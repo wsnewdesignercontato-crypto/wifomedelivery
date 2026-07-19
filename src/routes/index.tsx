@@ -565,77 +565,61 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* ============= DARK BENEFITS BAR (full black + neon) ============= */}
-      <section className="relative overflow-hidden bg-[#0a0708] py-20 sm:py-28">
-        {/* Neon orange background glows */}
+      {/* ============= DARK BENEFITS BAR (preto neutro, minimalista) ============= */}
+      <section className="relative overflow-hidden bg-black py-20 sm:py-28">
+        {/* Sutil glow laranja (bem discreto) */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -left-32 top-1/4 h-[420px] w-[420px] rounded-full bg-primary/30 blur-[140px]"
+          className="pointer-events-none absolute -left-40 top-1/3 h-[360px] w-[360px] rounded-full bg-primary/15 blur-[160px]"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-32 bottom-0 h-[480px] w-[480px] rounded-full bg-[#ff8a3d]/25 blur-[160px]"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/15 blur-[120px] animate-glow-pulse"
-        />
-        {/* Grid overlay */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
+          className="pointer-events-none absolute -right-40 bottom-0 h-[380px] w-[380px] rounded-full bg-primary/10 blur-[160px]"
         />
 
-        <div className="relative mx-auto max-w-7xl px-6">
+        <div className="relative mx-auto max-w-5xl px-6">
           <div className="reveal mb-12 text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-primary shadow-[0_0_24px_-4px_oklch(0.7_0.19_45/0.6)]">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary shadow-[0_0_8px_oklch(0.7_0.19_45)]" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/90">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
               Por que o WiFome
             </span>
             <h2 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
-              Feito pra você <span className="text-primary [text-shadow:0_0_28px_oklch(0.7_0.19_45/0.7)]">amar</span>
+              Feito pra você <span className="text-primary">amar</span>
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {/* 2 colunas — cards lado a lado */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
             {beneficios.map(({ Icon, titulo, texto }, i) => (
               <div
                 key={titulo}
-                className="reveal group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6 backdrop-blur-sm transition-all duration-500 hover:-translate-y-1.5 hover:border-primary/50 hover:shadow-[0_20px_60px_-20px_oklch(0.7_0.19_45/0.6)]"
-                style={{ transitionDelay: `${i * 60}ms` }}
+                className="reveal group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6 transition-all duration-500 hover:-translate-y-1 hover:border-primary/40 hover:bg-white/[0.035]"
+                style={{ transitionDelay: `${i * 70}ms` }}
               >
-                {/* Neon wash on hover */}
+                {/* Glow discreto no hover */}
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-primary/0 blur-3xl transition-all duration-500 group-hover:bg-primary/40"
-                />
-                {/* Shine sweep */}
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-1000 group-hover:translate-x-full"
+                  className="pointer-events-none absolute -top-20 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-primary/0 blur-3xl transition-all duration-500 group-hover:bg-primary/20"
                 />
 
-                <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-[#ff8a3d] text-primary-foreground shadow-[0_10px_30px_-8px_oklch(0.7_0.19_45/0.7)] ring-1 ring-white/20 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-[-4deg]">
-                  <Icon className="h-6 w-6" />
+                <div className="relative flex items-start gap-5">
+                  {/* Ícone minimalista: outline em círculo */}
+                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-primary/5 text-primary transition-all duration-500 group-hover:border-primary group-hover:bg-primary/10">
+                    <Icon className="h-5 w-5" strokeWidth={1.5} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-base font-semibold tracking-tight text-white sm:text-lg">
+                      {titulo}
+                    </h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-white/55">{texto}</p>
+                  </div>
                 </div>
-                <h3 className="relative mt-5 text-lg font-bold text-white">{titulo}</h3>
-                <p className="relative mt-2 text-sm leading-relaxed text-white/60">{texto}</p>
-
-                {/* Corner accent */}
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute right-4 top-4 h-1.5 w-1.5 rounded-full bg-primary/60 shadow-[0_0_10px_oklch(0.7_0.19_45)] transition-all duration-500 group-hover:scale-150"
-                />
               </div>
             ))}
           </div>
         </div>
       </section>
+
 
 
 
