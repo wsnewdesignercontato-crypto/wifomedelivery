@@ -315,20 +315,23 @@ function LandingPage() {
                 </span>
 
                 {/* icon orb */}
-                <div className="relative mt-2">
+                <div className="float-on-hover relative mt-2">
                   <div
                     aria-hidden
                     className="absolute inset-0 -m-3 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
                     style={{ background: c.glow }}
                   />
                   <div
-                    className="relative flex h-16 w-16 items-center justify-center rounded-[1.25rem] text-[2rem] transition-all duration-500 ease-out group-hover:scale-110 group-hover:-rotate-[8deg]"
+                    className="pulse-ring-on-hover relative flex h-16 w-16 items-center justify-center rounded-[1.25rem] text-[2rem] transition-all duration-500 ease-out group-hover:scale-110 group-hover:-rotate-[8deg]"
                     style={{
                       background: `linear-gradient(160deg, color-mix(in oklab, ${c.tint} 88%, white) 0%, ${c.tint} 100%)`,
                       boxShadow: `inset 0 1px 0 0 hsl(0 0% 100% / 0.9), inset 0 -6px 12px -6px ${c.glow}, 0 6px 16px -8px ${c.glow}`,
+                      color: c.glow,
                     }}
                   >
-                    <span className="drop-shadow-[0_2px_3px_rgba(0,0,0,0.12)]">{c.emoji}</span>
+                    <span className="drop-shadow-[0_2px_3px_rgba(0,0,0,0.12)] transition-transform duration-500 group-hover:scale-110">
+                      {c.emoji}
+                    </span>
                   </div>
                 </div>
 
