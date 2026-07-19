@@ -20,8 +20,9 @@ export function IFomeLogo({ className, size = "md", showWord = true }: Props) {
       <img
         src={logoAsset.url}
         alt="WiFome"
-        className={cn("object-contain", s.box)}
+        className={cn("object-contain rounded-xl shadow-brand", s.box)}
       />
+
       {showWord && (
         <span className={cn("font-black tracking-tight text-foreground", s.text)}>
           Wi<span className="text-primary">Fome</span>
