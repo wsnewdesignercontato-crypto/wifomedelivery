@@ -144,7 +144,6 @@ const beneficios = [
 
 function CategoriasRail() {
   const railRef = useRef<HTMLDivElement>(null);
-  const [paused, setPaused] = useState(false);
   const scrollBy = (dir: 1 | -1) => {
     const el = railRef.current;
     if (!el) return;
@@ -152,7 +151,7 @@ function CategoriasRail() {
     el.scrollBy({ left: step * dir, behavior: "smooth" });
   };
 
-  // Auto-scroll suave contínuo (loop infinito, pausa no hover/touch)
+  // Auto-scroll contínuo estilo vitrine (loop infinito, sem pausa)
   useEffect(() => {
     const el = railRef.current;
     if (!el) return;
@@ -160,21 +159,20 @@ function CategoriasRail() {
     if (prefersReduced) return;
     let raf = 0;
     let last = performance.now();
-    const speed = 22; // px/segundo — devagarzinho
+    const speed = 28; // px/segundo — devagarzinho
     const tick = (now: number) => {
       const dt = (now - last) / 1000;
       last = now;
-      if (!paused) {
-        const half = el.scrollWidth / 2;
-        let next = el.scrollLeft + speed * dt;
-        if (half > 0 && next >= half) next -= half;
-        el.scrollLeft = next;
-      }
+      const half = el.scrollWidth / 2;
+      let next = el.scrollLeft + speed * dt;
+      if (half > 0 && next >= half) next -= half;
+      el.scrollLeft = next;
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [paused]);
+  }, []);
+
 
 
   return (
@@ -190,28 +188,19 @@ function CategoriasRail() {
 
       <div className="relative mx-auto max-w-7xl px-6">
         {/* Header */}
-        <div className="reveal mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-              Categorias em alta
-            </span>
-            <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-              O que vai chegar <span className="text-primary">hoje?</span>
-            </h2>
-            <p className="mt-3 max-w-lg text-sm text-muted-foreground sm:text-base">
-              Do salgado ao doce, do mercado à farmácia — tudo no mesmo app.
-            </p>
-          </div>
-          <Link
-            to="/auth"
-            search={{ perfil: "cliente" }}
-            className="group inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card px-5 py-2.5 text-sm font-bold text-foreground shadow-sm transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-brand"
-          >
-            Ver todas
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </Link>
+        <div className="reveal mb-10">
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+            Categorias em alta
+          </span>
+          <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+            O que vai chegar <span className="text-primary">hoje?</span>
+          </h2>
+          <p className="mt-3 max-w-lg text-sm text-muted-foreground sm:text-base">
+            Do salgado ao doce, do mercado à farmácia — tudo no mesmo app.
+          </p>
         </div>
+
 
         {/* Rail wrapper (arrows + scroll area) */}
         <div className="relative">
@@ -247,12 +236,9 @@ function CategoriasRail() {
           {/* Scroll rail */}
           <div
             ref={railRef}
-            onMouseEnter={() => setPaused(true)}
-            onMouseLeave={() => setPaused(false)}
-            onTouchStart={() => setPaused(true)}
-            onTouchEnd={() => setPaused(false)}
             className="hide-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-4 pt-2 sm:gap-5"
           >
+
             {[...categorias, ...categorias].map((c, i) => (
               <Link
                 key={`${c.nome}-${i}`}
