@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   Store,
   Bike,
@@ -16,8 +16,6 @@ import {
   Facebook,
   Twitter,
   Music2,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { IFomeLogo } from "@/components/ifome-logo";
 import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
