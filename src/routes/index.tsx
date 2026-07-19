@@ -426,6 +426,15 @@ function LandingPage() {
                   Sou um restaurante
                 </Button>
               </Link>
+              <Link to="/auth" search={{ perfil: "entregador" }}>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full border-white/30 bg-white/5 text-white hover:bg-white/10 hover:text-white sm:w-auto"
+                >
+                  Quero entregar
+                </Button>
+              </Link>
             </div>
 
             {/* Trust icons */}
