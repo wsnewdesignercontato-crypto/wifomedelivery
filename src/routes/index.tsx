@@ -23,6 +23,10 @@ import { Button } from "@/components/ui/button";
 import heroFood from "@/assets/hero-food.jpg";
 import phoneApp from "@/assets/phone-app.png.asset.json";
 import trackingPhones from "@/assets/tracking-phones.jpg";
+import perfilCliente from "@/assets/perfil-cliente.png";
+import perfilEstabelecimento from "@/assets/perfil-estabelecimento.png";
+import perfilEntregador from "@/assets/perfil-entregador.png";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
