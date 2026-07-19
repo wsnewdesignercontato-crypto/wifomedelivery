@@ -23,6 +23,10 @@ import { Button } from "@/components/ui/button";
 import heroFood from "@/assets/hero-food.jpg";
 import phoneApp from "@/assets/phone-app.png.asset.json";
 import trackingPhones from "@/assets/tracking-phones.jpg";
+import perfilCliente from "@/assets/perfil-cliente.png";
+import perfilEstabelecimento from "@/assets/perfil-estabelecimento.png";
+import perfilEntregador from "@/assets/perfil-entregador.png";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -63,29 +67,36 @@ const categorias = [
 const perfis = [
   {
     key: "cliente",
-    titulo: "Sou cliente",
+    tag: "Sou",
+    highlight: "cliente",
     descricao: "Descubra restaurantes, faça pedidos e acompanhe a entrega em tempo real.",
     Icon: ShoppingBag,
+    mockup: perfilCliente,
     to: "/auth" as const,
     search: { perfil: "cliente" as const },
   },
   {
     key: "estabelecimento",
-    titulo: "Tenho um estabelecimento",
+    tag: "Tenha um",
+    highlight: "estabelecimento",
     descricao: "Gerencie seu cardápio, receba pedidos e aumente suas vendas no WiFome.",
     Icon: Store,
+    mockup: perfilEstabelecimento,
     to: "/auth" as const,
     search: { perfil: "estabelecimento" as const },
   },
   {
     key: "entregador",
-    titulo: "Quero entregar",
+    tag: "Quero",
+    highlight: "entregar",
     descricao: "Aceite corridas próximas, faça entregas e acompanhe seus ganhos.",
     Icon: Bike,
+    mockup: perfilEntregador,
     to: "/auth" as const,
     search: { perfil: "entregador" as const },
   },
 ];
+
 
 const trackingFeatures = [
   "Rastreamento do entregador no mapa",
@@ -358,25 +369,23 @@ function LandingPage() {
       </section>
 
 
-      {/* ============= 3 PERFIS (PREMIUM) ============= */}
+      {/* ============= 3 PERFIS (PREMIUM HORIZONTAL) ============= */}
       <section
         id="como-funciona"
-        className="relative overflow-hidden bg-gradient-to-b from-background via-background to-[oklch(0.98_0.015_60)] py-24 sm:py-32"
+        className="relative overflow-hidden bg-gradient-to-b from-background via-background to-[oklch(0.98_0.015_60)] py-20 sm:py-28"
       >
-        {/* ambient glow */}
         <div
           aria-hidden
           className="pointer-events-none absolute left-1/2 top-0 h-[520px] w-[880px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
         />
         <div className="relative mx-auto max-w-7xl px-6">
           <div className="mx-auto max-w-2xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              Escolha seu papel
+            <span className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-1.5 text-[11px] font-black uppercase tracking-[0.22em] text-primary-foreground shadow-[0_10px_24px_-8px_oklch(0.72_0.19_45/0.55)]">
+              Uma plataforma, três experiências
             </span>
             <h2 className="mt-5 text-4xl font-black leading-[1.05] tracking-tight text-foreground sm:text-5xl">
-              Uma plataforma,{" "}
-              <span className="text-primary">três experiências</span>
+              Escolha o seu{" "}
+              <span className="text-primary">papel</span>
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
               Pedir, vender ou entregar — o WiFome foi desenhado para você
@@ -384,45 +393,56 @@ function LandingPage() {
             </p>
           </div>
 
-          <div className="mt-16 grid gap-6 md:grid-cols-3 lg:gap-8">
-            {perfis.map(({ key, titulo, descricao, Icon, to, search }, i) => (
+          <div className="mt-14 grid gap-6 md:grid-cols-3 lg:gap-7">
+            {perfis.map(({ key, tag, highlight, descricao, Icon, mockup, to, search }, i) => (
               <Link
                 key={key}
                 to={to}
                 search={search}
-                className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-border/60 bg-card p-8 shadow-[0_20px_50px_-20px_oklch(0_0_0/0.15)] transition-all duration-500 hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_40px_80px_-24px_oklch(0.72_0.19_45/0.35)] sm:p-10"
+                className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-border/60 bg-card p-7 shadow-[0_20px_50px_-20px_oklch(0_0_0/0.15)] transition-all duration-500 hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_40px_80px_-24px_oklch(0.72_0.19_45/0.35)] sm:p-8"
               >
                 {/* corner index */}
-                <span className="pointer-events-none absolute right-6 top-6 font-mono text-xs tabular-nums text-muted-foreground/50">
+                <span className="pointer-events-none absolute right-6 top-6 z-10 font-mono text-xs tabular-nums text-muted-foreground/50">
                   0{i + 1}
                 </span>
 
+                {/* mockup on top */}
+                <div className="relative -mx-2 -mt-2 mb-5 aspect-[4/3] overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.98_0.02_55)] to-[oklch(0.95_0.05_45)]">
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/15 blur-3xl"
+                  />
+                  <img
+                    src={mockup}
+                    alt=""
+                    loading="lazy"
+                    width={1024}
+                    height={768}
+                    className="absolute inset-0 h-full w-full object-contain p-3 transition-transform duration-700 group-hover:scale-105"
+                  />
+                </div>
+
                 {/* icon */}
-                <div className="relative mb-8">
+                <div className="relative mb-4">
                   <div className="absolute -inset-3 rounded-3xl bg-primary/15 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
-                  <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-[oklch(0.68_0.2_38)] text-primary-foreground shadow-[0_10px_24px_-8px_oklch(0.72_0.19_45/0.6)] transition-transform duration-500 group-hover:scale-110 group-hover:rotate-[-4deg]">
-                    <Icon className="h-8 w-8" strokeWidth={1.75} />
+                  <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[oklch(0.68_0.2_38)] text-primary-foreground shadow-[0_10px_24px_-8px_oklch(0.72_0.19_45/0.6)] transition-transform duration-500 group-hover:scale-110 group-hover:rotate-[-4deg]">
+                    <Icon className="h-6 w-6" strokeWidth={2} />
                   </div>
                 </div>
 
-                <h3 className="text-2xl font-black tracking-tight text-foreground">
-                  {titulo}
+                <h3 className="text-2xl font-black leading-tight tracking-tight text-foreground">
+                  {tag}{" "}
+                  <span className="text-primary">{highlight}</span>
                 </h3>
-                <p className="mt-3 flex-grow text-[15px] leading-relaxed text-muted-foreground">
+                <p className="mt-2 flex-grow text-[15px] leading-relaxed text-muted-foreground">
                   {descricao}
                 </p>
 
-                {/* divider */}
-                <div className="mt-8 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
-
                 {/* CTA */}
-                <div className="mt-6 flex items-center justify-between">
-                  <span className="inline-flex items-center gap-2 text-sm font-bold text-primary">
+                <div className="mt-6">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-[0_10px_24px_-8px_oklch(0.72_0.19_45/0.55)] transition-transform duration-300 group-hover:translate-x-1">
                     Começar agora
-                    <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1.5" />
-                  </span>
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full border border-border/60 bg-background text-foreground transition-all duration-300 group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                   </span>
                 </div>
 
@@ -436,6 +456,7 @@ function LandingPage() {
           </div>
         </div>
       </section>
+
 
 
       {/* ============= TRACKING (PEACH) ============= */}
