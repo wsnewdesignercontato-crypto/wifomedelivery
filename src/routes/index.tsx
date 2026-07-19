@@ -608,10 +608,16 @@ function LandingPage() {
                 </li>
               ))}
             </ul>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <StoreBadge store="apple" />
-              <StoreBadge store="google" />
+            <div className="mt-8">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                Em breve nos aplicativos
+              </p>
+              <div className="mt-3 flex flex-row items-center gap-2">
+                <StoreBadge store="apple" />
+                <StoreBadge store="google" />
+              </div>
             </div>
+
           </div>
         </div>
       </section>
