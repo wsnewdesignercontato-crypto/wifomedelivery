@@ -616,12 +616,12 @@ function LandingPage() {
             </h2>
           </div>
 
-          {/* 2 colunas — cards lado a lado (sempre) */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-5">
+          {/* Grid distribuído — 2 col mobile, 4 col desktop, ícone no topo centralizado */}
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
             {beneficios.map(({ Icon, titulo, texto }, i) => (
               <div
                 key={titulo}
-                className="reveal group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-6 transition-all duration-500 hover:-translate-y-1 hover:border-primary/50 hover:bg-white/[0.04] hover:shadow-[0_0_30px_-8px_rgba(255,107,0,0.25)]"
+                className="reveal group relative flex flex-col items-center overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-8 text-center transition-all duration-500 hover:-translate-y-1 hover:border-primary/50 hover:bg-white/[0.04] hover:shadow-[0_0_30px_-8px_rgba(255,107,0,0.25)]"
                 style={{ transitionDelay: `${i * 70}ms` }}
               >
                 {/* Glow neon no hover */}
@@ -630,21 +630,21 @@ function LandingPage() {
                   className="pointer-events-none absolute -top-20 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-primary/0 blur-3xl transition-all duration-500 group-hover:bg-primary/30"
                 />
 
-                <div className="relative flex items-start gap-3 sm:gap-5">
-                  {/* Ícone minimalista: outline em círculo com neon */}
-                  <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-primary/5 text-primary transition-all duration-500 group-hover:border-primary group-hover:bg-primary/15 group-hover:shadow-[0_0_16px_-2px_rgba(255,107,0,0.45)] sm:h-12 sm:w-12">
-                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.5} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-semibold tracking-tight text-white sm:text-lg">
-                      {titulo}
-                    </h3>
-                    <p className="mt-1 text-xs leading-relaxed text-white/55 sm:text-sm">{texto}</p>
-                  </div>
+                {/* Ícone centralizado no topo */}
+                <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-primary/40 bg-primary/5 text-primary transition-all duration-500 group-hover:border-primary group-hover:bg-primary/15 group-hover:shadow-[0_0_20px_-2px_rgba(255,107,0,0.55)]">
+                  <Icon className="h-6 w-6" strokeWidth={1.5} />
                 </div>
+
+                <h3 className="relative mt-5 text-base font-semibold tracking-tight text-white sm:text-lg">
+                  {titulo}
+                </h3>
+                <p className="relative mt-2 text-sm leading-relaxed text-white/60">
+                  {texto}
+                </p>
               </div>
             ))}
           </div>
+
         </div>
       </section>
 
