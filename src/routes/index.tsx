@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useRef } from "react";
 import {
   Store,
   Bike,
@@ -15,6 +16,8 @@ import {
   Facebook,
   Twitter,
   Music2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { IFomeLogo } from "@/components/ifome-logo";
 import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
@@ -50,17 +53,28 @@ const navLinks = [
   { label: "Ajuda", href: "#ajuda" },
 ];
 
+import catPizza from "@/assets/cat/pizza.png";
+import catHamburguer from "@/assets/cat/hamburguer.png";
+import catMarmita from "@/assets/cat/marmita.png";
+import catAcai from "@/assets/cat/acai.png";
+import catSorvete from "@/assets/cat/sorvete.png";
+import catPastel from "@/assets/cat/pastel.png";
+import catLanches from "@/assets/cat/lanches.png";
+import catBebidas from "@/assets/cat/bebidas.png";
+import catMercado from "@/assets/cat/mercado.png";
+import catFarmacia from "@/assets/cat/farmacia.png";
+
 const categorias = [
-  { emoji: "🍕", nome: "Pizza", tint: "oklch(0.96 0.05 55)", glow: "oklch(0.72 0.19 45 / 0.35)" },
-  { emoji: "🍔", nome: "Hambúrguer", tint: "oklch(0.96 0.05 80)", glow: "oklch(0.75 0.16 75 / 0.35)" },
-  { emoji: "🍲", nome: "Marmita", tint: "oklch(0.95 0.05 145)", glow: "oklch(0.7 0.15 145 / 0.3)" },
-  { emoji: "🍧", nome: "Açaí", tint: "oklch(0.94 0.05 310)", glow: "oklch(0.6 0.2 310 / 0.35)" },
-  { emoji: "🍦", nome: "Sorvete", tint: "oklch(0.96 0.04 20)", glow: "oklch(0.75 0.15 15 / 0.3)" },
-  { emoji: "🥟", nome: "Pastel", tint: "oklch(0.96 0.05 70)", glow: "oklch(0.75 0.15 70 / 0.35)" },
-  { emoji: "🥪", nome: "Lanches", tint: "oklch(0.95 0.04 230)", glow: "oklch(0.65 0.15 230 / 0.3)" },
-  { emoji: "🥤", nome: "Bebidas", tint: "oklch(0.94 0.06 25)", glow: "oklch(0.65 0.22 25 / 0.35)" },
-  { emoji: "🧺", nome: "Mercado", tint: "oklch(0.95 0.04 265)", glow: "oklch(0.6 0.15 265 / 0.3)" },
-  { emoji: "💊", nome: "Farmácia", tint: "oklch(0.95 0.04 350)", glow: "oklch(0.68 0.2 350 / 0.35)" },
+  { img: catPizza,       nome: "Pizza",      tint: "oklch(0.96 0.05 55)",  glow: "oklch(0.72 0.19 45 / 0.35)" },
+  { img: catHamburguer,  nome: "Hambúrguer", tint: "oklch(0.96 0.05 80)",  glow: "oklch(0.75 0.16 75 / 0.35)" },
+  { img: catMarmita,     nome: "Marmita",    tint: "oklch(0.95 0.05 145)", glow: "oklch(0.7 0.15 145 / 0.3)" },
+  { img: catAcai,        nome: "Açaí",       tint: "oklch(0.94 0.05 310)", glow: "oklch(0.6 0.2 310 / 0.35)" },
+  { img: catSorvete,     nome: "Sorvete",    tint: "oklch(0.96 0.04 20)",  glow: "oklch(0.75 0.15 15 / 0.3)" },
+  { img: catPastel,      nome: "Pastel",     tint: "oklch(0.96 0.05 70)",  glow: "oklch(0.75 0.15 70 / 0.35)" },
+  { img: catLanches,     nome: "Lanches",    tint: "oklch(0.95 0.04 230)", glow: "oklch(0.65 0.15 230 / 0.3)" },
+  { img: catBebidas,     nome: "Bebidas",    tint: "oklch(0.94 0.06 25)",  glow: "oklch(0.65 0.22 25 / 0.35)" },
+  { img: catMercado,     nome: "Mercado",    tint: "oklch(0.95 0.04 265)", glow: "oklch(0.6 0.15 265 / 0.3)" },
+  { img: catFarmacia,    nome: "Farmácia",   tint: "oklch(0.95 0.04 350)", glow: "oklch(0.68 0.2 350 / 0.35)" },
 ];
 
 
@@ -127,6 +141,152 @@ const beneficios = [
     texto: "Estamos sempre prontos para te ajudar.",
   },
 ];
+
+function CategoriasRail() {
+  const railRef = useRef<HTMLDivElement>(null);
+  const scrollBy = (dir: 1 | -1) => {
+    const el = railRef.current;
+    if (!el) return;
+    const step = Math.max(el.clientWidth * 0.7, 320);
+    el.scrollBy({ left: step * dir, behavior: "smooth" });
+  };
+
+  return (
+    <section className="relative overflow-hidden bg-gradient-to-b from-muted/40 via-background to-muted/30 py-20 sm:py-28">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-24 left-1/4 h-64 w-64 rounded-full bg-primary/10 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-16 right-0 h-56 w-56 rounded-full bg-primary/15 blur-3xl"
+      />
+
+      <div className="relative mx-auto max-w-7xl px-6">
+        {/* Header */}
+        <div className="reveal mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+              Categorias em alta
+            </span>
+            <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+              O que vai chegar <span className="text-primary">hoje?</span>
+            </h2>
+            <p className="mt-3 max-w-lg text-sm text-muted-foreground sm:text-base">
+              Do salgado ao doce, do mercado à farmácia — tudo no mesmo app.
+            </p>
+          </div>
+          <Link
+            to="/auth"
+            search={{ perfil: "cliente" }}
+            className="group inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card px-5 py-2.5 text-sm font-bold text-foreground shadow-sm transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-brand"
+          >
+            Ver todas
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+
+        {/* Rail wrapper (arrows + scroll area) */}
+        <div className="relative">
+          {/* Left arrow */}
+          <button
+            type="button"
+            aria-label="Anterior"
+            onClick={() => scrollBy(-1)}
+            className="absolute -left-2 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full border border-border/60 bg-card/95 p-2.5 text-foreground shadow-[0_10px_30px_-12px_oklch(0_0_0/0.25)] backdrop-blur transition-all hover:-translate-y-1/2 hover:scale-105 hover:border-primary hover:bg-primary hover:text-primary-foreground sm:flex lg:-left-5"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          {/* Right arrow */}
+          <button
+            type="button"
+            aria-label="Próximo"
+            onClick={() => scrollBy(1)}
+            className="absolute -right-2 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full border border-border/60 bg-card/95 p-2.5 text-foreground shadow-[0_10px_30px_-12px_oklch(0_0_0/0.25)] backdrop-blur transition-all hover:-translate-y-1/2 hover:scale-105 hover:border-primary hover:bg-primary hover:text-primary-foreground sm:flex lg:-right-5"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+
+          {/* Edge fades */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-background to-transparent sm:w-12"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-background to-transparent sm:w-12"
+          />
+
+          {/* Scroll rail */}
+          <div
+            ref={railRef}
+            className="hide-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 pb-4 pt-2 sm:gap-5"
+          >
+            {categorias.map((c, i) => (
+              <Link
+                key={c.nome}
+                to="/auth"
+                search={{ perfil: "cliente" }}
+                style={{ ["--reveal-delay" as string]: `${i * 55}ms` }}
+                className="reveal group relative flex w-[140px] shrink-0 snap-start flex-col items-center justify-between overflow-hidden rounded-[1.75rem] border border-border/50 bg-gradient-to-b from-card to-card/70 p-4 shadow-[0_1px_0_0_hsl(0_0%_100%/0.9)_inset,0_10px_30px_-16px_oklch(0_0_0/0.18)] backdrop-blur-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:border-primary/50 sm:w-[152px] lg:w-[164px]"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = `0 1px 0 0 hsl(0 0% 100% / 0.9) inset, 0 24px 48px -22px ${c.glow}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "";
+                }}
+              >
+                {/* soft top tint wash */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 top-0 h-2/3 opacity-70 transition-opacity duration-500 group-hover:opacity-100"
+                  style={{
+                    background: `radial-gradient(120% 100% at 50% 0%, ${c.tint} 0%, transparent 72%)`,
+                  }}
+                />
+
+                {/* Icon */}
+                <div className="relative mt-1 flex h-24 w-24 items-center justify-center">
+                  <div
+                    aria-hidden
+                    className="absolute inset-2 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
+                    style={{ background: c.glow }}
+                  />
+                  <img
+                    src={c.img}
+                    alt={c.nome}
+                    loading="lazy"
+                    width={512}
+                    height={512}
+                    className="relative h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,0,0,0.15)] transition-transform duration-500 ease-out group-hover:-translate-y-1 group-hover:scale-[1.08]"
+                  />
+                </div>
+
+                {/* Label */}
+                <div className="relative mt-3 flex flex-col items-center gap-1.5">
+                  <span className="text-[14px] font-bold leading-none tracking-tight text-foreground transition-colors duration-300 group-hover:text-primary">
+                    {c.nome}
+                  </span>
+                  <span
+                    aria-hidden
+                    className="h-[2px] w-4 rounded-full bg-primary/0 transition-all duration-500 group-hover:w-7 group-hover:bg-primary"
+                  />
+                </div>
+
+                {/* Shine */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent transition-transform duration-[1200ms] ease-out group-hover:translate-x-full"
+                />
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function LandingPage() {
   useRevealOnScroll();
@@ -265,108 +425,9 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* ============= CATEGORIAS (PREMIUM) ============= */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-muted/40 via-background to-muted/30 py-20 sm:py-28">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-24 left-1/4 h-64 w-64 rounded-full bg-primary/10 blur-3xl"
-        />
-        <div className="relative mx-auto max-w-7xl px-6">
-          <div className="reveal mb-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-                Categorias em alta
-              </span>
-              <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-                O que vai chegar{" "}
-                <span className="text-primary">hoje?</span>
-              </h2>
-              <p className="mt-3 max-w-lg text-sm text-muted-foreground sm:text-base">
-                Do salgado ao doce, do mercado à farmácia — tudo no mesmo app.
-              </p>
-            </div>
-            <Link
-              to="/auth"
-              search={{ perfil: "cliente" }}
-              className="group inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card px-5 py-2.5 text-sm font-bold text-foreground shadow-sm transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-brand"
-            >
-              Ver todas
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </div>
+      {/* ============= CATEGORIAS (PREMIUM RAIL) ============= */}
+      <CategoriasRail />
 
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 sm:gap-4 lg:grid-cols-10 lg:gap-4">
-            {categorias.map((c, i) => (
-              <Link
-                key={c.nome}
-                to="/auth"
-                search={{ perfil: "cliente" }}
-                style={{ ["--reveal-delay" as string]: `${i * 55}ms` }}
-                className="reveal group relative flex aspect-[3/4] flex-col items-center justify-between overflow-hidden rounded-[1.5rem] border border-border/50 bg-gradient-to-b from-card to-card/60 p-4 shadow-[0_1px_0_0_hsl(0_0%_100%/0.8)_inset,0_10px_28px_-14px_oklch(0_0_0/0.15)] backdrop-blur-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:border-primary/50"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = `0 1px 0 0 hsl(0 0% 100% / 0.8) inset, 0 24px 44px -20px ${c.glow}`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = "";
-                }}
-              >
-                {/* soft top tint wash */}
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-x-0 top-0 h-1/2 opacity-60 transition-opacity duration-500 group-hover:opacity-100"
-                  style={{
-                    background: `radial-gradient(120% 100% at 50% 0%, ${c.tint} 0%, transparent 70%)`,
-                  }}
-                />
-
-                {/* index */}
-                <span className="absolute right-3 top-3 font-mono text-[10px] font-medium tabular-nums tracking-widest text-muted-foreground/45">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-
-                {/* icon orb */}
-                <div className="float-on-hover relative mt-2">
-                  <div
-                    aria-hidden
-                    className="absolute inset-0 -m-3 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
-                    style={{ background: c.glow }}
-                  />
-                  <div
-                    className="pulse-ring-on-hover relative flex h-16 w-16 items-center justify-center rounded-[1.25rem] text-[2rem] transition-all duration-500 ease-out group-hover:scale-110 group-hover:-rotate-[8deg]"
-                    style={{
-                      background: `linear-gradient(160deg, color-mix(in oklab, ${c.tint} 88%, white) 0%, ${c.tint} 100%)`,
-                      boxShadow: `inset 0 1px 0 0 hsl(0 0% 100% / 0.9), inset 0 -6px 12px -6px ${c.glow}, 0 6px 16px -8px ${c.glow}`,
-                      color: c.glow,
-                    }}
-                  >
-                    <span className="drop-shadow-[0_2px_3px_rgba(0,0,0,0.12)] transition-transform duration-500 group-hover:scale-110">
-                      {c.emoji}
-                    </span>
-                  </div>
-                </div>
-
-                {/* label */}
-                <div className="relative flex flex-col items-center gap-1.5">
-                  <span className="text-[13px] font-bold leading-none tracking-tight text-foreground transition-colors duration-300 group-hover:text-primary">
-                    {c.nome}
-                  </span>
-                  <span
-                    aria-hidden
-                    className="h-[2px] w-4 rounded-full bg-primary/0 transition-all duration-500 group-hover:w-6 group-hover:bg-primary"
-                  />
-                </div>
-
-                {/* shine */}
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent transition-transform duration-[1200ms] ease-out group-hover:translate-x-full"
-                />
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
 
 
       {/* ============= 3 PERFIS (PREMIUM HORIZONTAL) ============= */}
