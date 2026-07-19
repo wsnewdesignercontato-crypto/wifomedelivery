@@ -497,11 +497,26 @@ function LandingPage() {
                   0{i + 1}
                 </span>
 
-                {/* mockup on top */}
-                <div className="relative -mx-2 -mt-2 mb-5 aspect-[4/3] overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.98_0.02_55)] to-[oklch(0.95_0.05_45)]">
+                {/* mockup — floating, sem moldura quadrada */}
+                <div className="relative mb-6 flex aspect-[4/3] items-center justify-center">
+                  {/* radial wash suave (sem borda visível) */}
                   <div
                     aria-hidden
-                    className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/15 blur-3xl"
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                      background:
+                        "radial-gradient(60% 55% at 50% 55%, oklch(0.94 0.08 50 / 0.55) 0%, oklch(0.97 0.04 55 / 0.25) 45%, transparent 72%)",
+                    }}
+                  />
+                  {/* glow pulsante atrás do device */}
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute left-1/2 top-1/2 h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/25 blur-3xl transition-opacity duration-500 group-hover:bg-primary/40"
+                  />
+                  {/* sombra de contato (elipse sob o device) */}
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute bottom-2 left-1/2 h-4 w-2/3 -translate-x-1/2 rounded-[50%] bg-black/20 blur-xl"
                   />
                   <img
                     src={mockup}
@@ -509,9 +524,10 @@ function LandingPage() {
                     loading="lazy"
                     width={1024}
                     height={768}
-                    className="absolute inset-0 h-full w-full object-contain p-3 transition-transform duration-700 group-hover:scale-105"
+                    className="relative z-10 h-full w-full object-contain drop-shadow-[0_25px_35px_oklch(0_0_0/0.22)] transition-all duration-700 group-hover:-translate-y-1 group-hover:scale-[1.04]"
                   />
                 </div>
+
 
                 {/* icon */}
                 <div className="relative mb-4">
