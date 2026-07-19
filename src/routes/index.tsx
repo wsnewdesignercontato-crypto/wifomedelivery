@@ -18,6 +18,8 @@ import {
   Music2,
   Percent,
   Wallet,
+  ChevronDown,
+  User,
 } from "lucide-react";
 import { IFomeLogo } from "@/components/ifome-logo";
 import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
