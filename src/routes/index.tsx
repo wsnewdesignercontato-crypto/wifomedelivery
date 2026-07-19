@@ -566,19 +566,43 @@ function LandingPage() {
 
 
 
-      {/* ============= TRACKING (PEACH) ============= */}
-      <section className="bg-[oklch(0.96_0.03_55)] py-16 sm:py-24">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-6 lg:grid-cols-2">
-          <div className="order-2 flex justify-center lg:order-1">
+      {/* ============= TRACKING (PREMIUM FLOATING) ============= */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-background via-[oklch(0.99_0.01_60)] to-background py-20 sm:py-28">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/4 top-1/2 h-[520px] w-[520px] -translate-y-1/2 rounded-full bg-primary/12 blur-3xl"
+        />
+        <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-6 lg:grid-cols-2">
+          <div className="relative order-2 flex justify-center lg:order-1">
+            {/* radial wash */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  "radial-gradient(55% 55% at 50% 55%, oklch(0.94 0.09 50 / 0.55) 0%, oklch(0.97 0.04 55 / 0.2) 45%, transparent 72%)",
+              }}
+            />
+            {/* glow */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-[28rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/25 blur-3xl"
+            />
+            {/* contact shadow */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute bottom-6 left-1/2 h-6 w-3/4 -translate-x-1/2 rounded-[50%] bg-black/25 blur-2xl"
+            />
             <img
               src={trackingPhones}
               alt="Rastreamento em tempo real do pedido"
               loading="lazy"
               width={1408}
               height={1008}
-              className="w-full max-w-2xl drop-shadow-2xl"
+              className="relative z-10 w-full max-w-2xl object-contain drop-shadow-[0_35px_45px_oklch(0_0_0/0.28)]"
             />
           </div>
+
           <div className="order-1 lg:order-2 lg:pl-8">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
               Acompanhe tudo
