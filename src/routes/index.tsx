@@ -31,7 +31,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, User, Store, Bike } from "lucide-react";
+import { ChevronDown as _CD, User as _U, Store as _S, Bike as _B } from "lucide-react";
 import heroFood from "@/assets/hero-food.jpg";
 import phoneApp from "@/assets/phone-app.png.asset.json";
 import trackingPhones from "@/assets/tracking-phones.png";
