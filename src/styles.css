@@ -279,4 +279,48 @@
 }
 /* Movimento contínuo: sem pausa no hover e sem parar por reduced-motion */
 
+/* ============= Text reveal automático ============= */
+@keyframes text-rise {
+  0%   { opacity: 0; transform: translateY(14px); filter: blur(6px); letter-spacing: 0.02em; }
+  60%  { opacity: 1; filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); letter-spacing: normal; }
+}
+
+@keyframes heading-shine {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.text-reveal {
+  opacity: 0;
+  will-change: transform, opacity, filter;
+}
+.text-reveal.is-visible {
+  animation: text-rise 0.85s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+.heading-shine {
+  background-image: linear-gradient(
+    100deg,
+    currentColor 0%,
+    currentColor 42%,
+    color-mix(in oklab, currentColor 45%, #ff6b00) 50%,
+    currentColor 58%,
+    currentColor 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: heading-shine 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-reveal,
+  .text-reveal.is-visible { opacity: 1 !important; animation: none !important; transform: none !important; filter: none !important; }
+  .heading-shine { animation: none; }
+}
+
+
 
