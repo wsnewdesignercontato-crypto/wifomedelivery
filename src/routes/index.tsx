@@ -530,7 +530,7 @@ function LandingPage() {
           className="pointer-events-none absolute left-1/4 top-1/2 h-[520px] w-[520px] -translate-y-1/2 rounded-full bg-primary/12 blur-3xl"
         />
         <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-6 lg:grid-cols-2">
-          <div className="relative order-2 flex justify-center lg:order-1">
+          <div className="reveal relative order-2 flex justify-center lg:order-1">
             {/* radial wash */}
             <div
               aria-hidden
