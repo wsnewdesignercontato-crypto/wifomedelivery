@@ -16,6 +16,8 @@ import {
   Facebook,
   Twitter,
   Music2,
+  Percent,
+  Wallet,
 } from "lucide-react";
 import { IFomeLogo } from "@/components/ifome-logo";
 import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
