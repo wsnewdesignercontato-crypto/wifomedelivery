@@ -67,29 +67,36 @@ const categorias = [
 const perfis = [
   {
     key: "cliente",
-    titulo: "Sou cliente",
+    tag: "Sou",
+    highlight: "cliente",
     descricao: "Descubra restaurantes, faça pedidos e acompanhe a entrega em tempo real.",
     Icon: ShoppingBag,
+    mockup: perfilCliente,
     to: "/auth" as const,
     search: { perfil: "cliente" as const },
   },
   {
     key: "estabelecimento",
-    titulo: "Tenho um estabelecimento",
+    tag: "Tenha um",
+    highlight: "estabelecimento",
     descricao: "Gerencie seu cardápio, receba pedidos e aumente suas vendas no WiFome.",
     Icon: Store,
+    mockup: perfilEstabelecimento,
     to: "/auth" as const,
     search: { perfil: "estabelecimento" as const },
   },
   {
     key: "entregador",
-    titulo: "Quero entregar",
+    tag: "Quero",
+    highlight: "entregar",
     descricao: "Aceite corridas próximas, faça entregas e acompanhe seus ganhos.",
     Icon: Bike,
+    mockup: perfilEntregador,
     to: "/auth" as const,
     search: { perfil: "entregador" as const },
   },
 ];
+
 
 const trackingFeatures = [
   "Rastreamento do entregador no mapa",
