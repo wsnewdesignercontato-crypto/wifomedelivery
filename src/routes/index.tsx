@@ -142,6 +142,152 @@ const beneficios = [
   },
 ];
 
+function CategoriasRail() {
+  const railRef = useRef<HTMLDivElement>(null);
+  const scrollBy = (dir: 1 | -1) => {
+    const el = railRef.current;
+    if (!el) return;
+    const step = Math.max(el.clientWidth * 0.7, 320);
+    el.scrollBy({ left: step * dir, behavior: "smooth" });
+  };
+
+  return (
+    <section className="relative overflow-hidden bg-gradient-to-b from-muted/40 via-background to-muted/30 py-20 sm:py-28">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-24 left-1/4 h-64 w-64 rounded-full bg-primary/10 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-16 right-0 h-56 w-56 rounded-full bg-primary/15 blur-3xl"
+      />
+
+      <div className="relative mx-auto max-w-7xl px-6">
+        {/* Header */}
+        <div className="reveal mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+              Categorias em alta
+            </span>
+            <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+              O que vai chegar <span className="text-primary">hoje?</span>
+            </h2>
+            <p className="mt-3 max-w-lg text-sm text-muted-foreground sm:text-base">
+              Do salgado ao doce, do mercado à farmácia — tudo no mesmo app.
+            </p>
+          </div>
+          <Link
+            to="/auth"
+            search={{ perfil: "cliente" }}
+            className="group inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card px-5 py-2.5 text-sm font-bold text-foreground shadow-sm transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-brand"
+          >
+            Ver todas
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+
+        {/* Rail wrapper (arrows + scroll area) */}
+        <div className="relative">
+          {/* Left arrow */}
+          <button
+            type="button"
+            aria-label="Anterior"
+            onClick={() => scrollBy(-1)}
+            className="absolute -left-2 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full border border-border/60 bg-card/95 p-2.5 text-foreground shadow-[0_10px_30px_-12px_oklch(0_0_0/0.25)] backdrop-blur transition-all hover:-translate-y-1/2 hover:scale-105 hover:border-primary hover:bg-primary hover:text-primary-foreground sm:flex lg:-left-5"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          {/* Right arrow */}
+          <button
+            type="button"
+            aria-label="Próximo"
+            onClick={() => scrollBy(1)}
+            className="absolute -right-2 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full border border-border/60 bg-card/95 p-2.5 text-foreground shadow-[0_10px_30px_-12px_oklch(0_0_0/0.25)] backdrop-blur transition-all hover:-translate-y-1/2 hover:scale-105 hover:border-primary hover:bg-primary hover:text-primary-foreground sm:flex lg:-right-5"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+
+          {/* Edge fades */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-background to-transparent sm:w-12"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-background to-transparent sm:w-12"
+          />
+
+          {/* Scroll rail */}
+          <div
+            ref={railRef}
+            className="hide-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 pb-4 pt-2 sm:gap-5"
+          >
+            {categorias.map((c, i) => (
+              <Link
+                key={c.nome}
+                to="/auth"
+                search={{ perfil: "cliente" }}
+                style={{ ["--reveal-delay" as string]: `${i * 55}ms` }}
+                className="reveal group relative flex w-[140px] shrink-0 snap-start flex-col items-center justify-between overflow-hidden rounded-[1.75rem] border border-border/50 bg-gradient-to-b from-card to-card/70 p-4 shadow-[0_1px_0_0_hsl(0_0%_100%/0.9)_inset,0_10px_30px_-16px_oklch(0_0_0/0.18)] backdrop-blur-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:border-primary/50 sm:w-[152px] lg:w-[164px]"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = `0 1px 0 0 hsl(0 0% 100% / 0.9) inset, 0 24px 48px -22px ${c.glow}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "";
+                }}
+              >
+                {/* soft top tint wash */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 top-0 h-2/3 opacity-70 transition-opacity duration-500 group-hover:opacity-100"
+                  style={{
+                    background: `radial-gradient(120% 100% at 50% 0%, ${c.tint} 0%, transparent 72%)`,
+                  }}
+                />
+
+                {/* Icon */}
+                <div className="relative mt-1 flex h-24 w-24 items-center justify-center">
+                  <div
+                    aria-hidden
+                    className="absolute inset-2 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
+                    style={{ background: c.glow }}
+                  />
+                  <img
+                    src={c.img}
+                    alt={c.nome}
+                    loading="lazy"
+                    width={512}
+                    height={512}
+                    className="relative h-full w-full object-contain drop-shadow-[0_10px_16px_rgba(0,0,0,0.15)] transition-transform duration-500 ease-out group-hover:-translate-y-1 group-hover:scale-[1.08]"
+                  />
+                </div>
+
+                {/* Label */}
+                <div className="relative mt-3 flex flex-col items-center gap-1.5">
+                  <span className="text-[14px] font-bold leading-none tracking-tight text-foreground transition-colors duration-300 group-hover:text-primary">
+                    {c.nome}
+                  </span>
+                  <span
+                    aria-hidden
+                    className="h-[2px] w-4 rounded-full bg-primary/0 transition-all duration-500 group-hover:w-7 group-hover:bg-primary"
+                  />
+                </div>
+
+                {/* Shine */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent transition-transform duration-[1200ms] ease-out group-hover:translate-x-full"
+                />
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function LandingPage() {
   useRevealOnScroll();
   return (
