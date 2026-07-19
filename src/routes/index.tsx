@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   Store,
   Bike,
@@ -16,8 +16,6 @@ import {
   Facebook,
   Twitter,
   Music2,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { IFomeLogo } from "@/components/ifome-logo";
 import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
@@ -143,38 +141,6 @@ const beneficios = [
 ];
 
 function CategoriasRail() {
-  const railRef = useRef<HTMLDivElement>(null);
-  const scrollBy = (dir: 1 | -1) => {
-    const el = railRef.current;
-    if (!el) return;
-    const step = Math.max(el.clientWidth * 0.7, 320);
-    el.scrollBy({ left: step * dir, behavior: "smooth" });
-  };
-
-  // Auto-scroll contínuo estilo vitrine (loop infinito, sem pausa)
-  useEffect(() => {
-    const el = railRef.current;
-    if (!el) return;
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReduced) return;
-    let raf = 0;
-    let last = performance.now();
-    const speed = 28; // px/segundo — devagarzinho
-    const tick = (now: number) => {
-      const dt = (now - last) / 1000;
-      last = now;
-      const half = el.scrollWidth / 2;
-      let next = el.scrollLeft + speed * dt;
-      if (half > 0 && next >= half) next -= half;
-      el.scrollLeft = next;
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, []);
-
-
-
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-muted/40 via-background to-muted/30 py-20 sm:py-28">
       <div
@@ -200,52 +166,29 @@ function CategoriasRail() {
             Do salgado ao doce, do mercado à farmácia — tudo no mesmo app.
           </p>
         </div>
+      </div>
 
+      {/* Marquee wrapper — largura total com fades laterais */}
+      <div className="relative">
+        {/* Edge fades */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-background to-transparent sm:w-24"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-background to-transparent sm:w-24"
+        />
 
-        {/* Rail wrapper (arrows + scroll area) */}
-        <div className="relative">
-          {/* Left arrow */}
-          <button
-            type="button"
-            aria-label="Anterior"
-            onClick={() => scrollBy(-1)}
-            className="absolute -left-2 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full border border-border/60 bg-card/95 p-2.5 text-foreground shadow-[0_10px_30px_-12px_oklch(0_0_0/0.25)] backdrop-blur transition-all hover:-translate-y-1/2 hover:scale-105 hover:border-primary hover:bg-primary hover:text-primary-foreground sm:flex lg:-left-5"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          {/* Right arrow */}
-          <button
-            type="button"
-            aria-label="Próximo"
-            onClick={() => scrollBy(1)}
-            className="absolute -right-2 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full border border-border/60 bg-card/95 p-2.5 text-foreground shadow-[0_10px_30px_-12px_oklch(0_0_0/0.25)] backdrop-blur transition-all hover:-translate-y-1/2 hover:scale-105 hover:border-primary hover:bg-primary hover:text-primary-foreground sm:flex lg:-right-5"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-
-          {/* Edge fades */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-background to-transparent sm:w-12"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-background to-transparent sm:w-12"
-          />
-
-          {/* Scroll rail */}
-          <div
-            ref={railRef}
-            className="hide-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-4 pt-2 sm:gap-5"
-          >
+        <div className="marquee-viewport overflow-hidden">
+          <div className="marquee-track flex w-max gap-4 py-3 sm:gap-5">
 
             {[...categorias, ...categorias].map((c, i) => (
               <Link
                 key={`${c.nome}-${i}`}
                 to="/auth"
                 search={{ perfil: "cliente" }}
-                style={{ ["--reveal-delay" as string]: `${(i % categorias.length) * 55}ms` }}
-                className="reveal group relative flex w-[140px] shrink-0 flex-col items-center justify-between overflow-hidden rounded-[1.75rem] border border-border/50 bg-gradient-to-b from-card to-card/70 p-4 shadow-[0_1px_0_0_hsl(0_0%_100%/0.9)_inset,0_10px_30px_-16px_oklch(0_0_0/0.18)] backdrop-blur-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:border-primary/50 sm:w-[152px] lg:w-[164px]"
+                className="group relative flex w-[140px] shrink-0 flex-col items-center justify-between overflow-hidden rounded-[1.75rem] border border-border/50 bg-gradient-to-b from-card to-card/70 p-4 shadow-[0_1px_0_0_hsl(0_0%_100%/0.9)_inset,0_10px_30px_-16px_oklch(0_0_0/0.18)] backdrop-blur-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:border-primary/50 sm:w-[152px] lg:w-[164px]"
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = `0 1px 0 0 hsl(0 0% 100% / 0.9) inset, 0 24px 48px -22px ${c.glow}`;
                 }}
