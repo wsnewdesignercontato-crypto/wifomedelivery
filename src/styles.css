@@ -273,9 +273,10 @@
 
 .marquee-viewport { width: 100%; }
 .marquee-track {
-  animation: marquee-x 45s linear infinite;
+  animation: marquee-x 22s linear infinite;
   will-change: transform;
 }
+.marquee-track:hover { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) {
   .marquee-track { animation: none; }
 }
