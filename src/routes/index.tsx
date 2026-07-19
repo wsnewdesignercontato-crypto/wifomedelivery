@@ -804,10 +804,8 @@ function LandingPage() {
           <FooterCol title="Institucional" items={["Sobre nós", "Carreiras", "Blog", "Política de privacidade", "Termos de uso"]} />
 
           <div className="col-span-2 flex flex-col items-center justify-center text-center sm:col-span-3 lg:col-span-2">
-            <p className="text-sm font-bold uppercase tracking-wider text-white">
-              Em breve
-              <span className="ml-1 text-xs font-normal normal-case text-white/70">nos aplicativos</span>
-            </p>
+            <p className="text-sm font-bold uppercase tracking-wider text-white">Em breve</p>
+            <p className="text-xs text-white/70">nos aplicativos</p>
             <div className="mt-4 flex flex-row flex-wrap items-center justify-center gap-2">
               <StoreBadge store="apple" dark />
               <StoreBadge store="google" dark />
