@@ -184,12 +184,6 @@ function CategoriasRail() {
 
         <div className="marquee-viewport overflow-hidden">
           <div className="marquee-track flex w-max gap-4 py-3 sm:gap-5">
-            {[...categorias, ...categorias].map((c, i) => (
-              <Link
-                key={`${c.nome}-${i}`}
-                to="/auth"
-                search={{ perfil: "cliente" }}
-                className="group relative flex w-[140px] shrink-0 flex-col items-center justify-between overflow-hidden rounded-[1.75rem] border border-border/50 bg-gradient-to-b from-card to-card/70 p-4 shadow-[0_1px_0_0_hsl(0_0%_100%/0.9)_inset,0_10px_30px_-16px_oklch(0_0_0/0.18)] backdrop-blur-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:border-primary/50 sm:w-[152px] lg:w-[164px]"
 
             {[...categorias, ...categorias].map((c, i) => (
               <Link
