@@ -160,7 +160,7 @@ function AppDispatcher() {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-foreground">{titulo}</h3>
+                    <h2 className="font-semibold text-foreground">{titulo}</h2>
                     {tem && (
                       <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold text-success">
                         Ativo

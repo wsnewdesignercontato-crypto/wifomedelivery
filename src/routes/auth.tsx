@@ -22,9 +22,21 @@ export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Entrar no WiFome" },
-      { name: "description", content: "Entre ou crie sua conta no WiFome." },
+      { title: "Entrar no WiFome — Acesse sua conta" },
+      {
+        name: "description",
+        content:
+          "Acesse sua conta WiFome ou cadastre-se como cliente, estabelecimento ou entregador. Peça, gerencie pedidos ou faça entregas em minutos.",
+      },
+      { property: "og:title", content: "Entrar no WiFome — Acesse sua conta" },
+      {
+        property: "og:description",
+        content:
+          "Faça login ou crie sua conta WiFome para pedir comida, gerenciar seu restaurante ou trabalhar como entregador.",
+      },
+      { property: "og:url", content: "https://wifomedelivery.lovable.app/auth" },
     ],
+    links: [{ rel: "canonical", href: "https://wifomedelivery.lovable.app/auth" }],
   }),
   component: AuthPage,
 });
@@ -177,7 +189,7 @@ function AuthPage() {
         <div className="mt-8 text-center">
           <IFomeLogo size="lg" showWord={false} className="mx-auto" />
           <h1 className="mt-4 text-2xl font-black tracking-tight text-foreground">
-            WiFome
+            Acesse sua conta WiFome
           </h1>
           <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1 text-xs font-medium text-foreground">
             <Icon className="h-3.5 w-3.5 text-primary" />

@@ -1,0 +1,9 @@
+# WiFome
+
+> Plataforma de delivery brasileira que conecta clientes, restaurantes e entregadores em tempo real, com pedidos, gestão e rastreamento ao vivo.
+
+WiFome é um app 3-em-1: clientes pedem comida dos restaurantes próximos, estabelecimentos gerenciam cardápio e pedidos, e entregadores aceitam corridas — tudo em uma única plataforma com rastreamento em tempo real.
+
+## Pages
+
+- [Início](/): Página principal do WiFome com categorias de comida, benefícios e download do app.
