@@ -238,12 +238,9 @@ function CategoriasRail() {
           {/* Scroll rail */}
           <div
             ref={railRef}
-            onMouseEnter={() => setPaused(true)}
-            onMouseLeave={() => setPaused(false)}
-            onTouchStart={() => setPaused(true)}
-            onTouchEnd={() => setPaused(false)}
             className="hide-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-4 pt-2 sm:gap-5"
           >
+
             {[...categorias, ...categorias].map((c, i) => (
               <Link
                 key={`${c.nome}-${i}`}
