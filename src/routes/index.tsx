@@ -564,10 +564,10 @@ function LandingPage() {
                 <Timer className="h-7 w-7" />
               </div>
               <div className="flex flex-col">
-                <span className="text-lg font-black text-white sm:text-xl lg:text-2xl">
+                <span className="text-balance text-lg font-black text-white sm:text-xl lg:text-2xl">
                   Receba no <span className="text-primary">D1</span>, o dia depois
                 </span>
-                <span className="text-sm font-medium text-white/75 sm:text-base">
+                <span className="text-balance text-sm font-medium text-white/75 sm:text-base">
                   Dinheiro na conta sem esperar dias úteis
                 </span>
               </div>
