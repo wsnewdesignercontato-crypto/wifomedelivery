@@ -279,11 +279,17 @@
 }
 /* Movimento contínuo: sem pausa no hover e sem parar por reduced-motion */
 
-/* ============= Text reveal automático ============= */
+/* ============= Cinema: text + word reveal ============= */
 @keyframes text-rise {
-  0%   { opacity: 0; transform: translateY(14px); filter: blur(6px); letter-spacing: 0.02em; }
+  0%   { opacity: 0; transform: translateY(28px) scale(0.96); filter: blur(10px); letter-spacing: 0.04em; }
+  55%  { opacity: 1; filter: blur(0.4px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); letter-spacing: normal; }
+}
+
+@keyframes word-rise {
+  0%   { opacity: 0; transform: translateY(60%) rotate(3deg); filter: blur(8px); }
   60%  { opacity: 1; filter: blur(0); }
-  100% { opacity: 1; transform: translateY(0); filter: blur(0); letter-spacing: normal; }
+  100% { opacity: 1; transform: translateY(0) rotate(0); filter: blur(0); }
 }
 
 @keyframes heading-shine {
@@ -291,12 +297,38 @@
   100% { background-position: 200% 0; }
 }
 
+@keyframes cinema-zoom {
+  0%   { opacity: 0; transform: scale(1.12); filter: blur(14px) brightness(0.7); }
+  60%  { opacity: 1; filter: blur(0) brightness(1); }
+  100% { opacity: 1; transform: scale(1); filter: blur(0) brightness(1); }
+}
+
 .text-reveal {
   opacity: 0;
   will-change: transform, opacity, filter;
 }
 .text-reveal.is-visible {
-  animation: text-rise 0.85s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  animation: text-rise 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* Split por palavras: aplicado pelo hook em h1/h2 */
+.word-split { display: inline-block; overflow: hidden; padding-bottom: 0.08em; }
+.word-split .word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(80%);
+  will-change: transform, opacity, filter;
+}
+.word-split.is-visible .word {
+  animation: word-rise 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--reveal-delay, 0ms) + (var(--word-index, 0) * 70ms));
+}
+
+/* Zoom cinematográfico: aplicado a mockups/imagens grandes via .reveal-zoom */
+.reveal-zoom { opacity: 0; will-change: transform, opacity, filter; }
+.reveal-zoom.is-visible {
+  animation: cinema-zoom 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   animation-delay: var(--reveal-delay, 0ms);
 }
 
@@ -304,23 +336,32 @@
   background-image: linear-gradient(
     100deg,
     currentColor 0%,
-    currentColor 42%,
-    color-mix(in oklab, currentColor 45%, #ff6b00) 50%,
-    currentColor 58%,
+    currentColor 40%,
+    color-mix(in oklab, currentColor 30%, #ff6b00) 50%,
+    currentColor 60%,
     currentColor 100%
   );
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: heading-shine 6s ease-in-out infinite;
+  animation: heading-shine 5s ease-in-out infinite;
 }
 
+/* Fallback: se algo ficar preso invisível, revela após 1.5s */
+@keyframes safety-show { to { opacity: 1; } }
+.text-reveal, .reveal, .word-split .word {
+  animation-fill-mode: forwards;
+}
+.text-reveal:not(.is-visible) { animation: safety-show 0.01s 2s forwards; }
+
 @media (prefers-reduced-motion: reduce) {
-  .text-reveal,
-  .text-reveal.is-visible { opacity: 1 !important; animation: none !important; transform: none !important; filter: none !important; }
+  .text-reveal, .text-reveal.is-visible,
+  .reveal-zoom, .reveal-zoom.is-visible,
+  .word-split .word { opacity: 1 !important; animation: none !important; transform: none !important; filter: none !important; }
   .heading-shine { animation: none; }
 }
+
 
 
 
