@@ -777,7 +777,7 @@ function LandingPage() {
 
       {/* ============= FOOTER (ORANGE) ============= */}
       <footer id="ajuda" className="relative overflow-hidden bg-primary text-primary-foreground">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 px-6 py-14 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 px-6 py-14 sm:grid-cols-3 lg:grid-cols-6">
           <div className="col-span-2 lg:col-span-2">
             <div className="flex justify-center">
               <IFomeLogo size="md" className="[&_span]:text-white" />
@@ -803,9 +803,9 @@ function LandingPage() {
           <FooterCol title="Links rápidos" items={["Início", "Como funciona", "Para estabelecimentos", "Para entregadores", "Ajuda"]} />
           <FooterCol title="Institucional" items={["Sobre nós", "Carreiras", "Blog", "Política de privacidade", "Termos de uso"]} />
 
-          <div className="col-span-2 flex flex-col items-center text-center sm:col-span-3 lg:col-span-1">
-            <h4 className="text-sm font-bold uppercase tracking-wider text-white">Em breve</h4>
-            <p className="mt-1 text-xs text-white/70">nos aplicativos</p>
+          <div className="col-span-2 flex flex-col items-center justify-center text-center sm:col-span-3 lg:col-span-2">
+            <p className="text-sm font-bold uppercase tracking-wider text-white">Em breve</p>
+            <p className="text-xs text-white/70">nos aplicativos</p>
             <div className="mt-4 flex flex-row flex-wrap items-center justify-center gap-2">
               <StoreBadge store="apple" dark />
               <StoreBadge store="google" dark />
