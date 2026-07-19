@@ -654,7 +654,7 @@ function LandingPage() {
               <div
                 key={titulo}
                 className="reveal group relative flex flex-col items-center overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-8 text-center transition-all duration-500 hover:-translate-y-1 hover:border-primary/50 hover:bg-white/[0.04] hover:shadow-[0_0_30px_-8px_rgba(255,107,0,0.25)]"
-                style={{ transitionDelay: `${i * 70}ms` }}
+                style={{ ["--reveal-delay" as never]: `${i * 120}ms` } as React.CSSProperties}
               >
                 {/* Glow neon no hover */}
                 <div
