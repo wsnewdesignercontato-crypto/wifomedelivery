@@ -525,6 +525,62 @@ function LandingPage() {
 
 
 
+      {/* ============= TAXA PREMIUM (DESTAQUE PARCEIROS) ============= */}
+      <section
+        id="estabelecimentos"
+        className="relative overflow-hidden bg-gradient-to-br from-[#0d0705] via-black to-[#0d0705] py-20 sm:py-28"
+      >
+        {/* Glow orbe laranja */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-32 top-1/2 h-[520px] w-[520px] -translate-y-1/2 rounded-full bg-primary/20 blur-[140px] animate-glow-pulse"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-32 bottom-0 h-[420px] w-[420px] rounded-full bg-primary/15 blur-[120px] animate-glow-pulse"
+          style={{ animationDelay: "2s" }}
+        />
+
+        <div className="relative mx-auto max-w-5xl px-6">
+          <div className="reveal mx-auto max-w-3xl rounded-[2.5rem] border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/[0.07] to-transparent p-8 text-center shadow-[0_0_60px_-20px_rgba(255,107,0,0.35)] backdrop-blur-sm sm:p-12 lg:p-16">
+            {/* badge */}
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/15 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-primary">
+              <Percent className="h-3.5 w-3.5" />
+              Para estabelecimentos
+            </span>
+
+            <h2 className="mt-6 text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
+              A melhor taxa do{" "}
+              <span className="bg-gradient-brand bg-clip-text text-transparent">Brasil</span>
+            </h2>
+
+            <p className="reveal mx-auto mt-5 max-w-xl text-lg font-medium leading-relaxed text-white/85 sm:text-xl" style={{ ["--reveal-delay" as never]: "120ms" } as React.CSSProperties}>
+              Receba no <span className="text-primary font-black">D1</span>, o dia depois, com a
+              melhor taxa do Brasil. Mais lucro no seu bolso, menos burocracia.
+            </p>
+
+            <div className="reveal mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row" style={{ ["--reveal-delay" as never]: "220ms" } as React.CSSProperties}>
+              <Link to="/auth" search={{ perfil: "estabelecimento" }}>
+                <Button
+                  size="lg"
+                  className="bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95"
+                >
+                  Cadastrar meu restaurante
+                  <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+
+            <div className="reveal mt-8 flex items-center justify-center gap-2 text-sm text-white/60" style={{ ["--reveal-delay" as never]: "320ms" } as React.CSSProperties}>
+              <Wallet className="h-4 w-4 text-primary" />
+              <span>Sem mensalidade · Sem surpresas · Saque automático</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+
       {/* ============= TRACKING (PREMIUM FLOATING) ============= */}
       <section className="relative overflow-hidden bg-gradient-to-b from-background via-[oklch(0.99_0.01_60)] to-background py-20 sm:py-28">
         <div
