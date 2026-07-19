@@ -687,8 +687,10 @@ function LandingPage() {
       <footer id="ajuda" className="relative overflow-hidden bg-primary text-primary-foreground">
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 px-6 py-14 sm:grid-cols-3 lg:grid-cols-5">
           <div className="col-span-2 lg:col-span-2">
-            <IFomeLogo size="md" className="[&_span]:text-white" />
-            <p className="mt-4 max-w-xs text-sm text-white/85">
+            <div className="flex justify-center">
+              <IFomeLogo size="md" className="[&_span]:text-white" />
+            </div>
+            <p className="mx-auto mt-4 max-w-xs text-center text-sm text-white/85">
               Mais que um app de delivery, uma experiência completa para você, restaurantes e
               entregadores.
             </p>
