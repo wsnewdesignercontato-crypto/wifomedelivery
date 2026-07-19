@@ -18,11 +18,22 @@ import {
   Music2,
   Percent,
   Wallet,
+  ChevronDown,
+  User,
 } from "lucide-react";
 import { IFomeLogo } from "@/components/ifome-logo";
 import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+
 import heroFood from "@/assets/hero-food.jpg";
 import phoneApp from "@/assets/phone-app.png.asset.json";
 import trackingPhones from "@/assets/tracking-phones.png";
@@ -297,19 +308,61 @@ function LandingPage() {
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link to="/auth" search={{ perfil: "cliente" }}>
-              <Button
-                variant="outline"
-                className="hidden border-white/30 bg-white/5 text-white hover:bg-white/10 hover:text-white sm:inline-flex"
-              >
-                Entrar
-              </Button>
-            </Link>
-            <Link to="/auth" search={{ perfil: "cliente" }}>
-              <Button className="bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95">
-                Cadastrar
-              </Button>
-            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="hidden border-white/30 bg-white/5 text-white hover:bg-white/10 hover:text-white sm:inline-flex"
+                >
+                  Entrar <ChevronDown className="ml-1 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Entrar como</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/auth" search={{ perfil: "cliente" }}>
+                    <User className="mr-2 h-4 w-4" /> Cliente
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/auth" search={{ perfil: "estabelecimento" }}>
+                    <Store className="mr-2 h-4 w-4" /> Estabelecimento
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/auth" search={{ perfil: "entregador" }}>
+                    <Bike className="mr-2 h-4 w-4" /> Entregador
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95">
+                  Cadastrar <ChevronDown className="ml-1 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Criar conta como</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/auth" search={{ perfil: "cliente" }}>
+                    <User className="mr-2 h-4 w-4" /> Cliente
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/auth" search={{ perfil: "estabelecimento" }}>
+                    <Store className="mr-2 h-4 w-4" /> Estabelecimento
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/auth" search={{ perfil: "entregador" }}>
+                    <Bike className="mr-2 h-4 w-4" /> Entregador
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
