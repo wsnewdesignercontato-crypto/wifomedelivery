@@ -38,6 +38,29 @@ export const Route = createFileRoute("/")({
         content:
           "Peça comida dos seus restaurantes favoritos, acompanhe a entrega ao vivo e trabalhe como parceiro WiFome. Cliente, estabelecimento e entregador em um único app.",
       },
+      { property: "og:title", content: "WiFome — Delivery em tempo real" },
+      {
+        property: "og:description",
+        content:
+          "Peça comida dos restaurantes próximos, acompanhe a entrega ao vivo e ganhe dinheiro entregando com o WiFome.",
+      },
+      { property: "og:url", content: "https://wifomedelivery.lovable.app/" },
+    ],
+    links: [{ rel: "canonical", href: "https://wifomedelivery.lovable.app/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Service",
+          serviceType: "Food delivery",
+          provider: { "@type": "Organization", name: "WiFome" },
+          areaServed: { "@type": "Country", name: "Brasil" },
+          name: "WiFome — Delivery de comida em tempo real",
+          description:
+            "Aplicativo de delivery que conecta clientes, restaurantes e entregadores com rastreamento em tempo real.",
+        }),
+      },
     ],
   }),
   component: LandingPage,
@@ -214,7 +237,7 @@ function CategoriasRail() {
                   />
                   <img
                     src={c.img}
-                    alt={c.nome}
+                    alt={`Categoria de ${c.nome}`}
                     loading="lazy"
                     width={512}
                     height={512}

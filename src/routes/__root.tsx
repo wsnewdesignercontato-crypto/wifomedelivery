@@ -91,6 +91,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "WiFome é a plataforma de delivery que conecta clientes, restaurantes e entregadores em tempo real. Peça sua comida favorita e acompanhe cada etapa.",
       },
       { name: "theme-color", content: "#FF6B00" },
+      { property: "og:site_name", content: "WiFome" },
       { property: "og:title", content: "WiFome — Delivery em tempo real" },
       {
         property: "og:description",
@@ -108,6 +109,29 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "WiFome",
+          url: "https://wifomedelivery.lovable.app",
+          logo: `https://wifomedelivery.lovable.app${logoAsset.url}`,
+          description:
+            "Plataforma de delivery que conecta clientes, restaurantes e entregadores em tempo real.",
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "WiFome",
+          url: "https://wifomedelivery.lovable.app",
+        }),
       },
     ],
   }),
