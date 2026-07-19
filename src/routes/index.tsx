@@ -337,7 +337,7 @@ function LandingPage() {
         <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-6 pb-20 pt-16 sm:pb-28 lg:grid-cols-2 lg:pb-32 lg:pt-24">
           {/* Copy */}
           <div className="max-w-xl">
-            <h1 className="text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+            <h1 className="reveal text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
               Sua fome
               <br />
               tem{" "}
@@ -347,12 +347,12 @@ function LandingPage() {
               <br />
               certo.
             </h1>
-            <p className="mt-6 max-w-md text-base text-white/70 sm:text-lg">
+            <p className="reveal mt-6 max-w-md text-base text-white/70 sm:text-lg" style={{ ["--reveal-delay" as never]: "120ms" } as React.CSSProperties}>
               Peça em minutos dos melhores restaurantes da sua região, acompanhe a entrega
               no mapa e receba tudo quentinho na sua porta.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="reveal mt-8 flex flex-col gap-3 sm:flex-row" style={{ ["--reveal-delay" as never]: "220ms" } as React.CSSProperties}>
               <Link to="/auth" search={{ perfil: "cliente" }}>
                 <Button
                   size="lg"
@@ -379,8 +379,12 @@ function LandingPage() {
                 { Icon: Timer, label: "Entrega em minutos" },
                 { Icon: MapPin, label: "Mapa ao vivo" },
                 { Icon: ShieldCheck, label: "Pagamento seguro" },
-              ].map(({ Icon, label }) => (
-                <div key={label} className="flex flex-col items-center gap-2 text-center">
+              ].map(({ Icon, label }, i) => (
+                <div
+                  key={label}
+                  className="reveal flex flex-col items-center gap-2 text-center"
+                  style={{ ["--reveal-delay" as never]: `${320 + i * 100}ms` } as React.CSSProperties}
+                >
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 text-primary ring-1 ring-primary/40">
                     <Icon className="h-4.5 w-4.5" />
                   </div>
@@ -391,7 +395,7 @@ function LandingPage() {
           </div>
 
           {/* Phone mockup */}
-          <div className="relative flex justify-center lg:justify-end">
+          <div className="reveal relative flex justify-center lg:justify-end" style={{ ["--reveal-delay" as never]: "180ms" } as React.CSSProperties}>
             <div
               className="animate-glow-pulse pointer-events-none absolute inset-0 mx-auto h-full w-[80%] rounded-full opacity-60 blur-3xl"
               style={{ background: "radial-gradient(closest-side, #FF6B00, transparent)" }}
@@ -422,7 +426,7 @@ function LandingPage() {
           className="pointer-events-none absolute left-1/2 top-0 h-[520px] w-[880px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
         />
         <div className="relative mx-auto max-w-7xl px-6">
-          <div className="mx-auto max-w-2xl text-center">
+          <div className="reveal mx-auto max-w-2xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-1.5 text-[11px] font-black uppercase tracking-[0.22em] text-primary-foreground shadow-[0_10px_24px_-8px_oklch(0.72_0.19_45/0.55)]">
               Uma plataforma, três experiências
             </span>
@@ -442,7 +446,8 @@ function LandingPage() {
                 key={key}
                 to={to}
                 search={search}
-                className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-border/60 bg-card p-7 shadow-[0_20px_50px_-20px_oklch(0_0_0/0.15)] transition-all duration-500 hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_40px_80px_-24px_oklch(0.72_0.19_45/0.35)] sm:p-8"
+                className="reveal group relative flex flex-col overflow-hidden rounded-[2rem] border border-border/60 bg-card p-7 shadow-[0_20px_50px_-20px_oklch(0_0_0/0.15)] transition-all duration-500 hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_40px_80px_-24px_oklch(0.72_0.19_45/0.35)] sm:p-8"
+                style={{ ["--reveal-delay" as never]: `${i * 140}ms` } as React.CSSProperties}
               >
                 {/* corner index */}
                 <span className="pointer-events-none absolute right-6 top-6 z-10 font-mono text-xs tabular-nums text-muted-foreground/50">
@@ -525,7 +530,7 @@ function LandingPage() {
           className="pointer-events-none absolute left-1/4 top-1/2 h-[520px] w-[520px] -translate-y-1/2 rounded-full bg-primary/12 blur-3xl"
         />
         <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-6 lg:grid-cols-2">
-          <div className="relative order-2 flex justify-center lg:order-1">
+          <div className="reveal relative order-2 flex justify-center lg:order-1">
             {/* radial wash */}
             <div
               aria-hidden
@@ -556,17 +561,21 @@ function LandingPage() {
           </div>
 
           <div className="order-1 lg:order-2 lg:pl-8">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+            <p className="reveal text-xs font-bold uppercase tracking-[0.2em] text-primary">
               Acompanhe tudo
             </p>
-            <h2 className="mt-3 text-4xl font-black leading-tight tracking-tight text-foreground sm:text-5xl">
+            <h2 className="reveal mt-3 text-4xl font-black leading-tight tracking-tight text-foreground sm:text-5xl" style={{ ["--reveal-delay" as never]: "100ms" } as React.CSSProperties}>
               Do pedido até
               <br />a sua porta, em{" "}
               <span className="text-primary">tempo real.</span>
             </h2>
             <ul className="mt-8 space-y-4">
-              {trackingFeatures.map((f) => (
-                <li key={f} className="flex items-start gap-3">
+              {trackingFeatures.map((f, i) => (
+                <li
+                  key={f}
+                  className="reveal flex items-start gap-3"
+                  style={{ ["--reveal-delay" as never]: `${200 + i * 90}ms` } as React.CSSProperties}
+                >
                   <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     <Check className="h-3.5 w-3.5" strokeWidth={3} />
                   </span>
@@ -645,7 +654,7 @@ function LandingPage() {
               <div
                 key={titulo}
                 className="reveal group relative flex flex-col items-center overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-8 text-center transition-all duration-500 hover:-translate-y-1 hover:border-primary/50 hover:bg-white/[0.04] hover:shadow-[0_0_30px_-8px_rgba(255,107,0,0.25)]"
-                style={{ transitionDelay: `${i * 70}ms` }}
+                style={{ ["--reveal-delay" as never]: `${i * 120}ms` } as React.CSSProperties}
               >
                 {/* Glow neon no hover */}
                 <div
