@@ -238,3 +238,9 @@
   border: 2px solid currentColor;
   animation: pulse-ring 1.6s ease-out infinite;
 }
+
+@utility hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar { display: none; }
+}
