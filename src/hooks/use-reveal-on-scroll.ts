@@ -23,10 +23,12 @@ export function useRevealOnScroll(selector = ".reveal") {
       );
       bigTitles.forEach((el) => {
         el.dataset.revealBound = "1";
-        el.classList.add("word-split", "heading-shine");
-        // Preserva children não-texto: só faz split se for texto puro
-        const raw = el.textContent ?? "";
+        // Só aplica word-split (que esconde palavras até animar) em títulos
+        // de texto puro. Títulos com children (spans coloridos) usam reveal simples
+        // para não ficarem invisíveis.
         if (el.children.length === 0) {
+          el.classList.add("word-split");
+          const raw = el.textContent ?? "";
           const words = raw.split(/(\s+)/);
           el.textContent = "";
           let i = 0;
@@ -41,6 +43,8 @@ export function useRevealOnScroll(selector = ".reveal") {
               el.appendChild(span);
             }
           });
+        } else {
+          el.classList.add("text-reveal");
         }
       });
 
