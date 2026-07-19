@@ -190,28 +190,19 @@ function CategoriasRail() {
 
       <div className="relative mx-auto max-w-7xl px-6">
         {/* Header */}
-        <div className="reveal mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-              Categorias em alta
-            </span>
-            <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-              O que vai chegar <span className="text-primary">hoje?</span>
-            </h2>
-            <p className="mt-3 max-w-lg text-sm text-muted-foreground sm:text-base">
-              Do salgado ao doce, do mercado à farmácia — tudo no mesmo app.
-            </p>
-          </div>
-          <Link
-            to="/auth"
-            search={{ perfil: "cliente" }}
-            className="group inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card px-5 py-2.5 text-sm font-bold text-foreground shadow-sm transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-brand"
-          >
-            Ver todas
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </Link>
+        <div className="reveal mb-10">
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+            Categorias em alta
+          </span>
+          <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+            O que vai chegar <span className="text-primary">hoje?</span>
+          </h2>
+          <p className="mt-3 max-w-lg text-sm text-muted-foreground sm:text-base">
+            Do salgado ao doce, do mercado à farmácia — tudo no mesmo app.
+          </p>
         </div>
+
 
         {/* Rail wrapper (arrows + scroll area) */}
         <div className="relative">
