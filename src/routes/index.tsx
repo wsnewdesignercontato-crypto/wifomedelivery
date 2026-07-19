@@ -712,14 +712,14 @@ function StoreBadge({ store }: { store: "apple" | "google"; dark?: boolean }) {
     <a
       href="#"
       aria-label={isApple ? "Baixar na App Store" : "Baixar no Google Play"}
-      className="group inline-flex h-14 items-center gap-3 rounded-2xl bg-black px-5 text-white shadow-[0_10px_24px_-8px_rgba(0,0,0,0.35)] ring-1 ring-white/10 transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_30px_-10px_rgba(0,0,0,0.45)]"
+      className="group inline-flex h-10 items-center gap-2 rounded-xl bg-black px-3 text-white shadow-[0_6px_16px_-6px_rgba(0,0,0,0.35)] ring-1 ring-white/10 transition-transform duration-300 hover:-translate-y-0.5"
     >
       {isApple ? (
-        <svg viewBox="0 0 24 24" className="h-7 w-7 shrink-0 fill-white" aria-hidden>
+        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 fill-white" aria-hidden>
           <path d="M16.365 1.43c0 1.14-.45 2.24-1.19 3.03-.79.85-2.08 1.5-3.14 1.42-.13-1.11.44-2.28 1.15-3.02.79-.83 2.13-1.44 3.18-1.43zM20.5 17.05c-.55 1.27-.82 1.84-1.53 2.96-1 1.56-2.41 3.51-4.16 3.53-1.56.01-1.96-1.01-4.07-1-2.12.01-2.56 1.02-4.11 1.01-1.75-.02-3.09-1.78-4.09-3.34C-.28 15.83-.66 10.7 1.02 8.02 2.2 6.12 4.07 5 5.83 5c1.79 0 2.92 1.03 4.4 1.03 1.44 0 2.32-1.03 4.39-1.03 1.57 0 3.23.86 4.42 2.34-3.88 2.13-3.25 7.68 1.46 9.71z"/>
         </svg>
       ) : (
-        <svg viewBox="0 0 24 24" className="h-7 w-7 shrink-0" aria-hidden>
+        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" aria-hidden>
           <path d="M3.6 1.7C3.23 2.09 3 2.7 3 3.5v17c0 .8.23 1.41.6 1.8L13.3 12.6 3.6 1.7z" fill="#00D2FF"/>
           <path d="M17.1 8.8 13.3 12.6l3.8 3.8 4.6-2.6c1.3-.74 1.3-2.34 0-3.08L17.1 8.8z" fill="#FFCE00"/>
           <path d="M3.6 22.3c.42.44 1.11.5 1.9.05l12-6.85-3.8-3.8-10.1 10.6z" fill="#FF3D48"/>
@@ -727,14 +727,15 @@ function StoreBadge({ store }: { store: "apple" | "google"; dark?: boolean }) {
         </svg>
       )}
       <span className="flex flex-col items-start leading-none">
-        <span className="text-[10px] font-medium tracking-wide text-white/90">
+        <span className="text-[8px] font-medium tracking-wide text-white/90">
           {isApple ? "Download on the" : "GET IT ON"}
         </span>
-        <span className="mt-1 text-lg font-semibold leading-none tracking-tight">
+        <span className="mt-0.5 text-xs font-semibold leading-none tracking-tight">
           {isApple ? "App Store" : "Google Play"}
         </span>
       </span>
     </a>
   );
 }
+
 
