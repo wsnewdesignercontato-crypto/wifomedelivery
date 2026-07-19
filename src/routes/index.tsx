@@ -337,7 +337,7 @@ function LandingPage() {
         <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-6 pb-20 pt-16 sm:pb-28 lg:grid-cols-2 lg:pb-32 lg:pt-24">
           {/* Copy */}
           <div className="max-w-xl">
-            <h1 className="text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+            <h1 className="reveal text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
               Sua fome
               <br />
               tem{" "}
@@ -347,12 +347,12 @@ function LandingPage() {
               <br />
               certo.
             </h1>
-            <p className="mt-6 max-w-md text-base text-white/70 sm:text-lg">
+            <p className="reveal mt-6 max-w-md text-base text-white/70 sm:text-lg" style={{ ["--reveal-delay" as never]: "120ms" } as React.CSSProperties}>
               Peça em minutos dos melhores restaurantes da sua região, acompanhe a entrega
               no mapa e receba tudo quentinho na sua porta.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="reveal mt-8 flex flex-col gap-3 sm:flex-row" style={{ ["--reveal-delay" as never]: "220ms" } as React.CSSProperties}>
               <Link to="/auth" search={{ perfil: "cliente" }}>
                 <Button
                   size="lg"
@@ -379,8 +379,12 @@ function LandingPage() {
                 { Icon: Timer, label: "Entrega em minutos" },
                 { Icon: MapPin, label: "Mapa ao vivo" },
                 { Icon: ShieldCheck, label: "Pagamento seguro" },
-              ].map(({ Icon, label }) => (
-                <div key={label} className="flex flex-col items-center gap-2 text-center">
+              ].map(({ Icon, label }, i) => (
+                <div
+                  key={label}
+                  className="reveal flex flex-col items-center gap-2 text-center"
+                  style={{ ["--reveal-delay" as never]: `${320 + i * 100}ms` } as React.CSSProperties}
+                >
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 text-primary ring-1 ring-primary/40">
                     <Icon className="h-4.5 w-4.5" />
                   </div>
@@ -391,7 +395,7 @@ function LandingPage() {
           </div>
 
           {/* Phone mockup */}
-          <div className="relative flex justify-center lg:justify-end">
+          <div className="reveal relative flex justify-center lg:justify-end" style={{ ["--reveal-delay" as never]: "180ms" } as React.CSSProperties}>
             <div
               className="animate-glow-pulse pointer-events-none absolute inset-0 mx-auto h-full w-[80%] rounded-full opacity-60 blur-3xl"
               style={{ background: "radial-gradient(closest-side, #FF6B00, transparent)" }}
