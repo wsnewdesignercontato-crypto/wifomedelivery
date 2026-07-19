@@ -247,15 +247,19 @@ function CategoriasRail() {
           {/* Scroll rail */}
           <div
             ref={railRef}
-            className="hide-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 pb-4 pt-2 sm:gap-5"
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+            onTouchStart={() => setPaused(true)}
+            onTouchEnd={() => setPaused(false)}
+            className="hide-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 pb-4 pt-2 sm:gap-5"
           >
-            {categorias.map((c, i) => (
+            {[...categorias, ...categorias].map((c, i) => (
               <Link
-                key={c.nome}
+                key={`${c.nome}-${i}`}
                 to="/auth"
                 search={{ perfil: "cliente" }}
-                style={{ ["--reveal-delay" as string]: `${i * 55}ms` }}
-                className="reveal group relative flex w-[140px] shrink-0 snap-start flex-col items-center justify-between overflow-hidden rounded-[1.75rem] border border-border/50 bg-gradient-to-b from-card to-card/70 p-4 shadow-[0_1px_0_0_hsl(0_0%_100%/0.9)_inset,0_10px_30px_-16px_oklch(0_0_0/0.18)] backdrop-blur-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:border-primary/50 sm:w-[152px] lg:w-[164px]"
+                style={{ ["--reveal-delay" as string]: `${(i % categorias.length) * 55}ms` }}
+                className="reveal group relative flex w-[140px] shrink-0 flex-col items-center justify-between overflow-hidden rounded-[1.75rem] border border-border/50 bg-gradient-to-b from-card to-card/70 p-4 shadow-[0_1px_0_0_hsl(0_0%_100%/0.9)_inset,0_10px_30px_-16px_oklch(0_0_0/0.18)] backdrop-blur-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:border-primary/50 sm:w-[152px] lg:w-[164px]"
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = `0 1px 0 0 hsl(0 0% 100% / 0.9) inset, 0 24px 48px -22px ${c.glow}`;
                 }}
