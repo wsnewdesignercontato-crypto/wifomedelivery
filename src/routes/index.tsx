@@ -565,22 +565,50 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* ============= DARK BENEFITS BAR (preto neutro, minimalista) ============= */}
+      {/* ============= DARK BENEFITS BAR (preto + neon laranja) ============= */}
       <section className="relative overflow-hidden bg-black py-20 sm:py-28">
-        {/* Sutil glow laranja (bem discreto) */}
+        {/* Grade sutil de neon */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -left-40 top-1/3 h-[360px] w-[360px] rounded-full bg-primary/15 blur-[160px]"
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,107,0,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,107,0,0.15) 1px, transparent 1px)",
+            backgroundSize: "64px 64px",
+          }}
+        />
+
+        {/* Orbes de luz neon pulsantes */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-32 top-0 h-[420px] w-[420px] rounded-full bg-primary/25 blur-[140px] animate-glow-pulse"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-40 bottom-0 h-[380px] w-[380px] rounded-full bg-primary/10 blur-[160px]"
+          className="pointer-events-none absolute -right-40 bottom-0 h-[460px] w-[460px] rounded-full bg-primary/20 blur-[160px] animate-glow-pulse"
+          style={{ animationDelay: "3s" }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[300px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-[120px] animate-glow-pulse"
+          style={{ animationDelay: "1.5s" }}
+        />
+
+        {/* Barra de neon horizontal */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-0 right-0 top-1/2 h-px -translate-y-1/2"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent 0%, rgba(255,107,0,0.35) 20%, rgba(255,107,0,0.55) 50%, rgba(255,107,0,0.35) 80%, transparent 100%)",
+            boxShadow: "0 0 40px 2px rgba(255,107,0,0.25), 0 0 80px 8px rgba(255,107,0,0.12)",
+          }}
         />
 
         <div className="relative mx-auto max-w-5xl px-6">
           <div className="reveal mb-12 text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/90">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
               Por que o WiFome
             </span>
             <h2 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
@@ -588,30 +616,30 @@ function LandingPage() {
             </h2>
           </div>
 
-          {/* 2 colunas — cards lado a lado */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+          {/* 2 colunas — cards lado a lado (sempre) */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-5">
             {beneficios.map(({ Icon, titulo, texto }, i) => (
               <div
                 key={titulo}
-                className="reveal group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6 transition-all duration-500 hover:-translate-y-1 hover:border-primary/40 hover:bg-white/[0.035]"
+                className="reveal group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-6 transition-all duration-500 hover:-translate-y-1 hover:border-primary/50 hover:bg-white/[0.04] hover:shadow-[0_0_30px_-8px_rgba(255,107,0,0.25)]"
                 style={{ transitionDelay: `${i * 70}ms` }}
               >
-                {/* Glow discreto no hover */}
+                {/* Glow neon no hover */}
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute -top-20 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-primary/0 blur-3xl transition-all duration-500 group-hover:bg-primary/20"
+                  className="pointer-events-none absolute -top-20 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-primary/0 blur-3xl transition-all duration-500 group-hover:bg-primary/30"
                 />
 
-                <div className="relative flex items-start gap-5">
-                  {/* Ícone minimalista: outline em círculo */}
-                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-primary/5 text-primary transition-all duration-500 group-hover:border-primary group-hover:bg-primary/10">
-                    <Icon className="h-5 w-5" strokeWidth={1.5} />
+                <div className="relative flex items-start gap-3 sm:gap-5">
+                  {/* Ícone minimalista: outline em círculo com neon */}
+                  <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-primary/5 text-primary transition-all duration-500 group-hover:border-primary group-hover:bg-primary/15 group-hover:shadow-[0_0_16px_-2px_rgba(255,107,0,0.45)] sm:h-12 sm:w-12">
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.5} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-base font-semibold tracking-tight text-white sm:text-lg">
+                    <h3 className="text-sm font-semibold tracking-tight text-white sm:text-lg">
                       {titulo}
                     </h3>
-                    <p className="mt-1.5 text-sm leading-relaxed text-white/55">{texto}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-white/55 sm:text-sm">{texto}</p>
                   </div>
                 </div>
               </div>
