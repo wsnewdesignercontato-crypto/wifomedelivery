@@ -17,6 +17,7 @@ import {
   Music2,
 } from "lucide-react";
 import { IFomeLogo } from "@/components/ifome-logo";
+import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import heroFood from "@/assets/hero-food.jpg";
