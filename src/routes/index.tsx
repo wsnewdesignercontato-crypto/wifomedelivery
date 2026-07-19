@@ -442,7 +442,7 @@ function LandingPage() {
             </p>
           </div>
 
-          <div className="mt-14 grid gap-6 md:grid-cols-3 lg:gap-7">
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-7">
             {perfis.map(({ key, tag, highlight, descricao, Icon, mockup, to, search }, i) => (
               <Link
                 key={key}
@@ -496,7 +496,7 @@ function LandingPage() {
                   </div>
                 </div>
 
-                <h3 className="text-2xl font-black leading-tight tracking-tight text-foreground">
+                <h3 className="text-balance text-2xl font-black leading-tight tracking-tight text-foreground">
                   {tag}{" "}
                   <span className="text-primary">{highlight}</span>
                 </h3>
@@ -506,7 +506,7 @@ function LandingPage() {
 
                 {/* CTA */}
                 <div className="mt-6 flex justify-center">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-[0_10px_24px_-8px_oklch(0.72_0.19_45/0.55)] transition-transform duration-300 group-hover:translate-x-1">
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-[0_10px_24px_-8px_oklch(0.72_0.19_45/0.55)] transition-transform duration-300 group-hover:translate-x-1">
                     Começar agora
                     <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                   </span>
