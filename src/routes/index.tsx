@@ -549,17 +549,42 @@ function LandingPage() {
               Para estabelecimentos
             </span>
 
-            <h2 className="mt-6 text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
+            {/* Headline: melhor taxa do Brasil em destaque máximo */}
+            <h2 className="mt-7 text-[2.5rem] font-black leading-[0.95] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
               A melhor taxa do{" "}
               <span className="bg-gradient-brand bg-clip-text text-transparent">Brasil</span>
             </h2>
 
-            <p className="reveal mx-auto mt-5 max-w-xl text-lg font-medium leading-relaxed text-white/85 sm:text-xl" style={{ ["--reveal-delay" as never]: "120ms" } as React.CSSProperties}>
-              Receba no <span className="text-primary font-black">D1</span>, o dia depois, com a
-              melhor taxa do Brasil. Mais lucro no seu bolso, menos burocracia.
+            {/* D1 highlight card — legível em mobile */}
+            <div
+              className="reveal mx-auto mt-8 flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/15 to-primary/5 px-6 py-5 text-center shadow-[0_8px_30px_-12px_rgba(255,107,0,0.3)] sm:flex-row sm:justify-center sm:text-left"
+              style={{ ["--reveal-delay" as never]: "120ms" } as React.CSSProperties}
+            >
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary ring-1 ring-primary/30">
+                <Timer className="h-7 w-7" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-balance text-lg font-black text-white sm:text-xl lg:text-2xl">
+                  Receba no <span className="text-primary">D1</span>, o dia depois
+                </span>
+                <span className="text-balance text-sm font-medium text-white/75 sm:text-base">
+                  Dinheiro na conta sem esperar dias úteis
+                </span>
+              </div>
+            </div>
+
+            <p
+              className="reveal mx-auto mt-6 max-w-xl text-base font-medium leading-relaxed text-white/80 sm:text-lg"
+              style={{ ["--reveal-delay" as never]: "220ms" } as React.CSSProperties}
+            >
+              Taxa justa para o seu restaurante crescer. Mais lucro no seu bolso, menos
+              burocracia no dia a dia.
             </p>
 
-            <div className="reveal mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row" style={{ ["--reveal-delay" as never]: "220ms" } as React.CSSProperties}>
+            <div
+              className="reveal mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row"
+              style={{ ["--reveal-delay" as never]: "320ms" } as React.CSSProperties}
+            >
               <Link to="/auth" search={{ perfil: "estabelecimento" }}>
                 <Button
                   size="lg"
@@ -571,9 +596,18 @@ function LandingPage() {
               </Link>
             </div>
 
-            <div className="reveal mt-8 flex items-center justify-center gap-2 text-sm text-white/60" style={{ ["--reveal-delay" as never]: "320ms" } as React.CSSProperties}>
-              <Wallet className="h-4 w-4 text-primary" />
-              <span>Sem mensalidade · Sem surpresas · Saque automático</span>
+            <div
+              className="reveal mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-white/60"
+              style={{ ["--reveal-delay" as never]: "420ms" } as React.CSSProperties}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <Wallet className="h-4 w-4 text-primary" />
+                Sem mensalidade
+              </span>
+              <span className="hidden h-4 w-px bg-white/20 sm:inline" />
+              <span>Sem surpresas</span>
+              <span className="hidden h-4 w-px bg-white/20 sm:inline" />
+              <span>Saque automático</span>
             </div>
           </div>
         </div>
