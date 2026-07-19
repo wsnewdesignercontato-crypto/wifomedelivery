@@ -786,7 +786,7 @@ function LandingPage() {
               Mais que um app de delivery, uma experiência completa para você, restaurantes e
               entregadores.
             </p>
-            <div className="mt-6 flex gap-2">
+            <div className="mt-6 flex justify-center gap-2">
               {[Instagram, Facebook, Twitter, Music2].map((Icon, i) => (
                 <a
                   key={i}
