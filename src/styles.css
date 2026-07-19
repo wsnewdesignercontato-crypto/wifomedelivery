@@ -267,17 +267,16 @@
 
 /* ============= Marquee (auto-scroll vitrine) ============= */
 @keyframes marquee-x {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  0%   { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
 }
 
 .marquee-viewport { width: 100%; }
 .marquee-track {
-  animation: marquee-x 22s linear infinite;
+  animation: marquee-x 28s linear infinite !important;
   will-change: transform;
+  transform: translate3d(0, 0, 0);
 }
-.marquee-track:hover { animation-play-state: paused; }
-@media (prefers-reduced-motion: reduce) {
-  .marquee-track { animation: none; }
-}
+/* Movimento contínuo: sem pausa no hover e sem parar por reduced-motion */
+
 
