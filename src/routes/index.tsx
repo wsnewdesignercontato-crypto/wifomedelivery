@@ -426,7 +426,7 @@ function LandingPage() {
           className="pointer-events-none absolute left-1/2 top-0 h-[520px] w-[880px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
         />
         <div className="relative mx-auto max-w-7xl px-6">
-          <div className="mx-auto max-w-2xl text-center">
+          <div className="reveal mx-auto max-w-2xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-1.5 text-[11px] font-black uppercase tracking-[0.22em] text-primary-foreground shadow-[0_10px_24px_-8px_oklch(0.72_0.19_45/0.55)]">
               Uma plataforma, três experiências
             </span>
@@ -446,7 +446,8 @@ function LandingPage() {
                 key={key}
                 to={to}
                 search={search}
-                className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-border/60 bg-card p-7 shadow-[0_20px_50px_-20px_oklch(0_0_0/0.15)] transition-all duration-500 hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_40px_80px_-24px_oklch(0.72_0.19_45/0.35)] sm:p-8"
+                className="reveal group relative flex flex-col overflow-hidden rounded-[2rem] border border-border/60 bg-card p-7 shadow-[0_20px_50px_-20px_oklch(0_0_0/0.15)] transition-all duration-500 hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_40px_80px_-24px_oklch(0.72_0.19_45/0.35)] sm:p-8"
+                style={{ ["--reveal-delay" as never]: `${i * 140}ms` } as React.CSSProperties}
               >
                 {/* corner index */}
                 <span className="pointer-events-none absolute right-6 top-6 z-10 font-mono text-xs tabular-nums text-muted-foreground/50">
