@@ -17,6 +17,7 @@ import {
   Music2,
 } from "lucide-react";
 import { IFomeLogo } from "@/components/ifome-logo";
+import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import heroFood from "@/assets/hero-food.jpg";
@@ -117,8 +118,10 @@ const beneficios = [
 ];
 
 function LandingPage() {
+  useRevealOnScroll();
   return (
     <div className="min-h-screen bg-background">
+
       {/* ============= HEADER ============= */}
       <header
         id="inicio"
@@ -258,10 +261,10 @@ function LandingPage() {
           className="pointer-events-none absolute -top-24 left-1/4 h-64 w-64 rounded-full bg-primary/10 blur-3xl"
         />
         <div className="relative mx-auto max-w-7xl px-6">
-          <div className="mb-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="reveal mb-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
                 Categorias em alta
               </span>
               <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
@@ -275,7 +278,7 @@ function LandingPage() {
             <Link
               to="/auth"
               search={{ perfil: "cliente" }}
-              className="group inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card px-5 py-2.5 text-sm font-bold text-foreground shadow-sm transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground"
+              className="group inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card px-5 py-2.5 text-sm font-bold text-foreground shadow-sm transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-brand"
             >
               Ver todas
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -288,7 +291,8 @@ function LandingPage() {
                 key={c.nome}
                 to="/auth"
                 search={{ perfil: "cliente" }}
-                className="group relative flex aspect-[3/4] flex-col items-center justify-between overflow-hidden rounded-[1.5rem] border border-border/50 bg-gradient-to-b from-card to-card/60 p-4 shadow-[0_1px_0_0_hsl(0_0%_100%/0.8)_inset,0_10px_28px_-14px_oklch(0_0_0/0.15)] backdrop-blur-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:border-primary/50"
+                style={{ ["--reveal-delay" as string]: `${i * 55}ms` }}
+                className="reveal group relative flex aspect-[3/4] flex-col items-center justify-between overflow-hidden rounded-[1.5rem] border border-border/50 bg-gradient-to-b from-card to-card/60 p-4 shadow-[0_1px_0_0_hsl(0_0%_100%/0.8)_inset,0_10px_28px_-14px_oklch(0_0_0/0.15)] backdrop-blur-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:border-primary/50"
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = `0 1px 0 0 hsl(0 0% 100% / 0.8) inset, 0 24px 44px -20px ${c.glow}`;
                 }}
@@ -311,20 +315,23 @@ function LandingPage() {
                 </span>
 
                 {/* icon orb */}
-                <div className="relative mt-2">
+                <div className="float-on-hover relative mt-2">
                   <div
                     aria-hidden
                     className="absolute inset-0 -m-3 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
                     style={{ background: c.glow }}
                   />
                   <div
-                    className="relative flex h-16 w-16 items-center justify-center rounded-[1.25rem] text-[2rem] transition-all duration-500 ease-out group-hover:scale-110 group-hover:-rotate-[8deg]"
+                    className="pulse-ring-on-hover relative flex h-16 w-16 items-center justify-center rounded-[1.25rem] text-[2rem] transition-all duration-500 ease-out group-hover:scale-110 group-hover:-rotate-[8deg]"
                     style={{
                       background: `linear-gradient(160deg, color-mix(in oklab, ${c.tint} 88%, white) 0%, ${c.tint} 100%)`,
                       boxShadow: `inset 0 1px 0 0 hsl(0 0% 100% / 0.9), inset 0 -6px 12px -6px ${c.glow}, 0 6px 16px -8px ${c.glow}`,
+                      color: c.glow,
                     }}
                   >
-                    <span className="drop-shadow-[0_2px_3px_rgba(0,0,0,0.12)]">{c.emoji}</span>
+                    <span className="drop-shadow-[0_2px_3px_rgba(0,0,0,0.12)] transition-transform duration-500 group-hover:scale-110">
+                      {c.emoji}
+                    </span>
                   </div>
                 </div>
 

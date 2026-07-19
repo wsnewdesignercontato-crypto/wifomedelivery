@@ -199,3 +199,42 @@
 @utility shadow-card {
   box-shadow: var(--shadow-card);
 }
+
+/* ============= Scroll reveal + micro-interactions ============= */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(18px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(0.85); opacity: 0.55; }
+  80%  { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.reveal {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.reveal.is-visible {
+  animation: reveal-up 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+.group:hover .float-on-hover {
+  animation: float-soft 2.4s ease-in-out infinite;
+}
+
+.group:hover .pulse-ring-on-hover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid currentColor;
+  animation: pulse-ring 1.6s ease-out infinite;
+}
