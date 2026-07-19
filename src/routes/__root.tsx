@@ -15,13 +15,14 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthSync } from "@/components/auth-sync";
 
+import { IFomeLogo } from "@/components/ifome-logo";
+import logoAsset from "@/assets/wifome-logo.png.asset.json";
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-brand shadow-brand">
-          <span className="text-3xl font-black text-primary-foreground">iF</span>
-        </div>
+        <IFomeLogo size="lg" showWord={false} className="mx-auto mb-6" />
         <h1 className="text-7xl font-black text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Página não encontrada</h2>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -83,14 +84,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "iFome — Peça em minutos, receba em casa" },
+      { title: "WiFome — Peça em minutos, receba em casa" },
       {
         name: "description",
         content:
-          "iFome é a plataforma de delivery que conecta clientes, restaurantes e entregadores em tempo real. Peça sua comida favorita e acompanhe cada etapa.",
+          "WiFome é a plataforma de delivery que conecta clientes, restaurantes e entregadores em tempo real. Peça sua comida favorita e acompanhe cada etapa.",
       },
       { name: "theme-color", content: "#FF6B00" },
-      { property: "og:title", content: "iFome — Delivery em tempo real" },
+      { property: "og:title", content: "WiFome — Delivery em tempo real" },
       {
         property: "og:description",
         content:
@@ -101,7 +102,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", type: "image/png", href: logoAsset.url },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {

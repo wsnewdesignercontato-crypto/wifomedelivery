@@ -22,8 +22,8 @@ export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Entrar no iFome" },
-      { name: "description", content: "Entre ou crie sua conta no iFome." },
+      { title: "Entrar no WiFome" },
+      { name: "description", content: "Entre ou crie sua conta no WiFome." },
     ],
   }),
   component: AuthPage,
@@ -177,7 +177,7 @@ function AuthPage() {
         <div className="mt-8 text-center">
           <IFomeLogo size="lg" showWord={false} className="mx-auto" />
           <h1 className="mt-4 text-2xl font-black tracking-tight text-foreground">
-            iFome
+            WiFome
           </h1>
           <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1 text-xs font-medium text-foreground">
             <Icon className="h-3.5 w-3.5 text-primary" />

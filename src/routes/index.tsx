@@ -17,11 +17,11 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "iFome — Delivery em tempo real" },
+      { title: "WiFome — Delivery em tempo real" },
       {
         name: "description",
         content:
-          "Peça comida dos seus restaurantes favoritos, acompanhe a entrega ao vivo e trabalhe como parceiro iFome. Cliente, estabelecimento e entregador em um único app.",
+          "Peça comida dos seus restaurantes favoritos, acompanhe a entrega ao vivo e trabalhe como parceiro WiFome. Cliente, estabelecimento e entregador em um único app.",
       },
     ],
   }),
@@ -185,7 +185,7 @@ function LandingPage() {
             Uma plataforma, três experiências
           </h2>
           <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground">
-            iFome conecta clientes, estabelecimentos e entregadores em tempo real. Escolha
+            WiFome conecta clientes, estabelecimentos e entregadores em tempo real. Escolha
             como quer usar.
           </p>
         </div>
@@ -252,7 +252,7 @@ function LandingPage() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 sm:flex-row">
           <IFomeLogo size="sm" />
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} iFome. Todos os direitos reservados.
+            © {new Date().getFullYear()} WiFome. Todos os direitos reservados.
           </p>
         </div>
       </footer>
