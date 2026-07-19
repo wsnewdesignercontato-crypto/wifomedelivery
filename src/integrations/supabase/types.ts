@@ -327,6 +327,13 @@ export type Database = {
             referencedRelation: "establishments"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "menu_categories_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       order_items: {
@@ -434,6 +441,13 @@ export type Database = {
             referencedRelation: "establishments"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "orders_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       products: {
@@ -494,6 +508,13 @@ export type Database = {
             columns: ["establishment_id"]
             isOneToOne: false
             referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
             referencedColumns: ["id"]
           },
           {
@@ -558,16 +579,89 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      establishments_public: {
+        Row: {
+          avaliacao: number | null
+          capa_url: string | null
+          categoria_id: string | null
+          cidade: string | null
+          created_at: string | null
+          descricao: string | null
+          endereco: string | null
+          estado: string | null
+          id: string | null
+          is_open: boolean | null
+          lat: number | null
+          lng: number | null
+          logo_url: string | null
+          nome: string | null
+          owner_id: string | null
+          pedido_minimo_cents: number | null
+          raio_entrega_km: number | null
+          status: Database["public"]["Enums"]["establishment_status"] | null
+          taxa_entrega_cents: number | null
+          tempo_medio_min: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          avaliacao?: number | null
+          capa_url?: string | null
+          categoria_id?: string | null
+          cidade?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: string | null
+          is_open?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          logo_url?: string | null
+          nome?: string | null
+          owner_id?: string | null
+          pedido_minimo_cents?: number | null
+          raio_entrega_km?: number | null
+          status?: Database["public"]["Enums"]["establishment_status"] | null
+          taxa_entrega_cents?: number | null
+          tempo_medio_min?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          avaliacao?: number | null
+          capa_url?: string | null
+          categoria_id?: string | null
+          cidade?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: string | null
+          is_open?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          logo_url?: string | null
+          nome?: string | null
+          owner_id?: string | null
+          pedido_minimo_cents?: number | null
+          raio_entrega_km?: number | null
+          status?: Database["public"]["Enums"]["establishment_status"] | null
+          taxa_entrega_cents?: number | null
+          tempo_medio_min?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "establishments_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "global_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       app_role: "cliente" | "estabelecimento" | "entregador" | "admin"
