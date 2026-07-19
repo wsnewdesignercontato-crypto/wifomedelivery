@@ -411,7 +411,7 @@ function LandingPage() {
           {/* Phone mockup */}
           <div className="relative flex justify-center lg:justify-end">
             <div
-              className="pointer-events-none absolute inset-0 mx-auto h-full w-[80%] rounded-full opacity-60 blur-3xl"
+              className="animate-glow-pulse pointer-events-none absolute inset-0 mx-auto h-full w-[80%] rounded-full opacity-60 blur-3xl"
               style={{ background: "radial-gradient(closest-side, #FF6B00, transparent)" }}
             />
             <img
@@ -419,7 +419,7 @@ function LandingPage() {
               alt="Aplicativo WiFome"
               width={480}
               height={880}
-              className="relative w-[280px] drop-shadow-2xl sm:w-[340px] lg:w-[400px]"
+              className="animate-float-phone relative w-[280px] drop-shadow-2xl sm:w-[340px] lg:w-[400px]"
             />
           </div>
         </div>
