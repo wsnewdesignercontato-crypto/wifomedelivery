@@ -152,28 +152,62 @@ function LandingPage() {
       </section>
 
       {/* Categorias */}
-      <section className="mx-auto max-w-6xl px-4 py-14">
-        <div className="mb-6 flex items-end justify-between">
+      <section className="relative mx-auto max-w-6xl px-4 py-16 sm:py-20">
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-full opacity-60"
+          style={{
+            background:
+              "radial-gradient(80% 50% at 50% 0%, oklch(0.85 0.15 60 / 0.10) 0%, transparent 70%)",
+          }}
+        />
+        <div className="relative mb-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground backdrop-blur">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Categorias
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
               O que vai chegar hoje?
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Explore categorias e encontre seu próximo pedido.
+            <p className="mt-2 max-w-lg text-sm text-muted-foreground">
+              Uma curadoria dos sabores mais pedidos na sua região. Toque, escolha, receba.
             </p>
           </div>
+          <Link
+            to="/auth"
+            search={{ perfil: "cliente" }}
+            className="group inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:opacity-80"
+          >
+            Ver tudo
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-          {categorias.map((c) => (
-            <div
+
+        <div className="relative grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 sm:gap-4">
+          {categorias.map((c, i) => (
+            <Link
               key={c.nome}
-              className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card p-4 shadow-card transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-brand"
+              to="/auth"
+              search={{ perfil: "cliente" }}
+              className={`group relative flex aspect-square flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl border border-border/70 bg-card p-4 shadow-card ring-1 ${c.ring} transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-brand`}
             >
-              <span className="text-3xl transition-transform group-hover:scale-110">
-                {c.emoji}
+              <div
+                className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${c.tint} opacity-70 transition-opacity duration-300 group-hover:opacity-100`}
+              />
+              <div className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 transition-all duration-700 group-hover:left-[120%] group-hover:opacity-100" />
+
+              <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-background/70 shadow-sm ring-1 ring-border/60 backdrop-blur transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
+                <span className="text-3xl drop-shadow-sm">{c.emoji}</span>
+              </div>
+
+              <span className="relative text-sm font-semibold tracking-tight text-foreground">
+                {c.nome}
               </span>
-              <span className="text-xs font-medium text-foreground">{c.nome}</span>
-            </div>
+
+              <span className="absolute right-2.5 top-2 font-mono text-[10px] font-medium tabular-nums text-muted-foreground/50">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+            </Link>
           ))}
         </div>
       </section>
