@@ -118,8 +118,10 @@ const beneficios = [
 ];
 
 function LandingPage() {
+  useRevealOnScroll();
   return (
     <div className="min-h-screen bg-background">
+
       {/* ============= HEADER ============= */}
       <header
         id="inicio"
