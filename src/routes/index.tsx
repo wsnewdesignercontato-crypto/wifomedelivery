@@ -50,17 +50,28 @@ const navLinks = [
   { label: "Ajuda", href: "#ajuda" },
 ];
 
+import catPizza from "@/assets/cat/pizza.png";
+import catHamburguer from "@/assets/cat/hamburguer.png";
+import catMarmita from "@/assets/cat/marmita.png";
+import catAcai from "@/assets/cat/acai.png";
+import catSorvete from "@/assets/cat/sorvete.png";
+import catPastel from "@/assets/cat/pastel.png";
+import catLanches from "@/assets/cat/lanches.png";
+import catBebidas from "@/assets/cat/bebidas.png";
+import catMercado from "@/assets/cat/mercado.png";
+import catFarmacia from "@/assets/cat/farmacia.png";
+
 const categorias = [
-  { emoji: "🍕", nome: "Pizza", tint: "oklch(0.96 0.05 55)", glow: "oklch(0.72 0.19 45 / 0.35)" },
-  { emoji: "🍔", nome: "Hambúrguer", tint: "oklch(0.96 0.05 80)", glow: "oklch(0.75 0.16 75 / 0.35)" },
-  { emoji: "🍲", nome: "Marmita", tint: "oklch(0.95 0.05 145)", glow: "oklch(0.7 0.15 145 / 0.3)" },
-  { emoji: "🍧", nome: "Açaí", tint: "oklch(0.94 0.05 310)", glow: "oklch(0.6 0.2 310 / 0.35)" },
-  { emoji: "🍦", nome: "Sorvete", tint: "oklch(0.96 0.04 20)", glow: "oklch(0.75 0.15 15 / 0.3)" },
-  { emoji: "🥟", nome: "Pastel", tint: "oklch(0.96 0.05 70)", glow: "oklch(0.75 0.15 70 / 0.35)" },
-  { emoji: "🥪", nome: "Lanches", tint: "oklch(0.95 0.04 230)", glow: "oklch(0.65 0.15 230 / 0.3)" },
-  { emoji: "🥤", nome: "Bebidas", tint: "oklch(0.94 0.06 25)", glow: "oklch(0.65 0.22 25 / 0.35)" },
-  { emoji: "🧺", nome: "Mercado", tint: "oklch(0.95 0.04 265)", glow: "oklch(0.6 0.15 265 / 0.3)" },
-  { emoji: "💊", nome: "Farmácia", tint: "oklch(0.95 0.04 350)", glow: "oklch(0.68 0.2 350 / 0.35)" },
+  { img: catPizza,       nome: "Pizza",      tint: "oklch(0.96 0.05 55)",  glow: "oklch(0.72 0.19 45 / 0.35)" },
+  { img: catHamburguer,  nome: "Hambúrguer", tint: "oklch(0.96 0.05 80)",  glow: "oklch(0.75 0.16 75 / 0.35)" },
+  { img: catMarmita,     nome: "Marmita",    tint: "oklch(0.95 0.05 145)", glow: "oklch(0.7 0.15 145 / 0.3)" },
+  { img: catAcai,        nome: "Açaí",       tint: "oklch(0.94 0.05 310)", glow: "oklch(0.6 0.2 310 / 0.35)" },
+  { img: catSorvete,     nome: "Sorvete",    tint: "oklch(0.96 0.04 20)",  glow: "oklch(0.75 0.15 15 / 0.3)" },
+  { img: catPastel,      nome: "Pastel",     tint: "oklch(0.96 0.05 70)",  glow: "oklch(0.75 0.15 70 / 0.35)" },
+  { img: catLanches,     nome: "Lanches",    tint: "oklch(0.95 0.04 230)", glow: "oklch(0.65 0.15 230 / 0.3)" },
+  { img: catBebidas,     nome: "Bebidas",    tint: "oklch(0.94 0.06 25)",  glow: "oklch(0.65 0.22 25 / 0.35)" },
+  { img: catMercado,     nome: "Mercado",    tint: "oklch(0.95 0.04 265)", glow: "oklch(0.6 0.15 265 / 0.3)" },
+  { img: catFarmacia,    nome: "Farmácia",   tint: "oklch(0.95 0.04 350)", glow: "oklch(0.68 0.2 350 / 0.35)" },
 ];
 
 
