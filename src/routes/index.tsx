@@ -291,7 +291,8 @@ function LandingPage() {
                 key={c.nome}
                 to="/auth"
                 search={{ perfil: "cliente" }}
-                className="group relative flex aspect-[3/4] flex-col items-center justify-between overflow-hidden rounded-[1.5rem] border border-border/50 bg-gradient-to-b from-card to-card/60 p-4 shadow-[0_1px_0_0_hsl(0_0%_100%/0.8)_inset,0_10px_28px_-14px_oklch(0_0_0/0.15)] backdrop-blur-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:border-primary/50"
+                style={{ ["--reveal-delay" as string]: `${i * 55}ms` }}
+                className="reveal group relative flex aspect-[3/4] flex-col items-center justify-between overflow-hidden rounded-[1.5rem] border border-border/50 bg-gradient-to-b from-card to-card/60 p-4 shadow-[0_1px_0_0_hsl(0_0%_100%/0.8)_inset,0_10px_28px_-14px_oklch(0_0_0/0.15)] backdrop-blur-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:border-primary/50"
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = `0 1px 0 0 hsl(0 0% 100% / 0.8) inset, 0 24px 44px -20px ${c.glow}`;
                 }}
