@@ -803,14 +803,15 @@ function LandingPage() {
           <FooterCol title="Links rápidos" items={["Início", "Como funciona", "Para estabelecimentos", "Para entregadores", "Ajuda"]} />
           <FooterCol title="Institucional" items={["Sobre nós", "Carreiras", "Blog", "Política de privacidade", "Termos de uso"]} />
 
-          <div>
+          <div className="text-center">
             <h4 className="text-sm font-bold uppercase tracking-wider text-white">Em breve</h4>
             <p className="mt-1 text-xs text-white/70">nos aplicativos</p>
-            <div className="mt-4 flex flex-row items-center gap-2">
+            <div className="mt-4 flex flex-row items-center justify-center gap-2">
               <StoreBadge store="apple" dark />
               <StoreBadge store="google" dark />
             </div>
           </div>
+
 
         </div>
         <div className="border-t border-white/20">
