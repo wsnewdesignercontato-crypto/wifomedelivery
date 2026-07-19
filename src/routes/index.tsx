@@ -46,17 +46,18 @@ const navLinks = [
 ];
 
 const categorias = [
-  { emoji: "🍕", nome: "Pizza" },
-  { emoji: "🍔", nome: "Hambúrguer" },
-  { emoji: "🍲", nome: "Marmita" },
-  { emoji: "🍧", nome: "Açaí" },
-  { emoji: "🍦", nome: "Sorvete" },
-  { emoji: "🥟", nome: "Pastel" },
-  { emoji: "🥪", nome: "Lanches" },
-  { emoji: "🥤", nome: "Bebidas" },
-  { emoji: "🧺", nome: "Mercado" },
-  { emoji: "💊", nome: "Farmácia" },
+  { emoji: "🍕", nome: "Pizza", tint: "oklch(0.96 0.05 55)", glow: "oklch(0.72 0.19 45 / 0.35)" },
+  { emoji: "🍔", nome: "Hambúrguer", tint: "oklch(0.96 0.05 80)", glow: "oklch(0.75 0.16 75 / 0.35)" },
+  { emoji: "🍲", nome: "Marmita", tint: "oklch(0.95 0.05 145)", glow: "oklch(0.7 0.15 145 / 0.3)" },
+  { emoji: "🍧", nome: "Açaí", tint: "oklch(0.94 0.05 310)", glow: "oklch(0.6 0.2 310 / 0.35)" },
+  { emoji: "🍦", nome: "Sorvete", tint: "oklch(0.96 0.04 20)", glow: "oklch(0.75 0.15 15 / 0.3)" },
+  { emoji: "🥟", nome: "Pastel", tint: "oklch(0.96 0.05 70)", glow: "oklch(0.75 0.15 70 / 0.35)" },
+  { emoji: "🥪", nome: "Lanches", tint: "oklch(0.95 0.04 230)", glow: "oklch(0.65 0.15 230 / 0.3)" },
+  { emoji: "🥤", nome: "Bebidas", tint: "oklch(0.94 0.06 25)", glow: "oklch(0.65 0.22 25 / 0.35)" },
+  { emoji: "🧺", nome: "Mercado", tint: "oklch(0.95 0.04 265)", glow: "oklch(0.6 0.15 265 / 0.3)" },
+  { emoji: "💊", nome: "Farmácia", tint: "oklch(0.95 0.04 350)", glow: "oklch(0.68 0.2 350 / 0.35)" },
 ];
+
 
 const perfis = [
   {
@@ -250,40 +251,91 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* ============= CATEGORIAS ============= */}
-      <section className="bg-muted/30 py-16 sm:py-20">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mb-8 flex items-end justify-between">
-            <h2 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
-              O que vai chegar hoje?
-            </h2>
+      {/* ============= CATEGORIAS (PREMIUM) ============= */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-muted/40 via-background to-muted/30 py-20 sm:py-28">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-24 left-1/4 h-64 w-64 rounded-full bg-primary/10 blur-3xl"
+        />
+        <div className="relative mx-auto max-w-7xl px-6">
+          <div className="mb-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                Categorias em alta
+              </span>
+              <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+                O que vai chegar{" "}
+                <span className="text-primary">hoje?</span>
+              </h2>
+              <p className="mt-3 max-w-lg text-sm text-muted-foreground sm:text-base">
+                Do salgado ao doce, do mercado à farmácia — tudo no mesmo app.
+              </p>
+            </div>
             <Link
               to="/auth"
               search={{ perfil: "cliente" }}
-              className="group inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:opacity-80"
+              className="group inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card px-5 py-2.5 text-sm font-bold text-foreground shadow-sm transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground"
             >
               Ver todas
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-10">
-            {categorias.map((c) => (
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 sm:gap-4 lg:grid-cols-10 lg:gap-5">
+            {categorias.map((c, i) => (
               <Link
                 key={c.nome}
                 to="/auth"
                 search={{ perfil: "cliente" }}
-                className="group flex flex-col items-center gap-2 rounded-2xl border border-border/60 bg-card p-3 shadow-card transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-brand"
+                className="group relative flex flex-col items-center gap-3 overflow-hidden rounded-[1.75rem] border border-border/60 bg-card p-4 shadow-[0_10px_30px_-12px_oklch(0_0_0/0.12)] transition-all duration-500 hover:-translate-y-2 hover:border-primary/40"
+                style={
+                  {
+                    "--hover-shadow": `0 22px 40px -18px ${c.glow}`,
+                  } as React.CSSProperties
+                }
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = `0 22px 40px -18px ${c.glow}`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "";
+                }}
               >
-                <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-background text-4xl transition-transform group-hover:scale-110">
-                  {c.emoji}
+                {/* index */}
+                <span className="absolute right-3 top-2.5 font-mono text-[10px] tabular-nums text-muted-foreground/40">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+
+                {/* icon orb */}
+                <div className="relative">
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 -m-2 rounded-full opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100"
+                    style={{ background: c.glow }}
+                  />
+                  <div
+                    className="relative flex h-14 w-14 items-center justify-center rounded-2xl text-3xl shadow-inner transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-6"
+                    style={{ background: c.tint }}
+                  >
+                    <span className="drop-shadow-sm">{c.emoji}</span>
+                  </div>
                 </div>
-                <span className="text-xs font-semibold text-foreground">{c.nome}</span>
+
+                <span className="text-[13px] font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
+                  {c.nome}
+                </span>
+
+                {/* shine */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-1000 group-hover:translate-x-full"
+                />
               </Link>
             ))}
           </div>
         </div>
       </section>
+
 
       {/* ============= 3 PERFIS (PREMIUM) ============= */}
       <section
