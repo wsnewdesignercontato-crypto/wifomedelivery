@@ -144,12 +144,38 @@ const beneficios = [
 
 function CategoriasRail() {
   const railRef = useRef<HTMLDivElement>(null);
+  const [paused, setPaused] = useState(false);
   const scrollBy = (dir: 1 | -1) => {
     const el = railRef.current;
     if (!el) return;
     const step = Math.max(el.clientWidth * 0.7, 320);
     el.scrollBy({ left: step * dir, behavior: "smooth" });
   };
+
+  // Auto-scroll suave contínuo (loop infinito, pausa no hover/touch)
+  useEffect(() => {
+    const el = railRef.current;
+    if (!el) return;
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
+    let raf = 0;
+    let last = performance.now();
+    const speed = 22; // px/segundo — devagarzinho
+    const tick = (now: number) => {
+      const dt = (now - last) / 1000;
+      last = now;
+      if (!paused) {
+        const half = el.scrollWidth / 2;
+        let next = el.scrollLeft + speed * dt;
+        if (half > 0 && next >= half) next -= half;
+        el.scrollLeft = next;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [paused]);
+
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-muted/40 via-background to-muted/30 py-20 sm:py-28">
