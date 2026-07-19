@@ -64,7 +64,8 @@ const nomeSchema = z
 function AuthPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
-  const perfil = search.perfil ?? "cliente";
+  const perfil: "cliente" | "estabelecimento" | "entregador" =
+    search.perfil ?? "cliente";
   const info = perfilInfo[perfil];
   const [tab, setTab] = useState<"login" | "cadastro">("login");
   const [loading, setLoading] = useState(false);
