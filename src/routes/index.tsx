@@ -282,53 +282,67 @@ function LandingPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 sm:gap-4 lg:grid-cols-10 lg:gap-5">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 sm:gap-4 lg:grid-cols-10 lg:gap-4">
             {categorias.map((c, i) => (
               <Link
                 key={c.nome}
                 to="/auth"
                 search={{ perfil: "cliente" }}
-                className="group relative flex flex-col items-center gap-3 overflow-hidden rounded-[1.75rem] border border-border/60 bg-card p-4 shadow-[0_10px_30px_-12px_oklch(0_0_0/0.12)] transition-all duration-500 hover:-translate-y-2 hover:border-primary/40"
-                style={
-                  {
-                    "--hover-shadow": `0 22px 40px -18px ${c.glow}`,
-                  } as React.CSSProperties
-                }
+                className="group relative flex aspect-[3/4] flex-col items-center justify-between overflow-hidden rounded-[1.5rem] border border-border/50 bg-gradient-to-b from-card to-card/60 p-4 shadow-[0_1px_0_0_hsl(0_0%_100%/0.8)_inset,0_10px_28px_-14px_oklch(0_0_0/0.15)] backdrop-blur-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:border-primary/50"
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = `0 22px 40px -18px ${c.glow}`;
+                  e.currentTarget.style.boxShadow = `0 1px 0 0 hsl(0 0% 100% / 0.8) inset, 0 24px 44px -20px ${c.glow}`;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.boxShadow = "";
                 }}
               >
+                {/* soft top tint wash */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 top-0 h-1/2 opacity-60 transition-opacity duration-500 group-hover:opacity-100"
+                  style={{
+                    background: `radial-gradient(120% 100% at 50% 0%, ${c.tint} 0%, transparent 70%)`,
+                  }}
+                />
+
                 {/* index */}
-                <span className="absolute right-3 top-2.5 font-mono text-[10px] tabular-nums text-muted-foreground/40">
+                <span className="absolute right-3 top-3 font-mono text-[10px] font-medium tabular-nums tracking-widest text-muted-foreground/45">
                   {String(i + 1).padStart(2, "0")}
                 </span>
 
                 {/* icon orb */}
-                <div className="relative">
+                <div className="relative mt-2">
                   <div
                     aria-hidden
-                    className="absolute inset-0 -m-2 rounded-full opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100"
+                    className="absolute inset-0 -m-3 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
                     style={{ background: c.glow }}
                   />
                   <div
-                    className="relative flex h-14 w-14 items-center justify-center rounded-2xl text-3xl shadow-inner transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-6"
-                    style={{ background: c.tint }}
+                    className="relative flex h-16 w-16 items-center justify-center rounded-[1.25rem] text-[2rem] transition-all duration-500 ease-out group-hover:scale-110 group-hover:-rotate-[8deg]"
+                    style={{
+                      background: `linear-gradient(160deg, color-mix(in oklab, ${c.tint} 88%, white) 0%, ${c.tint} 100%)`,
+                      boxShadow: `inset 0 1px 0 0 hsl(0 0% 100% / 0.9), inset 0 -6px 12px -6px ${c.glow}, 0 6px 16px -8px ${c.glow}`,
+                    }}
                   >
-                    <span className="drop-shadow-sm">{c.emoji}</span>
+                    <span className="drop-shadow-[0_2px_3px_rgba(0,0,0,0.12)]">{c.emoji}</span>
                   </div>
                 </div>
 
-                <span className="text-[13px] font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
-                  {c.nome}
-                </span>
+                {/* label */}
+                <div className="relative flex flex-col items-center gap-1.5">
+                  <span className="text-[13px] font-bold leading-none tracking-tight text-foreground transition-colors duration-300 group-hover:text-primary">
+                    {c.nome}
+                  </span>
+                  <span
+                    aria-hidden
+                    className="h-[2px] w-4 rounded-full bg-primary/0 transition-all duration-500 group-hover:w-6 group-hover:bg-primary"
+                  />
+                </div>
 
                 {/* shine */}
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-1000 group-hover:translate-x-full"
+                  className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent transition-transform duration-[1200ms] ease-out group-hover:translate-x-full"
                 />
               </Link>
             ))}
