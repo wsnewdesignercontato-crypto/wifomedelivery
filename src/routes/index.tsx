@@ -561,17 +561,21 @@ function LandingPage() {
           </div>
 
           <div className="order-1 lg:order-2 lg:pl-8">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+            <p className="reveal text-xs font-bold uppercase tracking-[0.2em] text-primary">
               Acompanhe tudo
             </p>
-            <h2 className="mt-3 text-4xl font-black leading-tight tracking-tight text-foreground sm:text-5xl">
+            <h2 className="reveal mt-3 text-4xl font-black leading-tight tracking-tight text-foreground sm:text-5xl" style={{ ["--reveal-delay" as never]: "100ms" } as React.CSSProperties}>
               Do pedido até
               <br />a sua porta, em{" "}
               <span className="text-primary">tempo real.</span>
             </h2>
             <ul className="mt-8 space-y-4">
-              {trackingFeatures.map((f) => (
-                <li key={f} className="flex items-start gap-3">
+              {trackingFeatures.map((f, i) => (
+                <li
+                  key={f}
+                  className="reveal flex items-start gap-3"
+                  style={{ ["--reveal-delay" as never]: `${200 + i * 90}ms` } as React.CSSProperties}
+                >
                   <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     <Check className="h-3.5 w-3.5" strokeWidth={3} />
                   </span>
