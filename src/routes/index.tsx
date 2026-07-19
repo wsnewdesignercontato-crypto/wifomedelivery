@@ -285,35 +285,85 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* ============= 3 PERFIS ============= */}
-      <section id="como-funciona" className="bg-background py-20">
-        <div className="mx-auto max-w-7xl px-6">
-          <h2 className="text-center text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-            Uma plataforma,{" "}
-            <span className="text-primary">três experiências</span>
-          </h2>
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {perfis.map(({ key, titulo, descricao, Icon, to, search }) => (
+      {/* ============= 3 PERFIS (PREMIUM) ============= */}
+      <section
+        id="como-funciona"
+        className="relative overflow-hidden bg-gradient-to-b from-background via-background to-[oklch(0.98_0.015_60)] py-24 sm:py-32"
+      >
+        {/* ambient glow */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-0 h-[520px] w-[880px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
+        />
+        <div className="relative mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Escolha seu papel
+            </span>
+            <h2 className="mt-5 text-4xl font-black leading-[1.05] tracking-tight text-foreground sm:text-5xl">
+              Uma plataforma,{" "}
+              <span className="text-primary">três experiências</span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
+              Pedir, vender ou entregar — o WiFome foi desenhado para você
+              começar em minutos e crescer com a gente.
+            </p>
+          </div>
+
+          <div className="mt-16 grid gap-6 md:grid-cols-3 lg:gap-8">
+            {perfis.map(({ key, titulo, descricao, Icon, to, search }, i) => (
               <Link
                 key={key}
                 to={to}
                 search={search}
-                className="group relative flex flex-col rounded-3xl border border-border bg-card p-8 shadow-card transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-brand"
+                className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-border/60 bg-card p-8 shadow-[0_20px_50px_-20px_oklch(0_0_0/0.15)] transition-all duration-500 hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_40px_80px_-24px_oklch(0.72_0.19_45/0.35)] sm:p-10"
               >
-                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-brand">
-                  <Icon className="h-6 w-6" />
+                {/* corner index */}
+                <span className="pointer-events-none absolute right-6 top-6 font-mono text-xs tabular-nums text-muted-foreground/50">
+                  0{i + 1}
+                </span>
+
+                {/* icon */}
+                <div className="relative mb-8">
+                  <div className="absolute -inset-3 rounded-3xl bg-primary/15 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
+                  <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-[oklch(0.68_0.2_38)] text-primary-foreground shadow-[0_10px_24px_-8px_oklch(0.72_0.19_45/0.6)] transition-transform duration-500 group-hover:scale-110 group-hover:rotate-[-4deg]">
+                    <Icon className="h-8 w-8" strokeWidth={1.75} />
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-foreground">{titulo}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{descricao}</p>
-                <div className="mt-8 inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
-                  Começar
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+
+                <h3 className="text-2xl font-black tracking-tight text-foreground">
+                  {titulo}
+                </h3>
+                <p className="mt-3 flex-grow text-[15px] leading-relaxed text-muted-foreground">
+                  {descricao}
+                </p>
+
+                {/* divider */}
+                <div className="mt-8 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
+
+                {/* CTA */}
+                <div className="mt-6 flex items-center justify-between">
+                  <span className="inline-flex items-center gap-2 text-sm font-bold text-primary">
+                    Começar agora
+                    <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1.5" />
+                  </span>
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full border border-border/60 bg-background text-foreground transition-all duration-300 group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
                 </div>
+
+                {/* hover shine */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary/5 to-transparent transition-transform duration-1000 group-hover:translate-x-full"
+                />
               </Link>
             ))}
           </div>
         </div>
       </section>
+
 
       {/* ============= TRACKING (PEACH) ============= */}
       <section className="bg-[oklch(0.96_0.03_55)] py-16 sm:py-24">
