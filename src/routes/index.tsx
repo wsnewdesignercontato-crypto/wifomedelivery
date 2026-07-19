@@ -29,16 +29,16 @@ export const Route = createFileRoute("/")({
 });
 
 const categorias = [
-  { emoji: "🍕", nome: "Pizza" },
-  { emoji: "🍔", nome: "Hambúrguer" },
-  { emoji: "🍱", nome: "Marmita" },
-  { emoji: "🍧", nome: "Açaí" },
-  { emoji: "🍨", nome: "Sorvete" },
-  { emoji: "🥟", nome: "Pastel" },
-  { emoji: "🥪", nome: "Lanches" },
-  { emoji: "🥤", nome: "Bebidas" },
-  { emoji: "🛒", nome: "Mercado" },
-  { emoji: "💊", nome: "Farmácia" },
+  { emoji: "🍕", nome: "Pizza", tint: "from-red-500/25 to-orange-500/10", ring: "ring-red-500/20" },
+  { emoji: "🍔", nome: "Hambúrguer", tint: "from-amber-500/25 to-yellow-500/10", ring: "ring-amber-500/20" },
+  { emoji: "🍱", nome: "Marmita", tint: "from-emerald-500/25 to-lime-500/10", ring: "ring-emerald-500/20" },
+  { emoji: "🍧", nome: "Açaí", tint: "from-fuchsia-500/25 to-purple-500/10", ring: "ring-fuchsia-500/20" },
+  { emoji: "🍨", nome: "Sorvete", tint: "from-pink-500/25 to-rose-500/10", ring: "ring-pink-500/20" },
+  { emoji: "🥟", nome: "Pastel", tint: "from-orange-500/25 to-amber-500/10", ring: "ring-orange-500/20" },
+  { emoji: "🥪", nome: "Lanches", tint: "from-yellow-500/25 to-amber-500/10", ring: "ring-yellow-500/20" },
+  { emoji: "🥤", nome: "Bebidas", tint: "from-sky-500/25 to-cyan-500/10", ring: "ring-sky-500/20" },
+  { emoji: "🛒", nome: "Mercado", tint: "from-teal-500/25 to-emerald-500/10", ring: "ring-teal-500/20" },
+  { emoji: "💊", nome: "Farmácia", tint: "from-blue-500/25 to-indigo-500/10", ring: "ring-blue-500/20" },
 ];
 
 const perfis = [
