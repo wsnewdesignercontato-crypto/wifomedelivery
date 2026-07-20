@@ -45,6 +45,9 @@ export const placeOrder = createServerFn({ method: "POST" })
     if (lojaErr) throw new Error(lojaErr.message);
     if (!loja || loja.status !== "aprovado") throw new Error("Loja indisponível");
 
+    const isPickup = data.tipo_entrega === "pickup";
+    if (!isPickup && !data.endereco) throw new Error("Selecione um endereço de entrega");
+
     const subtotal = items.reduce(
       (s, i) => s + i.preco_unit_cents * i.quantidade,
       0,
