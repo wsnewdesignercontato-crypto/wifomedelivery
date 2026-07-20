@@ -174,9 +174,8 @@ function NovidadesPage() {
                 </div>
                 <div className="space-y-1 p-3">
                   <p className="line-clamp-1 text-sm font-semibold">{e.nome}</p>
-                  {e.categoria && <p className="line-clamp-1 text-[11px] text-muted-foreground">{e.categoria}</p>}
                   <div className="flex items-center gap-2 pt-0.5 text-[11px] text-muted-foreground">
-                    {e.avaliacao_media != null && <span>★ {Number(e.avaliacao_media).toFixed(1)}</span>}
+                    {e.avaliacao != null && <span>★ {Number(e.avaliacao).toFixed(1)}</span>}
                     {e.tempo_medio_min != null && <span>{e.tempo_medio_min} min</span>}
                   </div>
                 </div>
