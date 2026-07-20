@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_authenticated/entregador/avaliacoes")({
   component: Avaliacoes,
 });
 
-type Review = { id: string; rating_entregador: number | null; comentario_entregador: string | null; created_at: string };
+type Review = { id: string; rating_entregador: number | null; comentario: string | null; created_at: string };
 
 function Avaliacoes() {
   const { courier } = useMyCourier();
@@ -20,7 +20,7 @@ function Avaliacoes() {
 
   useEffect(() => {
     if (!courier) return;
-    supabase.from("reviews").select("id,rating_entregador,comentario_entregador,created_at")
+    supabase.from("reviews").select("id,rating_entregador,comentario,created_at")
       .eq("entregador_id", courier.user_id)
       .not("rating_entregador", "is", null)
       .order("created_at", { ascending: false }).limit(100)
@@ -47,7 +47,7 @@ function Avaliacoes() {
                 <Badge>{r.rating_entregador} ★</Badge>
                 <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString("pt-BR")}</span>
               </div>
-              {r.comentario_entregador && <p className="mt-2 text-sm">{r.comentario_entregador}</p>}
+              {r.comentario && <p className="mt-2 text-sm">{r.comentario}</p>}
             </div>
           ))}
         </div>
