@@ -140,8 +140,8 @@ function NovidadesPage() {
             <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
-            {/* Tag "Anúncio" no canto superior esquerdo */}
-            <span className="absolute left-3 top-3 rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-white/90 backdrop-blur">
+            {/* Tag "Anúncio" no canto superior direito */}
+            <span className="absolute right-3 top-3 rounded-full bg-black/50 px-1.5 py-px text-[8px] font-medium uppercase tracking-[0.12em] text-white/90 backdrop-blur">
               Anúncio
             </span>
 
