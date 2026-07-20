@@ -80,7 +80,7 @@ function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.to}>
                     <SidebarMenuButton asChild isActive={active}>
-                      <Link to={item.to} className="flex items-center gap-2">
+                      <Link to={item.to as never} className="flex items-center gap-2">
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span>{item.label}</span>}
                       </Link>
