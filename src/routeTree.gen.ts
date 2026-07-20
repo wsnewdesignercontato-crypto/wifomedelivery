@@ -54,7 +54,6 @@ import { Route as AuthenticatedEntregadorConfiguracoesRouteImport } from './rout
 import { Route as AuthenticatedEntregadorChatRouteImport } from './routes/_authenticated/entregador.chat'
 import { Route as AuthenticatedEntregadorCarteiraRouteImport } from './routes/_authenticated/entregador.carteira'
 import { Route as AuthenticatedEntregadorAvaliacoesRouteImport } from './routes/_authenticated/entregador.avaliacoes'
-import { Route as AuthenticatedClientePerfilRouteImport } from './routes/_authenticated/cliente.perfil'
 import { Route as AuthenticatedClientePedidosRouteImport } from './routes/_authenticated/cliente.pedidos'
 import { Route as AuthenticatedClienteFavoritosRouteImport } from './routes/_authenticated/cliente.favoritos'
 import { Route as AuthenticatedClienteCheckoutRouteImport } from './routes/_authenticated/cliente.checkout'
@@ -76,6 +75,7 @@ import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminCampanhasRouteImport } from './routes/_authenticated/admin.campanhas'
 import { Route as AuthenticatedAdminBannersRouteImport } from './routes/_authenticated/admin.banners'
 import { Route as AuthenticatedAdminAvaliacoesRouteImport } from './routes/_authenticated/admin.avaliacoes'
+import { Route as AuthenticatedClientePerfilContaRouteImport } from './routes/_authenticated/cliente.perfil.conta'
 import { Route as AuthenticatedClientePedidoIdRouteImport } from './routes/_authenticated/cliente.pedido.$id'
 import { Route as AuthenticatedClienteEstabelecimentoIdRouteImport } from './routes/_authenticated/cliente.estabelecimento.$id'
 
@@ -334,12 +334,6 @@ const AuthenticatedEntregadorAvaliacoesRoute =
     path: '/avaliacoes',
     getParentRoute: () => AuthenticatedEntregadorRoute,
   } as any)
-const AuthenticatedClientePerfilRoute =
-  AuthenticatedClientePerfilRouteImport.update({
-    id: '/perfil',
-    path: '/perfil',
-    getParentRoute: () => AuthenticatedClienteRoute,
-  } as any)
 const AuthenticatedClientePedidosRoute =
   AuthenticatedClientePedidosRouteImport.update({
     id: '/pedidos',
@@ -463,6 +457,12 @@ const AuthenticatedAdminAvaliacoesRoute =
     path: '/avaliacoes',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedClientePerfilContaRoute =
+  AuthenticatedClientePerfilContaRouteImport.update({
+    id: '/perfil/conta',
+    path: '/perfil/conta',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
 const AuthenticatedClientePedidoIdRoute =
   AuthenticatedClientePedidoIdRouteImport.update({
     id: '/pedido/$id',
@@ -510,7 +510,6 @@ export interface FileRoutesByFullPath {
   '/cliente/checkout': typeof AuthenticatedClienteCheckoutRoute
   '/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
   '/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
-  '/cliente/perfil': typeof AuthenticatedClientePerfilRoute
   '/entregador/avaliacoes': typeof AuthenticatedEntregadorAvaliacoesRoute
   '/entregador/carteira': typeof AuthenticatedEntregadorCarteiraRoute
   '/entregador/chat': typeof AuthenticatedEntregadorChatRoute
@@ -545,6 +544,7 @@ export interface FileRoutesByFullPath {
   '/estabelecimento/': typeof AuthenticatedEstabelecimentoIndexRoute
   '/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
+  '/cliente/perfil/conta': typeof AuthenticatedClientePerfilContaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -576,7 +576,6 @@ export interface FileRoutesByTo {
   '/cliente/checkout': typeof AuthenticatedClienteCheckoutRoute
   '/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
   '/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
-  '/cliente/perfil': typeof AuthenticatedClientePerfilRoute
   '/entregador/avaliacoes': typeof AuthenticatedEntregadorAvaliacoesRoute
   '/entregador/carteira': typeof AuthenticatedEntregadorCarteiraRoute
   '/entregador/chat': typeof AuthenticatedEntregadorChatRoute
@@ -611,6 +610,7 @@ export interface FileRoutesByTo {
   '/estabelecimento': typeof AuthenticatedEstabelecimentoIndexRoute
   '/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
+  '/cliente/perfil/conta': typeof AuthenticatedClientePerfilContaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -648,7 +648,6 @@ export interface FileRoutesById {
   '/_authenticated/cliente/checkout': typeof AuthenticatedClienteCheckoutRoute
   '/_authenticated/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
   '/_authenticated/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
-  '/_authenticated/cliente/perfil': typeof AuthenticatedClientePerfilRoute
   '/_authenticated/entregador/avaliacoes': typeof AuthenticatedEntregadorAvaliacoesRoute
   '/_authenticated/entregador/carteira': typeof AuthenticatedEntregadorCarteiraRoute
   '/_authenticated/entregador/chat': typeof AuthenticatedEntregadorChatRoute
@@ -683,6 +682,7 @@ export interface FileRoutesById {
   '/_authenticated/estabelecimento/': typeof AuthenticatedEstabelecimentoIndexRoute
   '/_authenticated/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/_authenticated/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
+  '/_authenticated/cliente/perfil/conta': typeof AuthenticatedClientePerfilContaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -720,7 +720,6 @@ export interface FileRouteTypes {
     | '/cliente/checkout'
     | '/cliente/favoritos'
     | '/cliente/pedidos'
-    | '/cliente/perfil'
     | '/entregador/avaliacoes'
     | '/entregador/carteira'
     | '/entregador/chat'
@@ -755,6 +754,7 @@ export interface FileRouteTypes {
     | '/estabelecimento/'
     | '/cliente/estabelecimento/$id'
     | '/cliente/pedido/$id'
+    | '/cliente/perfil/conta'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -786,7 +786,6 @@ export interface FileRouteTypes {
     | '/cliente/checkout'
     | '/cliente/favoritos'
     | '/cliente/pedidos'
-    | '/cliente/perfil'
     | '/entregador/avaliacoes'
     | '/entregador/carteira'
     | '/entregador/chat'
@@ -821,6 +820,7 @@ export interface FileRouteTypes {
     | '/estabelecimento'
     | '/cliente/estabelecimento/$id'
     | '/cliente/pedido/$id'
+    | '/cliente/perfil/conta'
   id:
     | '__root__'
     | '/'
@@ -857,7 +857,6 @@ export interface FileRouteTypes {
     | '/_authenticated/cliente/checkout'
     | '/_authenticated/cliente/favoritos'
     | '/_authenticated/cliente/pedidos'
-    | '/_authenticated/cliente/perfil'
     | '/_authenticated/entregador/avaliacoes'
     | '/_authenticated/entregador/carteira'
     | '/_authenticated/entregador/chat'
@@ -892,6 +891,7 @@ export interface FileRouteTypes {
     | '/_authenticated/estabelecimento/'
     | '/_authenticated/cliente/estabelecimento/$id'
     | '/_authenticated/cliente/pedido/$id'
+    | '/_authenticated/cliente/perfil/conta'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1223,13 +1223,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEntregadorAvaliacoesRouteImport
       parentRoute: typeof AuthenticatedEntregadorRoute
     }
-    '/_authenticated/cliente/perfil': {
-      id: '/_authenticated/cliente/perfil'
-      path: '/perfil'
-      fullPath: '/cliente/perfil'
-      preLoaderRoute: typeof AuthenticatedClientePerfilRouteImport
-      parentRoute: typeof AuthenticatedClienteRoute
-    }
     '/_authenticated/cliente/pedidos': {
       id: '/_authenticated/cliente/pedidos'
       path: '/pedidos'
@@ -1377,6 +1370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAvaliacoesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/cliente/perfil/conta': {
+      id: '/_authenticated/cliente/perfil/conta'
+      path: '/perfil/conta'
+      fullPath: '/cliente/perfil/conta'
+      preLoaderRoute: typeof AuthenticatedClientePerfilContaRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
     '/_authenticated/cliente/pedido/$id': {
       id: '/_authenticated/cliente/pedido/$id'
       path: '/pedido/$id'
@@ -1444,10 +1444,10 @@ interface AuthenticatedClienteRouteChildren {
   AuthenticatedClienteCheckoutRoute: typeof AuthenticatedClienteCheckoutRoute
   AuthenticatedClienteFavoritosRoute: typeof AuthenticatedClienteFavoritosRoute
   AuthenticatedClientePedidosRoute: typeof AuthenticatedClientePedidosRoute
-  AuthenticatedClientePerfilRoute: typeof AuthenticatedClientePerfilRoute
   AuthenticatedClienteIndexRoute: typeof AuthenticatedClienteIndexRoute
   AuthenticatedClienteEstabelecimentoIdRoute: typeof AuthenticatedClienteEstabelecimentoIdRoute
   AuthenticatedClientePedidoIdRoute: typeof AuthenticatedClientePedidoIdRoute
+  AuthenticatedClientePerfilContaRoute: typeof AuthenticatedClientePerfilContaRoute
 }
 
 const AuthenticatedClienteRouteChildren: AuthenticatedClienteRouteChildren = {
@@ -1456,11 +1456,11 @@ const AuthenticatedClienteRouteChildren: AuthenticatedClienteRouteChildren = {
   AuthenticatedClienteCheckoutRoute: AuthenticatedClienteCheckoutRoute,
   AuthenticatedClienteFavoritosRoute: AuthenticatedClienteFavoritosRoute,
   AuthenticatedClientePedidosRoute: AuthenticatedClientePedidosRoute,
-  AuthenticatedClientePerfilRoute: AuthenticatedClientePerfilRoute,
   AuthenticatedClienteIndexRoute: AuthenticatedClienteIndexRoute,
   AuthenticatedClienteEstabelecimentoIdRoute:
     AuthenticatedClienteEstabelecimentoIdRoute,
   AuthenticatedClientePedidoIdRoute: AuthenticatedClientePedidoIdRoute,
+  AuthenticatedClientePerfilContaRoute: AuthenticatedClientePerfilContaRoute,
 }
 
 const AuthenticatedClienteRouteWithChildren =
@@ -1602,13 +1602,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
