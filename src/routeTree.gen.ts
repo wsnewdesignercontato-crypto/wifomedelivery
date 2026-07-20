@@ -22,6 +22,7 @@ import { Route as AuthenticatedEntregadorRouteImport } from './routes/_authentic
 import { Route as AuthenticatedClienteRouteImport } from './routes/_authenticated/cliente'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedEstabelecimentoIndexRouteImport } from './routes/_authenticated/estabelecimento.index'
 import { Route as AuthenticatedClienteIndexRouteImport } from './routes/_authenticated/cliente.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as ApiPublicSeedDemoRouteImport } from './routes/api/public/seed-demo'
@@ -115,6 +116,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEstabelecimentoIndexRoute =
+  AuthenticatedEstabelecimentoIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
 const AuthenticatedClienteIndexRoute =
   AuthenticatedClienteIndexRouteImport.update({
     id: '/',
@@ -285,7 +292,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRoute
   '/cliente': typeof AuthenticatedClienteRouteWithChildren
   '/entregador': typeof AuthenticatedEntregadorRoute
-  '/estabelecimento': typeof AuthenticatedEstabelecimentoRoute
+  '/estabelecimento': typeof AuthenticatedEstabelecimentoRouteWithChildren
   '/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/admin/campanhas': typeof AuthenticatedAdminCampanhasRoute
@@ -311,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/cliente/': typeof AuthenticatedClienteIndexRoute
+  '/estabelecimento/': typeof AuthenticatedEstabelecimentoIndexRoute
   '/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
 }
@@ -324,7 +332,6 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app': typeof AuthenticatedAppRoute
   '/entregador': typeof AuthenticatedEntregadorRoute
-  '/estabelecimento': typeof AuthenticatedEstabelecimentoRoute
   '/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/admin/campanhas': typeof AuthenticatedAdminCampanhasRoute
@@ -350,6 +357,7 @@ export interface FileRoutesByTo {
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/cliente': typeof AuthenticatedClienteIndexRoute
+  '/estabelecimento': typeof AuthenticatedEstabelecimentoIndexRoute
   '/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
 }
@@ -367,7 +375,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/cliente': typeof AuthenticatedClienteRouteWithChildren
   '/_authenticated/entregador': typeof AuthenticatedEntregadorRoute
-  '/_authenticated/estabelecimento': typeof AuthenticatedEstabelecimentoRoute
+  '/_authenticated/estabelecimento': typeof AuthenticatedEstabelecimentoRouteWithChildren
   '/_authenticated/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
   '/_authenticated/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/_authenticated/admin/campanhas': typeof AuthenticatedAdminCampanhasRoute
@@ -393,6 +401,7 @@ export interface FileRoutesById {
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/cliente/': typeof AuthenticatedClienteIndexRoute
+  '/_authenticated/estabelecimento/': typeof AuthenticatedEstabelecimentoIndexRoute
   '/_authenticated/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/_authenticated/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
 }
@@ -436,6 +445,7 @@ export interface FileRouteTypes {
     | '/api/public/seed-demo'
     | '/admin/'
     | '/cliente/'
+    | '/estabelecimento/'
     | '/cliente/estabelecimento/$id'
     | '/cliente/pedido/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -449,7 +459,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/app'
     | '/entregador'
-    | '/estabelecimento'
     | '/admin/avaliacoes'
     | '/admin/banners'
     | '/admin/campanhas'
@@ -475,6 +484,7 @@ export interface FileRouteTypes {
     | '/api/public/seed-demo'
     | '/admin'
     | '/cliente'
+    | '/estabelecimento'
     | '/cliente/estabelecimento/$id'
     | '/cliente/pedido/$id'
   id:
@@ -517,6 +527,7 @@ export interface FileRouteTypes {
     | '/api/public/seed-demo'
     | '/_authenticated/admin/'
     | '/_authenticated/cliente/'
+    | '/_authenticated/estabelecimento/'
     | '/_authenticated/cliente/estabelecimento/$id'
     | '/_authenticated/cliente/pedido/$id'
   fileRoutesById: FileRoutesById
@@ -625,6 +636,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/estabelecimento/': {
+      id: '/_authenticated/estabelecimento/'
+      path: '/'
+      fullPath: '/estabelecimento/'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoIndexRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
     }
     '/_authenticated/cliente/': {
       id: '/_authenticated/cliente/'
@@ -890,12 +908,27 @@ const AuthenticatedClienteRouteChildren: AuthenticatedClienteRouteChildren = {
 const AuthenticatedClienteRouteWithChildren =
   AuthenticatedClienteRoute._addFileChildren(AuthenticatedClienteRouteChildren)
 
+interface AuthenticatedEstabelecimentoRouteChildren {
+  AuthenticatedEstabelecimentoIndexRoute: typeof AuthenticatedEstabelecimentoIndexRoute
+}
+
+const AuthenticatedEstabelecimentoRouteChildren: AuthenticatedEstabelecimentoRouteChildren =
+  {
+    AuthenticatedEstabelecimentoIndexRoute:
+      AuthenticatedEstabelecimentoIndexRoute,
+  }
+
+const AuthenticatedEstabelecimentoRouteWithChildren =
+  AuthenticatedEstabelecimentoRoute._addFileChildren(
+    AuthenticatedEstabelecimentoRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedClienteRoute: typeof AuthenticatedClienteRouteWithChildren
   AuthenticatedEntregadorRoute: typeof AuthenticatedEntregadorRoute
-  AuthenticatedEstabelecimentoRoute: typeof AuthenticatedEstabelecimentoRoute
+  AuthenticatedEstabelecimentoRoute: typeof AuthenticatedEstabelecimentoRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -903,7 +936,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedClienteRoute: AuthenticatedClienteRouteWithChildren,
   AuthenticatedEntregadorRoute: AuthenticatedEntregadorRoute,
-  AuthenticatedEstabelecimentoRoute: AuthenticatedEstabelecimentoRoute,
+  AuthenticatedEstabelecimentoRoute:
+    AuthenticatedEstabelecimentoRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
