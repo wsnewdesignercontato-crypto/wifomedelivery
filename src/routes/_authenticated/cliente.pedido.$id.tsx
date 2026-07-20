@@ -158,6 +158,14 @@ function PedidoPage() {
         </div>
       )}
 
+      {order.codigo_entrega && !["delivered","cancelled","refunded"].includes(order.status) && (
+        <div className="rounded-2xl border-2 border-primary bg-primary/5 p-4 text-center">
+          <p className="text-xs font-bold uppercase tracking-wider text-primary">Código de entrega</p>
+          <p className="mt-1 text-4xl font-black tracking-[0.5em] text-primary">{order.codigo_entrega}</p>
+          <p className="mt-2 text-xs text-muted-foreground">Informe este código ao entregador para confirmar o recebimento.</p>
+        </div>
+      )}
+
       {delivery && delivery.lat != null && delivery.lng != null && (
         <div className="rounded-2xl border border-border bg-card p-4">
           <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold"><MapPin className="h-4 w-4 text-primary" /> Localização do entregador</p>
