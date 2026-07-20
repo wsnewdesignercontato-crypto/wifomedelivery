@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 const placeOrderInput = z.object({
   establishment_id: z.string().uuid(),
   forma_pagamento: z.enum(["pix", "cartao", "dinheiro", "carteira"]),
+  tipo_entrega: z.enum(["delivery", "pickup"]).default("delivery"),
   endereco: z.object({
     label: z.string().optional(),
     rua: z.string().min(1),
@@ -16,7 +17,7 @@ const placeOrderInput = z.object({
     lat: z.number().optional().nullable(),
     lng: z.number().optional().nullable(),
     cep: z.string().optional().nullable(),
-  }),
+  }).nullable().optional(),
   observacoes: z.string().max(500).optional().nullable(),
   coupon_code: z.string().trim().max(50).optional().nullable(),
 });
