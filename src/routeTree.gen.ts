@@ -33,6 +33,7 @@ import { Route as AuthenticatedEstabelecimentoProdutosRouteImport } from './rout
 import { Route as AuthenticatedEstabelecimentoPedidosRouteImport } from './routes/_authenticated/estabelecimento.pedidos'
 import { Route as AuthenticatedEstabelecimentoHorariosRouteImport } from './routes/_authenticated/estabelecimento.horarios'
 import { Route as AuthenticatedEstabelecimentoFinanceiroRouteImport } from './routes/_authenticated/estabelecimento.financeiro'
+import { Route as AuthenticatedEstabelecimentoExtratoRouteImport } from './routes/_authenticated/estabelecimento.extrato'
 import { Route as AuthenticatedEstabelecimentoEstoqueRouteImport } from './routes/_authenticated/estabelecimento.estoque'
 import { Route as AuthenticatedEstabelecimentoEquipeRouteImport } from './routes/_authenticated/estabelecimento.equipe'
 import { Route as AuthenticatedEstabelecimentoEntregaRouteImport } from './routes/_authenticated/estabelecimento.entrega'
@@ -222,6 +223,12 @@ const AuthenticatedEstabelecimentoFinanceiroRoute =
   AuthenticatedEstabelecimentoFinanceiroRouteImport.update({
     id: '/financeiro',
     path: '/financeiro',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
+const AuthenticatedEstabelecimentoExtratoRoute =
+  AuthenticatedEstabelecimentoExtratoRouteImport.update({
+    id: '/extrato',
+    path: '/extrato',
     getParentRoute: () => AuthenticatedEstabelecimentoRoute,
   } as any)
 const AuthenticatedEstabelecimentoEstoqueRoute =
@@ -649,6 +656,7 @@ export interface FileRoutesByFullPath {
   '/estabelecimento/entrega': typeof AuthenticatedEstabelecimentoEntregaRoute
   '/estabelecimento/equipe': typeof AuthenticatedEstabelecimentoEquipeRoute
   '/estabelecimento/estoque': typeof AuthenticatedEstabelecimentoEstoqueRoute
+  '/estabelecimento/extrato': typeof AuthenticatedEstabelecimentoExtratoRoute
   '/estabelecimento/financeiro': typeof AuthenticatedEstabelecimentoFinanceiroRoute
   '/estabelecimento/horarios': typeof AuthenticatedEstabelecimentoHorariosRoute
   '/estabelecimento/pedidos': typeof AuthenticatedEstabelecimentoPedidosRoute
@@ -731,6 +739,7 @@ export interface FileRoutesByTo {
   '/estabelecimento/entrega': typeof AuthenticatedEstabelecimentoEntregaRoute
   '/estabelecimento/equipe': typeof AuthenticatedEstabelecimentoEquipeRoute
   '/estabelecimento/estoque': typeof AuthenticatedEstabelecimentoEstoqueRoute
+  '/estabelecimento/extrato': typeof AuthenticatedEstabelecimentoExtratoRoute
   '/estabelecimento/financeiro': typeof AuthenticatedEstabelecimentoFinanceiroRoute
   '/estabelecimento/horarios': typeof AuthenticatedEstabelecimentoHorariosRoute
   '/estabelecimento/pedidos': typeof AuthenticatedEstabelecimentoPedidosRoute
@@ -819,6 +828,7 @@ export interface FileRoutesById {
   '/_authenticated/estabelecimento/entrega': typeof AuthenticatedEstabelecimentoEntregaRoute
   '/_authenticated/estabelecimento/equipe': typeof AuthenticatedEstabelecimentoEquipeRoute
   '/_authenticated/estabelecimento/estoque': typeof AuthenticatedEstabelecimentoEstoqueRoute
+  '/_authenticated/estabelecimento/extrato': typeof AuthenticatedEstabelecimentoExtratoRoute
   '/_authenticated/estabelecimento/financeiro': typeof AuthenticatedEstabelecimentoFinanceiroRoute
   '/_authenticated/estabelecimento/horarios': typeof AuthenticatedEstabelecimentoHorariosRoute
   '/_authenticated/estabelecimento/pedidos': typeof AuthenticatedEstabelecimentoPedidosRoute
@@ -907,6 +917,7 @@ export interface FileRouteTypes {
     | '/estabelecimento/entrega'
     | '/estabelecimento/equipe'
     | '/estabelecimento/estoque'
+    | '/estabelecimento/extrato'
     | '/estabelecimento/financeiro'
     | '/estabelecimento/horarios'
     | '/estabelecimento/pedidos'
@@ -989,6 +1000,7 @@ export interface FileRouteTypes {
     | '/estabelecimento/entrega'
     | '/estabelecimento/equipe'
     | '/estabelecimento/estoque'
+    | '/estabelecimento/extrato'
     | '/estabelecimento/financeiro'
     | '/estabelecimento/horarios'
     | '/estabelecimento/pedidos'
@@ -1076,6 +1088,7 @@ export interface FileRouteTypes {
     | '/_authenticated/estabelecimento/entrega'
     | '/_authenticated/estabelecimento/equipe'
     | '/_authenticated/estabelecimento/estoque'
+    | '/_authenticated/estabelecimento/extrato'
     | '/_authenticated/estabelecimento/financeiro'
     | '/_authenticated/estabelecimento/horarios'
     | '/_authenticated/estabelecimento/pedidos'
@@ -1282,6 +1295,13 @@ declare module '@tanstack/react-router' {
       path: '/financeiro'
       fullPath: '/estabelecimento/financeiro'
       preLoaderRoute: typeof AuthenticatedEstabelecimentoFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
+    '/_authenticated/estabelecimento/extrato': {
+      id: '/_authenticated/estabelecimento/extrato'
+      path: '/extrato'
+      fullPath: '/estabelecimento/extrato'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoExtratoRouteImport
       parentRoute: typeof AuthenticatedEstabelecimentoRoute
     }
     '/_authenticated/estabelecimento/estoque': {
@@ -1889,6 +1909,7 @@ interface AuthenticatedEstabelecimentoRouteChildren {
   AuthenticatedEstabelecimentoEntregaRoute: typeof AuthenticatedEstabelecimentoEntregaRoute
   AuthenticatedEstabelecimentoEquipeRoute: typeof AuthenticatedEstabelecimentoEquipeRoute
   AuthenticatedEstabelecimentoEstoqueRoute: typeof AuthenticatedEstabelecimentoEstoqueRoute
+  AuthenticatedEstabelecimentoExtratoRoute: typeof AuthenticatedEstabelecimentoExtratoRoute
   AuthenticatedEstabelecimentoFinanceiroRoute: typeof AuthenticatedEstabelecimentoFinanceiroRoute
   AuthenticatedEstabelecimentoHorariosRoute: typeof AuthenticatedEstabelecimentoHorariosRoute
   AuthenticatedEstabelecimentoPedidosRoute: typeof AuthenticatedEstabelecimentoPedidosRoute
@@ -1920,6 +1941,8 @@ const AuthenticatedEstabelecimentoRouteChildren: AuthenticatedEstabelecimentoRou
       AuthenticatedEstabelecimentoEquipeRoute,
     AuthenticatedEstabelecimentoEstoqueRoute:
       AuthenticatedEstabelecimentoEstoqueRoute,
+    AuthenticatedEstabelecimentoExtratoRoute:
+      AuthenticatedEstabelecimentoExtratoRoute,
     AuthenticatedEstabelecimentoFinanceiroRoute:
       AuthenticatedEstabelecimentoFinanceiroRoute,
     AuthenticatedEstabelecimentoHorariosRoute:
