@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, MapPin, CreditCard, Banknote, QrCode, Wallet } from "lucide-react";
+import { Loader2, MapPin, CreditCard, Banknote, QrCode, Wallet, Bike, Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
