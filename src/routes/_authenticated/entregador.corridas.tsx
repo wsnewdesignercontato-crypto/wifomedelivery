@@ -402,22 +402,32 @@ function Corridas() {
                 <p className="mt-3 text-sm text-muted-foreground">Nenhuma corrida disponível no momento.</p>
               </div>
             )}
-            {disponiveis.map((d) => (
-              <div key={d.id} className="rounded-2xl border border-border bg-card p-4 shadow-card">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-semibold">
-                      {d.entregador_id === courier?.user_id ? "🎯 Chamado direto para você" : "Corrida disponível"}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">Aceite antes que outro entregador</p>
+            {disponiveis.map((d) => {
+              const m = availMeta[d.id];
+              return (
+                <div key={d.id} className="rounded-2xl border border-border bg-card p-4 shadow-card">
+                  <div className="flex items-start justify-between">
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">
+                        {d.entregador_id === courier?.user_id ? "🎯 Chamado direto para você" : m?.nome || "Corrida disponível"}
+                      </p>
+                      <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+                        {m?.distKm != null ? (
+                          <span><b className="text-foreground">{m.distKm.toString().replace(".", ",")} km</b> até a coleta</span>
+                        ) : (
+                          <span>Aceite antes que outro entregador</span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="font-bold text-primary shrink-0">{fmt(d.valor_entrega_cents)}</span>
                   </div>
-                  <span className="font-bold text-primary">{fmt(d.valor_entrega_cents)}</span>
+                  <div className="mt-3">
+                    <Button className="w-full" onClick={() => aceitar(d)}>Aceitar corrida</Button>
+                  </div>
                 </div>
-                <div className="mt-3">
-                  <Button className="w-full" onClick={() => aceitar(d)}>Aceitar corrida</Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}
