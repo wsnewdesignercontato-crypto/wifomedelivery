@@ -88,16 +88,19 @@ function ClienteHome() {
   const catsScrollRef = useRef<HTMLDivElement | null>(null);
   const catsPausedRef = useRef(false);
 
-  // Auto-scroll lento das categorias — pausa ao interagir e retoma após ocioso
+  // Auto-scroll lento das categorias — pausa ao interagir, ao selecionar,
+  // ao expandir em grade, ao trocar de aba e para reduced-motion.
   useEffect(() => {
     const el = catsScrollRef.current;
     if (!el) return;
+    if (showAllCats) return; // no modo grade não há scroll horizontal
     if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
 
     let raf = 0;
     let last = performance.now();
+    let pos = el.scrollLeft;
     let resumeTimer: ReturnType<typeof setTimeout> | null = null;
-    const SPEED = 14; // px por segundo — bem lento
+    const SPEED = 16; // px/s — lento e consistente em qualquer dpr
 
     const pause = (ms = 2500) => {
       catsPausedRef.current = true;
@@ -106,13 +109,15 @@ function ClienteHome() {
     };
 
     const step = (now: number) => {
-      const dt = (now - last) / 1000;
+      const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      if (!catsPausedRef.current && el.scrollWidth > el.clientWidth + 4) {
-        const max = el.scrollWidth - el.clientWidth;
-        let next = el.scrollLeft + SPEED * dt;
-        if (next >= max - 0.5) next = 0;
-        el.scrollLeft = next;
+      const max = el.scrollWidth - el.clientWidth;
+      if (!catsPausedRef.current && !document.hidden && max > 4) {
+        // Sincroniza acumulador quando o usuário rolou manualmente
+        if (Math.abs(pos - el.scrollLeft) > 2) pos = el.scrollLeft;
+        pos += SPEED * dt;
+        if (pos >= max - 0.5) pos = 0;
+        el.scrollLeft = pos;
       }
       raf = requestAnimationFrame(step);
     };
@@ -121,12 +126,14 @@ function ClienteHome() {
     const onEnter = () => { catsPausedRef.current = true; };
     const onLeave = () => { catsPausedRef.current = false; };
     const onInteract = () => pause(3000);
+    const onVisibility = () => { last = performance.now(); };
 
     el.addEventListener("mouseenter", onEnter);
     el.addEventListener("mouseleave", onLeave);
     el.addEventListener("pointerdown", onInteract);
     el.addEventListener("touchstart", onInteract, { passive: true });
     el.addEventListener("wheel", onInteract, { passive: true });
+    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       cancelAnimationFrame(raf);
@@ -136,8 +143,17 @@ function ClienteHome() {
       el.removeEventListener("pointerdown", onInteract);
       el.removeEventListener("touchstart", onInteract);
       el.removeEventListener("wheel", onInteract);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [cats.length, showAllCats]);
+
+  // Pausa longa quando o usuário seleciona uma categoria (mantém a escolha visível)
+  useEffect(() => {
+    if (!catSel) return;
+    catsPausedRef.current = true;
+    const t = setTimeout(() => { catsPausedRef.current = false; }, 5000);
+    return () => clearTimeout(t);
+  }, [catSel]);
 
   useEffect(() => {
     (async () => {
@@ -219,7 +235,11 @@ function ClienteHome() {
         </div>
         <div
           ref={catsScrollRef}
-          className="-mx-1 flex gap-3 overflow-x-auto pb-1 scrollbar-hide"
+          className={
+            showAllCats
+              ? "grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8"
+              : "-mx-1 flex gap-3 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory"
+          }
         >
           {visibleCats.map((c) => {
             const img = CAT_IMG[c.slug];
@@ -228,8 +248,11 @@ function ClienteHome() {
               <button
                 key={c.id}
                 onClick={() => setCatSel(active ? null : c.id)}
-                className="flex shrink-0 snap-start flex-col items-center gap-1.5"
-                style={{ width: "72px" }}
+                className={
+                  showAllCats
+                    ? "flex flex-col items-center gap-1.5"
+                    : "flex w-[72px] shrink-0 snap-start flex-col items-center gap-1.5 sm:w-[84px] md:w-[96px]"
+                }
               >
                 <div
                   className={`aspect-square w-full overflow-hidden rounded-2xl bg-muted shadow-sm transition-all ${
@@ -240,8 +263,8 @@ function ClienteHome() {
                     <img
                       src={img}
                       alt={c.nome}
-                      width={144}
-                      height={144}
+                      width={192}
+                      height={192}
                       loading="lazy"
                       className="h-full w-full object-cover"
                     />
@@ -252,7 +275,7 @@ function ClienteHome() {
                   )}
                 </div>
                 <span
-                  className={`text-center text-[11px] font-semibold leading-tight ${
+                  className={`text-center text-[11px] font-semibold leading-tight sm:text-xs ${
                     active ? "text-primary" : "text-foreground"
                   }`}
                 >
@@ -264,13 +287,12 @@ function ClienteHome() {
           {!showAllCats && cats.length > 4 && (
             <button
               onClick={() => setShowAllCats(true)}
-              className="flex shrink-0 snap-start flex-col items-center gap-1.5"
-              style={{ width: "72px" }}
+              className="flex w-[72px] shrink-0 snap-start flex-col items-center gap-1.5 sm:w-[84px] md:w-[96px]"
             >
               <div className="grid aspect-square w-full place-items-center rounded-2xl bg-primary/10 text-primary shadow-sm transition-all hover:scale-[1.03]">
                 <span className="text-2xl font-black">+</span>
               </div>
-              <span className="text-center text-[11px] font-semibold leading-tight text-primary">
+              <span className="text-center text-[11px] font-semibold leading-tight text-primary sm:text-xs">
                 Ver todas
               </span>
             </button>
