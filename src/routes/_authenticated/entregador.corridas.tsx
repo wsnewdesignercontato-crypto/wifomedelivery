@@ -72,6 +72,26 @@ function Corridas() {
   const [savingIncident, setSavingIncident] = useState(false);
   const watchIdRef = useRef<number | null>(null);
   const proofInputRef = useRef<HTMLInputElement>(null);
+  const [myPos, setMyPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [availMeta, setAvailMeta] = useState<Record<string, { nome: string; distKm: number | null }>>({});
+
+  useEffect(() => {
+    if (!("geolocation" in navigator)) return;
+    navigator.geolocation.getCurrentPosition(
+      (p) => setMyPos({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 60000, timeout: 8000 },
+    );
+  }, []);
+
+  function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+    const R = 6371;
+    const toRad = (d: number) => (d * Math.PI) / 180;
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(s));
+  }
 
   async function load() {
     if (!courier) return;
@@ -82,6 +102,37 @@ function Corridas() {
       .or(`entregador_id.is.null,entregador_id.eq.${courier.user_id}`)
       .order("created_at", { ascending: false });
     setDisponiveis((dv ?? []) as Delivery[]);
+
+    // Metadados (nome da loja + distância até a coleta)
+    const dvList = (dv ?? []) as Delivery[];
+    if (dvList.length) {
+      const orderIds = dvList.map((d) => d.order_id);
+      const { data: ords } = await supabase
+        .from("orders")
+        .select("id, establishment_id")
+        .in("id", orderIds);
+      const estabIds = Array.from(new Set((ords ?? []).map((o: any) => o.establishment_id)));
+      const { data: estabs } = estabIds.length
+        ? await supabase.from("establishments").select("id, nome, lat, lng").in("id", estabIds)
+        : { data: [] as any[] };
+      const estabById: Record<string, { nome: string; lat: number | null; lng: number | null }> = {};
+      (estabs ?? []).forEach((e: any) => { estabById[e.id] = { nome: e.nome, lat: e.lat, lng: e.lng }; });
+      const orderToEstab: Record<string, string> = {};
+      (ords ?? []).forEach((o: any) => { orderToEstab[o.id] = o.establishment_id; });
+      const meta: Record<string, { nome: string; distKm: number | null }> = {};
+      for (const d of dvList) {
+        const eid = orderToEstab[d.order_id];
+        const e = eid ? estabById[eid] : undefined;
+        let distKm: number | null = null;
+        if (myPos && e && e.lat != null && e.lng != null) {
+          distKm = Math.round(haversineKm(myPos, { lat: e.lat, lng: e.lng }) * 10) / 10;
+        }
+        meta[d.id] = { nome: e?.nome ?? "Loja", distKm };
+      }
+      setAvailMeta(meta);
+    } else {
+      setAvailMeta({});
+    }
 
     const { data: at } = await supabase
       .from("deliveries")
@@ -351,22 +402,32 @@ function Corridas() {
                 <p className="mt-3 text-sm text-muted-foreground">Nenhuma corrida disponível no momento.</p>
               </div>
             )}
-            {disponiveis.map((d) => (
-              <div key={d.id} className="rounded-2xl border border-border bg-card p-4 shadow-card">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-semibold">
-                      {d.entregador_id === courier?.user_id ? "🎯 Chamado direto para você" : "Corrida disponível"}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">Aceite antes que outro entregador</p>
+            {disponiveis.map((d) => {
+              const m = availMeta[d.id];
+              return (
+                <div key={d.id} className="rounded-2xl border border-border bg-card p-4 shadow-card">
+                  <div className="flex items-start justify-between">
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">
+                        {d.entregador_id === courier?.user_id ? "🎯 Chamado direto para você" : m?.nome || "Corrida disponível"}
+                      </p>
+                      <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+                        {m?.distKm != null ? (
+                          <span><b className="text-foreground">{m.distKm.toString().replace(".", ",")} km</b> até a coleta</span>
+                        ) : (
+                          <span>Aceite antes que outro entregador</span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="font-bold text-primary shrink-0">{fmt(d.valor_entrega_cents)}</span>
                   </div>
-                  <span className="font-bold text-primary">{fmt(d.valor_entrega_cents)}</span>
+                  <div className="mt-3">
+                    <Button className="w-full" onClick={() => aceitar(d)}>Aceitar corrida</Button>
+                  </div>
                 </div>
-                <div className="mt-3">
-                  <Button className="w-full" onClick={() => aceitar(d)}>Aceitar corrida</Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}

@@ -25,11 +25,15 @@ export function NotificationsBell({ userId }: { userId: string }) {
 
   useEffect(() => {
     let alive = true;
+    // Only notifications destinadas a clientes (ou gerais)
+    const audienceOk = (a: string | null | undefined) =>
+      !a || a === "cliente" || a === "all";
     async function load() {
       const { data } = await supabase
         .from("notifications")
-        .select("id,titulo,mensagem,link_url,lida,created_at")
+        .select("id,titulo,mensagem,link_url,lida,created_at,audience")
         .eq("user_id", userId)
+        .or("audience.is.null,audience.eq.cliente,audience.eq.all")
         .order("created_at", { ascending: false })
         .limit(20);
       if (alive) setItems((data ?? []) as Notif[]);
@@ -41,7 +45,8 @@ export function NotificationsBell({ userId }: { userId: string }) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
         (p) => {
-          const n = p.new as Notif;
+          const n = p.new as Notif & { audience?: string | null };
+          if (!audienceOk(n.audience)) return;
           setItems((prev) => [n, ...prev].slice(0, 20));
           toast(n.titulo, { description: n.mensagem });
         },
