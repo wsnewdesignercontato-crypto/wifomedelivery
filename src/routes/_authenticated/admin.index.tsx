@@ -75,19 +75,19 @@ async function fetchOverview() {
         .order("created_at", { ascending: false })
         .limit(2000),
       supabase.from("profiles").select("id", { count: "exact", head: true }),
-      supabase.from("establishments").select("id,nome,aberto,status", { count: "exact" }),
+      supabase.from("establishments").select("id,nome,is_open,status", { count: "exact" }),
       supabase
         .from("courier_profiles")
-        .select("id", { count: "exact", head: true })
+        .select("user_id", { count: "exact", head: true })
         .eq("status", "online"),
-      supabase.from("courier_profiles").select("id", { count: "exact", head: true }),
+      supabase.from("courier_profiles").select("user_id", { count: "exact", head: true }),
     ]);
 
   const orders = (ordersMonthRes.data ?? []) as Order[];
   const clientesTotal = clientesRes.count ?? 0;
   const estabsTotal = estabsRes.count ?? 0;
-  const estabsAbertos =
-    (estabsRes.data ?? []).filter((e: { aberto: boolean }) => e.aberto).length;
+  const estabsList = (estabsRes.data ?? []) as { id: string; nome: string; is_open: boolean; status: string }[];
+  const estabsAbertos = estabsList.filter((e) => e.is_open).length;
   const entregadoresOnline = couriersOnlineRes.count ?? 0;
   const entregadoresTotal = couriersRes.count ?? 0;
 
@@ -139,9 +139,7 @@ async function fetchOverview() {
   }));
 
   // Top estabelecimentos (by delivered orders this month)
-  const estabsById = new Map<string, string>(
-    ((estabsRes.data ?? []) as { id: string; nome: string }[]).map((e) => [e.id, e.nome]),
-  );
+  const estabsById = new Map<string, string>(estabsList.map((e) => [e.id, e.nome]));
   const topMap = new Map<string, { nome: string; pedidos: number; receita: number }>();
   deliveredMonth.forEach((o) => {
     if (!o.establishment_id) return;
