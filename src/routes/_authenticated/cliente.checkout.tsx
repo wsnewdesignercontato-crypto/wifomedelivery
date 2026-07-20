@@ -138,38 +138,68 @@ function CheckoutPage() {
     );
   }
 
-  const total = subtotal + estab.taxa_entrega_cents;
+  const frete = tipoEntrega === "pickup" ? 0 : estab.taxa_entrega_cents;
+  const total = subtotal + frete;
 
   return (
     <div className="space-y-5">
       <h1 className="text-xl font-bold">Finalizar pedido</h1>
 
       <section>
-        <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold"><MapPin className="h-4 w-4 text-primary" /> Endereço de entrega</h2>
-        <div className="space-y-2">
-          {addrs.map((a) => (
-            <label key={a.id} className={`block cursor-pointer rounded-2xl border p-3 text-sm ${addrId === a.id ? "border-primary bg-primary/5" : "border-border bg-card"}`}>
-              <input type="radio" className="sr-only" checked={addrId === a.id} onChange={() => setAddrId(a.id)} />
-              <div className="font-semibold">{a.label}</div>
-              <div className="text-xs text-muted-foreground">
-                {a.rua}{a.numero ? `, ${a.numero}` : ""}{a.bairro ? ` — ${a.bairro}` : ""}<br />
-                {a.cidade}{a.estado ? `/${a.estado}` : ""}{a.cep ? ` · CEP ${a.cep}` : ""}
-              </div>
-            </label>
-          ))}
-        </div>
-        <div className="mt-3 rounded-2xl border border-dashed border-border p-3">
-          <p className="mb-2 text-xs font-semibold">Novo endereço</p>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Input placeholder="Rua" value={novo.rua} onChange={(e) => setNovo({ ...novo, rua: e.target.value })} />
-            <Input placeholder="Número" value={novo.numero} onChange={(e) => setNovo({ ...novo, numero: e.target.value })} />
-            <Input placeholder="Bairro" value={novo.bairro} onChange={(e) => setNovo({ ...novo, bairro: e.target.value })} />
-            <Input placeholder="Cidade" value={novo.cidade} onChange={(e) => setNovo({ ...novo, cidade: e.target.value })} />
-            <Input placeholder="Estado" value={novo.estado} onChange={(e) => setNovo({ ...novo, estado: e.target.value })} />
-          </div>
-          <Button size="sm" variant="outline" className="mt-2" onClick={criarEndereco}>Adicionar endereço</Button>
+        <h2 className="mb-2 text-sm font-semibold">Como você quer receber?</h2>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setTipoEntrega("delivery")}
+            className={`flex items-center gap-2 rounded-2xl border p-3 text-sm font-medium transition ${tipoEntrega === "delivery" ? "border-primary bg-primary/5 text-primary" : "border-border bg-card"}`}
+          >
+            <Bike className="h-4 w-4" />
+            <div className="text-left">
+              <div>Entrega</div>
+              <div className="text-[11px] font-normal text-muted-foreground">{estab.taxa_entrega_cents === 0 ? "Grátis" : fmt(estab.taxa_entrega_cents)}</div>
+            </div>
+          </button>
+          <button
+            onClick={() => setTipoEntrega("pickup")}
+            className={`flex items-center gap-2 rounded-2xl border p-3 text-sm font-medium transition ${tipoEntrega === "pickup" ? "border-primary bg-primary/5 text-primary" : "border-border bg-card"}`}
+          >
+            <Store className="h-4 w-4" />
+            <div className="text-left">
+              <div>Retirar no local</div>
+              <div className="text-[11px] font-normal text-muted-foreground">Sem taxa</div>
+            </div>
+          </button>
         </div>
       </section>
+
+      {tipoEntrega === "delivery" && (
+        <section>
+          <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold"><MapPin className="h-4 w-4 text-primary" /> Endereço de entrega</h2>
+          <div className="space-y-2">
+            {addrs.map((a) => (
+              <label key={a.id} className={`block cursor-pointer rounded-2xl border p-3 text-sm ${addrId === a.id ? "border-primary bg-primary/5" : "border-border bg-card"}`}>
+                <input type="radio" className="sr-only" checked={addrId === a.id} onChange={() => setAddrId(a.id)} />
+                <div className="font-semibold">{a.label}</div>
+                <div className="text-xs text-muted-foreground">
+                  {a.rua}{a.numero ? `, ${a.numero}` : ""}{a.bairro ? ` — ${a.bairro}` : ""}<br />
+                  {a.cidade}{a.estado ? `/${a.estado}` : ""}{a.cep ? ` · CEP ${a.cep}` : ""}
+                </div>
+              </label>
+            ))}
+          </div>
+          <div className="mt-3 rounded-2xl border border-dashed border-border p-3">
+            <p className="mb-2 text-xs font-semibold">Novo endereço</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Input placeholder="Rua" value={novo.rua} onChange={(e) => setNovo({ ...novo, rua: e.target.value })} />
+              <Input placeholder="Número" value={novo.numero} onChange={(e) => setNovo({ ...novo, numero: e.target.value })} />
+              <Input placeholder="Bairro" value={novo.bairro} onChange={(e) => setNovo({ ...novo, bairro: e.target.value })} />
+              <Input placeholder="Cidade" value={novo.cidade} onChange={(e) => setNovo({ ...novo, cidade: e.target.value })} />
+              <Input placeholder="Estado" value={novo.estado} onChange={(e) => setNovo({ ...novo, estado: e.target.value })} />
+            </div>
+            <Button size="sm" variant="outline" className="mt-2" onClick={criarEndereco}>Adicionar endereço</Button>
+          </div>
+        </section>
+      )}
+
 
       <section>
         <h2 className="mb-2 text-sm font-semibold">Forma de pagamento</h2>
