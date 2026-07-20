@@ -77,7 +77,7 @@ function NovidadesPage() {
   return (
     <div className="space-y-6 pb-4">
       <div className="flex items-center gap-2">
-        <Sparkles className="h-5 w-5 text-primary" />
+        <ShoppingBag className="h-5 w-5 text-primary" />
         <h1 className="text-xl font-bold">Novidades</h1>
       </div>
 
