@@ -24,6 +24,7 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/ap
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as ApiPublicSeedDemoRouteImport } from './routes/api/public/seed-demo'
+import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin.usuarios'
 import { Route as AuthenticatedAdminSuporteRouteImport } from './routes/_authenticated/admin.suporte'
 import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin.pedidos'
 import { Route as AuthenticatedAdminNotificacoesRouteImport } from './routes/_authenticated/admin.notificacoes'
@@ -115,6 +116,12 @@ const ApiPublicSeedDemoRoute = ApiPublicSeedDemoRouteImport.update({
   path: '/api/public/seed-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminUsuariosRoute =
+  AuthenticatedAdminUsuariosRouteImport.update({
+    id: '/usuarios',
+    path: '/usuarios',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminSuporteRoute =
   AuthenticatedAdminSuporteRouteImport.update({
     id: '/suporte',
@@ -231,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/admin/suporte': typeof AuthenticatedAdminSuporteRoute
+  '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -261,6 +269,7 @@ export interface FileRoutesByTo {
   '/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/admin/suporte': typeof AuthenticatedAdminSuporteRoute
+  '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
@@ -294,6 +303,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/_authenticated/admin/suporte': typeof AuthenticatedAdminSuporteRoute
+  '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -327,6 +337,7 @@ export interface FileRouteTypes {
     | '/admin/notificacoes'
     | '/admin/pedidos'
     | '/admin/suporte'
+    | '/admin/usuarios'
     | '/api/public/seed-demo'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -357,6 +368,7 @@ export interface FileRouteTypes {
     | '/admin/notificacoes'
     | '/admin/pedidos'
     | '/admin/suporte'
+    | '/admin/usuarios'
     | '/api/public/seed-demo'
     | '/admin'
   id:
@@ -389,6 +401,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/notificacoes'
     | '/_authenticated/admin/pedidos'
     | '/_authenticated/admin/suporte'
+    | '/_authenticated/admin/usuarios'
     | '/api/public/seed-demo'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
@@ -511,6 +524,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/seed-demo'
       preLoaderRoute: typeof ApiPublicSeedDemoRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/usuarios': {
+      id: '/_authenticated/admin/usuarios'
+      path: '/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AuthenticatedAdminUsuariosRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/suporte': {
       id: '/_authenticated/admin/suporte'
@@ -636,6 +656,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminNotificacoesRoute: typeof AuthenticatedAdminNotificacoesRoute
   AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
   AuthenticatedAdminSuporteRoute: typeof AuthenticatedAdminSuporteRoute
+  AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
@@ -656,6 +677,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminNotificacoesRoute: AuthenticatedAdminNotificacoesRoute,
   AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
   AuthenticatedAdminSuporteRoute: AuthenticatedAdminSuporteRoute,
+  AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
