@@ -35,9 +35,11 @@ const navItems: NavItem[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag },
   { to: "/admin/mapa", label: "Mapa ao vivo", icon: MapIcon },
+  { to: "/admin/usuarios", label: "Usuários & Admins", icon: Shield, group: "Pessoas" },
   { to: "/admin/clientes", label: "Clientes", icon: Users, group: "Pessoas" },
   { to: "/admin/estabelecimentos", label: "Estabelecimentos", icon: Store, group: "Pessoas" },
   { to: "/admin/entregadores", label: "Entregadores", icon: Bike, group: "Pessoas" },
+
   { to: "/admin/financeiro", label: "Financeiro", icon: DollarSign, group: "Operação" },
   { to: "/admin/avaliacoes", label: "Avaliações", icon: Star, group: "Operação" },
   { to: "/admin/cupons", label: "Cupons", icon: Ticket, group: "Marketing" },
