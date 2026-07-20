@@ -265,6 +265,32 @@ function PainelEntregador({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [online, courier.user_id]);
 
+  // Live GPS tracking — publish every ~10s while online
+  useEffect(() => {
+    if (!online || typeof navigator === "undefined" || !navigator.geolocation) return;
+    let lastSent = 0;
+    const watchId = navigator.geolocation.watchPosition(
+      async (pos) => {
+        const now = Date.now();
+        if (now - lastSent < 10000) return;
+        lastSent = now;
+        await supabase.from("tracking_points").insert({
+          courier_id: courier.user_id,
+          order_id: ativa?.order_id ?? null,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+          heading: pos.coords.heading,
+          speed: pos.coords.speed,
+        });
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
+    );
+    return () => { navigator.geolocation.clearWatch(watchId); };
+  }, [online, courier.user_id, ativa?.order_id]);
+
+
 
   async function toggleOnline(v: boolean) {
     setOnline(v);

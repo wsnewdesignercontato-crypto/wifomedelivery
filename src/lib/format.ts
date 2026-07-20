@@ -20,3 +20,5 @@ export const dateTime = (d: string | Date) =>
     hour: "2-digit",
     minute: "2-digit",
   });
+
+export const fmtBRL = brl;
