@@ -43,8 +43,8 @@ function EstabsPage() {
 
   const filtered = (data ?? []).filter((e) => {
     if (q && !e.nome.toLowerCase().includes(q.toLowerCase())) return false;
-    if (filter === "aberto") return e.aberto && e.status !== "bloqueado";
-    if (filter === "fechado") return !e.aberto && e.status !== "bloqueado";
+    if (filter === "aberto") return e.is_open && e.status !== "bloqueado";
+    if (filter === "fechado") return !e.is_open && e.status !== "bloqueado";
     if (filter === "bloqueado") return e.status === "bloqueado";
     return true;
   });
@@ -113,7 +113,7 @@ function EstabsPage() {
               <div className="min-w-0 flex-1">
                 <h3 className="truncate font-semibold text-foreground">{e.nome}</h3>
                 <p className="truncate text-xs text-muted-foreground">
-                  {e.categoria ?? "—"} · {e.cidade ?? "—"}/{e.estado ?? "—"}
+                  {e.categoria_id ?? "—"} · {e.cidade ?? "—"}/{e.estado ?? "—"}
                 </p>
                 <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1">
@@ -130,12 +130,12 @@ function EstabsPage() {
                   className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                     e.status === "bloqueado"
                       ? "bg-rose-500/10 text-rose-600"
-                      : e.aberto
+                      : e.is_open
                         ? "bg-emerald-500/10 text-emerald-600"
                         : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {e.status === "bloqueado" ? "Bloqueado" : e.aberto ? "Aberto" : "Fechado"}
+                  {e.status === "bloqueado" ? "Bloqueado" : e.is_open ? "Aberto" : "Fechado"}
                 </span>
               </div>
             </div>

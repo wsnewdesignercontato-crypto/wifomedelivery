@@ -16,7 +16,6 @@ type Order = {
   created_at: string;
   establishment_id: string | null;
   cliente_id: string | null;
-  entregador_id: string | null;
 };
 
 const COLUMNS: { key: string; label: string; color: string }[] = [
@@ -33,7 +32,7 @@ const COLUMNS: { key: string; label: string; color: string }[] = [
 async function fetchOrders() {
   const { data, error } = await supabase
     .from("orders")
-    .select("id,status,total_cents,created_at,establishment_id,cliente_id,entregador_id")
+    .select("id,status,total_cents,created_at,establishment_id,cliente_id")
     .order("created_at", { ascending: false })
     .limit(300);
   if (error) throw error;
