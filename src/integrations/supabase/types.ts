@@ -2122,6 +2122,79 @@ export type Database = {
           },
         ]
       }
+      sponsored_ads: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          cta_texto: string
+          duracao_segundos: number
+          establishment_id: string | null
+          fim_em: string | null
+          id: string
+          imagem_url: string
+          inicio_em: string | null
+          patrocinado: boolean
+          prioridade: number
+          subtitulo: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          cta_texto?: string
+          duracao_segundos?: number
+          establishment_id?: string | null
+          fim_em?: string | null
+          id?: string
+          imagem_url: string
+          inicio_em?: string | null
+          patrocinado?: boolean
+          prioridade?: number
+          subtitulo?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          cta_texto?: string
+          duracao_segundos?: number
+          establishment_id?: string | null
+          fim_em?: string | null
+          id?: string
+          imagem_url?: string
+          inicio_em?: string | null
+          patrocinado?: boolean
+          prioridade?: number
+          subtitulo?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsored_ads_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
+          {
+            foreignKeyName: "sponsored_ads_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_ads_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_movements: {
         Row: {
           created_at: string
