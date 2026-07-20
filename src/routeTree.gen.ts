@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminEntrarRouteImport } from './routes/admin-entrar'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedEstabelecimentoRouteImport } from './routes/_authenticated/estabelecimento'
@@ -62,6 +63,11 @@ const CadastroRoute = CadastroRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminEntrarRoute = AdminEntrarRouteImport.update({
+  id: '/admin-entrar',
+  path: '/admin-entrar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -199,6 +205,7 @@ const AuthenticatedAdminAvaliacoesRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin-entrar': typeof AdminEntrarRoute
   '/auth': typeof AuthRoute
   '/cadastro': typeof CadastroRoute
   '/entrar': typeof EntrarRoute
@@ -229,6 +236,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin-entrar': typeof AdminEntrarRoute
   '/auth': typeof AuthRoute
   '/cadastro': typeof CadastroRoute
   '/entrar': typeof EntrarRoute
@@ -260,6 +268,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/admin-entrar': typeof AdminEntrarRoute
   '/auth': typeof AuthRoute
   '/cadastro': typeof CadastroRoute
   '/entrar': typeof EntrarRoute
@@ -292,6 +301,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin-entrar'
     | '/auth'
     | '/cadastro'
     | '/entrar'
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin-entrar'
     | '/auth'
     | '/cadastro'
     | '/entrar'
@@ -352,6 +363,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/admin-entrar'
     | '/auth'
     | '/cadastro'
     | '/entrar'
@@ -384,6 +396,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AdminEntrarRoute: typeof AdminEntrarRoute
   AuthRoute: typeof AuthRoute
   CadastroRoute: typeof CadastroRoute
   EntrarRoute: typeof EntrarRoute
@@ -427,6 +440,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-entrar': {
+      id: '/admin-entrar'
+      path: '/admin-entrar'
+      fullPath: '/admin-entrar'
+      preLoaderRoute: typeof AdminEntrarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -664,6 +684,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AdminEntrarRoute: AdminEntrarRoute,
   AuthRoute: AuthRoute,
   CadastroRoute: CadastroRoute,
   EntrarRoute: EntrarRoute,
@@ -674,13 +695,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
