@@ -20,6 +20,7 @@ type Config = {
   default_delivery_fee_cents: number;
   default_radius_km: number;
   maintenance_mode: boolean;
+  bestseller_threshold: number;
 };
 
 async function fetchConfig() {
