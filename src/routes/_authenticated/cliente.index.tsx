@@ -24,7 +24,7 @@ import catCafeteria from "@/assets/cat-cafeteria.jpg";
 import catPorcoes from "@/assets/cat-porcoes.jpg";
 import catMercado from "@/assets/cat-mercado.jpg";
 import catFarmacia from "@/assets/cat-farmacia.jpg";
-import bannerFreteGratis from "@/assets/banner-frete-gratis-premium.png";
+import bannerFreteGratis from "@/assets/banner-frete-gratis-premium.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/cliente/")({
   component: ClienteHome,
