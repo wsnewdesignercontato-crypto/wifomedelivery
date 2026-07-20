@@ -1,0 +1,1 @@
+ALTER TABLE public.platform_settings ADD COLUMN IF NOT EXISTS bestseller_threshold INT NOT NULL DEFAULT 15;
