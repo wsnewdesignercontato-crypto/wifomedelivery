@@ -25,8 +25,12 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedClienteIndexRouteImport } from './routes/_authenticated/cliente.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as ApiPublicSeedDemoRouteImport } from './routes/api/public/seed-demo'
+import { Route as AuthenticatedClientePerfilRouteImport } from './routes/_authenticated/cliente.perfil'
+import { Route as AuthenticatedClientePedidosRouteImport } from './routes/_authenticated/cliente.pedidos'
+import { Route as AuthenticatedClienteFavoritosRouteImport } from './routes/_authenticated/cliente.favoritos'
 import { Route as AuthenticatedClienteCheckoutRouteImport } from './routes/_authenticated/cliente.checkout'
 import { Route as AuthenticatedClienteCarrinhoRouteImport } from './routes/_authenticated/cliente.carrinho'
+import { Route as AuthenticatedClienteBuscarRouteImport } from './routes/_authenticated/cliente.buscar'
 import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin.usuarios'
 import { Route as AuthenticatedAdminSuporteRouteImport } from './routes/_authenticated/admin.suporte'
 import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin.pedidos'
@@ -43,6 +47,7 @@ import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminCampanhasRouteImport } from './routes/_authenticated/admin.campanhas'
 import { Route as AuthenticatedAdminBannersRouteImport } from './routes/_authenticated/admin.banners'
 import { Route as AuthenticatedAdminAvaliacoesRouteImport } from './routes/_authenticated/admin.avaliacoes'
+import { Route as AuthenticatedClientePedidoIdRouteImport } from './routes/_authenticated/cliente.pedido.$id'
 import { Route as AuthenticatedClienteEstabelecimentoIdRouteImport } from './routes/_authenticated/cliente.estabelecimento.$id'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -126,6 +131,24 @@ const ApiPublicSeedDemoRoute = ApiPublicSeedDemoRouteImport.update({
   path: '/api/public/seed-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedClientePerfilRoute =
+  AuthenticatedClientePerfilRouteImport.update({
+    id: '/perfil',
+    path: '/perfil',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
+const AuthenticatedClientePedidosRoute =
+  AuthenticatedClientePedidosRouteImport.update({
+    id: '/pedidos',
+    path: '/pedidos',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
+const AuthenticatedClienteFavoritosRoute =
+  AuthenticatedClienteFavoritosRouteImport.update({
+    id: '/favoritos',
+    path: '/favoritos',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
 const AuthenticatedClienteCheckoutRoute =
   AuthenticatedClienteCheckoutRouteImport.update({
     id: '/checkout',
@@ -136,6 +159,12 @@ const AuthenticatedClienteCarrinhoRoute =
   AuthenticatedClienteCarrinhoRouteImport.update({
     id: '/carrinho',
     path: '/carrinho',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
+const AuthenticatedClienteBuscarRoute =
+  AuthenticatedClienteBuscarRouteImport.update({
+    id: '/buscar',
+    path: '/buscar',
     getParentRoute: () => AuthenticatedClienteRoute,
   } as any)
 const AuthenticatedAdminUsuariosRoute =
@@ -231,6 +260,12 @@ const AuthenticatedAdminAvaliacoesRoute =
     path: '/avaliacoes',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedClientePedidoIdRoute =
+  AuthenticatedClientePedidoIdRouteImport.update({
+    id: '/pedido/$id',
+    path: '/pedido/$id',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
 const AuthenticatedClienteEstabelecimentoIdRoute =
   AuthenticatedClienteEstabelecimentoIdRouteImport.update({
     id: '/estabelecimento/$id',
@@ -267,12 +302,17 @@ export interface FileRoutesByFullPath {
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/admin/suporte': typeof AuthenticatedAdminSuporteRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
+  '/cliente/buscar': typeof AuthenticatedClienteBuscarRoute
   '/cliente/carrinho': typeof AuthenticatedClienteCarrinhoRoute
   '/cliente/checkout': typeof AuthenticatedClienteCheckoutRoute
+  '/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
+  '/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
+  '/cliente/perfil': typeof AuthenticatedClientePerfilRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/cliente/': typeof AuthenticatedClienteIndexRoute
   '/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
+  '/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -301,12 +341,17 @@ export interface FileRoutesByTo {
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/admin/suporte': typeof AuthenticatedAdminSuporteRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
+  '/cliente/buscar': typeof AuthenticatedClienteBuscarRoute
   '/cliente/carrinho': typeof AuthenticatedClienteCarrinhoRoute
   '/cliente/checkout': typeof AuthenticatedClienteCheckoutRoute
+  '/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
+  '/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
+  '/cliente/perfil': typeof AuthenticatedClientePerfilRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/cliente': typeof AuthenticatedClienteIndexRoute
   '/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
+  '/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -339,12 +384,17 @@ export interface FileRoutesById {
   '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/_authenticated/admin/suporte': typeof AuthenticatedAdminSuporteRoute
   '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
+  '/_authenticated/cliente/buscar': typeof AuthenticatedClienteBuscarRoute
   '/_authenticated/cliente/carrinho': typeof AuthenticatedClienteCarrinhoRoute
   '/_authenticated/cliente/checkout': typeof AuthenticatedClienteCheckoutRoute
+  '/_authenticated/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
+  '/_authenticated/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
+  '/_authenticated/cliente/perfil': typeof AuthenticatedClientePerfilRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/cliente/': typeof AuthenticatedClienteIndexRoute
   '/_authenticated/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
+  '/_authenticated/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -377,12 +427,17 @@ export interface FileRouteTypes {
     | '/admin/pedidos'
     | '/admin/suporte'
     | '/admin/usuarios'
+    | '/cliente/buscar'
     | '/cliente/carrinho'
     | '/cliente/checkout'
+    | '/cliente/favoritos'
+    | '/cliente/pedidos'
+    | '/cliente/perfil'
     | '/api/public/seed-demo'
     | '/admin/'
     | '/cliente/'
     | '/cliente/estabelecimento/$id'
+    | '/cliente/pedido/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -411,12 +466,17 @@ export interface FileRouteTypes {
     | '/admin/pedidos'
     | '/admin/suporte'
     | '/admin/usuarios'
+    | '/cliente/buscar'
     | '/cliente/carrinho'
     | '/cliente/checkout'
+    | '/cliente/favoritos'
+    | '/cliente/pedidos'
+    | '/cliente/perfil'
     | '/api/public/seed-demo'
     | '/admin'
     | '/cliente'
     | '/cliente/estabelecimento/$id'
+    | '/cliente/pedido/$id'
   id:
     | '__root__'
     | '/'
@@ -448,12 +508,17 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/pedidos'
     | '/_authenticated/admin/suporte'
     | '/_authenticated/admin/usuarios'
+    | '/_authenticated/cliente/buscar'
     | '/_authenticated/cliente/carrinho'
     | '/_authenticated/cliente/checkout'
+    | '/_authenticated/cliente/favoritos'
+    | '/_authenticated/cliente/pedidos'
+    | '/_authenticated/cliente/perfil'
     | '/api/public/seed-demo'
     | '/_authenticated/admin/'
     | '/_authenticated/cliente/'
     | '/_authenticated/cliente/estabelecimento/$id'
+    | '/_authenticated/cliente/pedido/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -582,6 +647,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSeedDemoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/cliente/perfil': {
+      id: '/_authenticated/cliente/perfil'
+      path: '/perfil'
+      fullPath: '/cliente/perfil'
+      preLoaderRoute: typeof AuthenticatedClientePerfilRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
+    '/_authenticated/cliente/pedidos': {
+      id: '/_authenticated/cliente/pedidos'
+      path: '/pedidos'
+      fullPath: '/cliente/pedidos'
+      preLoaderRoute: typeof AuthenticatedClientePedidosRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
+    '/_authenticated/cliente/favoritos': {
+      id: '/_authenticated/cliente/favoritos'
+      path: '/favoritos'
+      fullPath: '/cliente/favoritos'
+      preLoaderRoute: typeof AuthenticatedClienteFavoritosRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
     '/_authenticated/cliente/checkout': {
       id: '/_authenticated/cliente/checkout'
       path: '/checkout'
@@ -594,6 +680,13 @@ declare module '@tanstack/react-router' {
       path: '/carrinho'
       fullPath: '/cliente/carrinho'
       preLoaderRoute: typeof AuthenticatedClienteCarrinhoRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
+    '/_authenticated/cliente/buscar': {
+      id: '/_authenticated/cliente/buscar'
+      path: '/buscar'
+      fullPath: '/cliente/buscar'
+      preLoaderRoute: typeof AuthenticatedClienteBuscarRouteImport
       parentRoute: typeof AuthenticatedClienteRoute
     }
     '/_authenticated/admin/usuarios': {
@@ -708,6 +801,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAvaliacoesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/cliente/pedido/$id': {
+      id: '/_authenticated/cliente/pedido/$id'
+      path: '/pedido/$id'
+      fullPath: '/cliente/pedido/$id'
+      preLoaderRoute: typeof AuthenticatedClientePedidoIdRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
     '/_authenticated/cliente/estabelecimento/$id': {
       id: '/_authenticated/cliente/estabelecimento/$id'
       path: '/estabelecimento/$id'
@@ -763,18 +863,28 @@ const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
 interface AuthenticatedClienteRouteChildren {
+  AuthenticatedClienteBuscarRoute: typeof AuthenticatedClienteBuscarRoute
   AuthenticatedClienteCarrinhoRoute: typeof AuthenticatedClienteCarrinhoRoute
   AuthenticatedClienteCheckoutRoute: typeof AuthenticatedClienteCheckoutRoute
+  AuthenticatedClienteFavoritosRoute: typeof AuthenticatedClienteFavoritosRoute
+  AuthenticatedClientePedidosRoute: typeof AuthenticatedClientePedidosRoute
+  AuthenticatedClientePerfilRoute: typeof AuthenticatedClientePerfilRoute
   AuthenticatedClienteIndexRoute: typeof AuthenticatedClienteIndexRoute
   AuthenticatedClienteEstabelecimentoIdRoute: typeof AuthenticatedClienteEstabelecimentoIdRoute
+  AuthenticatedClientePedidoIdRoute: typeof AuthenticatedClientePedidoIdRoute
 }
 
 const AuthenticatedClienteRouteChildren: AuthenticatedClienteRouteChildren = {
+  AuthenticatedClienteBuscarRoute: AuthenticatedClienteBuscarRoute,
   AuthenticatedClienteCarrinhoRoute: AuthenticatedClienteCarrinhoRoute,
   AuthenticatedClienteCheckoutRoute: AuthenticatedClienteCheckoutRoute,
+  AuthenticatedClienteFavoritosRoute: AuthenticatedClienteFavoritosRoute,
+  AuthenticatedClientePedidosRoute: AuthenticatedClientePedidosRoute,
+  AuthenticatedClientePerfilRoute: AuthenticatedClientePerfilRoute,
   AuthenticatedClienteIndexRoute: AuthenticatedClienteIndexRoute,
   AuthenticatedClienteEstabelecimentoIdRoute:
     AuthenticatedClienteEstabelecimentoIdRoute,
+  AuthenticatedClientePedidoIdRoute: AuthenticatedClientePedidoIdRoute,
 }
 
 const AuthenticatedClienteRouteWithChildren =
