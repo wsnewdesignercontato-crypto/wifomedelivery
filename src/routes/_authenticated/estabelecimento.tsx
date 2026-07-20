@@ -342,6 +342,7 @@ function PainelLoja({ estab, setEstab }: { estab: Estab; setEstab: (e: Estab) =>
 function PedidosPanel({ estab }: { estab: Estab }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [items, setItems] = useState<Record<string, OrderItem[]>>({});
+  const [openHistory, setOpenHistory] = useState<Set<string>>(new Set());
 
   async function reload() {
     const { data } = await supabase
