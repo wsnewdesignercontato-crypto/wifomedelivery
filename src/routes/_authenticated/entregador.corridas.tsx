@@ -1,13 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Bike, MapPin, Package, CheckCircle2, Phone, MessageSquare, Navigation, Clock, ShieldCheck, Loader2 } from "lucide-react";
+import { Bike, MapPin, Package, CheckCircle2, Phone, MessageSquare, Navigation, Clock, ShieldCheck, Loader2, Camera, Banknote, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useMyCourier, fmt } from "@/hooks/use-courier";
+import { OrderChat } from "@/components/order-chat";
+import { SOSButton } from "@/components/sos-button";
 
 export const Route = createFileRoute("/_authenticated/entregador/corridas")({
   component: Corridas,
@@ -21,6 +24,7 @@ type OrderLite = {
   id: string; establishment_id: string; total_cents: number; cliente_id: string;
   endereco_entrega: { endereco?: string; bairro?: string; complemento?: string } | null;
   codigo_entrega: string | null; observacoes: string | null; forma_pagamento: string;
+  troco_para_cents: number | null;
 };
 type Estab = { id: string; nome: string; endereco: string | null; cidade: string | null; telefone?: string | null };
 type ClienteInfo = { nome: string | null; telefone: string | null };
@@ -39,6 +43,15 @@ const ORDER_MAP: Record<string, string> = {
   at_customer: "arriving", delivered: "delivered",
 };
 
+const INCIDENT_TYPES = [
+  { k: "endereco_errado", label: "Endereço errado" },
+  { k: "cliente_ausente", label: "Cliente ausente" },
+  { k: "produto_avariado", label: "Produto avariado" },
+  { k: "acidente", label: "Acidente / pane" },
+  { k: "recusa", label: "Cliente recusou" },
+  { k: "outro", label: "Outro" },
+];
+
 function Corridas() {
   const { courier } = useMyCourier();
   const [disponiveis, setDisponiveis] = useState<Delivery[]>([]);
@@ -49,7 +62,16 @@ function Corridas() {
   const [codeOpen, setCodeOpen] = useState(false);
   const [codeInput, setCodeInput] = useState("");
   const [advancing, setAdvancing] = useState(false);
+  const [chatOpen, setChatOpen] = useState<"client_courier" | "store_courier" | null>(null);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofPreview, setProofPreview] = useState<string | null>(null);
+  const [contactless, setContactless] = useState(false);
+  const [incidentOpen, setIncidentOpen] = useState(false);
+  const [incidentType, setIncidentType] = useState("cliente_ausente");
+  const [incidentText, setIncidentText] = useState("");
+  const [savingIncident, setSavingIncident] = useState(false);
   const watchIdRef = useRef<number | null>(null);
+  const proofInputRef = useRef<HTMLInputElement>(null);
 
   async function load() {
     if (!courier) return;
@@ -73,7 +95,7 @@ function Corridas() {
 
     if (at) {
       const { data: o } = await supabase.from("orders")
-        .select("id,establishment_id,total_cents,cliente_id,endereco_entrega,codigo_entrega,observacoes,forma_pagamento")
+        .select("id,establishment_id,total_cents,cliente_id,endereco_entrega,codigo_entrega,observacoes,forma_pagamento,troco_para_cents")
         .eq("id", at.order_id).maybeSingle();
       setOrder(o as OrderLite);
       if (o) {
@@ -97,7 +119,6 @@ function Corridas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courier?.user_id]);
 
-  // GPS tracking enquanto há corrida ativa em campo (to_store → at_customer)
   useEffect(() => {
     const shouldTrack = ativa && ["to_store","at_store","picked_up","to_customer","at_customer"].includes(ativa.status);
     if (!shouldTrack || !courier || !("geolocation" in navigator)) {
@@ -137,7 +158,7 @@ function Corridas() {
 
   async function avancar(next: string) {
     if (!ativa || !courier || advancing) return;
-    if (next === "delivered") { setCodeInput(""); setCodeOpen(true); return; }
+    if (next === "delivered") { setCodeInput(""); setProofFile(null); setProofPreview(null); setContactless(false); setCodeOpen(true); return; }
     setAdvancing(true);
     const patch: Record<string, unknown> = { status: next };
     if (next === "picked_up") patch.coletado_em = new Date().toISOString();
@@ -148,17 +169,41 @@ function Corridas() {
     load();
   }
 
+  function pickProof(f: File) {
+    if (f.size > 5 * 1024 * 1024) return toast.error("Foto muito grande (máx 5MB)");
+    setProofFile(f);
+    setProofPreview(URL.createObjectURL(f));
+  }
+
   async function confirmarEntrega() {
     if (!ativa || !order || !courier) return;
     if (order.codigo_entrega && codeInput.trim() !== order.codigo_entrega) {
       return toast.error("Código incorreto");
     }
     setAdvancing(true);
+    let prova_url: string | null = null;
+    let metodo: string = contactless ? "contactless" : "code";
+    if (proofFile) {
+      const path = `${courier.user_id}/${order.id}/${Date.now()}-${proofFile.name}`;
+      const up = await supabase.storage.from("delivery-proofs").upload(path, proofFile);
+      if (up.error) { setAdvancing(false); return toast.error("Falha ao enviar foto"); }
+      const { data: signed } = await supabase.storage.from("delivery-proofs").createSignedUrl(path, 60 * 60 * 24 * 30);
+      prova_url = signed?.signedUrl ?? path;
+      metodo = "photo";
+    }
+    const orderPatch: Record<string, unknown> = {
+      status: "delivered",
+      entrega_metodo_prova: metodo,
+      dinheiro_recebido: order.forma_pagamento === "dinheiro",
+    };
+    if (prova_url) orderPatch.prova_url = prova_url;
+
+
     const { error } = await supabase.from("deliveries").update({
       status: "delivered", entregue_em: new Date().toISOString(),
     }).eq("id", ativa.id);
     if (error) { setAdvancing(false); return toast.error("Falha ao finalizar"); }
-    await supabase.from("orders").update({ status: "delivered" }).eq("id", ativa.order_id);
+    await supabase.from("orders").update(orderPatch as never).eq("id", ativa.order_id);
     await supabase.from("courier_profiles").update({ status: "online" }).eq("user_id", courier.user_id);
     setAdvancing(false);
     setCodeOpen(false);
@@ -166,12 +211,34 @@ function Corridas() {
     load();
   }
 
+  async function salvarIncidente() {
+    if (!ativa || !order || !courier) return;
+    setSavingIncident(true);
+    const { error } = await supabase.from("order_incidents").insert({
+      order_id: order.id,
+      entregador_id: courier.user_id,
+      tipo: incidentType,
+      descricao: incidentText.trim() || null,
+    });
+
+    setSavingIncident(false);
+    if (error) return toast.error("Falha ao registrar");
+    toast.success("Ocorrência registrada. Suporte foi notificado.");
+    setIncidentOpen(false);
+    setIncidentText("");
+  }
+
   const currentStageIdx = ativa ? STAGES.findIndex((s) => s.key === ativa.status) : -1;
   const currentStage = currentStageIdx >= 0 ? STAGES[currentStageIdx] : null;
+  const trocoDevolver = order && order.forma_pagamento === "dinheiro" && order.troco_para_cents
+    ? Math.max(0, order.troco_para_cents - order.total_cents) : 0;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-black">Corridas</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-black">Corridas</h1>
+        {ativa && <SOSButton orderId={ativa.order_id} deliveryId={ativa.id} />}
+      </div>
 
       {ativa && (
         <section className="rounded-2xl border-2 border-primary bg-card p-4 shadow-brand">
@@ -180,7 +247,6 @@ function Corridas() {
             <span className="font-bold text-primary">{fmt(ativa.valor_entrega_cents)}</span>
           </div>
 
-          {/* Timeline */}
           <div className="mt-4">
             <div className="flex items-center gap-1">
               {STAGES.map((s, i) => {
@@ -207,11 +273,16 @@ function Corridas() {
                 </p>
                 <p className="font-semibold">{estab.nome}</p>
                 <p className="text-xs text-muted-foreground">{estab.endereco ?? "—"} {estab.cidade && `· ${estab.cidade}`}</p>
-                {estab.telefone && (
-                  <a href={`tel:${estab.telefone}`}>
-                    <Button size="sm" variant="outline" className="mt-2"><Phone className="mr-2 h-3 w-3" />Ligar</Button>
-                  </a>
-                )}
+                <div className="mt-2 flex gap-2">
+                  {estab.telefone && (
+                    <a href={`tel:${estab.telefone}`}>
+                      <Button size="sm" variant="outline"><Phone className="mr-2 h-3 w-3" />Ligar</Button>
+                    </a>
+                  )}
+                  <Button size="sm" variant="outline" onClick={() => setChatOpen("store_courier")}>
+                    <MessageSquare className="mr-2 h-3 w-3" />Chat loja
+                  </Button>
+                </div>
               </div>
               <div className="rounded-xl border border-border bg-background p-3">
                 <p className="mb-1 flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
@@ -228,12 +299,25 @@ function Corridas() {
                       <Button size="sm" variant="outline"><Phone className="mr-2 h-3 w-3" />Ligar</Button>
                     </a>
                   )}
-                  <Button size="sm" variant="outline"><MessageSquare className="mr-2 h-3 w-3" />Chat</Button>
+                  <Button size="sm" variant="outline" onClick={() => setChatOpen("client_courier")}>
+                    <MessageSquare className="mr-2 h-3 w-3" />Chat cliente
+                  </Button>
                 </div>
               </div>
               {order.observacoes && (
                 <div className="md:col-span-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs">
                   <strong>Observações:</strong> {order.observacoes}
+                </div>
+              )}
+              {order.forma_pagamento === "dinheiro" && (
+                <div className="md:col-span-2 rounded-xl border-2 border-emerald-500/50 bg-emerald-500/10 p-3 text-sm">
+                  <p className="flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400">
+                    <Banknote className="h-4 w-4" /> Pagamento em dinheiro
+                  </p>
+                  <p className="mt-1 text-xs">
+                    Total a receber: <strong>{fmt(order.total_cents)}</strong>
+                    {order.troco_para_cents ? <> · Cliente vai pagar com <strong>{fmt(order.troco_para_cents)}</strong> · <span className="text-emerald-600 dark:text-emerald-400">Levar troco: <strong>{fmt(trocoDevolver)}</strong></span></> : <> · Sem necessidade de troco</>}
+                  </p>
                 </div>
               )}
               <div className="md:col-span-2 flex items-center justify-between rounded-xl border border-border bg-background p-3 text-xs">
@@ -250,6 +334,9 @@ function Corridas() {
                 {currentStage.cta}
               </Button>
             )}
+            <Button size="lg" variant="outline" onClick={() => setIncidentOpen(true)}>
+              <AlertTriangle className="mr-2 h-4 w-4" /> Reportar problema
+            </Button>
           </div>
         </section>
       )}
@@ -284,25 +371,114 @@ function Corridas() {
         </section>
       )}
 
+      {/* Confirmar entrega */}
       <Dialog open={codeOpen} onOpenChange={setCodeOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Confirmar entrega</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Peça ao cliente o <strong className="text-foreground">código de 4 dígitos</strong> mostrado no app dele e digite abaixo para finalizar a corrida.
-            </p>
+        <DialogContent className="max-h-[92vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Confirmar entrega</DialogTitle>
+            <DialogDescription>
+              Peça o código de 4 dígitos ao cliente e, se possível, tire uma foto do pedido entregue como prova.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
             <Input
               inputMode="numeric" maxLength={4} placeholder="0000"
               value={codeInput} onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
               className="text-center text-3xl font-black tracking-[0.5em]"
               autoFocus
             />
+
+            <div className="space-y-2">
+              <p className="text-xs font-bold uppercase text-muted-foreground">Prova de entrega (opcional)</p>
+              <input
+                ref={proofInputRef}
+                type="file" accept="image/*" capture="environment" className="hidden"
+                onChange={(e) => e.target.files?.[0] && pickProof(e.target.files[0])}
+              />
+              {proofPreview ? (
+                <div className="relative">
+                  <img src={proofPreview} alt="prova" className="w-full rounded-xl" />
+                  <Button size="sm" variant="outline" className="mt-2 w-full" onClick={() => { setProofFile(null); setProofPreview(null); }}>
+                    Trocar foto
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="outline" className="w-full" onClick={() => proofInputRef.current?.click()}>
+                  <Camera className="mr-2 h-4 w-4" /> Tirar foto do pedido entregue
+                </Button>
+              )}
+            </div>
+
+            <label className="flex items-start gap-2 rounded-xl border border-border bg-background p-3 text-sm">
+              <input type="checkbox" checked={contactless} onChange={(e) => setContactless(e.target.checked)} className="mt-1" />
+              <span>
+                <strong>Entrega sem contato</strong>
+                <span className="block text-xs text-muted-foreground">O pedido foi deixado na porta conforme instruções.</span>
+              </span>
+            </label>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCodeOpen(false)}>Cancelar</Button>
             <Button onClick={confirmarEntrega} disabled={advancing || codeInput.length !== 4}>
               {advancing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
               Confirmar entrega
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Chat drawer */}
+      <Sheet open={chatOpen !== null} onOpenChange={(o) => !o && setChatOpen(null)}>
+        <SheetContent side="right" className="flex w-full flex-col p-0 sm:max-w-md">
+          <SheetHeader className="border-b border-border p-4">
+            <SheetTitle>{chatOpen === "client_courier" ? "Chat com o cliente" : "Chat com a loja"}</SheetTitle>
+          </SheetHeader>
+          {chatOpen && ativa && order && (
+            <div className="flex-1 p-3">
+              <OrderChat
+                orderId={order.id}
+                escopo={chatOpen}
+                myRole="entregador"
+                contactName={chatOpen === "client_courier" ? cliente?.nome : estab?.nome}
+                contactPhone={chatOpen === "client_courier" ? cliente?.telefone : estab?.telefone}
+              />
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Ocorrência */}
+      <Dialog open={incidentOpen} onOpenChange={setIncidentOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reportar problema</DialogTitle>
+            <DialogDescription>Gera um protocolo para o suporte WiFome analisar.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              {INCIDENT_TYPES.map((t) => (
+                <button
+                  key={t.k} type="button"
+                  onClick={() => setIncidentType(t.k)}
+                  className={`rounded-xl border-2 p-3 font-semibold transition ${
+                    incidentType === t.k ? "border-primary bg-primary/10 text-primary" : "border-border bg-background"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <textarea
+              className="w-full rounded-xl border border-border bg-background p-3 text-sm"
+              rows={3} placeholder="Descreva o que aconteceu (opcional)"
+              value={incidentText} onChange={(e) => setIncidentText(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIncidentOpen(false)}>Cancelar</Button>
+            <Button onClick={salvarIncidente} disabled={savingIncident}>
+              {savingIncident ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AlertTriangle className="mr-2 h-4 w-4" />}
+              Registrar
             </Button>
           </DialogFooter>
         </DialogContent>
