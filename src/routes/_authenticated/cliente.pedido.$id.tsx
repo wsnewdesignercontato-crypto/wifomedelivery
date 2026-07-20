@@ -23,6 +23,7 @@ type Order = {
   refund_amount_cents: number;
   establishment_id: string;
   forma_pagamento: string;
+  codigo_entrega: string | null;
   created_at: string;
 };
 type Item = { id: string; nome_snapshot: string; preco_unit_cents: number; quantidade: number; observacoes: string | null };
@@ -61,7 +62,7 @@ function PedidoPage() {
     async function load() {
       const { data: o } = await supabase
         .from("orders")
-        .select("id,status,subtotal_cents,frete_cents,desconto_cents,total_cents,observacoes,cancellation_reason,refund_status,refund_amount_cents,establishment_id,forma_pagamento,created_at")
+        .select("id,status,subtotal_cents,frete_cents,desconto_cents,total_cents,observacoes,cancellation_reason,refund_status,refund_amount_cents,establishment_id,forma_pagamento,codigo_entrega,created_at")
         .eq("id", id)
         .maybeSingle();
       setOrder(o as Order | null);
@@ -154,6 +155,14 @@ function PedidoPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {order.codigo_entrega && !["delivered","cancelled","refunded"].includes(order.status) && (
+        <div className="rounded-2xl border-2 border-primary bg-primary/5 p-4 text-center">
+          <p className="text-xs font-bold uppercase tracking-wider text-primary">Código de entrega</p>
+          <p className="mt-1 text-4xl font-black tracking-[0.5em] text-primary">{order.codigo_entrega}</p>
+          <p className="mt-2 text-xs text-muted-foreground">Informe este código ao entregador para confirmar o recebimento.</p>
         </div>
       )}
 
