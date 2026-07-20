@@ -17,6 +17,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { EstabReviewsPanel } from "@/components/reviews";
+import { OrderHistory } from "@/components/order-history";
 import { IFomeLogo } from "@/components/ifome-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
