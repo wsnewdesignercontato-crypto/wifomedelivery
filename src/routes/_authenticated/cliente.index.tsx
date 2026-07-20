@@ -190,6 +190,24 @@ function ClienteHome() {
       });
       setSalesCount(counts);
       if (ps.data?.bestseller_threshold) setThreshold(ps.data.bestseller_threshold);
+
+      // Horário de hoje para as lojas listadas
+      const ids = (e.data ?? []).map((x: any) => x.id);
+      if (ids.length) {
+        const today = new Date().getDay();
+        const { data: hrs } = await supabase
+          .from("establishment_hours")
+          .select("establishment_id,abre,fecha,ativo,dia_semana")
+          .in("establishment_id", ids)
+          .eq("dia_semana", today)
+          .eq("ativo", true);
+        const map: Record<string, { abre: string; fecha: string }> = {};
+        (hrs ?? []).forEach((h: any) => {
+          map[h.establishment_id] = { abre: String(h.abre).slice(0, 5), fecha: String(h.fecha).slice(0, 5) };
+        });
+        setHoursById(map);
+      }
+
       setLoading(false);
     })();
   }, []);
