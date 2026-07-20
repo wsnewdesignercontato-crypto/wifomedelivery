@@ -216,12 +216,11 @@ function Corridas() {
     setSavingIncident(true);
     const { error } = await supabase.from("order_incidents").insert({
       order_id: order.id,
-      delivery_id: ativa.id,
-      reported_by: courier.user_id,
-      reporter_role: "entregador",
+      entregador_id: courier.user_id,
       tipo: incidentType,
       descricao: incidentText.trim() || null,
     });
+
     setSavingIncident(false);
     if (error) return toast.error("Falha ao registrar");
     toast.success("Ocorrência registrada. Suporte foi notificado.");
