@@ -32,6 +32,8 @@ export type Courier = {
   aceitacao_pct?: number;
   cancelamento_pct?: number;
   aprovacao?: string;
+  kyc_status?: string;
+  kyc_motivo?: string | null;
 };
 
 export function courierQueryOptions(userId: string) {
