@@ -380,7 +380,7 @@ function PedidosPanel({ estab }: { estab: Estab }) {
     }
   }
 
-  const proxima = (s: string): { label: string; next: string } | null => {
+  const proxima = (s: string): { label: string; next: "accepted" | "preparing" | "ready" } | null => {
     if (s === "placed") return { label: "Aceitar", next: "accepted" };
     if (s === "accepted") return { label: "Iniciar preparo", next: "preparing" };
     if (s === "preparing") return { label: "Marcar pronto e chamar entregador", next: "ready" };
