@@ -10,6 +10,7 @@ export const Route = createFileRoute("/_authenticated/cliente/carrinho")({
   component: CarrinhoPage,
 });
 
+type CartAddon = { id: string; nome: string; preco_extra_cents: number; group_nome: string };
 type Item = {
   id: string;
   product_id: string;
@@ -18,6 +19,7 @@ type Item = {
   quantidade: number;
   observacoes: string | null;
   establishment_id: string;
+  addons: CartAddon[];
 };
 type Estab = { id: string; nome: string; taxa_entrega_cents: number; pedido_minimo_cents: number };
 
