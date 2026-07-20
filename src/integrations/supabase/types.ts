@@ -589,6 +589,8 @@ export type Database = {
           endereco: Json | null
           entregas_total: number | null
           foto_url: string | null
+          kyc_motivo: string | null
+          kyc_status: string
           last_seen: string | null
           lat: number | null
           lng: number | null
@@ -633,6 +635,8 @@ export type Database = {
           endereco?: Json | null
           entregas_total?: number | null
           foto_url?: string | null
+          kyc_motivo?: string | null
+          kyc_status?: string
           last_seen?: string | null
           lat?: number | null
           lng?: number | null
@@ -677,6 +681,8 @@ export type Database = {
           endereco?: Json | null
           entregas_total?: number | null
           foto_url?: string | null
+          kyc_motivo?: string | null
+          kyc_status?: string
           last_seen?: string | null
           lat?: number | null
           lng?: number | null
@@ -1003,6 +1009,67 @@ export type Database = {
           },
         ]
       }
+      establishment_documents: {
+        Row: {
+          arquivo_url: string
+          created_at: string
+          establishment_id: string
+          id: string
+          motivo_recusa: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          arquivo_url: string
+          created_at?: string
+          establishment_id: string
+          id?: string
+          motivo_recusa?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          arquivo_url?: string
+          created_at?: string
+          establishment_id?: string
+          id?: string
+          motivo_recusa?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "establishment_documents_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
+          {
+            foreignKeyName: "establishment_documents_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "establishment_documents_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       establishment_hours: {
         Row: {
           abre: string
@@ -1055,6 +1122,91 @@ export type Database = {
           },
         ]
       }
+      establishment_withdrawals: {
+        Row: {
+          banco_info: Json | null
+          comprovante_url: string | null
+          created_at: string
+          establishment_id: string
+          id: string
+          liquido_cents: number | null
+          metodo: string
+          motivo_recusa: string | null
+          pix_key: string | null
+          pix_tipo: string | null
+          processado_em: string | null
+          requested_by: string
+          status: string
+          taxa_cents: number | null
+          titular_documento: string | null
+          titular_nome: string | null
+          updated_at: string
+          valor_cents: number
+        }
+        Insert: {
+          banco_info?: Json | null
+          comprovante_url?: string | null
+          created_at?: string
+          establishment_id: string
+          id?: string
+          liquido_cents?: number | null
+          metodo?: string
+          motivo_recusa?: string | null
+          pix_key?: string | null
+          pix_tipo?: string | null
+          processado_em?: string | null
+          requested_by: string
+          status?: string
+          taxa_cents?: number | null
+          titular_documento?: string | null
+          titular_nome?: string | null
+          updated_at?: string
+          valor_cents: number
+        }
+        Update: {
+          banco_info?: Json | null
+          comprovante_url?: string | null
+          created_at?: string
+          establishment_id?: string
+          id?: string
+          liquido_cents?: number | null
+          metodo?: string
+          motivo_recusa?: string | null
+          pix_key?: string | null
+          pix_tipo?: string | null
+          processado_em?: string | null
+          requested_by?: string
+          status?: string
+          taxa_cents?: number | null
+          titular_documento?: string | null
+          titular_nome?: string | null
+          updated_at?: string
+          valor_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "establishment_withdrawals_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
+          {
+            foreignKeyName: "establishment_withdrawals_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "establishment_withdrawals_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       establishments: {
         Row: {
           avaliacao: number | null
@@ -1076,6 +1228,8 @@ export type Database = {
           id: string
           instagram: string | null
           is_open: boolean
+          kyc_motivo: string | null
+          kyc_status: string
           lat: number | null
           lng: number | null
           logo_url: string | null
@@ -1115,6 +1269,8 @@ export type Database = {
           id?: string
           instagram?: string | null
           is_open?: boolean
+          kyc_motivo?: string | null
+          kyc_status?: string
           lat?: number | null
           lng?: number | null
           logo_url?: string | null
@@ -1154,6 +1310,8 @@ export type Database = {
           id?: string
           instagram?: string | null
           is_open?: boolean
+          kyc_motivo?: string | null
+          kyc_status?: string
           lat?: number | null
           lng?: number | null
           logo_url?: string | null

@@ -1,103 +1,152 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { toast } from "sonner";
+import {
+  ChevronRight, User, Car, FileText, CreditCard, ShieldCheck,
+  Bell, HelpCircle, Settings, LogOut, Loader2, Shield, Wallet,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { useMyCourier } from "@/hooks/use-courier";
-import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/entregador/perfil")({
-  component: Perfil,
+  component: PerfilHub,
 });
 
-function Perfil() {
-  const { courier, userId } = useMyCourier();
-  const qc = useQueryClient();
-  const [f, setF] = useState({
-    foto_url: "", telefone: "", whatsapp: "", cpf: "", rg: "",
-    cnh: "", cnh_categoria: "", cnh_validade: "",
-    pix_key: "", pix_tipo: "cpf",
-    banco_nome: "", banco_agencia: "", banco_conta: "", banco_tipo: "corrente", banco_titular: "",
-    contato_emergencia_nome: "", contato_emergencia_tel: "",
-  });
+const APP_VERSION = "1.0.0";
 
-  useEffect(() => {
-    if (!courier) return;
-    setF({
-      foto_url: courier.foto_url ?? "",
-      telefone: courier.telefone ?? "",
-      whatsapp: courier.whatsapp ?? "",
-      cpf: courier.cpf ?? "",
-      rg: courier.rg ?? "",
-      cnh: courier.cnh ?? "",
-      cnh_categoria: courier.cnh_categoria ?? "",
-      cnh_validade: courier.cnh_validade ?? "",
-      pix_key: courier.pix_key ?? "",
-      pix_tipo: courier.pix_tipo ?? "cpf",
-      banco_nome: courier.banco_nome ?? "",
-      banco_agencia: courier.banco_agencia ?? "",
-      banco_conta: courier.banco_conta ?? "",
-      banco_tipo: courier.banco_tipo ?? "corrente",
-      banco_titular: courier.banco_titular ?? "",
-      contato_emergencia_nome: courier.contato_emergencia_nome ?? "",
-      contato_emergencia_tel: courier.contato_emergencia_tel ?? "",
-    });
-  }, [courier]);
+const GROUPS = [
+  {
+    title: "Conta",
+    items: [
+      { to: "/entregador/perfil/dados", label: "Meus dados", desc: "Nome, telefone, foto, RG, CPF", icon: User },
+      { to: "/entregador/veiculo", label: "Meu veículo", desc: "Marca, modelo, placa, ano", icon: Car },
+      { to: "/entregador/documentos", label: "Documentos (KYC)", desc: "CNH, selfie, comprovantes", icon: FileText, kyc: true },
+    ],
+  },
+  {
+    title: "Financeiro",
+    items: [
+      { to: "/entregador/perfil/pagamento", label: "Dados de pagamento", desc: "PIX, banco, titular", icon: CreditCard },
+      { to: "/entregador/carteira", label: "Carteira e saques", desc: "Saldo, saque via PIX", icon: Wallet },
+    ],
+  },
+  {
+    title: "Preferências",
+    items: [
+      { to: "/entregador/notificacoes", label: "Notificações", desc: "Alertas de corridas", icon: Bell },
+      { to: "/entregador/configuracoes", label: "Configurações", desc: "Som, GPS, privacidade", icon: Settings },
+    ],
+  },
+  {
+    title: "Suporte",
+    items: [
+      { to: "/entregador/suporte", label: "Ajuda e suporte", desc: "Fale com o time WiFome", icon: HelpCircle },
+    ],
+  },
+] as const;
 
-  async function salvar() {
-    const { error } = await supabase.from("courier_profiles").update(f).eq("user_id", userId);
-    if (error) return toast.error(error.message);
-    toast.success("Perfil atualizado");
-    qc.invalidateQueries({ queryKey: ["courier", userId] });
+function PerfilHub() {
+  const { courier, isLoading } = useMyCourier();
+  const navigate = useNavigate();
+  const [signingOut, setSigningOut] = useState(false);
+
+  async function sair() {
+    setSigningOut(true);
+    try {
+      await supabase.auth.signOut();
+      navigate({ to: "/", replace: true });
+    } catch {
+      setSigningOut(false);
+      toast.error("Erro ao sair");
+    }
+  }
+
+  const kyc = courier?.kyc_status ?? "pendente";
+  const kycColor =
+    kyc === "aprovado" ? "bg-emerald-500 text-white" :
+    kyc === "em_analise" ? "bg-amber-500 text-white" :
+    kyc === "rejeitado" ? "bg-red-500 text-white" :
+    "bg-muted text-muted-foreground";
+
+  const initials = "EN";
+
+  if (isLoading) {
+    return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-black">Meu perfil</h1>
+    <div className="space-y-5 max-w-2xl mx-auto">
+      {/* Header perfil */}
+      <section className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
+        <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-lg font-black text-primary">
+          {courier?.foto_url ? <img src={courier.foto_url} alt="" className="h-full w-full object-cover" /> : initials}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-bold">Entregador WiFome</p>
+          <p className="truncate text-xs text-muted-foreground">{courier?.telefone ?? "—"}</p>
+          <div className="mt-1 flex gap-1">
+            <Badge className={kycColor} variant="secondary">
+              <ShieldCheck className="mr-1 h-3 w-3" />
+              KYC: {kyc}
+            </Badge>
+          </div>
+        </div>
+        <Link to="/entregador/perfil/dados" className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/5">
+          Editar
+        </Link>
+      </section>
 
-      <Section title="Dados pessoais">
-        <Field label="Foto (URL)" value={f.foto_url} onChange={(v) => setF({ ...f, foto_url: v })} />
-        <Field label="Telefone" value={f.telefone} onChange={(v) => setF({ ...f, telefone: v })} />
-        <Field label="WhatsApp" value={f.whatsapp} onChange={(v) => setF({ ...f, whatsapp: v })} />
-        <Field label="CPF" value={f.cpf} onChange={(v) => setF({ ...f, cpf: v })} />
-        <Field label="RG" value={f.rg} onChange={(v) => setF({ ...f, rg: v })} />
-      </Section>
+      {kyc !== "aprovado" && (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 dark:bg-amber-950/30 p-4 text-sm">
+          <p className="font-bold text-amber-900 dark:text-amber-200 flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4" /> Valide sua conta
+          </p>
+          <p className="mt-1 text-xs text-amber-800 dark:text-amber-300">
+            Envie sua CNH, selfie e comprovantes em <b>Documentos</b>. Sem validação você não consegue solicitar saques.
+          </p>
+        </div>
+      )}
 
-      <Section title="CNH">
-        <Field label="Número" value={f.cnh} onChange={(v) => setF({ ...f, cnh: v })} />
-        <Field label="Categoria" value={f.cnh_categoria} onChange={(v) => setF({ ...f, cnh_categoria: v })} />
-        <Field label="Validade" type="date" value={f.cnh_validade} onChange={(v) => setF({ ...f, cnh_validade: v })} />
-      </Section>
+      {GROUPS.map((g) => (
+        <section key={g.title} className="space-y-2">
+          <h2 className="px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{g.title}</h2>
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            {g.items.map((it, i) => {
+              const Icon = it.icon;
+              return (
+                <Link
+                  key={it.to}
+                  to={it.to}
+                  className={`flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/50 ${i > 0 ? "border-t border-border" : ""}`}
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{it.label}</p>
+                    <p className="truncate text-xs text-muted-foreground">{it.desc}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      ))}
 
-      <Section title="PIX e Banco">
-        <Field label="Chave PIX" value={f.pix_key} onChange={(v) => setF({ ...f, pix_key: v })} />
-        <Field label="Tipo PIX" value={f.pix_tipo} onChange={(v) => setF({ ...f, pix_tipo: v })} />
-        <Field label="Banco" value={f.banco_nome} onChange={(v) => setF({ ...f, banco_nome: v })} />
-        <Field label="Agência" value={f.banco_agencia} onChange={(v) => setF({ ...f, banco_agencia: v })} />
-        <Field label="Conta" value={f.banco_conta} onChange={(v) => setF({ ...f, banco_conta: v })} />
-        <Field label="Titular" value={f.banco_titular} onChange={(v) => setF({ ...f, banco_titular: v })} />
-      </Section>
+      <Button variant="outline" className="w-full" onClick={sair} disabled={signingOut}>
+        {signingOut ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
+        Sair da conta
+      </Button>
 
-      <Section title="Contato de emergência">
-        <Field label="Nome" value={f.contato_emergencia_nome} onChange={(v) => setF({ ...f, contato_emergencia_nome: v })} />
-        <Field label="Telefone" value={f.contato_emergencia_tel} onChange={(v) => setF({ ...f, contato_emergencia_tel: v })} />
-      </Section>
-
-      <Button size="lg" onClick={salvar}>Salvar alterações</Button>
+      <div className="flex flex-col items-center gap-1 pt-2 text-center">
+        <div className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
+          <Shield className="h-3 w-3" /> WiFome Entregador
+        </div>
+        <p className="text-[11px] text-muted-foreground">Versão {APP_VERSION}</p>
+      </div>
     </div>
   );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="rounded-2xl border border-border bg-card p-4 shadow-card">
-      <h2 className="mb-3 font-semibold">{title}</h2>
-      <div className="grid gap-3 md:grid-cols-2">{children}</div>
-    </section>
-  );
-}
-function Field({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
-  return <div><Label>{label}</Label><Input type={type} value={value} onChange={(e) => onChange(e.target.value)} /></div>;
 }

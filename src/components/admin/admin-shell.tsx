@@ -41,6 +41,7 @@ const navItems: NavItem[] = [
   { to: "/admin/entregadores", label: "Entregadores", icon: Bike, group: "Pessoas" },
 
   { to: "/admin/financeiro", label: "Financeiro", icon: DollarSign, group: "Operação" },
+  { to: "/admin/saques", label: "Saques", icon: DollarSign, group: "Operação" },
   { to: "/admin/avaliacoes", label: "Avaliações", icon: Star, group: "Operação" },
   { to: "/admin/cupons", label: "Cupons", icon: Ticket, group: "Marketing" },
   { to: "/admin/campanhas", label: "Campanhas", icon: Megaphone, group: "Marketing" },
