@@ -15,8 +15,8 @@ export const Route = createFileRoute("/_authenticated/admin/estabelecimentos")({
 type Estab = {
   id: string;
   nome: string;
-  categoria: string | null;
-  aberto: boolean;
+  categoria_id: string | null;
+  is_open: boolean;
   status: string;
   avaliacao: number | null;
   tempo_medio_min: number | null;
@@ -29,7 +29,7 @@ type Estab = {
 async function fetchEstabs() {
   const { data, error } = await supabase
     .from("establishments")
-    .select("id,nome,categoria,aberto,status,avaliacao,tempo_medio_min,taxa_entrega_cents,logo_url,cidade,estado")
+    .select("id,nome,categoria_id,is_open,status,avaliacao,tempo_medio_min,taxa_entrega_cents,logo_url,cidade,estado")
     .order("nome");
   if (error) throw error;
   return (data ?? []) as Estab[];
