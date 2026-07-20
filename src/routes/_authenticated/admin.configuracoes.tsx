@@ -128,6 +128,20 @@ function ConfigPage() {
             />
           </div>
         </div>
+        <div>
+          <Label htmlFor="best">Vendas mínimas para selo "Mais vendido"</Label>
+          <Input
+            id="best"
+            type="number"
+            min={1}
+            value={form.bestseller_threshold}
+            onChange={(e) => setForm({ ...form, bestseller_threshold: Number(e.target.value) })}
+            className="mt-1.5"
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Estabelecimentos com pelo menos esse número de pedidos entregues ganham o selo laranja "Mais vendido".
+          </p>
+        </div>
         <div className="flex items-center justify-between rounded-xl border border-border bg-background/50 p-4">
           <div>
             <p className="font-medium">Modo manutenção</p>
