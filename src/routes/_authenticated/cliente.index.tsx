@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Star, ChevronRight, Loader2, Tag, Flame } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -85,6 +85,59 @@ function ClienteHome() {
   const [promoIds, setPromoIds] = useState<Set<string>>(new Set());
   const [salesCount, setSalesCount] = useState<Record<string, number>>({});
   const [threshold, setThreshold] = useState<number>(15);
+  const catsScrollRef = useRef<HTMLDivElement | null>(null);
+  const catsPausedRef = useRef(false);
+
+  // Auto-scroll lento das categorias — pausa ao interagir e retoma após ocioso
+  useEffect(() => {
+    const el = catsScrollRef.current;
+    if (!el) return;
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+
+    let raf = 0;
+    let last = performance.now();
+    let resumeTimer: ReturnType<typeof setTimeout> | null = null;
+    const SPEED = 14; // px por segundo — bem lento
+
+    const pause = (ms = 2500) => {
+      catsPausedRef.current = true;
+      if (resumeTimer) clearTimeout(resumeTimer);
+      resumeTimer = setTimeout(() => { catsPausedRef.current = false; }, ms);
+    };
+
+    const step = (now: number) => {
+      const dt = (now - last) / 1000;
+      last = now;
+      if (!catsPausedRef.current && el.scrollWidth > el.clientWidth + 4) {
+        const max = el.scrollWidth - el.clientWidth;
+        let next = el.scrollLeft + SPEED * dt;
+        if (next >= max - 0.5) next = 0;
+        el.scrollLeft = next;
+      }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+
+    const onEnter = () => { catsPausedRef.current = true; };
+    const onLeave = () => { catsPausedRef.current = false; };
+    const onInteract = () => pause(3000);
+
+    el.addEventListener("mouseenter", onEnter);
+    el.addEventListener("mouseleave", onLeave);
+    el.addEventListener("pointerdown", onInteract);
+    el.addEventListener("touchstart", onInteract, { passive: true });
+    el.addEventListener("wheel", onInteract, { passive: true });
+
+    return () => {
+      cancelAnimationFrame(raf);
+      if (resumeTimer) clearTimeout(resumeTimer);
+      el.removeEventListener("mouseenter", onEnter);
+      el.removeEventListener("mouseleave", onLeave);
+      el.removeEventListener("pointerdown", onInteract);
+      el.removeEventListener("touchstart", onInteract);
+      el.removeEventListener("wheel", onInteract);
+    };
+  }, [cats.length, showAllCats]);
 
   useEffect(() => {
     (async () => {
@@ -164,7 +217,10 @@ function ClienteHome() {
             {showAllCats ? "Ver menos" : "Ver todas"}
           </button>
         </div>
-        <div className="-mx-1 flex gap-3 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory">
+        <div
+          ref={catsScrollRef}
+          className="-mx-1 flex gap-3 overflow-x-auto pb-1 scrollbar-hide"
+        >
           {visibleCats.map((c) => {
             const img = CAT_IMG[c.slug];
             const active = catSel === c.id;
