@@ -22,9 +22,24 @@ import { Route as AuthenticatedEntregadorRouteImport } from './routes/_authentic
 import { Route as AuthenticatedClienteRouteImport } from './routes/_authenticated/cliente'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedEstabelecimentoIndexRouteImport } from './routes/_authenticated/estabelecimento.index'
 import { Route as AuthenticatedClienteIndexRouteImport } from './routes/_authenticated/cliente.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as ApiPublicSeedDemoRouteImport } from './routes/api/public/seed-demo'
+import { Route as AuthenticatedEstabelecimentoRelatoriosRouteImport } from './routes/_authenticated/estabelecimento.relatorios'
+import { Route as AuthenticatedEstabelecimentoProdutosRouteImport } from './routes/_authenticated/estabelecimento.produtos'
+import { Route as AuthenticatedEstabelecimentoPedidosRouteImport } from './routes/_authenticated/estabelecimento.pedidos'
+import { Route as AuthenticatedEstabelecimentoHorariosRouteImport } from './routes/_authenticated/estabelecimento.horarios'
+import { Route as AuthenticatedEstabelecimentoFinanceiroRouteImport } from './routes/_authenticated/estabelecimento.financeiro'
+import { Route as AuthenticatedEstabelecimentoEstoqueRouteImport } from './routes/_authenticated/estabelecimento.estoque'
+import { Route as AuthenticatedEstabelecimentoEquipeRouteImport } from './routes/_authenticated/estabelecimento.equipe'
+import { Route as AuthenticatedEstabelecimentoEntregaRouteImport } from './routes/_authenticated/estabelecimento.entrega'
+import { Route as AuthenticatedEstabelecimentoCuponsRouteImport } from './routes/_authenticated/estabelecimento.cupons'
+import { Route as AuthenticatedEstabelecimentoConfiguracoesRouteImport } from './routes/_authenticated/estabelecimento.configuracoes'
+import { Route as AuthenticatedEstabelecimentoComplementosRouteImport } from './routes/_authenticated/estabelecimento.complementos'
+import { Route as AuthenticatedEstabelecimentoCategoriasRouteImport } from './routes/_authenticated/estabelecimento.categorias'
+import { Route as AuthenticatedEstabelecimentoBannersRouteImport } from './routes/_authenticated/estabelecimento.banners'
+import { Route as AuthenticatedEstabelecimentoAvaliacoesRouteImport } from './routes/_authenticated/estabelecimento.avaliacoes'
 import { Route as AuthenticatedClientePerfilRouteImport } from './routes/_authenticated/cliente.perfil'
 import { Route as AuthenticatedClientePedidosRouteImport } from './routes/_authenticated/cliente.pedidos'
 import { Route as AuthenticatedClienteFavoritosRouteImport } from './routes/_authenticated/cliente.favoritos'
@@ -115,6 +130,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEstabelecimentoIndexRoute =
+  AuthenticatedEstabelecimentoIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
 const AuthenticatedClienteIndexRoute =
   AuthenticatedClienteIndexRouteImport.update({
     id: '/',
@@ -131,6 +152,90 @@ const ApiPublicSeedDemoRoute = ApiPublicSeedDemoRouteImport.update({
   path: '/api/public/seed-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedEstabelecimentoRelatoriosRoute =
+  AuthenticatedEstabelecimentoRelatoriosRouteImport.update({
+    id: '/relatorios',
+    path: '/relatorios',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
+const AuthenticatedEstabelecimentoProdutosRoute =
+  AuthenticatedEstabelecimentoProdutosRouteImport.update({
+    id: '/produtos',
+    path: '/produtos',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
+const AuthenticatedEstabelecimentoPedidosRoute =
+  AuthenticatedEstabelecimentoPedidosRouteImport.update({
+    id: '/pedidos',
+    path: '/pedidos',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
+const AuthenticatedEstabelecimentoHorariosRoute =
+  AuthenticatedEstabelecimentoHorariosRouteImport.update({
+    id: '/horarios',
+    path: '/horarios',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
+const AuthenticatedEstabelecimentoFinanceiroRoute =
+  AuthenticatedEstabelecimentoFinanceiroRouteImport.update({
+    id: '/financeiro',
+    path: '/financeiro',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
+const AuthenticatedEstabelecimentoEstoqueRoute =
+  AuthenticatedEstabelecimentoEstoqueRouteImport.update({
+    id: '/estoque',
+    path: '/estoque',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
+const AuthenticatedEstabelecimentoEquipeRoute =
+  AuthenticatedEstabelecimentoEquipeRouteImport.update({
+    id: '/equipe',
+    path: '/equipe',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
+const AuthenticatedEstabelecimentoEntregaRoute =
+  AuthenticatedEstabelecimentoEntregaRouteImport.update({
+    id: '/entrega',
+    path: '/entrega',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
+const AuthenticatedEstabelecimentoCuponsRoute =
+  AuthenticatedEstabelecimentoCuponsRouteImport.update({
+    id: '/cupons',
+    path: '/cupons',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
+const AuthenticatedEstabelecimentoConfiguracoesRoute =
+  AuthenticatedEstabelecimentoConfiguracoesRouteImport.update({
+    id: '/configuracoes',
+    path: '/configuracoes',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
+const AuthenticatedEstabelecimentoComplementosRoute =
+  AuthenticatedEstabelecimentoComplementosRouteImport.update({
+    id: '/complementos',
+    path: '/complementos',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
+const AuthenticatedEstabelecimentoCategoriasRoute =
+  AuthenticatedEstabelecimentoCategoriasRouteImport.update({
+    id: '/categorias',
+    path: '/categorias',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
+const AuthenticatedEstabelecimentoBannersRoute =
+  AuthenticatedEstabelecimentoBannersRouteImport.update({
+    id: '/banners',
+    path: '/banners',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
+const AuthenticatedEstabelecimentoAvaliacoesRoute =
+  AuthenticatedEstabelecimentoAvaliacoesRouteImport.update({
+    id: '/avaliacoes',
+    path: '/avaliacoes',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
 const AuthenticatedClientePerfilRoute =
   AuthenticatedClientePerfilRouteImport.update({
     id: '/perfil',
@@ -285,7 +390,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRoute
   '/cliente': typeof AuthenticatedClienteRouteWithChildren
   '/entregador': typeof AuthenticatedEntregadorRoute
-  '/estabelecimento': typeof AuthenticatedEstabelecimentoRoute
+  '/estabelecimento': typeof AuthenticatedEstabelecimentoRouteWithChildren
   '/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/admin/campanhas': typeof AuthenticatedAdminCampanhasRoute
@@ -308,9 +413,24 @@ export interface FileRoutesByFullPath {
   '/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
   '/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
   '/cliente/perfil': typeof AuthenticatedClientePerfilRoute
+  '/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
+  '/estabelecimento/banners': typeof AuthenticatedEstabelecimentoBannersRoute
+  '/estabelecimento/categorias': typeof AuthenticatedEstabelecimentoCategoriasRoute
+  '/estabelecimento/complementos': typeof AuthenticatedEstabelecimentoComplementosRoute
+  '/estabelecimento/configuracoes': typeof AuthenticatedEstabelecimentoConfiguracoesRoute
+  '/estabelecimento/cupons': typeof AuthenticatedEstabelecimentoCuponsRoute
+  '/estabelecimento/entrega': typeof AuthenticatedEstabelecimentoEntregaRoute
+  '/estabelecimento/equipe': typeof AuthenticatedEstabelecimentoEquipeRoute
+  '/estabelecimento/estoque': typeof AuthenticatedEstabelecimentoEstoqueRoute
+  '/estabelecimento/financeiro': typeof AuthenticatedEstabelecimentoFinanceiroRoute
+  '/estabelecimento/horarios': typeof AuthenticatedEstabelecimentoHorariosRoute
+  '/estabelecimento/pedidos': typeof AuthenticatedEstabelecimentoPedidosRoute
+  '/estabelecimento/produtos': typeof AuthenticatedEstabelecimentoProdutosRoute
+  '/estabelecimento/relatorios': typeof AuthenticatedEstabelecimentoRelatoriosRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/cliente/': typeof AuthenticatedClienteIndexRoute
+  '/estabelecimento/': typeof AuthenticatedEstabelecimentoIndexRoute
   '/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
 }
@@ -324,7 +444,6 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app': typeof AuthenticatedAppRoute
   '/entregador': typeof AuthenticatedEntregadorRoute
-  '/estabelecimento': typeof AuthenticatedEstabelecimentoRoute
   '/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/admin/campanhas': typeof AuthenticatedAdminCampanhasRoute
@@ -347,9 +466,24 @@ export interface FileRoutesByTo {
   '/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
   '/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
   '/cliente/perfil': typeof AuthenticatedClientePerfilRoute
+  '/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
+  '/estabelecimento/banners': typeof AuthenticatedEstabelecimentoBannersRoute
+  '/estabelecimento/categorias': typeof AuthenticatedEstabelecimentoCategoriasRoute
+  '/estabelecimento/complementos': typeof AuthenticatedEstabelecimentoComplementosRoute
+  '/estabelecimento/configuracoes': typeof AuthenticatedEstabelecimentoConfiguracoesRoute
+  '/estabelecimento/cupons': typeof AuthenticatedEstabelecimentoCuponsRoute
+  '/estabelecimento/entrega': typeof AuthenticatedEstabelecimentoEntregaRoute
+  '/estabelecimento/equipe': typeof AuthenticatedEstabelecimentoEquipeRoute
+  '/estabelecimento/estoque': typeof AuthenticatedEstabelecimentoEstoqueRoute
+  '/estabelecimento/financeiro': typeof AuthenticatedEstabelecimentoFinanceiroRoute
+  '/estabelecimento/horarios': typeof AuthenticatedEstabelecimentoHorariosRoute
+  '/estabelecimento/pedidos': typeof AuthenticatedEstabelecimentoPedidosRoute
+  '/estabelecimento/produtos': typeof AuthenticatedEstabelecimentoProdutosRoute
+  '/estabelecimento/relatorios': typeof AuthenticatedEstabelecimentoRelatoriosRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/cliente': typeof AuthenticatedClienteIndexRoute
+  '/estabelecimento': typeof AuthenticatedEstabelecimentoIndexRoute
   '/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
 }
@@ -367,7 +501,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/cliente': typeof AuthenticatedClienteRouteWithChildren
   '/_authenticated/entregador': typeof AuthenticatedEntregadorRoute
-  '/_authenticated/estabelecimento': typeof AuthenticatedEstabelecimentoRoute
+  '/_authenticated/estabelecimento': typeof AuthenticatedEstabelecimentoRouteWithChildren
   '/_authenticated/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
   '/_authenticated/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/_authenticated/admin/campanhas': typeof AuthenticatedAdminCampanhasRoute
@@ -390,9 +524,24 @@ export interface FileRoutesById {
   '/_authenticated/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
   '/_authenticated/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
   '/_authenticated/cliente/perfil': typeof AuthenticatedClientePerfilRoute
+  '/_authenticated/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
+  '/_authenticated/estabelecimento/banners': typeof AuthenticatedEstabelecimentoBannersRoute
+  '/_authenticated/estabelecimento/categorias': typeof AuthenticatedEstabelecimentoCategoriasRoute
+  '/_authenticated/estabelecimento/complementos': typeof AuthenticatedEstabelecimentoComplementosRoute
+  '/_authenticated/estabelecimento/configuracoes': typeof AuthenticatedEstabelecimentoConfiguracoesRoute
+  '/_authenticated/estabelecimento/cupons': typeof AuthenticatedEstabelecimentoCuponsRoute
+  '/_authenticated/estabelecimento/entrega': typeof AuthenticatedEstabelecimentoEntregaRoute
+  '/_authenticated/estabelecimento/equipe': typeof AuthenticatedEstabelecimentoEquipeRoute
+  '/_authenticated/estabelecimento/estoque': typeof AuthenticatedEstabelecimentoEstoqueRoute
+  '/_authenticated/estabelecimento/financeiro': typeof AuthenticatedEstabelecimentoFinanceiroRoute
+  '/_authenticated/estabelecimento/horarios': typeof AuthenticatedEstabelecimentoHorariosRoute
+  '/_authenticated/estabelecimento/pedidos': typeof AuthenticatedEstabelecimentoPedidosRoute
+  '/_authenticated/estabelecimento/produtos': typeof AuthenticatedEstabelecimentoProdutosRoute
+  '/_authenticated/estabelecimento/relatorios': typeof AuthenticatedEstabelecimentoRelatoriosRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/cliente/': typeof AuthenticatedClienteIndexRoute
+  '/_authenticated/estabelecimento/': typeof AuthenticatedEstabelecimentoIndexRoute
   '/_authenticated/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/_authenticated/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
 }
@@ -433,9 +582,24 @@ export interface FileRouteTypes {
     | '/cliente/favoritos'
     | '/cliente/pedidos'
     | '/cliente/perfil'
+    | '/estabelecimento/avaliacoes'
+    | '/estabelecimento/banners'
+    | '/estabelecimento/categorias'
+    | '/estabelecimento/complementos'
+    | '/estabelecimento/configuracoes'
+    | '/estabelecimento/cupons'
+    | '/estabelecimento/entrega'
+    | '/estabelecimento/equipe'
+    | '/estabelecimento/estoque'
+    | '/estabelecimento/financeiro'
+    | '/estabelecimento/horarios'
+    | '/estabelecimento/pedidos'
+    | '/estabelecimento/produtos'
+    | '/estabelecimento/relatorios'
     | '/api/public/seed-demo'
     | '/admin/'
     | '/cliente/'
+    | '/estabelecimento/'
     | '/cliente/estabelecimento/$id'
     | '/cliente/pedido/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -449,7 +613,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/app'
     | '/entregador'
-    | '/estabelecimento'
     | '/admin/avaliacoes'
     | '/admin/banners'
     | '/admin/campanhas'
@@ -472,9 +635,24 @@ export interface FileRouteTypes {
     | '/cliente/favoritos'
     | '/cliente/pedidos'
     | '/cliente/perfil'
+    | '/estabelecimento/avaliacoes'
+    | '/estabelecimento/banners'
+    | '/estabelecimento/categorias'
+    | '/estabelecimento/complementos'
+    | '/estabelecimento/configuracoes'
+    | '/estabelecimento/cupons'
+    | '/estabelecimento/entrega'
+    | '/estabelecimento/equipe'
+    | '/estabelecimento/estoque'
+    | '/estabelecimento/financeiro'
+    | '/estabelecimento/horarios'
+    | '/estabelecimento/pedidos'
+    | '/estabelecimento/produtos'
+    | '/estabelecimento/relatorios'
     | '/api/public/seed-demo'
     | '/admin'
     | '/cliente'
+    | '/estabelecimento'
     | '/cliente/estabelecimento/$id'
     | '/cliente/pedido/$id'
   id:
@@ -514,9 +692,24 @@ export interface FileRouteTypes {
     | '/_authenticated/cliente/favoritos'
     | '/_authenticated/cliente/pedidos'
     | '/_authenticated/cliente/perfil'
+    | '/_authenticated/estabelecimento/avaliacoes'
+    | '/_authenticated/estabelecimento/banners'
+    | '/_authenticated/estabelecimento/categorias'
+    | '/_authenticated/estabelecimento/complementos'
+    | '/_authenticated/estabelecimento/configuracoes'
+    | '/_authenticated/estabelecimento/cupons'
+    | '/_authenticated/estabelecimento/entrega'
+    | '/_authenticated/estabelecimento/equipe'
+    | '/_authenticated/estabelecimento/estoque'
+    | '/_authenticated/estabelecimento/financeiro'
+    | '/_authenticated/estabelecimento/horarios'
+    | '/_authenticated/estabelecimento/pedidos'
+    | '/_authenticated/estabelecimento/produtos'
+    | '/_authenticated/estabelecimento/relatorios'
     | '/api/public/seed-demo'
     | '/_authenticated/admin/'
     | '/_authenticated/cliente/'
+    | '/_authenticated/estabelecimento/'
     | '/_authenticated/cliente/estabelecimento/$id'
     | '/_authenticated/cliente/pedido/$id'
   fileRoutesById: FileRoutesById
@@ -626,6 +819,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/estabelecimento/': {
+      id: '/_authenticated/estabelecimento/'
+      path: '/'
+      fullPath: '/estabelecimento/'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoIndexRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
     '/_authenticated/cliente/': {
       id: '/_authenticated/cliente/'
       path: '/'
@@ -646,6 +846,104 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/seed-demo'
       preLoaderRoute: typeof ApiPublicSeedDemoRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/estabelecimento/relatorios': {
+      id: '/_authenticated/estabelecimento/relatorios'
+      path: '/relatorios'
+      fullPath: '/estabelecimento/relatorios'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoRelatoriosRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
+    '/_authenticated/estabelecimento/produtos': {
+      id: '/_authenticated/estabelecimento/produtos'
+      path: '/produtos'
+      fullPath: '/estabelecimento/produtos'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoProdutosRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
+    '/_authenticated/estabelecimento/pedidos': {
+      id: '/_authenticated/estabelecimento/pedidos'
+      path: '/pedidos'
+      fullPath: '/estabelecimento/pedidos'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoPedidosRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
+    '/_authenticated/estabelecimento/horarios': {
+      id: '/_authenticated/estabelecimento/horarios'
+      path: '/horarios'
+      fullPath: '/estabelecimento/horarios'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoHorariosRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
+    '/_authenticated/estabelecimento/financeiro': {
+      id: '/_authenticated/estabelecimento/financeiro'
+      path: '/financeiro'
+      fullPath: '/estabelecimento/financeiro'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
+    '/_authenticated/estabelecimento/estoque': {
+      id: '/_authenticated/estabelecimento/estoque'
+      path: '/estoque'
+      fullPath: '/estabelecimento/estoque'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoEstoqueRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
+    '/_authenticated/estabelecimento/equipe': {
+      id: '/_authenticated/estabelecimento/equipe'
+      path: '/equipe'
+      fullPath: '/estabelecimento/equipe'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoEquipeRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
+    '/_authenticated/estabelecimento/entrega': {
+      id: '/_authenticated/estabelecimento/entrega'
+      path: '/entrega'
+      fullPath: '/estabelecimento/entrega'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoEntregaRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
+    '/_authenticated/estabelecimento/cupons': {
+      id: '/_authenticated/estabelecimento/cupons'
+      path: '/cupons'
+      fullPath: '/estabelecimento/cupons'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoCuponsRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
+    '/_authenticated/estabelecimento/configuracoes': {
+      id: '/_authenticated/estabelecimento/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/estabelecimento/configuracoes'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoConfiguracoesRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
+    '/_authenticated/estabelecimento/complementos': {
+      id: '/_authenticated/estabelecimento/complementos'
+      path: '/complementos'
+      fullPath: '/estabelecimento/complementos'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoComplementosRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
+    '/_authenticated/estabelecimento/categorias': {
+      id: '/_authenticated/estabelecimento/categorias'
+      path: '/categorias'
+      fullPath: '/estabelecimento/categorias'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoCategoriasRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
+    '/_authenticated/estabelecimento/banners': {
+      id: '/_authenticated/estabelecimento/banners'
+      path: '/banners'
+      fullPath: '/estabelecimento/banners'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoBannersRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
+    '/_authenticated/estabelecimento/avaliacoes': {
+      id: '/_authenticated/estabelecimento/avaliacoes'
+      path: '/avaliacoes'
+      fullPath: '/estabelecimento/avaliacoes'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoAvaliacoesRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
     }
     '/_authenticated/cliente/perfil': {
       id: '/_authenticated/cliente/perfil'
@@ -890,12 +1188,69 @@ const AuthenticatedClienteRouteChildren: AuthenticatedClienteRouteChildren = {
 const AuthenticatedClienteRouteWithChildren =
   AuthenticatedClienteRoute._addFileChildren(AuthenticatedClienteRouteChildren)
 
+interface AuthenticatedEstabelecimentoRouteChildren {
+  AuthenticatedEstabelecimentoAvaliacoesRoute: typeof AuthenticatedEstabelecimentoAvaliacoesRoute
+  AuthenticatedEstabelecimentoBannersRoute: typeof AuthenticatedEstabelecimentoBannersRoute
+  AuthenticatedEstabelecimentoCategoriasRoute: typeof AuthenticatedEstabelecimentoCategoriasRoute
+  AuthenticatedEstabelecimentoComplementosRoute: typeof AuthenticatedEstabelecimentoComplementosRoute
+  AuthenticatedEstabelecimentoConfiguracoesRoute: typeof AuthenticatedEstabelecimentoConfiguracoesRoute
+  AuthenticatedEstabelecimentoCuponsRoute: typeof AuthenticatedEstabelecimentoCuponsRoute
+  AuthenticatedEstabelecimentoEntregaRoute: typeof AuthenticatedEstabelecimentoEntregaRoute
+  AuthenticatedEstabelecimentoEquipeRoute: typeof AuthenticatedEstabelecimentoEquipeRoute
+  AuthenticatedEstabelecimentoEstoqueRoute: typeof AuthenticatedEstabelecimentoEstoqueRoute
+  AuthenticatedEstabelecimentoFinanceiroRoute: typeof AuthenticatedEstabelecimentoFinanceiroRoute
+  AuthenticatedEstabelecimentoHorariosRoute: typeof AuthenticatedEstabelecimentoHorariosRoute
+  AuthenticatedEstabelecimentoPedidosRoute: typeof AuthenticatedEstabelecimentoPedidosRoute
+  AuthenticatedEstabelecimentoProdutosRoute: typeof AuthenticatedEstabelecimentoProdutosRoute
+  AuthenticatedEstabelecimentoRelatoriosRoute: typeof AuthenticatedEstabelecimentoRelatoriosRoute
+  AuthenticatedEstabelecimentoIndexRoute: typeof AuthenticatedEstabelecimentoIndexRoute
+}
+
+const AuthenticatedEstabelecimentoRouteChildren: AuthenticatedEstabelecimentoRouteChildren =
+  {
+    AuthenticatedEstabelecimentoAvaliacoesRoute:
+      AuthenticatedEstabelecimentoAvaliacoesRoute,
+    AuthenticatedEstabelecimentoBannersRoute:
+      AuthenticatedEstabelecimentoBannersRoute,
+    AuthenticatedEstabelecimentoCategoriasRoute:
+      AuthenticatedEstabelecimentoCategoriasRoute,
+    AuthenticatedEstabelecimentoComplementosRoute:
+      AuthenticatedEstabelecimentoComplementosRoute,
+    AuthenticatedEstabelecimentoConfiguracoesRoute:
+      AuthenticatedEstabelecimentoConfiguracoesRoute,
+    AuthenticatedEstabelecimentoCuponsRoute:
+      AuthenticatedEstabelecimentoCuponsRoute,
+    AuthenticatedEstabelecimentoEntregaRoute:
+      AuthenticatedEstabelecimentoEntregaRoute,
+    AuthenticatedEstabelecimentoEquipeRoute:
+      AuthenticatedEstabelecimentoEquipeRoute,
+    AuthenticatedEstabelecimentoEstoqueRoute:
+      AuthenticatedEstabelecimentoEstoqueRoute,
+    AuthenticatedEstabelecimentoFinanceiroRoute:
+      AuthenticatedEstabelecimentoFinanceiroRoute,
+    AuthenticatedEstabelecimentoHorariosRoute:
+      AuthenticatedEstabelecimentoHorariosRoute,
+    AuthenticatedEstabelecimentoPedidosRoute:
+      AuthenticatedEstabelecimentoPedidosRoute,
+    AuthenticatedEstabelecimentoProdutosRoute:
+      AuthenticatedEstabelecimentoProdutosRoute,
+    AuthenticatedEstabelecimentoRelatoriosRoute:
+      AuthenticatedEstabelecimentoRelatoriosRoute,
+    AuthenticatedEstabelecimentoIndexRoute:
+      AuthenticatedEstabelecimentoIndexRoute,
+  }
+
+const AuthenticatedEstabelecimentoRouteWithChildren =
+  AuthenticatedEstabelecimentoRoute._addFileChildren(
+    AuthenticatedEstabelecimentoRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedClienteRoute: typeof AuthenticatedClienteRouteWithChildren
   AuthenticatedEntregadorRoute: typeof AuthenticatedEntregadorRoute
-  AuthenticatedEstabelecimentoRoute: typeof AuthenticatedEstabelecimentoRoute
+  AuthenticatedEstabelecimentoRoute: typeof AuthenticatedEstabelecimentoRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -903,7 +1258,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedClienteRoute: AuthenticatedClienteRouteWithChildren,
   AuthenticatedEntregadorRoute: AuthenticatedEntregadorRoute,
-  AuthenticatedEstabelecimentoRoute: AuthenticatedEstabelecimentoRoute,
+  AuthenticatedEstabelecimentoRoute:
+    AuthenticatedEstabelecimentoRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =

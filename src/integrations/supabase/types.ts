@@ -14,6 +14,119 @@ export type Database = {
   }
   public: {
     Tables: {
+      addon_groups: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          establishment_id: string
+          id: string
+          maximo: number
+          minimo: number
+          nome: string
+          obrigatorio: boolean
+          ordem: number
+          selecao_multipla: boolean
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          establishment_id: string
+          id?: string
+          maximo?: number
+          minimo?: number
+          nome: string
+          obrigatorio?: boolean
+          ordem?: number
+          selecao_multipla?: boolean
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          establishment_id?: string
+          id?: string
+          maximo?: number
+          minimo?: number
+          nome?: string
+          obrigatorio?: boolean
+          ordem?: number
+          selecao_multipla?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addon_groups_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "addon_groups_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      addons: {
+        Row: {
+          addon_group_id: string
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          estoque: number | null
+          foto_url: string | null
+          id: string
+          nome: string
+          ordem: number
+          preco_extra_cents: number
+          qtd_maxima: number | null
+          updated_at: string
+        }
+        Insert: {
+          addon_group_id: string
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estoque?: number | null
+          foto_url?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          preco_extra_cents?: number
+          qtd_maxima?: number | null
+          updated_at?: string
+        }
+        Update: {
+          addon_group_id?: string
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estoque?: number | null
+          foto_url?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          preco_extra_cents?: number
+          qtd_maxima?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addons_addon_group_id_fkey"
+            columns: ["addon_group_id"]
+            isOneToOne: false
+            referencedRelation: "addon_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       addresses: {
         Row: {
           bairro: string | null
@@ -439,18 +552,205 @@ export type Database = {
           },
         ]
       }
+      estab_banners: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          cta_link: string | null
+          cta_texto: string | null
+          data_final: string | null
+          data_inicial: string | null
+          establishment_id: string
+          id: string
+          imagem_url: string | null
+          link_categoria: string | null
+          link_produto: string | null
+          ordem: number
+          subtitulo: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          cta_link?: string | null
+          cta_texto?: string | null
+          data_final?: string | null
+          data_inicial?: string | null
+          establishment_id: string
+          id?: string
+          imagem_url?: string | null
+          link_categoria?: string | null
+          link_produto?: string | null
+          ordem?: number
+          subtitulo?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          cta_link?: string | null
+          cta_texto?: string | null
+          data_final?: string | null
+          data_inicial?: string | null
+          establishment_id?: string
+          id?: string
+          imagem_url?: string | null
+          link_categoria?: string | null
+          link_produto?: string | null
+          ordem?: number
+          subtitulo?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estab_banners_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estab_banners_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estab_banners_link_categoria_fkey"
+            columns: ["link_categoria"]
+            isOneToOne: false
+            referencedRelation: "menu_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estab_banners_link_produto_fkey"
+            columns: ["link_produto"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      establishment_delivery_zones: {
+        Row: {
+          ativo: boolean
+          bairro: string | null
+          created_at: string
+          establishment_id: string
+          id: string
+          nome: string
+          raio_km: number | null
+          taxa_cents: number
+          tempo_min: number | null
+        }
+        Insert: {
+          ativo?: boolean
+          bairro?: string | null
+          created_at?: string
+          establishment_id: string
+          id?: string
+          nome: string
+          raio_km?: number | null
+          taxa_cents?: number
+          tempo_min?: number | null
+        }
+        Update: {
+          ativo?: boolean
+          bairro?: string | null
+          created_at?: string
+          establishment_id?: string
+          id?: string
+          nome?: string
+          raio_km?: number | null
+          taxa_cents?: number
+          tempo_min?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "establishment_delivery_zones_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "establishment_delivery_zones_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      establishment_hours: {
+        Row: {
+          abre: string
+          ativo: boolean
+          created_at: string
+          dia_semana: number
+          establishment_id: string
+          fecha: string
+          id: string
+        }
+        Insert: {
+          abre: string
+          ativo?: boolean
+          created_at?: string
+          dia_semana: number
+          establishment_id: string
+          fecha: string
+          id?: string
+        }
+        Update: {
+          abre?: string
+          ativo?: boolean
+          created_at?: string
+          dia_semana?: number
+          establishment_id?: string
+          fecha?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "establishment_hours_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "establishment_hours_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       establishments: {
         Row: {
           avaliacao: number | null
+          banco_agencia: string | null
+          banco_conta: string | null
+          banco_documento: string | null
+          banco_nome: string | null
+          banco_tipo: string | null
+          banco_titular: string | null
           capa_url: string | null
           categoria_id: string | null
           cidade: string | null
           cnpj: string | null
+          cor_destaque: string | null
           created_at: string
           descricao: string | null
           endereco: string | null
           estado: string | null
           id: string
+          instagram: string | null
           is_open: boolean
           lat: number | null
           lng: number | null
@@ -460,24 +760,36 @@ export type Database = {
           pedido_minimo_cents: number
           pix_key: string | null
           raio_entrega_km: number
+          razao_social: string | null
+          site: string | null
+          slogan: string | null
           status: Database["public"]["Enums"]["establishment_status"]
           taxa_entrega_cents: number
           telefone: string | null
           tempo_medio_min: number
+          tipos: string[]
           updated_at: string
           whatsapp: string | null
         }
         Insert: {
           avaliacao?: number | null
+          banco_agencia?: string | null
+          banco_conta?: string | null
+          banco_documento?: string | null
+          banco_nome?: string | null
+          banco_tipo?: string | null
+          banco_titular?: string | null
           capa_url?: string | null
           categoria_id?: string | null
           cidade?: string | null
           cnpj?: string | null
+          cor_destaque?: string | null
           created_at?: string
           descricao?: string | null
           endereco?: string | null
           estado?: string | null
           id?: string
+          instagram?: string | null
           is_open?: boolean
           lat?: number | null
           lng?: number | null
@@ -487,24 +799,36 @@ export type Database = {
           pedido_minimo_cents?: number
           pix_key?: string | null
           raio_entrega_km?: number
+          razao_social?: string | null
+          site?: string | null
+          slogan?: string | null
           status?: Database["public"]["Enums"]["establishment_status"]
           taxa_entrega_cents?: number
           telefone?: string | null
           tempo_medio_min?: number
+          tipos?: string[]
           updated_at?: string
           whatsapp?: string | null
         }
         Update: {
           avaliacao?: number | null
+          banco_agencia?: string | null
+          banco_conta?: string | null
+          banco_documento?: string | null
+          banco_nome?: string | null
+          banco_tipo?: string | null
+          banco_titular?: string | null
           capa_url?: string | null
           categoria_id?: string | null
           cidade?: string | null
           cnpj?: string | null
+          cor_destaque?: string | null
           created_at?: string
           descricao?: string | null
           endereco?: string | null
           estado?: string | null
           id?: string
+          instagram?: string | null
           is_open?: boolean
           lat?: number | null
           lng?: number | null
@@ -514,10 +838,14 @@ export type Database = {
           pedido_minimo_cents?: number
           pix_key?: string | null
           raio_entrega_km?: number
+          razao_social?: string | null
+          site?: string | null
+          slogan?: string | null
           status?: Database["public"]["Enums"]["establishment_status"]
           taxa_entrega_cents?: number
           telefone?: string | null
           tempo_medio_min?: number
+          tipos?: string[]
           updated_at?: string
           whatsapp?: string | null
         }
@@ -945,6 +1273,89 @@ export type Database = {
         }
         Relationships: []
       }
+      product_addon_groups: {
+        Row: {
+          addon_group_id: string
+          ordem: number
+          product_id: string
+        }
+        Insert: {
+          addon_group_id: string
+          ordem?: number
+          product_id: string
+        }
+        Update: {
+          addon_group_id?: string
+          ordem?: number
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_addon_groups_addon_group_id_fkey"
+            columns: ["addon_group_id"]
+            isOneToOne: false
+            referencedRelation: "addon_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_addon_groups_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_variants: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          estoque: number | null
+          id: string
+          nome: string
+          ordem: number
+          preco_cents: number
+          preco_promo_cents: number | null
+          product_id: string
+          tempo_extra_min: number | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          estoque?: number | null
+          id?: string
+          nome: string
+          ordem?: number
+          preco_cents: number
+          preco_promo_cents?: number | null
+          product_id: string
+          tempo_extra_min?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          estoque?: number | null
+          id?: string
+          nome?: string
+          ordem?: number
+          preco_cents?: number
+          preco_promo_cents?: number | null
+          product_id?: string
+          tempo_extra_min?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           created_at: string
@@ -1064,6 +1475,8 @@ export type Database = {
           problema_reportado: boolean
           rating_entregador: number | null
           rating_loja: number
+          respondido_em: string | null
+          resposta: string | null
         }
         Insert: {
           cliente_id: string
@@ -1077,6 +1490,8 @@ export type Database = {
           problema_reportado?: boolean
           rating_entregador?: number | null
           rating_loja: number
+          respondido_em?: string | null
+          resposta?: string | null
         }
         Update: {
           cliente_id?: string
@@ -1090,6 +1505,8 @@ export type Database = {
           problema_reportado?: boolean
           rating_entregador?: number | null
           rating_loja?: number
+          respondido_em?: string | null
+          resposta?: string | null
         }
         Relationships: [
           {
@@ -1111,6 +1528,61 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: true
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_movements: {
+        Row: {
+          created_at: string
+          establishment_id: string
+          id: string
+          motivo: string | null
+          product_id: string
+          quantidade: number
+          tipo: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          establishment_id: string
+          id?: string
+          motivo?: string | null
+          product_id: string
+          quantidade: number
+          tipo: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          establishment_id?: string
+          id?: string
+          motivo?: string | null
+          product_id?: string
+          quantidade?: number
+          tipo?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -1187,6 +1659,63 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_members: {
+        Row: {
+          aceito_em: string | null
+          ativo: boolean
+          convidado_em: string
+          created_at: string
+          email: string
+          establishment_id: string
+          id: string
+          nome: string | null
+          papel: Database["public"]["Enums"]["team_role"]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          aceito_em?: string | null
+          ativo?: boolean
+          convidado_em?: string
+          created_at?: string
+          email: string
+          establishment_id: string
+          id?: string
+          nome?: string | null
+          papel?: Database["public"]["Enums"]["team_role"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          aceito_em?: string | null
+          ativo?: boolean
+          convidado_em?: string
+          created_at?: string
+          email?: string
+          establishment_id?: string
+          id?: string
+          nome?: string | null
+          papel?: Database["public"]["Enums"]["team_role"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_members_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1381,6 +1910,14 @@ export type Database = {
         | "refunded"
       payment_method: "pix" | "cartao" | "dinheiro" | "carteira"
       refund_status: "none" | "pending" | "completed" | "failed"
+      team_role:
+        | "proprietario"
+        | "gerente"
+        | "atendente"
+        | "cozinha"
+        | "financeiro"
+        | "estoque"
+        | "marketing"
       ticket_priority: "low" | "normal" | "high" | "urgent"
       ticket_status: "open" | "pending" | "resolved" | "closed"
     }
@@ -1551,6 +2088,15 @@ export const Constants = {
       ],
       payment_method: ["pix", "cartao", "dinheiro", "carteira"],
       refund_status: ["none", "pending", "completed", "failed"],
+      team_role: [
+        "proprietario",
+        "gerente",
+        "atendente",
+        "cozinha",
+        "financeiro",
+        "estoque",
+        "marketing",
+      ],
       ticket_priority: ["low", "normal", "high", "urgent"],
       ticket_status: ["open", "pending", "resolved", "closed"],
     },
