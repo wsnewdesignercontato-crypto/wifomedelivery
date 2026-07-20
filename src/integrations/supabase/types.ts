@@ -615,6 +615,70 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          cliente_id: string
+          comentario: string | null
+          created_at: string
+          entregador_id: string | null
+          establishment_id: string
+          id: string
+          order_id: string
+          problema_descricao: string | null
+          problema_reportado: boolean
+          rating_entregador: number | null
+          rating_loja: number
+        }
+        Insert: {
+          cliente_id: string
+          comentario?: string | null
+          created_at?: string
+          entregador_id?: string | null
+          establishment_id: string
+          id?: string
+          order_id: string
+          problema_descricao?: string | null
+          problema_reportado?: boolean
+          rating_entregador?: number | null
+          rating_loja: number
+        }
+        Update: {
+          cliente_id?: string
+          comentario?: string | null
+          created_at?: string
+          entregador_id?: string | null
+          establishment_id?: string
+          id?: string
+          order_id?: string
+          problema_descricao?: string | null
+          problema_reportado?: boolean
+          rating_entregador?: number | null
+          rating_loja?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string

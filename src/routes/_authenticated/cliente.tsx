@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { ReviewForm } from "@/components/reviews";
 import { IFomeLogo } from "@/components/ifome-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,6 +111,7 @@ function ClienteApp() {
   const [obs, setObs] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [meusPedidos, setMeusPedidos] = useState<Order[]>([]);
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     (async () => {
@@ -138,7 +140,11 @@ function ClienteApp() {
         .order("created_at", { ascending: false })
         .limit(30);
       if (active) setMeusPedidos((data ?? []) as Order[]);
-
+      const delivered = (data ?? []).filter((o: Order) => o.status === "delivered").map((o: Order) => o.id);
+      if (delivered.length > 0) {
+        const { data: revs } = await supabase.from("reviews").select("order_id").in("order_id", delivered);
+        if (active) setReviewedIds(new Set((revs ?? []).map((r: { order_id: string }) => r.order_id)));
+      }
     })();
     const ch = supabase
       .channel("cliente-pedidos")
@@ -444,6 +450,18 @@ function ClienteApp() {
                     </div>
                     {o.status === "cancelled" && o.cancellation_reason && (
                       <p className="mt-2 rounded-lg bg-muted p-2 text-xs">Motivo: {o.cancellation_reason}</p>
+                    )}
+                    {o.status === "delivered" && loja && (
+                      reviewedIds.has(o.id) ? (
+                        <p className="mt-3 text-xs text-muted-foreground">✓ Você já avaliou este pedido</p>
+                      ) : (
+                        <ReviewForm
+                          orderId={o.id}
+                          clienteId={user.id}
+                          establishmentId={loja.id}
+                          onSubmitted={() => setReviewedIds((prev) => new Set(prev).add(o.id))}
+                        />
+                      )
                     )}
                   </div>
                 );

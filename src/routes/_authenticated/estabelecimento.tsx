@@ -12,9 +12,11 @@ import {
   Loader2,
   Power,
   Bike,
+  Star,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { EstabReviewsPanel } from "@/components/reviews";
 import { IFomeLogo } from "@/components/ifome-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -305,12 +307,15 @@ function SetupForm({ userId, onCreated }: { userId: string; onCreated: (e: Estab
 function PainelLoja({ estab, setEstab }: { estab: Estab; setEstab: (e: Estab) => void }) {
   return (
     <Tabs defaultValue="pedidos">
-      <TabsList className="grid w-full max-w-md grid-cols-3">
+      <TabsList className="grid w-full max-w-xl grid-cols-4">
         <TabsTrigger value="pedidos">
           <ReceiptText className="mr-2 h-4 w-4" /> Pedidos
         </TabsTrigger>
         <TabsTrigger value="produtos">
           <Package className="mr-2 h-4 w-4" /> Produtos
+        </TabsTrigger>
+        <TabsTrigger value="avaliacoes">
+          <Star className="mr-2 h-4 w-4" /> Avaliações
         </TabsTrigger>
         <TabsTrigger value="config">
           <Settings className="mr-2 h-4 w-4" /> Config
@@ -322,6 +327,9 @@ function PainelLoja({ estab, setEstab }: { estab: Estab; setEstab: (e: Estab) =>
       </TabsContent>
       <TabsContent value="produtos" className="mt-4">
         <ProdutosPanel estab={estab} />
+      </TabsContent>
+      <TabsContent value="avaliacoes" className="mt-4">
+        <EstabReviewsPanel establishmentId={estab.id} />
       </TabsContent>
       <TabsContent value="config" className="mt-4">
         <ConfigPanel estab={estab} onChange={setEstab} />
