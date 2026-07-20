@@ -21,6 +21,36 @@ function ContaPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [novaSenha, setNovaSenha] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function uploadFoto(file: File) {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecione uma imagem");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Imagem muito grande (máx. 5MB)");
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+    const up = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    if (up.error) {
+      setUploading(false);
+      toast.error(up.error.message);
+      return;
+    }
+    const signed = await supabase.storage.from("avatars").createSignedUrl(path, 60 * 60 * 24 * 365);
+    setUploading(false);
+    if (signed.error || !signed.data) {
+      toast.error(signed.error?.message ?? "Falha ao gerar URL");
+      return;
+    }
+    setProfile((p) => (p ? { ...p, foto_url: signed.data!.signedUrl } : p));
+    toast.success("Foto carregada — clique em Salvar");
+  }
 
   useEffect(() => {
     (async () => {
