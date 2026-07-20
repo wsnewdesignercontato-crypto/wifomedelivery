@@ -9,6 +9,7 @@ import { IFomeLogo } from "@/components/ifome-logo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useMyCourier } from "@/hooks/use-courier";
+import { useNewRideAlert } from "@/hooks/use-new-ride-alert";
 
 const NAV = [
   { to: "/entregador", label: "Início", icon: Home, exact: true },
