@@ -289,22 +289,26 @@ function PainelEntregador({
     loadDisponiveis();
   }
 
-  async function avancar(next: string) {
+  async function avancar(next: "to_store" | "at_store" | "picked_up" | "to_customer" | "at_customer" | "delivered") {
     if (!ativa) return;
-    const patch: Record<string, unknown> = { status: next };
+    const patch: {
+      status: typeof next;
+      coletado_em?: string;
+      entregue_em?: string;
+    } = { status: next };
     if (next === "picked_up") patch.coletado_em = new Date().toISOString();
     if (next === "delivered") patch.entregue_em = new Date().toISOString();
     await supabase.from("deliveries").update(patch).eq("id", ativa.id);
-    // sincroniza pedido
-    const orderMap: Record<string, string> = {
+    const orderMap = {
       to_store: "courier_assigned",
       picked_up: "picked_up",
       to_customer: "on_the_way",
       at_customer: "arriving",
       delivered: "delivered",
-    };
-    if (orderMap[next]) {
-      await supabase.from("orders").update({ status: orderMap[next] }).eq("id", ativa.order_id);
+    } as const;
+    if (next in orderMap) {
+      const os = orderMap[next as keyof typeof orderMap];
+      await supabase.from("orders").update({ status: os }).eq("id", ativa.order_id);
     }
     if (next === "delivered") {
       await supabase.from("courier_profiles").update({ status: "online" }).eq("user_id", courier.user_id);
