@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Sparkles, Store, ChevronRight, Megaphone } from "lucide-react";
+import { ShoppingBag, Store, ChevronRight } from "lucide-react";
+import adBurgerPremium from "@/assets/ad-burger-premium.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -76,7 +77,7 @@ function NovidadesPage() {
   return (
     <div className="space-y-6 pb-4">
       <div className="flex items-center gap-2">
-        <Sparkles className="h-5 w-5 text-primary" />
+        <ShoppingBag className="h-5 w-5 text-primary" />
         <h1 className="text-xl font-bold">Novidades</h1>
       </div>
 
@@ -126,10 +127,41 @@ function NovidadesPage() {
             )}
           </button>
         ) : (
-          <div className="flex h-44 w-full items-center justify-center rounded-2xl border border-dashed border-border bg-muted/30 text-center text-sm text-muted-foreground">
-            <div className="flex flex-col items-center gap-2">
-              <Megaphone className="h-6 w-6" />
-              Sem anúncios no momento
+          <div className="group relative block h-44 w-full overflow-hidden rounded-2xl text-left shadow-xl ring-1 ring-black/10 sm:h-56">
+            <img
+              src={adBurgerPremium}
+              alt="Burger Master - Combo em promoção"
+              width={1536}
+              height={1024}
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            {/* Degradê para leitura do texto à esquerda */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+
+            {/* Tag "Anúncio" no canto superior esquerdo */}
+            <span className="absolute left-3 top-3 rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-white/90 backdrop-blur">
+              Anúncio
+            </span>
+
+            {/* Conteúdo do banner */}
+            <div className="absolute inset-y-0 left-0 flex max-w-[65%] flex-col justify-center gap-2 p-5 text-white sm:max-w-[55%] sm:p-6">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary sm:text-xs">
+                Burger Master
+              </span>
+              <h3 className="text-xl font-extrabold leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] sm:text-2xl">
+                Combo Duplo por <span className="text-primary">R$ 29,90</span>
+              </h3>
+              <p className="text-xs opacity-90 sm:text-sm">
+                Hambúrguer artesanal + batata + refri. Só hoje!
+              </p>
+              <div className="pt-1">
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary px-3.5 py-1.5 text-xs font-bold text-primary-foreground shadow-lg shadow-primary/40">
+                  Peça agora
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </span>
+              </div>
             </div>
           </div>
         )}
