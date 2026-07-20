@@ -30,7 +30,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     // Carrinho do usuário para essa loja
     const { data: items, error: cartErr } = await supabase
       .from("cart_items")
-      .select("product_id,nome_snapshot,preco_unit_cents,quantidade,observacoes")
+      .select("product_id,nome_snapshot,preco_unit_cents,quantidade,observacoes,addons")
       .eq("user_id", userId)
       .eq("establishment_id", data.establishment_id);
     if (cartErr) throw new Error(cartErr.message);
@@ -118,6 +118,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         preco_unit_cents: i.preco_unit_cents,
         quantidade: i.quantidade,
         observacoes: i.observacoes,
+        addons: Array.isArray(i.addons) ? i.addons : [],
       })),
     );
     if (itensErr) throw new Error(itensErr.message);

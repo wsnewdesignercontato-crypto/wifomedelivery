@@ -43,10 +43,13 @@ function CarrinhoPage() {
     setLoading(true);
     const { data } = await supabase
       .from("cart_items")
-      .select("id,product_id,nome_snapshot,preco_unit_cents,quantidade,observacoes,establishment_id")
+      .select("id,product_id,nome_snapshot,preco_unit_cents,quantidade,observacoes,establishment_id,addons")
       .eq("user_id", user.id)
       .order("created_at");
-    const arr = (data ?? []) as Item[];
+    const arr = ((data ?? []) as unknown as Item[]).map((i) => ({
+      ...i,
+      addons: Array.isArray(i.addons) ? i.addons : [],
+    }));
     setItems(arr);
     if (arr[0]) {
       const { data: e } = await supabase
@@ -110,7 +113,19 @@ function CarrinhoPage() {
           <div key={i.id} className="flex gap-3 rounded-2xl border border-border bg-card p-3">
             <div className="flex-1">
               <p className="font-semibold">{i.nome_snapshot}</p>
-              {i.observacoes && <p className="mt-0.5 text-xs text-muted-foreground">{i.observacoes}</p>}
+              {i.addons.length > 0 && (
+                <ul className="mt-1 space-y-0.5">
+                  {i.addons.map((a, idx) => (
+                    <li key={`${a.id}-${idx}`} className="text-[11px] text-muted-foreground">
+                      + {a.nome}
+                      {a.preco_extra_cents > 0 && (
+                        <span className="ml-1 text-primary/80">({fmt(a.preco_extra_cents)})</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {i.observacoes && <p className="mt-0.5 text-xs italic text-muted-foreground">"{i.observacoes}"</p>}
               <p className="mt-1 text-sm font-bold text-primary">{fmt(i.preco_unit_cents * i.quantidade)}</p>
             </div>
             <div className="flex flex-col items-end gap-2">
