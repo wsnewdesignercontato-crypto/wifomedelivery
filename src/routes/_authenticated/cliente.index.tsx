@@ -10,6 +10,20 @@ import catAcai from "@/assets/cat-acai.jpg";
 import catSorvete from "@/assets/cat-sorvete.jpg";
 import catMarmita from "@/assets/cat-marmita.jpg";
 import catPastel from "@/assets/cat-pastel.jpg";
+import catFrango from "@/assets/cat-frango.jpg";
+import catChurrasco from "@/assets/cat-churrasco.jpg";
+import catSaudavel from "@/assets/cat-saudavel.jpg";
+import catMexicana from "@/assets/cat-mexicana.jpg";
+import catMassas from "@/assets/cat-massas.jpg";
+import catPadaria from "@/assets/cat-padaria.jpg";
+import catLanches from "@/assets/cat-lanches.jpg";
+import catDoces from "@/assets/cat-doces.jpg";
+import catChocolates from "@/assets/cat-chocolates.jpg";
+import catBebidas from "@/assets/cat-bebidas.jpg";
+import catCafeteria from "@/assets/cat-cafeteria.jpg";
+import catPorcoes from "@/assets/cat-porcoes.jpg";
+import catMercado from "@/assets/cat-mercado.jpg";
+import catFarmacia from "@/assets/cat-farmacia.jpg";
 import bannerScooter from "@/assets/banner-scooter.png";
 
 export const Route = createFileRoute("/_authenticated/cliente/")({
@@ -39,13 +53,26 @@ const CAT_IMG: Record<string, string> = {
   pizza: catPizza,
   hamburguer: catHamburguer,
   hamburgueres: catHamburguer,
-  lanches: catHamburguer,
+  lanches: catLanches,
   japonesa: catSushi,
   sushi: catSushi,
   acai: catAcai,
   sorvete: catSorvete,
   marmita: catMarmita,
   pastel: catPastel,
+  frango: catFrango,
+  churrasco: catChurrasco,
+  saudavel: catSaudavel,
+  mexicana: catMexicana,
+  massas: catMassas,
+  padaria: catPadaria,
+  doces: catDoces,
+  chocolates: catChocolates,
+  bebidas: catBebidas,
+  cafeteria: catCafeteria,
+  porcoes: catPorcoes,
+  mercado: catMercado,
+  farmacia: catFarmacia,
 };
 
 function ClienteHome() {
