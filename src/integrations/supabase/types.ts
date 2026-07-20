@@ -384,8 +384,50 @@ export type Database = {
           },
         ]
       }
+      order_status_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          from_status: Database["public"]["Enums"]["order_status"] | null
+          id: string
+          order_id: string
+          reason: string | null
+          to_status: Database["public"]["Enums"]["order_status"]
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["order_status"] | null
+          id?: string
+          order_id: string
+          reason?: string | null
+          to_status: Database["public"]["Enums"]["order_status"]
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["order_status"] | null
+          id?: string
+          order_id?: string
+          reason?: string | null
+          to_status?: Database["public"]["Enums"]["order_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          cancelled_role: string | null
           cliente_id: string
           created_at: string
           desconto_cents: number
@@ -395,6 +437,9 @@ export type Database = {
           frete_cents: number
           id: string
           observacoes: string | null
+          refund_amount_cents: number
+          refund_status: Database["public"]["Enums"]["refund_status"]
+          refunded_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           subtotal_cents: number
           tempo_estimado_min: number | null
@@ -402,6 +447,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          cancelled_role?: string | null
           cliente_id: string
           created_at?: string
           desconto_cents?: number
@@ -411,6 +460,9 @@ export type Database = {
           frete_cents?: number
           id?: string
           observacoes?: string | null
+          refund_amount_cents?: number
+          refund_status?: Database["public"]["Enums"]["refund_status"]
+          refunded_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           subtotal_cents?: number
           tempo_estimado_min?: number | null
@@ -418,6 +470,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          cancelled_role?: string | null
           cliente_id?: string
           created_at?: string
           desconto_cents?: number
@@ -427,6 +483,9 @@ export type Database = {
           frete_cents?: number
           id?: string
           observacoes?: string | null
+          refund_amount_cents?: number
+          refund_status?: Database["public"]["Enums"]["refund_status"]
+          refunded_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           subtotal_cents?: number
           tempo_estimado_min?: number | null
@@ -699,6 +758,7 @@ export type Database = {
         | "cancelled"
         | "refunded"
       payment_method: "pix" | "cartao" | "dinheiro" | "carteira"
+      refund_status: "none" | "pending" | "completed" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -864,6 +924,7 @@ export const Constants = {
         "refunded",
       ],
       payment_method: ["pix", "cartao", "dinheiro", "carteira"],
+      refund_status: ["none", "pending", "completed", "failed"],
     },
   },
 } as const
