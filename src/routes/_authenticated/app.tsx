@@ -73,33 +73,40 @@ function AppDispatcher() {
         if (cancelled) return;
         setRoles(r);
 
-        // Se veio com perfil solicitado, priorizar
         const requested = search.perfil;
+
+        // 1) Perfil solicitado e já ativado → redireciona
         if (requested && r.includes(requested)) {
           navigate({ to: `/${requested}`, replace: true });
           return;
         }
 
-        // Admin sempre vai para /admin se tiver
+        // 2) Perfil solicitado mas ainda não ativado → ativa automaticamente
+        if (requested && !r.includes(requested)) {
+          setState("adding");
+          const { error } = await supabase
+            .from("user_roles")
+            .insert({ user_id: user.id, role: requested });
+          if (error && !error.message.includes("duplicate")) {
+            console.error(error);
+            toast.error("Não foi possível ativar este perfil");
+            setState("pick");
+            return;
+          }
+          navigate({ to: `/${requested}`, replace: true });
+          return;
+        }
+
+        // 3) Sem perfil pedido: admin > único perfil > escolher
         if (r.includes("admin")) {
           navigate({ to: "/admin", replace: true });
           return;
         }
-
-        // Se tem só um perfil, redireciona
         const nonAdmin = r.filter((x) => x !== "admin");
         if (nonAdmin.length === 1) {
           navigate({ to: `/${nonAdmin[0]}`, replace: true });
           return;
         }
-
-        // Se veio querendo um perfil que não tem, oferecer criar
-        if (requested && !r.includes(requested)) {
-          setState("pick");
-          return;
-        }
-
-        // Múltiplos perfis → deixar escolher
         setState("pick");
       } catch (err) {
         console.error(err);

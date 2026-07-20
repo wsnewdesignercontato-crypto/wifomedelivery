@@ -16,6 +16,9 @@ import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedEstabelecimentoRouteImport } from './routes/_authenticated/estabelecimento'
+import { Route as AuthenticatedEntregadorRouteImport } from './routes/_authenticated/entregador'
+import { Route as AuthenticatedClienteRouteImport } from './routes/_authenticated/cliente'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -52,6 +55,22 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedEstabelecimentoRoute =
+  AuthenticatedEstabelecimentoRouteImport.update({
+    id: '/estabelecimento',
+    path: '/estabelecimento',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedEntregadorRoute = AuthenticatedEntregadorRouteImport.update({
+  id: '/entregador',
+  path: '/entregador',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedClienteRoute = AuthenticatedClienteRouteImport.update({
+  id: '/cliente',
+  path: '/cliente',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   id: '/app',
   path: '/app',
@@ -66,6 +85,9 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app': typeof AuthenticatedAppRoute
+  '/cliente': typeof AuthenticatedClienteRoute
+  '/entregador': typeof AuthenticatedEntregadorRoute
+  '/estabelecimento': typeof AuthenticatedEstabelecimentoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,6 +97,9 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app': typeof AuthenticatedAppRoute
+  '/cliente': typeof AuthenticatedClienteRoute
+  '/entregador': typeof AuthenticatedEntregadorRoute
+  '/estabelecimento': typeof AuthenticatedEstabelecimentoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,6 +111,9 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
+  '/_authenticated/cliente': typeof AuthenticatedClienteRoute
+  '/_authenticated/entregador': typeof AuthenticatedEntregadorRoute
+  '/_authenticated/estabelecimento': typeof AuthenticatedEstabelecimentoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,6 +125,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/sitemap.xml'
     | '/app'
+    | '/cliente'
+    | '/entregador'
+    | '/estabelecimento'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -106,6 +137,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/sitemap.xml'
     | '/app'
+    | '/cliente'
+    | '/entregador'
+    | '/estabelecimento'
   id:
     | '__root__'
     | '/'
@@ -116,6 +150,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/sitemap.xml'
     | '/_authenticated/app'
+    | '/_authenticated/cliente'
+    | '/_authenticated/entregador'
+    | '/_authenticated/estabelecimento'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -179,6 +216,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/estabelecimento': {
+      id: '/_authenticated/estabelecimento'
+      path: '/estabelecimento'
+      fullPath: '/estabelecimento'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/entregador': {
+      id: '/_authenticated/entregador'
+      path: '/entregador'
+      fullPath: '/entregador'
+      preLoaderRoute: typeof AuthenticatedEntregadorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cliente': {
+      id: '/_authenticated/cliente'
+      path: '/cliente'
+      fullPath: '/cliente'
+      preLoaderRoute: typeof AuthenticatedClienteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/app': {
       id: '/_authenticated/app'
       path: '/app'
@@ -191,10 +249,16 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
+  AuthenticatedClienteRoute: typeof AuthenticatedClienteRoute
+  AuthenticatedEntregadorRoute: typeof AuthenticatedEntregadorRoute
+  AuthenticatedEstabelecimentoRoute: typeof AuthenticatedEstabelecimentoRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRoute,
+  AuthenticatedClienteRoute: AuthenticatedClienteRoute,
+  AuthenticatedEntregadorRoute: AuthenticatedEntregadorRoute,
+  AuthenticatedEstabelecimentoRoute: AuthenticatedEstabelecimentoRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
