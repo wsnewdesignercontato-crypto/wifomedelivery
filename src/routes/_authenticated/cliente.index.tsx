@@ -353,7 +353,9 @@ function ClienteHome() {
                 estab={e}
                 hasPromo={promoIds.has(e.id)}
                 isBestseller={(salesCount[e.id] ?? 0) >= threshold}
+                hoje={hoursById[e.id]}
               />
+
             ))}
           </div>
         )}
