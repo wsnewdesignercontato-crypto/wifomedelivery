@@ -67,10 +67,10 @@ export const grantAppRole = createServerFn({ method: "POST" })
       .upsert({ user_id: data.targetUserId, role: data.role }, { onConflict: "user_id,role" });
     if (error) throw new Error(error.message);
     await supabaseAdmin.from("admin_audit_log").insert({
-      actor_id: context.userId,
+      admin_id: context.userId,
       action: "grant_role",
-      target_type: "user",
-      target_id: data.targetUserId,
+      entity_type: "user",
+      entity_id: data.targetUserId,
       metadata: { role: data.role },
     });
     return { ok: true };
@@ -98,10 +98,10 @@ export const revokeAppRole = createServerFn({ method: "POST" })
       .eq("role", data.role);
     if (error) throw new Error(error.message);
     await supabaseAdmin.from("admin_audit_log").insert({
-      actor_id: context.userId,
+      admin_id: context.userId,
       action: "revoke_role",
-      target_type: "user",
-      target_id: data.targetUserId,
+      entity_type: "user",
+      entity_id: data.targetUserId,
       metadata: { role: data.role },
     });
     return { ok: true };
