@@ -54,7 +54,6 @@ import { Route as AuthenticatedEntregadorConfiguracoesRouteImport } from './rout
 import { Route as AuthenticatedEntregadorChatRouteImport } from './routes/_authenticated/entregador.chat'
 import { Route as AuthenticatedEntregadorCarteiraRouteImport } from './routes/_authenticated/entregador.carteira'
 import { Route as AuthenticatedEntregadorAvaliacoesRouteImport } from './routes/_authenticated/entregador.avaliacoes'
-import { Route as AuthenticatedClientePerfilRouteImport } from './routes/_authenticated/cliente.perfil'
 import { Route as AuthenticatedClientePedidosRouteImport } from './routes/_authenticated/cliente.pedidos'
 import { Route as AuthenticatedClienteFavoritosRouteImport } from './routes/_authenticated/cliente.favoritos'
 import { Route as AuthenticatedClienteCheckoutRouteImport } from './routes/_authenticated/cliente.checkout'
@@ -76,6 +75,15 @@ import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminCampanhasRouteImport } from './routes/_authenticated/admin.campanhas'
 import { Route as AuthenticatedAdminBannersRouteImport } from './routes/_authenticated/admin.banners'
 import { Route as AuthenticatedAdminAvaliacoesRouteImport } from './routes/_authenticated/admin.avaliacoes'
+import { Route as AuthenticatedClientePerfilIndexRouteImport } from './routes/_authenticated/cliente.perfil.index'
+import { Route as AuthenticatedClientePerfilTermosRouteImport } from './routes/_authenticated/cliente.perfil.termos'
+import { Route as AuthenticatedClientePerfilRecompensasRouteImport } from './routes/_authenticated/cliente.perfil.recompensas'
+import { Route as AuthenticatedClientePerfilNotificacoesRouteImport } from './routes/_authenticated/cliente.perfil.notificacoes'
+import { Route as AuthenticatedClientePerfilEnderecosRouteImport } from './routes/_authenticated/cliente.perfil.enderecos'
+import { Route as AuthenticatedClientePerfilDispositivoRouteImport } from './routes/_authenticated/cliente.perfil.dispositivo'
+import { Route as AuthenticatedClientePerfilContaRouteImport } from './routes/_authenticated/cliente.perfil.conta'
+import { Route as AuthenticatedClientePerfilClubeRouteImport } from './routes/_authenticated/cliente.perfil.clube'
+import { Route as AuthenticatedClientePerfilAjudaRouteImport } from './routes/_authenticated/cliente.perfil.ajuda'
 import { Route as AuthenticatedClientePedidoIdRouteImport } from './routes/_authenticated/cliente.pedido.$id'
 import { Route as AuthenticatedClienteEstabelecimentoIdRouteImport } from './routes/_authenticated/cliente.estabelecimento.$id'
 
@@ -334,12 +342,6 @@ const AuthenticatedEntregadorAvaliacoesRoute =
     path: '/avaliacoes',
     getParentRoute: () => AuthenticatedEntregadorRoute,
   } as any)
-const AuthenticatedClientePerfilRoute =
-  AuthenticatedClientePerfilRouteImport.update({
-    id: '/perfil',
-    path: '/perfil',
-    getParentRoute: () => AuthenticatedClienteRoute,
-  } as any)
 const AuthenticatedClientePedidosRoute =
   AuthenticatedClientePedidosRouteImport.update({
     id: '/pedidos',
@@ -463,6 +465,60 @@ const AuthenticatedAdminAvaliacoesRoute =
     path: '/avaliacoes',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedClientePerfilIndexRoute =
+  AuthenticatedClientePerfilIndexRouteImport.update({
+    id: '/perfil/',
+    path: '/perfil/',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
+const AuthenticatedClientePerfilTermosRoute =
+  AuthenticatedClientePerfilTermosRouteImport.update({
+    id: '/perfil/termos',
+    path: '/perfil/termos',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
+const AuthenticatedClientePerfilRecompensasRoute =
+  AuthenticatedClientePerfilRecompensasRouteImport.update({
+    id: '/perfil/recompensas',
+    path: '/perfil/recompensas',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
+const AuthenticatedClientePerfilNotificacoesRoute =
+  AuthenticatedClientePerfilNotificacoesRouteImport.update({
+    id: '/perfil/notificacoes',
+    path: '/perfil/notificacoes',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
+const AuthenticatedClientePerfilEnderecosRoute =
+  AuthenticatedClientePerfilEnderecosRouteImport.update({
+    id: '/perfil/enderecos',
+    path: '/perfil/enderecos',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
+const AuthenticatedClientePerfilDispositivoRoute =
+  AuthenticatedClientePerfilDispositivoRouteImport.update({
+    id: '/perfil/dispositivo',
+    path: '/perfil/dispositivo',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
+const AuthenticatedClientePerfilContaRoute =
+  AuthenticatedClientePerfilContaRouteImport.update({
+    id: '/perfil/conta',
+    path: '/perfil/conta',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
+const AuthenticatedClientePerfilClubeRoute =
+  AuthenticatedClientePerfilClubeRouteImport.update({
+    id: '/perfil/clube',
+    path: '/perfil/clube',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
+const AuthenticatedClientePerfilAjudaRoute =
+  AuthenticatedClientePerfilAjudaRouteImport.update({
+    id: '/perfil/ajuda',
+    path: '/perfil/ajuda',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
 const AuthenticatedClientePedidoIdRoute =
   AuthenticatedClientePedidoIdRouteImport.update({
     id: '/pedido/$id',
@@ -510,7 +566,6 @@ export interface FileRoutesByFullPath {
   '/cliente/checkout': typeof AuthenticatedClienteCheckoutRoute
   '/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
   '/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
-  '/cliente/perfil': typeof AuthenticatedClientePerfilRoute
   '/entregador/avaliacoes': typeof AuthenticatedEntregadorAvaliacoesRoute
   '/entregador/carteira': typeof AuthenticatedEntregadorCarteiraRoute
   '/entregador/chat': typeof AuthenticatedEntregadorChatRoute
@@ -545,6 +600,15 @@ export interface FileRoutesByFullPath {
   '/estabelecimento/': typeof AuthenticatedEstabelecimentoIndexRoute
   '/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
+  '/cliente/perfil/ajuda': typeof AuthenticatedClientePerfilAjudaRoute
+  '/cliente/perfil/clube': typeof AuthenticatedClientePerfilClubeRoute
+  '/cliente/perfil/conta': typeof AuthenticatedClientePerfilContaRoute
+  '/cliente/perfil/dispositivo': typeof AuthenticatedClientePerfilDispositivoRoute
+  '/cliente/perfil/enderecos': typeof AuthenticatedClientePerfilEnderecosRoute
+  '/cliente/perfil/notificacoes': typeof AuthenticatedClientePerfilNotificacoesRoute
+  '/cliente/perfil/recompensas': typeof AuthenticatedClientePerfilRecompensasRoute
+  '/cliente/perfil/termos': typeof AuthenticatedClientePerfilTermosRoute
+  '/cliente/perfil/': typeof AuthenticatedClientePerfilIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -576,7 +640,6 @@ export interface FileRoutesByTo {
   '/cliente/checkout': typeof AuthenticatedClienteCheckoutRoute
   '/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
   '/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
-  '/cliente/perfil': typeof AuthenticatedClientePerfilRoute
   '/entregador/avaliacoes': typeof AuthenticatedEntregadorAvaliacoesRoute
   '/entregador/carteira': typeof AuthenticatedEntregadorCarteiraRoute
   '/entregador/chat': typeof AuthenticatedEntregadorChatRoute
@@ -611,6 +674,15 @@ export interface FileRoutesByTo {
   '/estabelecimento': typeof AuthenticatedEstabelecimentoIndexRoute
   '/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
+  '/cliente/perfil/ajuda': typeof AuthenticatedClientePerfilAjudaRoute
+  '/cliente/perfil/clube': typeof AuthenticatedClientePerfilClubeRoute
+  '/cliente/perfil/conta': typeof AuthenticatedClientePerfilContaRoute
+  '/cliente/perfil/dispositivo': typeof AuthenticatedClientePerfilDispositivoRoute
+  '/cliente/perfil/enderecos': typeof AuthenticatedClientePerfilEnderecosRoute
+  '/cliente/perfil/notificacoes': typeof AuthenticatedClientePerfilNotificacoesRoute
+  '/cliente/perfil/recompensas': typeof AuthenticatedClientePerfilRecompensasRoute
+  '/cliente/perfil/termos': typeof AuthenticatedClientePerfilTermosRoute
+  '/cliente/perfil': typeof AuthenticatedClientePerfilIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -648,7 +720,6 @@ export interface FileRoutesById {
   '/_authenticated/cliente/checkout': typeof AuthenticatedClienteCheckoutRoute
   '/_authenticated/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
   '/_authenticated/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
-  '/_authenticated/cliente/perfil': typeof AuthenticatedClientePerfilRoute
   '/_authenticated/entregador/avaliacoes': typeof AuthenticatedEntregadorAvaliacoesRoute
   '/_authenticated/entregador/carteira': typeof AuthenticatedEntregadorCarteiraRoute
   '/_authenticated/entregador/chat': typeof AuthenticatedEntregadorChatRoute
@@ -683,6 +754,15 @@ export interface FileRoutesById {
   '/_authenticated/estabelecimento/': typeof AuthenticatedEstabelecimentoIndexRoute
   '/_authenticated/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/_authenticated/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
+  '/_authenticated/cliente/perfil/ajuda': typeof AuthenticatedClientePerfilAjudaRoute
+  '/_authenticated/cliente/perfil/clube': typeof AuthenticatedClientePerfilClubeRoute
+  '/_authenticated/cliente/perfil/conta': typeof AuthenticatedClientePerfilContaRoute
+  '/_authenticated/cliente/perfil/dispositivo': typeof AuthenticatedClientePerfilDispositivoRoute
+  '/_authenticated/cliente/perfil/enderecos': typeof AuthenticatedClientePerfilEnderecosRoute
+  '/_authenticated/cliente/perfil/notificacoes': typeof AuthenticatedClientePerfilNotificacoesRoute
+  '/_authenticated/cliente/perfil/recompensas': typeof AuthenticatedClientePerfilRecompensasRoute
+  '/_authenticated/cliente/perfil/termos': typeof AuthenticatedClientePerfilTermosRoute
+  '/_authenticated/cliente/perfil/': typeof AuthenticatedClientePerfilIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -720,7 +800,6 @@ export interface FileRouteTypes {
     | '/cliente/checkout'
     | '/cliente/favoritos'
     | '/cliente/pedidos'
-    | '/cliente/perfil'
     | '/entregador/avaliacoes'
     | '/entregador/carteira'
     | '/entregador/chat'
@@ -755,6 +834,15 @@ export interface FileRouteTypes {
     | '/estabelecimento/'
     | '/cliente/estabelecimento/$id'
     | '/cliente/pedido/$id'
+    | '/cliente/perfil/ajuda'
+    | '/cliente/perfil/clube'
+    | '/cliente/perfil/conta'
+    | '/cliente/perfil/dispositivo'
+    | '/cliente/perfil/enderecos'
+    | '/cliente/perfil/notificacoes'
+    | '/cliente/perfil/recompensas'
+    | '/cliente/perfil/termos'
+    | '/cliente/perfil/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -786,7 +874,6 @@ export interface FileRouteTypes {
     | '/cliente/checkout'
     | '/cliente/favoritos'
     | '/cliente/pedidos'
-    | '/cliente/perfil'
     | '/entregador/avaliacoes'
     | '/entregador/carteira'
     | '/entregador/chat'
@@ -821,6 +908,15 @@ export interface FileRouteTypes {
     | '/estabelecimento'
     | '/cliente/estabelecimento/$id'
     | '/cliente/pedido/$id'
+    | '/cliente/perfil/ajuda'
+    | '/cliente/perfil/clube'
+    | '/cliente/perfil/conta'
+    | '/cliente/perfil/dispositivo'
+    | '/cliente/perfil/enderecos'
+    | '/cliente/perfil/notificacoes'
+    | '/cliente/perfil/recompensas'
+    | '/cliente/perfil/termos'
+    | '/cliente/perfil'
   id:
     | '__root__'
     | '/'
@@ -857,7 +953,6 @@ export interface FileRouteTypes {
     | '/_authenticated/cliente/checkout'
     | '/_authenticated/cliente/favoritos'
     | '/_authenticated/cliente/pedidos'
-    | '/_authenticated/cliente/perfil'
     | '/_authenticated/entregador/avaliacoes'
     | '/_authenticated/entregador/carteira'
     | '/_authenticated/entregador/chat'
@@ -892,6 +987,15 @@ export interface FileRouteTypes {
     | '/_authenticated/estabelecimento/'
     | '/_authenticated/cliente/estabelecimento/$id'
     | '/_authenticated/cliente/pedido/$id'
+    | '/_authenticated/cliente/perfil/ajuda'
+    | '/_authenticated/cliente/perfil/clube'
+    | '/_authenticated/cliente/perfil/conta'
+    | '/_authenticated/cliente/perfil/dispositivo'
+    | '/_authenticated/cliente/perfil/enderecos'
+    | '/_authenticated/cliente/perfil/notificacoes'
+    | '/_authenticated/cliente/perfil/recompensas'
+    | '/_authenticated/cliente/perfil/termos'
+    | '/_authenticated/cliente/perfil/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1223,13 +1327,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEntregadorAvaliacoesRouteImport
       parentRoute: typeof AuthenticatedEntregadorRoute
     }
-    '/_authenticated/cliente/perfil': {
-      id: '/_authenticated/cliente/perfil'
-      path: '/perfil'
-      fullPath: '/cliente/perfil'
-      preLoaderRoute: typeof AuthenticatedClientePerfilRouteImport
-      parentRoute: typeof AuthenticatedClienteRoute
-    }
     '/_authenticated/cliente/pedidos': {
       id: '/_authenticated/cliente/pedidos'
       path: '/pedidos'
@@ -1377,6 +1474,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAvaliacoesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/cliente/perfil/': {
+      id: '/_authenticated/cliente/perfil/'
+      path: '/perfil'
+      fullPath: '/cliente/perfil/'
+      preLoaderRoute: typeof AuthenticatedClientePerfilIndexRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
+    '/_authenticated/cliente/perfil/termos': {
+      id: '/_authenticated/cliente/perfil/termos'
+      path: '/perfil/termos'
+      fullPath: '/cliente/perfil/termos'
+      preLoaderRoute: typeof AuthenticatedClientePerfilTermosRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
+    '/_authenticated/cliente/perfil/recompensas': {
+      id: '/_authenticated/cliente/perfil/recompensas'
+      path: '/perfil/recompensas'
+      fullPath: '/cliente/perfil/recompensas'
+      preLoaderRoute: typeof AuthenticatedClientePerfilRecompensasRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
+    '/_authenticated/cliente/perfil/notificacoes': {
+      id: '/_authenticated/cliente/perfil/notificacoes'
+      path: '/perfil/notificacoes'
+      fullPath: '/cliente/perfil/notificacoes'
+      preLoaderRoute: typeof AuthenticatedClientePerfilNotificacoesRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
+    '/_authenticated/cliente/perfil/enderecos': {
+      id: '/_authenticated/cliente/perfil/enderecos'
+      path: '/perfil/enderecos'
+      fullPath: '/cliente/perfil/enderecos'
+      preLoaderRoute: typeof AuthenticatedClientePerfilEnderecosRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
+    '/_authenticated/cliente/perfil/dispositivo': {
+      id: '/_authenticated/cliente/perfil/dispositivo'
+      path: '/perfil/dispositivo'
+      fullPath: '/cliente/perfil/dispositivo'
+      preLoaderRoute: typeof AuthenticatedClientePerfilDispositivoRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
+    '/_authenticated/cliente/perfil/conta': {
+      id: '/_authenticated/cliente/perfil/conta'
+      path: '/perfil/conta'
+      fullPath: '/cliente/perfil/conta'
+      preLoaderRoute: typeof AuthenticatedClientePerfilContaRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
+    '/_authenticated/cliente/perfil/clube': {
+      id: '/_authenticated/cliente/perfil/clube'
+      path: '/perfil/clube'
+      fullPath: '/cliente/perfil/clube'
+      preLoaderRoute: typeof AuthenticatedClientePerfilClubeRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
+    '/_authenticated/cliente/perfil/ajuda': {
+      id: '/_authenticated/cliente/perfil/ajuda'
+      path: '/perfil/ajuda'
+      fullPath: '/cliente/perfil/ajuda'
+      preLoaderRoute: typeof AuthenticatedClientePerfilAjudaRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
     '/_authenticated/cliente/pedido/$id': {
       id: '/_authenticated/cliente/pedido/$id'
       path: '/pedido/$id'
@@ -1444,10 +1604,18 @@ interface AuthenticatedClienteRouteChildren {
   AuthenticatedClienteCheckoutRoute: typeof AuthenticatedClienteCheckoutRoute
   AuthenticatedClienteFavoritosRoute: typeof AuthenticatedClienteFavoritosRoute
   AuthenticatedClientePedidosRoute: typeof AuthenticatedClientePedidosRoute
-  AuthenticatedClientePerfilRoute: typeof AuthenticatedClientePerfilRoute
   AuthenticatedClienteIndexRoute: typeof AuthenticatedClienteIndexRoute
   AuthenticatedClienteEstabelecimentoIdRoute: typeof AuthenticatedClienteEstabelecimentoIdRoute
   AuthenticatedClientePedidoIdRoute: typeof AuthenticatedClientePedidoIdRoute
+  AuthenticatedClientePerfilAjudaRoute: typeof AuthenticatedClientePerfilAjudaRoute
+  AuthenticatedClientePerfilClubeRoute: typeof AuthenticatedClientePerfilClubeRoute
+  AuthenticatedClientePerfilContaRoute: typeof AuthenticatedClientePerfilContaRoute
+  AuthenticatedClientePerfilDispositivoRoute: typeof AuthenticatedClientePerfilDispositivoRoute
+  AuthenticatedClientePerfilEnderecosRoute: typeof AuthenticatedClientePerfilEnderecosRoute
+  AuthenticatedClientePerfilNotificacoesRoute: typeof AuthenticatedClientePerfilNotificacoesRoute
+  AuthenticatedClientePerfilRecompensasRoute: typeof AuthenticatedClientePerfilRecompensasRoute
+  AuthenticatedClientePerfilTermosRoute: typeof AuthenticatedClientePerfilTermosRoute
+  AuthenticatedClientePerfilIndexRoute: typeof AuthenticatedClientePerfilIndexRoute
 }
 
 const AuthenticatedClienteRouteChildren: AuthenticatedClienteRouteChildren = {
@@ -1456,11 +1624,23 @@ const AuthenticatedClienteRouteChildren: AuthenticatedClienteRouteChildren = {
   AuthenticatedClienteCheckoutRoute: AuthenticatedClienteCheckoutRoute,
   AuthenticatedClienteFavoritosRoute: AuthenticatedClienteFavoritosRoute,
   AuthenticatedClientePedidosRoute: AuthenticatedClientePedidosRoute,
-  AuthenticatedClientePerfilRoute: AuthenticatedClientePerfilRoute,
   AuthenticatedClienteIndexRoute: AuthenticatedClienteIndexRoute,
   AuthenticatedClienteEstabelecimentoIdRoute:
     AuthenticatedClienteEstabelecimentoIdRoute,
   AuthenticatedClientePedidoIdRoute: AuthenticatedClientePedidoIdRoute,
+  AuthenticatedClientePerfilAjudaRoute: AuthenticatedClientePerfilAjudaRoute,
+  AuthenticatedClientePerfilClubeRoute: AuthenticatedClientePerfilClubeRoute,
+  AuthenticatedClientePerfilContaRoute: AuthenticatedClientePerfilContaRoute,
+  AuthenticatedClientePerfilDispositivoRoute:
+    AuthenticatedClientePerfilDispositivoRoute,
+  AuthenticatedClientePerfilEnderecosRoute:
+    AuthenticatedClientePerfilEnderecosRoute,
+  AuthenticatedClientePerfilNotificacoesRoute:
+    AuthenticatedClientePerfilNotificacoesRoute,
+  AuthenticatedClientePerfilRecompensasRoute:
+    AuthenticatedClientePerfilRecompensasRoute,
+  AuthenticatedClientePerfilTermosRoute: AuthenticatedClientePerfilTermosRoute,
+  AuthenticatedClientePerfilIndexRoute: AuthenticatedClientePerfilIndexRoute,
 }
 
 const AuthenticatedClienteRouteWithChildren =
