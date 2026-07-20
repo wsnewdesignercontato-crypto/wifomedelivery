@@ -18,6 +18,7 @@ function Notif() {
   useEffect(() => {
     if (!courier) return;
     supabase.from("notifications").select("*").eq("user_id", courier.user_id)
+      .or("audience.is.null,audience.eq.entregador,audience.eq.all")
       .order("created_at", { ascending: false }).limit(100)
       .then(({ data }) => setList((data ?? []) as N[]));
   }, [courier]);
