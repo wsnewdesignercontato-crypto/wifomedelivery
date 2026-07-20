@@ -34,6 +34,7 @@ import {
   Settings,
   LogOut,
   Bell,
+  FileText,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Estab } from "@/hooks/use-estab";
