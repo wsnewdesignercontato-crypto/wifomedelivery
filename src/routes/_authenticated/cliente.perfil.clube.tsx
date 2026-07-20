@@ -22,17 +22,13 @@ function ClubePage() {
         <ChevronLeft className="h-4 w-4" /> Voltar
       </Link>
 
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-[hsl(19,100%,42%)] p-6 text-primary-foreground shadow-lg">
-        <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative">
-          <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-bold">
-            <Crown className="h-3 w-3" /> Clube WiFi
-          </div>
-          <h1 className="text-2xl font-black">Assine e economize em cada pedido</h1>
-          <p className="mt-1 text-sm opacity-90">
-            Frete grátis, cupons e vantagens exclusivas por apenas <b>R$ 9,90/mês</b>.
-          </p>
-        </div>
+      <div className="relative overflow-hidden rounded-3xl bg-black shadow-lg">
+        <img
+          src={clubeBanner.url}
+          alt="Clube WiFome — assine e economize em cada pedido"
+          className="block w-full h-auto"
+          loading="eager"
+        />
       </div>
 
       <div className="space-y-2 rounded-2xl border border-border bg-card p-4">
