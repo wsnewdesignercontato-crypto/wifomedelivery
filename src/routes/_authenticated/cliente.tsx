@@ -17,6 +17,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { ReviewForm } from "@/components/reviews";
+import { OrderHistory } from "@/components/order-history";
 import { IFomeLogo } from "@/components/ifome-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,6 +113,7 @@ function ClienteApp() {
   const [enviando, setEnviando] = useState(false);
   const [meusPedidos, setMeusPedidos] = useState<Order[]>([]);
   const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
+  const [openHistory, setOpenHistory] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     (async () => {
@@ -451,6 +453,27 @@ function ClienteApp() {
                     {o.status === "cancelled" && o.cancellation_reason && (
                       <p className="mt-2 rounded-lg bg-muted p-2 text-xs">Motivo: {o.cancellation_reason}</p>
                     )}
+                    <div className="mt-3 border-t border-border pt-3">
+                      <button
+                        type="button"
+                        className="text-xs font-medium text-primary hover:underline"
+                        onClick={() =>
+                          setOpenHistory((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(o.id)) next.delete(o.id);
+                            else next.add(o.id);
+                            return next;
+                          })
+                        }
+                      >
+                        {openHistory.has(o.id) ? "Ocultar histórico" : "Ver histórico do pedido"}
+                      </button>
+                      {openHistory.has(o.id) && (
+                        <div className="mt-3">
+                          <OrderHistory orderId={o.id} />
+                        </div>
+                      )}
+                    </div>
                     {o.status === "delivered" && loja && (
                       reviewedIds.has(o.id) ? (
                         <p className="mt-3 text-xs text-muted-foreground">✓ Você já avaliou este pedido</p>
