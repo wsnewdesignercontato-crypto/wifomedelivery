@@ -455,6 +455,12 @@ function EstabRow({
           ) : (
             fmt(estab.taxa_entrega_cents)
           )}
+          {hoje ? (
+            <>
+              {" · "}
+              <span className="font-semibold text-foreground">Hoje {hoje.abre}–{hoje.fecha}</span>
+            </>
+          ) : null}
         </p>
       </div>
 
