@@ -103,6 +103,37 @@ function Corridas() {
       .order("created_at", { ascending: false });
     setDisponiveis((dv ?? []) as Delivery[]);
 
+    // Metadados (nome da loja + distância até a coleta)
+    const dvList = (dv ?? []) as Delivery[];
+    if (dvList.length) {
+      const orderIds = dvList.map((d) => d.order_id);
+      const { data: ords } = await supabase
+        .from("orders")
+        .select("id, establishment_id")
+        .in("id", orderIds);
+      const estabIds = Array.from(new Set((ords ?? []).map((o: any) => o.establishment_id)));
+      const { data: estabs } = estabIds.length
+        ? await supabase.from("establishments").select("id, nome, lat, lng").in("id", estabIds)
+        : { data: [] as any[] };
+      const estabById: Record<string, { nome: string; lat: number | null; lng: number | null }> = {};
+      (estabs ?? []).forEach((e: any) => { estabById[e.id] = { nome: e.nome, lat: e.lat, lng: e.lng }; });
+      const orderToEstab: Record<string, string> = {};
+      (ords ?? []).forEach((o: any) => { orderToEstab[o.id] = o.establishment_id; });
+      const meta: Record<string, { nome: string; distKm: number | null }> = {};
+      for (const d of dvList) {
+        const eid = orderToEstab[d.order_id];
+        const e = eid ? estabById[eid] : undefined;
+        let distKm: number | null = null;
+        if (myPos && e && e.lat != null && e.lng != null) {
+          distKm = Math.round(haversineKm(myPos, { lat: e.lat, lng: e.lng }) * 10) / 10;
+        }
+        meta[d.id] = { nome: e?.nome ?? "Loja", distKm };
+      }
+      setAvailMeta(meta);
+    } else {
+      setAvailMeta({});
+    }
+
     const { data: at } = await supabase
       .from("deliveries")
       .select("id,order_id,status,valor_entrega_cents,entregador_id,aceito_em,coletado_em,entregue_em")
