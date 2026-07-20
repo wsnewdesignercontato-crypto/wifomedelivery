@@ -12,24 +12,42 @@ export const Route = createFileRoute("/_authenticated/admin/entregadores")({
 });
 
 type Courier = {
-  id: string;
   user_id: string;
-  nome: string | null;
   veiculo: string | null;
   placa: string | null;
   status: string;
-  ativo: boolean;
-  cidade: string | null;
+  cnh: string | null;
+  last_seen: string | null;
+};
+
+type CourierRow = Courier & {
+  nome: string | null;
   telefone: string | null;
 };
 
-async function fetchCouriers() {
+async function fetchCouriers(): Promise<CourierRow[]> {
   const { data, error } = await supabase
     .from("courier_profiles")
-    .select("id,user_id,nome,veiculo,placa,status,ativo,cidade,telefone")
-    .order("nome");
+    .select("user_id,veiculo,placa,status,cnh,last_seen");
   if (error) throw error;
-  return (data ?? []) as Courier[];
+  const list = (data ?? []) as Courier[];
+  if (list.length === 0) return [];
+  const ids = list.map((c) => c.user_id);
+  const { data: profs } = await supabase
+    .from("profiles")
+    .select("id,nome,telefone")
+    .in("id", ids);
+  const profMap = new Map(
+    ((profs ?? []) as { id: string; nome: string | null; telefone: string | null }[]).map((p) => [
+      p.id,
+      p,
+    ]),
+  );
+  return list.map((c) => ({
+    ...c,
+    nome: profMap.get(c.user_id)?.nome ?? null,
+    telefone: profMap.get(c.user_id)?.telefone ?? null,
+  }));
 }
 
 function EntregadoresPage() {
@@ -44,13 +62,16 @@ function EntregadoresPage() {
     return true;
   });
 
-  async function toggleActive(id: string, ativo: boolean, userId: string) {
-    const { error } = await supabase.from("courier_profiles").update({ ativo }).eq("id", id);
+  async function setStatus(userId: string, newStatus: "offline" | "online") {
+    const { error } = await supabase
+      .from("courier_profiles")
+      .update({ status: newStatus })
+      .eq("user_id", userId);
     if (error) return toast.error("Falha ao atualizar");
-    toast.success(ativo ? "Entregador reativado" : "Entregador bloqueado");
+    toast.success(newStatus === "offline" ? "Entregador desconectado" : "Entregador reativado");
     await supabase.from("admin_audit_log").insert({
       admin_id: (await supabase.auth.getUser()).data.user!.id,
-      action: ativo ? "courier_activate" : "courier_block",
+      action: `courier_set_${newStatus}`,
       entity_type: "courier",
       entity_id: userId,
     });
@@ -100,7 +121,7 @@ function EntregadoresPage() {
               <tr>
                 <th className="px-4 py-3">Entregador</th>
                 <th className="px-4 py-3">Veículo</th>
-                <th className="px-4 py-3">Cidade</th>
+                <th className="px-4 py-3">CNH</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3 text-right">Ações</th>
               </tr>
@@ -122,7 +143,7 @@ function EntregadoresPage() {
                 </tr>
               )}
               {filtered.map((c) => (
-                <tr key={c.id} className="hover:bg-muted/30">
+                <tr key={c.user_id} className="hover:bg-muted/30">
                   <td className="px-4 py-3">
                     <p className="font-medium">{c.nome || "Sem nome"}</p>
                     <p className="text-xs text-muted-foreground">{c.telefone || "—"}</p>
@@ -130,25 +151,20 @@ function EntregadoresPage() {
                   <td className="px-4 py-3 text-muted-foreground">
                     {c.veiculo ?? "—"} {c.placa ? `· ${c.placa}` : ""}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">{c.cidade ?? "—"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{c.cnh ?? "—"}</td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusPill[c.status] ?? "bg-muted"}`}>
                       {c.status}
                     </span>
-                    {!c.ativo && (
-                      <span className="ml-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-[10px] font-semibold text-rose-600">
-                        bloqueado
-                      </span>
-                    )}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    {c.ativo ? (
-                      <Button size="sm" variant="outline" className="text-rose-600" onClick={() => toggleActive(c.id, false, c.user_id)}>
-                        <Ban className="mr-1.5 h-3.5 w-3.5" /> Bloquear
+                    {c.status === "offline" ? (
+                      <Button size="sm" variant="outline" onClick={() => setStatus(c.user_id, "online")}>
+                        <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Ativar
                       </Button>
                     ) : (
-                      <Button size="sm" variant="outline" onClick={() => toggleActive(c.id, true, c.user_id)}>
-                        <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Ativar
+                      <Button size="sm" variant="outline" className="text-rose-600" onClick={() => setStatus(c.user_id, "offline")}>
+                        <Ban className="mr-1.5 h-3.5 w-3.5" /> Desconectar
                       </Button>
                     )}
                   </td>

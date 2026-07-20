@@ -13,17 +13,16 @@ export const Route = createFileRoute("/_authenticated/admin/avaliacoes")({
 type Review = {
   id: string;
   rating_loja: number;
-  rating_entrega: number | null;
+  rating_entregador: number | null;
   comentario: string | null;
   created_at: string;
-  hidden?: boolean;
   establishment_id: string;
 };
 
 async function fetchReviews() {
   const { data, error } = await supabase
     .from("reviews")
-    .select("id,rating_loja,rating_entrega,comentario,created_at,establishment_id")
+    .select("id,rating_loja,rating_entregador,comentario,created_at,establishment_id")
     .order("created_at", { ascending: false })
     .limit(200);
   if (error) throw error;
