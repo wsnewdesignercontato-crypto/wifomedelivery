@@ -194,9 +194,10 @@ function Corridas() {
     const orderPatch: Record<string, unknown> = {
       status: "delivered",
       entrega_metodo_prova: metodo,
-      dinheiro_recebido: order.forma_pagamento === "dinheiro" ? true : false,
+      dinheiro_recebido: order.forma_pagamento === "dinheiro",
     };
     if (prova_url) orderPatch.prova_url = prova_url;
+
 
     const { error } = await supabase.from("deliveries").update({
       status: "delivered", entregue_em: new Date().toISOString(),
