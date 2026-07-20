@@ -67,6 +67,10 @@ type Order = {
   observacoes: string | null;
   created_at: string;
   endereco_entrega: { endereco?: string } | null;
+  cancellation_reason?: string | null;
+  cancelled_role?: string | null;
+  refund_status?: string | null;
+  refund_amount_cents?: number | null;
 };
 type OrderItem = {
   id: string;
@@ -87,9 +91,15 @@ const STATUS_LABEL: Record<string, string> = {
   waiting_courier: "Aguardando entregador",
   courier_assigned: "Entregador a caminho",
   picked_up: "Coletado",
+  on_the_way: "A caminho",
+  arriving: "Chegando",
   delivered: "Entregue",
   cancelled: "Cancelado",
+  refunded: "Reembolsado",
 };
+
+const TERMINAL = new Set(["delivered", "cancelled", "refunded"]);
+
 
 function EstabApp() {
   const { user } = Route.useRouteContext() as { user: { id: string } };
@@ -327,10 +337,11 @@ function PedidosPanel({ estab }: { estab: Estab }) {
   async function reload() {
     const { data } = await supabase
       .from("orders")
-      .select("id,cliente_id,status,total_cents,observacoes,created_at,endereco_entrega")
+      .select("id,cliente_id,status,total_cents,observacoes,created_at,endereco_entrega,cancellation_reason,cancelled_role,refund_status,refund_amount_cents")
       .eq("establishment_id", estab.id)
       .order("created_at", { ascending: false })
       .limit(50);
+
     const list = (data ?? []) as Order[];
     setOrders(list);
     if (list.length) {
@@ -363,11 +374,10 @@ function PedidosPanel({ estab }: { estab: Estab }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estab.id]);
 
-  async function mudarStatus(id: string, novo: "accepted" | "preparing" | "ready" | "cancelled") {
+  async function mudarStatus(id: string, novo: "accepted" | "preparing" | "ready") {
     const { error } = await supabase.from("orders").update({ status: novo }).eq("id", id);
     if (error) return toast.error("Falha ao atualizar");
     if (novo === "ready") {
-      // criar entrega broadcasting
       await supabase.from("deliveries").insert({
         order_id: id,
         status: "broadcasting",
@@ -378,6 +388,40 @@ function PedidosPanel({ estab }: { estab: Estab }) {
     } else {
       toast.success("Status atualizado");
     }
+  }
+
+  async function cancelar(id: string) {
+    const motivo = prompt("Motivo do cancelamento:") ?? "";
+    if (!motivo.trim()) return toast.error("Informe um motivo");
+    if (!confirm("Cancelar este pedido? A entrega será liberada e o cliente notificado.")) return;
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        status: "cancelled",
+        cancellation_reason: motivo.trim(),
+        cancelled_by: estab.owner_id,
+        cancelled_role: "estabelecimento",
+      })
+      .eq("id", id);
+    if (error) toast.error("Falha ao cancelar");
+    else toast.success("Pedido cancelado");
+  }
+
+  async function reembolsar(o: Order) {
+    const valorStr = prompt("Valor a reembolsar (R$):", (o.total_cents / 100).toFixed(2)) ?? "";
+    const valor = Math.round(parseFloat(valorStr.replace(",", ".")) * 100);
+    if (!Number.isFinite(valor) || valor <= 0) return toast.error("Valor inválido");
+    if (valor > o.total_cents) return toast.error("Valor maior que o total do pedido");
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        status: "refunded",
+        refund_status: "completed",
+        refund_amount_cents: valor,
+      })
+      .eq("id", o.id);
+    if (error) toast.error("Falha ao reembolsar");
+    else toast.success("Reembolso registrado");
   }
 
   const proxima = (s: string): { label: string; next: "accepted" | "preparing" | "ready" } | null => {
@@ -396,6 +440,10 @@ function PedidosPanel({ estab }: { estab: Estab }) {
     );
   }
 
+  const podeCancelar = (s: string) => !TERMINAL.has(s);
+  const podeReembolsar = (o: Order) =>
+    (o.status === "cancelled" || o.status === "delivered") && o.refund_status !== "completed";
+
   return (
     <div className="space-y-3">
       {orders.map((o) => {
@@ -404,10 +452,13 @@ function PedidosPanel({ estab }: { estab: Estab }) {
           <div key={o.id} className="rounded-2xl border border-border bg-card p-4 shadow-card">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge className="bg-primary/15 text-primary hover:bg-primary/20">
                     {STATUS_LABEL[o.status] ?? o.status}
                   </Badge>
+                  {o.refund_status === "completed" && (
+                    <Badge variant="secondary">Reembolso {fmt(o.refund_amount_cents ?? 0)}</Badge>
+                  )}
                   <span className="text-xs text-muted-foreground">
                     {new Date(o.created_at).toLocaleTimeString("pt-BR")}
                   </span>
@@ -431,25 +482,36 @@ function PedidosPanel({ estab }: { estab: Estab }) {
             {o.observacoes && (
               <p className="mt-2 rounded-lg bg-muted p-2 text-xs">Obs: {o.observacoes}</p>
             )}
-            {step && (
-              <div className="mt-3 flex gap-2">
+            {o.status === "cancelled" && o.cancellation_reason && (
+              <p className="mt-2 rounded-lg bg-destructive/10 p-2 text-xs text-destructive">
+                Cancelado{o.cancelled_role ? ` (${o.cancelled_role})` : ""}: {o.cancellation_reason}
+              </p>
+            )}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {step && (
                 <Button size="sm" onClick={() => mudarStatus(o.id, step.next)}>
                   {step.next === "ready" && <Bike className="mr-2 h-4 w-4" />}
                   {step.label}
                 </Button>
-                {o.status === "placed" && (
-                  <Button size="sm" variant="outline" onClick={() => mudarStatus(o.id, "cancelled")}>
-                    Recusar
-                  </Button>
-                )}
-              </div>
-            )}
+              )}
+              {podeCancelar(o.status) && (
+                <Button size="sm" variant="outline" onClick={() => cancelar(o.id)}>
+                  Cancelar pedido
+                </Button>
+              )}
+              {podeReembolsar(o) && (
+                <Button size="sm" variant="secondary" onClick={() => reembolsar(o)}>
+                  Reembolsar
+                </Button>
+              )}
+            </div>
           </div>
         );
       })}
     </div>
   );
 }
+
 
 function ProdutosPanel({ estab }: { estab: Estab }) {
   const [produtos, setProdutos] = useState<Produto[]>([]);

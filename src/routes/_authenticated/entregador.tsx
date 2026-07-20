@@ -246,7 +246,15 @@ function PainelEntregador({
     if (online) loadDisponiveis();
     const ch = supabase
       .channel("courier-deliveries")
-      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, (payload) => {
+        const rec = (payload.new ?? payload.old) as Delivery | undefined;
+        if (
+          rec &&
+          rec.entregador_id === courier.user_id &&
+          (rec.status === "cancelled" || (payload.new as Delivery | null)?.status === "cancelled")
+        ) {
+          toast.warning("Corrida cancelada pela loja ou pelo cliente");
+        }
         if (online) loadDisponiveis();
         loadAtiva();
       })
@@ -256,6 +264,7 @@ function PainelEntregador({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [online, courier.user_id]);
+
 
   async function toggleOnline(v: boolean) {
     setOnline(v);

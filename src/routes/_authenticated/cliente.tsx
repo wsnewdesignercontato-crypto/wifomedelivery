@@ -66,6 +66,9 @@ type Order = {
   total_cents: number;
   created_at: string;
   observacoes: string | null;
+  cancellation_reason?: string | null;
+  refund_status?: string | null;
+  refund_amount_cents?: number | null;
 };
 
 const fmt = (c: number) =>
@@ -83,7 +86,11 @@ const STATUS_LABEL: Record<string, string> = {
   arriving: "Chegando",
   delivered: "Entregue",
   cancelled: "Cancelado",
+  refunded: "Reembolsado",
 };
+
+const CANCELABLE_BY_CLIENTE = new Set(["placed", "accepted"]);
+
 
 function ClienteApp() {
   const { user } = Route.useRouteContext() as { user: { id: string } };
@@ -126,11 +133,12 @@ function ClienteApp() {
     (async () => {
       const { data } = await supabase
         .from("orders")
-        .select("id,establishment_id,status,total_cents,created_at,observacoes")
+        .select("id,establishment_id,status,total_cents,created_at,observacoes,cancellation_reason,refund_status,refund_amount_cents")
         .eq("cliente_id", user.id)
         .order("created_at", { ascending: false })
         .limit(30);
       if (active) setMeusPedidos((data ?? []) as Order[]);
+
     })();
     const ch = supabase
       .channel("cliente-pedidos")
@@ -390,6 +398,7 @@ function ClienteApp() {
             ) : (
               meusPedidos.map((o) => {
                 const loja = estabs.find((e) => e.id === o.establishment_id);
+                const canCancel = CANCELABLE_BY_CLIENTE.has(o.status);
                 return (
                   <div key={o.id} className="rounded-2xl border border-border bg-card p-4 shadow-card">
                     <div className="flex items-center justify-between">
@@ -401,14 +410,45 @@ function ClienteApp() {
                       </div>
                       <span className="font-bold text-primary">{fmt(o.total_cents)}</span>
                     </div>
-                    <div className="mt-3">
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
                       <Badge className="bg-primary/15 text-primary hover:bg-primary/20">
                         {STATUS_LABEL[o.status] ?? o.status}
                       </Badge>
+                      {o.refund_status === "completed" && (
+                        <Badge variant="secondary">Reembolso {fmt(o.refund_amount_cents ?? 0)}</Badge>
+                      )}
+                      {canCancel && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="ml-auto"
+                          onClick={async () => {
+                            const motivo = prompt("Motivo do cancelamento (opcional):") ?? "";
+                            if (!confirm("Cancelar este pedido?")) return;
+                            const { error } = await supabase
+                              .from("orders")
+                              .update({
+                                status: "cancelled",
+                                cancellation_reason: motivo || null,
+                                cancelled_by: user.id,
+                                cancelled_role: "cliente",
+                              })
+                              .eq("id", o.id);
+                            if (error) toast.error("Não foi possível cancelar. Loja já iniciou o preparo?");
+                            else toast.success("Pedido cancelado");
+                          }}
+                        >
+                          Cancelar pedido
+                        </Button>
+                      )}
                     </div>
+                    {o.status === "cancelled" && o.cancellation_reason && (
+                      <p className="mt-2 rounded-lg bg-muted p-2 text-xs">Motivo: {o.cancellation_reason}</p>
+                    )}
                   </div>
                 );
               })
+
             )}
           </div>
         )}
