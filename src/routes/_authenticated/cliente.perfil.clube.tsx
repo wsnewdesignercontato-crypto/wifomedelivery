@@ -54,7 +54,7 @@ function ClubePage() {
         size="lg"
         onClick={() => toast.info("Assinatura em breve!")}
       >
-        Assinar Clube WiFi
+        Assinar Clube WiFome
       </Button>
       <p className="text-center text-[11px] text-muted-foreground">
         Cancele a qualquer momento. Sem multa.
