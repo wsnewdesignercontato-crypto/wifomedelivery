@@ -67,6 +67,10 @@ type Order = {
   observacoes: string | null;
   created_at: string;
   endereco_entrega: { endereco?: string } | null;
+  cancellation_reason?: string | null;
+  cancelled_role?: string | null;
+  refund_status?: string | null;
+  refund_amount_cents?: number | null;
 };
 type OrderItem = {
   id: string;
@@ -87,9 +91,15 @@ const STATUS_LABEL: Record<string, string> = {
   waiting_courier: "Aguardando entregador",
   courier_assigned: "Entregador a caminho",
   picked_up: "Coletado",
+  on_the_way: "A caminho",
+  arriving: "Chegando",
   delivered: "Entregue",
   cancelled: "Cancelado",
+  refunded: "Reembolsado",
 };
+
+const TERMINAL = new Set(["delivered", "cancelled", "refunded"]);
+
 
 function EstabApp() {
   const { user } = Route.useRouteContext() as { user: { id: string } };
@@ -327,10 +337,11 @@ function PedidosPanel({ estab }: { estab: Estab }) {
   async function reload() {
     const { data } = await supabase
       .from("orders")
-      .select("id,cliente_id,status,total_cents,observacoes,created_at,endereco_entrega")
+      .select("id,cliente_id,status,total_cents,observacoes,created_at,endereco_entrega,cancellation_reason,cancelled_role,refund_status,refund_amount_cents")
       .eq("establishment_id", estab.id)
       .order("created_at", { ascending: false })
       .limit(50);
+
     const list = (data ?? []) as Order[];
     setOrders(list);
     if (list.length) {
