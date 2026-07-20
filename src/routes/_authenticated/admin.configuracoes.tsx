@@ -51,6 +51,7 @@ function ConfigPage() {
         default_delivery_fee_cents: form.default_delivery_fee_cents,
         default_radius_km: form.default_radius_km,
         maintenance_mode: form.maintenance_mode,
+        bestseller_threshold: form.bestseller_threshold,
         updated_by: uid,
         updated_at: new Date().toISOString(),
       })
