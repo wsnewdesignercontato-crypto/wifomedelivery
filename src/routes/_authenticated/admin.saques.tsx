@@ -45,7 +45,7 @@ function SaquesAdmin() {
   useEffect(() => { load(); }, []);
 
   async function atualizar(tabela: string, id: string, patch: Record<string, unknown>) {
-    const { error } = await supabase.from(tabela).update({ ...patch, processado_em: new Date().toISOString() }).eq("id", id);
+    const { error } = await (supabase.from(tabela as never) as any).update({ ...patch, processado_em: new Date().toISOString() }).eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Saque atualizado");
     load();

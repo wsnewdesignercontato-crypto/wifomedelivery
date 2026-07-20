@@ -39,6 +39,7 @@ import { Route as AuthenticatedEstabelecimentoCuponsRouteImport } from './routes
 import { Route as AuthenticatedEstabelecimentoConfiguracoesRouteImport } from './routes/_authenticated/estabelecimento.configuracoes'
 import { Route as AuthenticatedEstabelecimentoComplementosRouteImport } from './routes/_authenticated/estabelecimento.complementos'
 import { Route as AuthenticatedEstabelecimentoCategoriasRouteImport } from './routes/_authenticated/estabelecimento.categorias'
+import { Route as AuthenticatedEstabelecimentoCarteiraRouteImport } from './routes/_authenticated/estabelecimento.carteira'
 import { Route as AuthenticatedEstabelecimentoBannersRouteImport } from './routes/_authenticated/estabelecimento.banners'
 import { Route as AuthenticatedEstabelecimentoAvaliacoesRouteImport } from './routes/_authenticated/estabelecimento.avaliacoes'
 import { Route as AuthenticatedEntregadorVeiculoRouteImport } from './routes/_authenticated/entregador.veiculo'
@@ -62,6 +63,7 @@ import { Route as AuthenticatedClienteCarrinhoRouteImport } from './routes/_auth
 import { Route as AuthenticatedClienteBuscarRouteImport } from './routes/_authenticated/cliente.buscar'
 import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin.usuarios'
 import { Route as AuthenticatedAdminSuporteRouteImport } from './routes/_authenticated/admin.suporte'
+import { Route as AuthenticatedAdminSaquesRouteImport } from './routes/_authenticated/admin.saques'
 import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin.pedidos'
 import { Route as AuthenticatedAdminNotificacoesRouteImport } from './routes/_authenticated/admin.notificacoes'
 import { Route as AuthenticatedAdminMapaRouteImport } from './routes/_authenticated/admin.mapa'
@@ -78,6 +80,7 @@ import { Route as AuthenticatedAdminBannersRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminAvaliacoesRouteImport } from './routes/_authenticated/admin.avaliacoes'
 import { Route as AuthenticatedAdminAnunciosRouteImport } from './routes/_authenticated/admin.anuncios'
 import { Route as AuthenticatedClientePerfilIndexRouteImport } from './routes/_authenticated/cliente.perfil.index'
+import { Route as AuthenticatedEntregadorPerfilPagamentoRouteImport } from './routes/_authenticated/entregador.perfil.pagamento'
 import { Route as AuthenticatedEntregadorPerfilDadosRouteImport } from './routes/_authenticated/entregador.perfil.dados'
 import { Route as AuthenticatedClientePerfilTermosRouteImport } from './routes/_authenticated/cliente.perfil.termos'
 import { Route as AuthenticatedClientePerfilRecompensasRouteImport } from './routes/_authenticated/cliente.perfil.recompensas'
@@ -255,6 +258,12 @@ const AuthenticatedEstabelecimentoCategoriasRoute =
     path: '/categorias',
     getParentRoute: () => AuthenticatedEstabelecimentoRoute,
   } as any)
+const AuthenticatedEstabelecimentoCarteiraRoute =
+  AuthenticatedEstabelecimentoCarteiraRouteImport.update({
+    id: '/carteira',
+    path: '/carteira',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
 const AuthenticatedEstabelecimentoBannersRoute =
   AuthenticatedEstabelecimentoBannersRouteImport.update({
     id: '/banners',
@@ -393,6 +402,12 @@ const AuthenticatedAdminSuporteRoute =
     path: '/suporte',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminSaquesRoute =
+  AuthenticatedAdminSaquesRouteImport.update({
+    id: '/saques',
+    path: '/saques',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminPedidosRoute =
   AuthenticatedAdminPedidosRouteImport.update({
     id: '/pedidos',
@@ -485,6 +500,12 @@ const AuthenticatedClientePerfilIndexRoute =
     id: '/perfil/',
     path: '/perfil/',
     getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
+const AuthenticatedEntregadorPerfilPagamentoRoute =
+  AuthenticatedEntregadorPerfilPagamentoRouteImport.update({
+    id: '/pagamento',
+    path: '/pagamento',
+    getParentRoute: () => AuthenticatedEntregadorPerfilRoute,
   } as any)
 const AuthenticatedEntregadorPerfilDadosRoute =
   AuthenticatedEntregadorPerfilDadosRouteImport.update({
@@ -581,6 +602,7 @@ export interface FileRoutesByFullPath {
   '/admin/mapa': typeof AuthenticatedAdminMapaRoute
   '/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
+  '/admin/saques': typeof AuthenticatedAdminSaquesRoute
   '/admin/suporte': typeof AuthenticatedAdminSuporteRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/cliente/buscar': typeof AuthenticatedClienteBuscarRoute
@@ -604,6 +626,7 @@ export interface FileRoutesByFullPath {
   '/entregador/veiculo': typeof AuthenticatedEntregadorVeiculoRoute
   '/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
   '/estabelecimento/banners': typeof AuthenticatedEstabelecimentoBannersRoute
+  '/estabelecimento/carteira': typeof AuthenticatedEstabelecimentoCarteiraRoute
   '/estabelecimento/categorias': typeof AuthenticatedEstabelecimentoCategoriasRoute
   '/estabelecimento/complementos': typeof AuthenticatedEstabelecimentoComplementosRoute
   '/estabelecimento/configuracoes': typeof AuthenticatedEstabelecimentoConfiguracoesRoute
@@ -632,6 +655,7 @@ export interface FileRoutesByFullPath {
   '/cliente/perfil/recompensas': typeof AuthenticatedClientePerfilRecompensasRoute
   '/cliente/perfil/termos': typeof AuthenticatedClientePerfilTermosRoute
   '/entregador/perfil/dados': typeof AuthenticatedEntregadorPerfilDadosRoute
+  '/entregador/perfil/pagamento': typeof AuthenticatedEntregadorPerfilPagamentoRoute
   '/cliente/perfil/': typeof AuthenticatedClientePerfilIndexRoute
 }
 export interface FileRoutesByTo {
@@ -658,6 +682,7 @@ export interface FileRoutesByTo {
   '/admin/mapa': typeof AuthenticatedAdminMapaRoute
   '/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
+  '/admin/saques': typeof AuthenticatedAdminSaquesRoute
   '/admin/suporte': typeof AuthenticatedAdminSuporteRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/cliente/buscar': typeof AuthenticatedClienteBuscarRoute
@@ -681,6 +706,7 @@ export interface FileRoutesByTo {
   '/entregador/veiculo': typeof AuthenticatedEntregadorVeiculoRoute
   '/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
   '/estabelecimento/banners': typeof AuthenticatedEstabelecimentoBannersRoute
+  '/estabelecimento/carteira': typeof AuthenticatedEstabelecimentoCarteiraRoute
   '/estabelecimento/categorias': typeof AuthenticatedEstabelecimentoCategoriasRoute
   '/estabelecimento/complementos': typeof AuthenticatedEstabelecimentoComplementosRoute
   '/estabelecimento/configuracoes': typeof AuthenticatedEstabelecimentoConfiguracoesRoute
@@ -709,6 +735,7 @@ export interface FileRoutesByTo {
   '/cliente/perfil/recompensas': typeof AuthenticatedClientePerfilRecompensasRoute
   '/cliente/perfil/termos': typeof AuthenticatedClientePerfilTermosRoute
   '/entregador/perfil/dados': typeof AuthenticatedEntregadorPerfilDadosRoute
+  '/entregador/perfil/pagamento': typeof AuthenticatedEntregadorPerfilPagamentoRoute
   '/cliente/perfil': typeof AuthenticatedClientePerfilIndexRoute
 }
 export interface FileRoutesById {
@@ -741,6 +768,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/mapa': typeof AuthenticatedAdminMapaRoute
   '/_authenticated/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
+  '/_authenticated/admin/saques': typeof AuthenticatedAdminSaquesRoute
   '/_authenticated/admin/suporte': typeof AuthenticatedAdminSuporteRoute
   '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/_authenticated/cliente/buscar': typeof AuthenticatedClienteBuscarRoute
@@ -764,6 +792,7 @@ export interface FileRoutesById {
   '/_authenticated/entregador/veiculo': typeof AuthenticatedEntregadorVeiculoRoute
   '/_authenticated/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
   '/_authenticated/estabelecimento/banners': typeof AuthenticatedEstabelecimentoBannersRoute
+  '/_authenticated/estabelecimento/carteira': typeof AuthenticatedEstabelecimentoCarteiraRoute
   '/_authenticated/estabelecimento/categorias': typeof AuthenticatedEstabelecimentoCategoriasRoute
   '/_authenticated/estabelecimento/complementos': typeof AuthenticatedEstabelecimentoComplementosRoute
   '/_authenticated/estabelecimento/configuracoes': typeof AuthenticatedEstabelecimentoConfiguracoesRoute
@@ -792,6 +821,7 @@ export interface FileRoutesById {
   '/_authenticated/cliente/perfil/recompensas': typeof AuthenticatedClientePerfilRecompensasRoute
   '/_authenticated/cliente/perfil/termos': typeof AuthenticatedClientePerfilTermosRoute
   '/_authenticated/entregador/perfil/dados': typeof AuthenticatedEntregadorPerfilDadosRoute
+  '/_authenticated/entregador/perfil/pagamento': typeof AuthenticatedEntregadorPerfilPagamentoRoute
   '/_authenticated/cliente/perfil/': typeof AuthenticatedClientePerfilIndexRoute
 }
 export interface FileRouteTypes {
@@ -824,6 +854,7 @@ export interface FileRouteTypes {
     | '/admin/mapa'
     | '/admin/notificacoes'
     | '/admin/pedidos'
+    | '/admin/saques'
     | '/admin/suporte'
     | '/admin/usuarios'
     | '/cliente/buscar'
@@ -847,6 +878,7 @@ export interface FileRouteTypes {
     | '/entregador/veiculo'
     | '/estabelecimento/avaliacoes'
     | '/estabelecimento/banners'
+    | '/estabelecimento/carteira'
     | '/estabelecimento/categorias'
     | '/estabelecimento/complementos'
     | '/estabelecimento/configuracoes'
@@ -875,6 +907,7 @@ export interface FileRouteTypes {
     | '/cliente/perfil/recompensas'
     | '/cliente/perfil/termos'
     | '/entregador/perfil/dados'
+    | '/entregador/perfil/pagamento'
     | '/cliente/perfil/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -901,6 +934,7 @@ export interface FileRouteTypes {
     | '/admin/mapa'
     | '/admin/notificacoes'
     | '/admin/pedidos'
+    | '/admin/saques'
     | '/admin/suporte'
     | '/admin/usuarios'
     | '/cliente/buscar'
@@ -924,6 +958,7 @@ export interface FileRouteTypes {
     | '/entregador/veiculo'
     | '/estabelecimento/avaliacoes'
     | '/estabelecimento/banners'
+    | '/estabelecimento/carteira'
     | '/estabelecimento/categorias'
     | '/estabelecimento/complementos'
     | '/estabelecimento/configuracoes'
@@ -952,6 +987,7 @@ export interface FileRouteTypes {
     | '/cliente/perfil/recompensas'
     | '/cliente/perfil/termos'
     | '/entregador/perfil/dados'
+    | '/entregador/perfil/pagamento'
     | '/cliente/perfil'
   id:
     | '__root__'
@@ -983,6 +1019,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/mapa'
     | '/_authenticated/admin/notificacoes'
     | '/_authenticated/admin/pedidos'
+    | '/_authenticated/admin/saques'
     | '/_authenticated/admin/suporte'
     | '/_authenticated/admin/usuarios'
     | '/_authenticated/cliente/buscar'
@@ -1006,6 +1043,7 @@ export interface FileRouteTypes {
     | '/_authenticated/entregador/veiculo'
     | '/_authenticated/estabelecimento/avaliacoes'
     | '/_authenticated/estabelecimento/banners'
+    | '/_authenticated/estabelecimento/carteira'
     | '/_authenticated/estabelecimento/categorias'
     | '/_authenticated/estabelecimento/complementos'
     | '/_authenticated/estabelecimento/configuracoes'
@@ -1034,6 +1072,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cliente/perfil/recompensas'
     | '/_authenticated/cliente/perfil/termos'
     | '/_authenticated/entregador/perfil/dados'
+    | '/_authenticated/entregador/perfil/pagamento'
     | '/_authenticated/cliente/perfil/'
   fileRoutesById: FileRoutesById
 }
@@ -1261,6 +1300,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEstabelecimentoCategoriasRouteImport
       parentRoute: typeof AuthenticatedEstabelecimentoRoute
     }
+    '/_authenticated/estabelecimento/carteira': {
+      id: '/_authenticated/estabelecimento/carteira'
+      path: '/carteira'
+      fullPath: '/estabelecimento/carteira'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoCarteiraRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
     '/_authenticated/estabelecimento/banners': {
       id: '/_authenticated/estabelecimento/banners'
       path: '/banners'
@@ -1422,6 +1468,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSuporteRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/saques': {
+      id: '/_authenticated/admin/saques'
+      path: '/saques'
+      fullPath: '/admin/saques'
+      preLoaderRoute: typeof AuthenticatedAdminSaquesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/pedidos': {
       id: '/_authenticated/admin/pedidos'
       path: '/pedidos'
@@ -1534,6 +1587,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientePerfilIndexRouteImport
       parentRoute: typeof AuthenticatedClienteRoute
     }
+    '/_authenticated/entregador/perfil/pagamento': {
+      id: '/_authenticated/entregador/perfil/pagamento'
+      path: '/pagamento'
+      fullPath: '/entregador/perfil/pagamento'
+      preLoaderRoute: typeof AuthenticatedEntregadorPerfilPagamentoRouteImport
+      parentRoute: typeof AuthenticatedEntregadorPerfilRoute
+    }
     '/_authenticated/entregador/perfil/dados': {
       id: '/_authenticated/entregador/perfil/dados'
       path: '/dados'
@@ -1630,6 +1690,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminMapaRoute: typeof AuthenticatedAdminMapaRoute
   AuthenticatedAdminNotificacoesRoute: typeof AuthenticatedAdminNotificacoesRoute
   AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
+  AuthenticatedAdminSaquesRoute: typeof AuthenticatedAdminSaquesRoute
   AuthenticatedAdminSuporteRoute: typeof AuthenticatedAdminSuporteRoute
   AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -1652,6 +1713,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminMapaRoute: AuthenticatedAdminMapaRoute,
   AuthenticatedAdminNotificacoesRoute: AuthenticatedAdminNotificacoesRoute,
   AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
+  AuthenticatedAdminSaquesRoute: AuthenticatedAdminSaquesRoute,
   AuthenticatedAdminSuporteRoute: AuthenticatedAdminSuporteRoute,
   AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
@@ -1712,12 +1774,15 @@ const AuthenticatedClienteRouteWithChildren =
 
 interface AuthenticatedEntregadorPerfilRouteChildren {
   AuthenticatedEntregadorPerfilDadosRoute: typeof AuthenticatedEntregadorPerfilDadosRoute
+  AuthenticatedEntregadorPerfilPagamentoRoute: typeof AuthenticatedEntregadorPerfilPagamentoRoute
 }
 
 const AuthenticatedEntregadorPerfilRouteChildren: AuthenticatedEntregadorPerfilRouteChildren =
   {
     AuthenticatedEntregadorPerfilDadosRoute:
       AuthenticatedEntregadorPerfilDadosRoute,
+    AuthenticatedEntregadorPerfilPagamentoRoute:
+      AuthenticatedEntregadorPerfilPagamentoRoute,
   }
 
 const AuthenticatedEntregadorPerfilRouteWithChildren =
@@ -1774,6 +1839,7 @@ const AuthenticatedEntregadorRouteWithChildren =
 interface AuthenticatedEstabelecimentoRouteChildren {
   AuthenticatedEstabelecimentoAvaliacoesRoute: typeof AuthenticatedEstabelecimentoAvaliacoesRoute
   AuthenticatedEstabelecimentoBannersRoute: typeof AuthenticatedEstabelecimentoBannersRoute
+  AuthenticatedEstabelecimentoCarteiraRoute: typeof AuthenticatedEstabelecimentoCarteiraRoute
   AuthenticatedEstabelecimentoCategoriasRoute: typeof AuthenticatedEstabelecimentoCategoriasRoute
   AuthenticatedEstabelecimentoComplementosRoute: typeof AuthenticatedEstabelecimentoComplementosRoute
   AuthenticatedEstabelecimentoConfiguracoesRoute: typeof AuthenticatedEstabelecimentoConfiguracoesRoute
@@ -1795,6 +1861,8 @@ const AuthenticatedEstabelecimentoRouteChildren: AuthenticatedEstabelecimentoRou
       AuthenticatedEstabelecimentoAvaliacoesRoute,
     AuthenticatedEstabelecimentoBannersRoute:
       AuthenticatedEstabelecimentoBannersRoute,
+    AuthenticatedEstabelecimentoCarteiraRoute:
+      AuthenticatedEstabelecimentoCarteiraRoute,
     AuthenticatedEstabelecimentoCategoriasRoute:
       AuthenticatedEstabelecimentoCategoriasRoute,
     AuthenticatedEstabelecimentoComplementosRoute:
