@@ -1610,6 +1610,7 @@ export type Database = {
           status: Database["public"]["Enums"]["order_status"]
           subtotal_cents: number
           tempo_estimado_min: number | null
+          tipo_entrega: string
           total_cents: number
           troco_para_cents: number | null
           updated_at: string
@@ -1640,6 +1641,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["order_status"]
           subtotal_cents?: number
           tempo_estimado_min?: number | null
+          tipo_entrega?: string
           total_cents?: number
           troco_para_cents?: number | null
           updated_at?: string
@@ -1670,6 +1672,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["order_status"]
           subtotal_cents?: number
           tempo_estimado_min?: number | null
+          tipo_entrega?: string
           total_cents?: number
           troco_para_cents?: number | null
           updated_at?: string

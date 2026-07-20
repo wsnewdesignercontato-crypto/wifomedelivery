@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, MapPin, CreditCard, Banknote, QrCode, Wallet } from "lucide-react";
+import { Loader2, MapPin, CreditCard, Banknote, QrCode, Wallet, Bike, Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,6 +52,7 @@ function CheckoutPage() {
   const [addrs, setAddrs] = useState<Addr[]>([]);
   const [addrId, setAddrId] = useState<string | null>(null);
   const [pagto, setPagto] = useState<Pay>("pix");
+  const [tipoEntrega, setTipoEntrega] = useState<"delivery" | "pickup">("delivery");
   const [obs, setObs] = useState("");
   const [estab, setEstab] = useState<Estab | null>(null);
   const [subtotal, setSubtotal] = useState(0);
@@ -100,7 +101,7 @@ function CheckoutPage() {
 
   async function confirmar() {
     const addr = addrs.find((a) => a.id === addrId);
-    if (!addr) { toast.error("Selecione um endereço"); return; }
+    if (tipoEntrega === "delivery" && !addr) { toast.error("Selecione um endereço"); return; }
     if (!estab) { toast.error("Carrinho vazio"); return; }
     setEnviando(true);
     try {
@@ -108,7 +109,8 @@ function CheckoutPage() {
         data: {
           establishment_id: estab.id,
           forma_pagamento: pagto,
-          endereco: {
+          tipo_entrega: tipoEntrega,
+          endereco: tipoEntrega === "pickup" || !addr ? null : {
             label: addr.label, rua: addr.rua, numero: addr.numero, complemento: addr.complemento,
             bairro: addr.bairro, cidade: addr.cidade, estado: addr.estado, cep: addr.cep,
             lat: addr.lat, lng: addr.lng,
@@ -136,38 +138,68 @@ function CheckoutPage() {
     );
   }
 
-  const total = subtotal + estab.taxa_entrega_cents;
+  const frete = tipoEntrega === "pickup" ? 0 : estab.taxa_entrega_cents;
+  const total = subtotal + frete;
 
   return (
     <div className="space-y-5">
       <h1 className="text-xl font-bold">Finalizar pedido</h1>
 
       <section>
-        <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold"><MapPin className="h-4 w-4 text-primary" /> Endereço de entrega</h2>
-        <div className="space-y-2">
-          {addrs.map((a) => (
-            <label key={a.id} className={`block cursor-pointer rounded-2xl border p-3 text-sm ${addrId === a.id ? "border-primary bg-primary/5" : "border-border bg-card"}`}>
-              <input type="radio" className="sr-only" checked={addrId === a.id} onChange={() => setAddrId(a.id)} />
-              <div className="font-semibold">{a.label}</div>
-              <div className="text-xs text-muted-foreground">
-                {a.rua}{a.numero ? `, ${a.numero}` : ""}{a.bairro ? ` — ${a.bairro}` : ""}<br />
-                {a.cidade}{a.estado ? `/${a.estado}` : ""}{a.cep ? ` · CEP ${a.cep}` : ""}
-              </div>
-            </label>
-          ))}
-        </div>
-        <div className="mt-3 rounded-2xl border border-dashed border-border p-3">
-          <p className="mb-2 text-xs font-semibold">Novo endereço</p>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Input placeholder="Rua" value={novo.rua} onChange={(e) => setNovo({ ...novo, rua: e.target.value })} />
-            <Input placeholder="Número" value={novo.numero} onChange={(e) => setNovo({ ...novo, numero: e.target.value })} />
-            <Input placeholder="Bairro" value={novo.bairro} onChange={(e) => setNovo({ ...novo, bairro: e.target.value })} />
-            <Input placeholder="Cidade" value={novo.cidade} onChange={(e) => setNovo({ ...novo, cidade: e.target.value })} />
-            <Input placeholder="Estado" value={novo.estado} onChange={(e) => setNovo({ ...novo, estado: e.target.value })} />
-          </div>
-          <Button size="sm" variant="outline" className="mt-2" onClick={criarEndereco}>Adicionar endereço</Button>
+        <h2 className="mb-2 text-sm font-semibold">Como você quer receber?</h2>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setTipoEntrega("delivery")}
+            className={`flex items-center gap-2 rounded-2xl border p-3 text-sm font-medium transition ${tipoEntrega === "delivery" ? "border-primary bg-primary/5 text-primary" : "border-border bg-card"}`}
+          >
+            <Bike className="h-4 w-4" />
+            <div className="text-left">
+              <div>Entrega</div>
+              <div className="text-[11px] font-normal text-muted-foreground">{estab.taxa_entrega_cents === 0 ? "Grátis" : fmt(estab.taxa_entrega_cents)}</div>
+            </div>
+          </button>
+          <button
+            onClick={() => setTipoEntrega("pickup")}
+            className={`flex items-center gap-2 rounded-2xl border p-3 text-sm font-medium transition ${tipoEntrega === "pickup" ? "border-primary bg-primary/5 text-primary" : "border-border bg-card"}`}
+          >
+            <Store className="h-4 w-4" />
+            <div className="text-left">
+              <div>Retirar no local</div>
+              <div className="text-[11px] font-normal text-muted-foreground">Sem taxa</div>
+            </div>
+          </button>
         </div>
       </section>
+
+      {tipoEntrega === "delivery" && (
+        <section>
+          <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold"><MapPin className="h-4 w-4 text-primary" /> Endereço de entrega</h2>
+          <div className="space-y-2">
+            {addrs.map((a) => (
+              <label key={a.id} className={`block cursor-pointer rounded-2xl border p-3 text-sm ${addrId === a.id ? "border-primary bg-primary/5" : "border-border bg-card"}`}>
+                <input type="radio" className="sr-only" checked={addrId === a.id} onChange={() => setAddrId(a.id)} />
+                <div className="font-semibold">{a.label}</div>
+                <div className="text-xs text-muted-foreground">
+                  {a.rua}{a.numero ? `, ${a.numero}` : ""}{a.bairro ? ` — ${a.bairro}` : ""}<br />
+                  {a.cidade}{a.estado ? `/${a.estado}` : ""}{a.cep ? ` · CEP ${a.cep}` : ""}
+                </div>
+              </label>
+            ))}
+          </div>
+          <div className="mt-3 rounded-2xl border border-dashed border-border p-3">
+            <p className="mb-2 text-xs font-semibold">Novo endereço</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Input placeholder="Rua" value={novo.rua} onChange={(e) => setNovo({ ...novo, rua: e.target.value })} />
+              <Input placeholder="Número" value={novo.numero} onChange={(e) => setNovo({ ...novo, numero: e.target.value })} />
+              <Input placeholder="Bairro" value={novo.bairro} onChange={(e) => setNovo({ ...novo, bairro: e.target.value })} />
+              <Input placeholder="Cidade" value={novo.cidade} onChange={(e) => setNovo({ ...novo, cidade: e.target.value })} />
+              <Input placeholder="Estado" value={novo.estado} onChange={(e) => setNovo({ ...novo, estado: e.target.value })} />
+            </div>
+            <Button size="sm" variant="outline" className="mt-2" onClick={criarEndereco}>Adicionar endereço</Button>
+          </div>
+        </section>
+      )}
+
 
       <section>
         <h2 className="mb-2 text-sm font-semibold">Forma de pagamento</h2>
@@ -193,7 +225,7 @@ function CheckoutPage() {
 
       <div className="rounded-2xl border border-border bg-card p-4 space-y-1.5 text-sm">
         <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
-        <div className="flex justify-between text-muted-foreground"><span>Entrega</span><span>{estab.taxa_entrega_cents === 0 ? "Grátis" : fmt(estab.taxa_entrega_cents)}</span></div>
+        <div className="flex justify-between text-muted-foreground"><span>{tipoEntrega === "pickup" ? "Retirada" : "Entrega"}</span><span>{tipoEntrega === "pickup" ? "Grátis" : (estab.taxa_entrega_cents === 0 ? "Grátis" : fmt(estab.taxa_entrega_cents))}</span></div>
         {search.cupom && <div className="flex justify-between text-primary"><span>Cupom</span><span>{search.cupom}</span></div>}
         <div className="my-2 border-t border-border" />
         <div className="flex justify-between text-base font-bold"><span>Total</span><span>{fmt(total)}</span></div>

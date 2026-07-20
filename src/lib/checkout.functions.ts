@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 const placeOrderInput = z.object({
   establishment_id: z.string().uuid(),
   forma_pagamento: z.enum(["pix", "cartao", "dinheiro", "carteira"]),
+  tipo_entrega: z.enum(["delivery", "pickup"]).default("delivery"),
   endereco: z.object({
     label: z.string().optional(),
     rua: z.string().min(1),
@@ -16,7 +17,7 @@ const placeOrderInput = z.object({
     lat: z.number().optional().nullable(),
     lng: z.number().optional().nullable(),
     cep: z.string().optional().nullable(),
-  }),
+  }).nullable().optional(),
   observacoes: z.string().max(500).optional().nullable(),
   coupon_code: z.string().trim().max(50).optional().nullable(),
 });
@@ -44,6 +45,9 @@ export const placeOrder = createServerFn({ method: "POST" })
     if (lojaErr) throw new Error(lojaErr.message);
     if (!loja || loja.status !== "aprovado") throw new Error("Loja indisponível");
 
+    const isPickup = data.tipo_entrega === "pickup";
+    if (!isPickup && !data.endereco) throw new Error("Selecione um endereço de entrega");
+
     const subtotal = items.reduce(
       (s, i) => s + i.preco_unit_cents * i.quantidade,
       0,
@@ -58,7 +62,7 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     // Cupom (opcional)
     let desconto = 0;
-    let frete = loja.taxa_entrega_cents;
+    let frete = isPickup ? 0 : loja.taxa_entrega_cents;
     if (data.coupon_code) {
       const { data: cup } = await supabase
         .from("coupons")
@@ -103,7 +107,8 @@ export const placeOrder = createServerFn({ method: "POST" })
         desconto_cents: desconto,
         total_cents: total,
         forma_pagamento: data.forma_pagamento,
-        endereco_entrega: data.endereco,
+        tipo_entrega: data.tipo_entrega,
+        endereco_entrega: isPickup ? null : data.endereco,
         observacoes: data.observacoes ?? null,
       })
       .select("id")

@@ -1,0 +1,1 @@
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS tipo_entrega TEXT NOT NULL DEFAULT 'delivery' CHECK (tipo_entrega IN ('delivery','pickup'));
