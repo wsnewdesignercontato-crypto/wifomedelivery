@@ -356,8 +356,20 @@ function EstabRow({
     <Link
       to="/cliente/estabelecimento/$id"
       params={{ id: estab.id }}
-      className="group flex items-center gap-3 rounded-2xl border border-border bg-card p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-brand"
+      className="group relative flex items-center gap-3 rounded-2xl border border-border bg-card p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-brand"
     >
+      {/* Badge de status: pequenininho no canto superior direito */}
+      {estab.is_open ? (
+        <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-0.5 rounded-full bg-emerald-500/15 px-1.5 py-[2px] text-[9px] font-black uppercase tracking-wide text-emerald-600 ring-1 ring-emerald-500/40">
+          <span className="h-1 w-1 animate-pulse rounded-full bg-emerald-500" />
+          Aberto
+        </span>
+      ) : (
+        <span className="absolute right-2 top-2 z-10 inline-flex items-center rounded-full bg-muted px-1.5 py-[2px] text-[9px] font-black uppercase tracking-wide text-muted-foreground ring-1 ring-border">
+          Fechado
+        </span>
+      )}
+
       <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted">
         {estab.capa_url || estab.logo_url ? (
           <img
@@ -380,21 +392,9 @@ function EstabRow({
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <h3 className="truncate text-base font-extrabold tracking-tight text-foreground">
-            {estab.nome}
-          </h3>
-          {estab.is_open ? (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-600 ring-1 ring-emerald-500/40">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-              Aberto
-            </span>
-          ) : (
-            <span className="inline-flex shrink-0 items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground ring-1 ring-border">
-              Fechado
-            </span>
-          )}
-        </div>
+        <h3 className="truncate pr-12 text-base font-extrabold tracking-tight text-foreground">
+          {estab.nome}
+        </h3>
         {(isBestseller || hasPromo) && (
           <div className="mt-1 flex flex-wrap items-center gap-1">
             {isBestseller && (
