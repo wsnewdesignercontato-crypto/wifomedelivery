@@ -2048,6 +2048,18 @@ export type Database = {
       }
     }
     Views: {
+      available_couriers: {
+        Row: {
+          avaliacao: number | null
+          last_seen: string | null
+          lat: number | null
+          lng: number | null
+          nome: string | null
+          user_id: string | null
+          veiculo: string | null
+        }
+        Relationships: []
+      }
       establishments_public: {
         Row: {
           avaliacao: number | null
@@ -2130,18 +2142,7 @@ export type Database = {
       }
     }
     Functions: {
-      available_couriers: {
-        Args: never
-        Returns: {
-          avaliacao: number
-          last_seen: string
-          lat: number
-          lng: number
-          nome: string
-          user_id: string
-          veiculo: string
-        }[]
-      }
+      [_ in never]: never
     }
     Enums: {
       app_role: "cliente" | "estabelecimento" | "entregador" | "admin"
