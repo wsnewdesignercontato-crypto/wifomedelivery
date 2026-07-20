@@ -16,11 +16,10 @@ export const Route = createFileRoute("/_authenticated/estabelecimento/cupons")({
 });
 
 type Coupon = {
-  id: string; codigo: string; tipo: string;
-  valor_desconto_cents: number | null; percentual_desconto: number | null;
-  valor_minimo_pedido_cents: number | null;
-  data_inicial: string | null; data_final: string | null;
-  ativo: boolean; usos_atual: number; usos_maximo: number | null;
+  id: string; code: string; type: string;
+  value_cents: number; percent: number;
+  min_order_cents: number; usage_limit: number | null; used_count: number;
+  ativo: boolean;
 };
 
 function CuponsPage() {
@@ -31,7 +30,7 @@ function CuponsPage() {
   async function reload() {
     if (!estab) return;
     const { data } = await supabase.from("coupons")
-      .select("id,codigo,tipo,valor_desconto_cents,percentual_desconto,valor_minimo_pedido_cents,data_inicial,data_final,ativo,usos_atual,usos_maximo")
+      .select("id,code,type,value_cents,percent,min_order_cents,usage_limit,used_count,ativo")
       .eq("establishment_id", estab.id).order("created_at", { ascending: false });
     setList((data ?? []) as Coupon[]);
   }
@@ -57,12 +56,12 @@ function CuponsPage() {
           <div key={c.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-mono font-bold">{c.codigo}</span>
-                <Badge>{c.tipo === "percentual" ? `${c.percentual_desconto}%` : fmt(c.valor_desconto_cents ?? 0)}</Badge>
+                <span className="font-mono font-bold">{c.code}</span>
+                <Badge>{c.type === "percent" ? `${c.percent}%` : fmt(c.value_cents)}</Badge>
               </div>
               <p className="text-xs text-muted-foreground">
-                Usos: {c.usos_atual}{c.usos_maximo ? `/${c.usos_maximo}` : ""}
-                {c.valor_minimo_pedido_cents ? ` · Mín ${fmt(c.valor_minimo_pedido_cents)}` : ""}
+                Usos: {c.used_count}{c.usage_limit ? `/${c.usage_limit}` : ""}
+                {c.min_order_cents ? ` · Mín ${fmt(c.min_order_cents)}` : ""}
               </p>
             </div>
             <Switch checked={c.ativo} onCheckedChange={() => toggle(c)} />
@@ -77,31 +76,31 @@ function CuponsPage() {
 
 function CupomForm({ onSaved }: { onSaved: () => void }) {
   const { estab } = useMyEstab();
-  const [f, setF] = useState({ codigo: "", tipo: "percentual", valor: "10", minimo: "", usos: "" });
+  const [f, setF] = useState({ code: "", type: "percent", valor: "10", minimo: "", usos: "" });
   async function salvar() {
-    if (!estab || !f.codigo.trim()) return toast.error("Código obrigatório");
-    const payload: Record<string, unknown> = {
-      establishment_id: estab.id, codigo: f.codigo.trim().toUpperCase(),
-      tipo: f.tipo, ativo: true,
-      valor_minimo_pedido_cents: f.minimo ? Math.round(parseFloat(f.minimo) * 100) : null,
-      usos_maximo: f.usos ? parseInt(f.usos) : null,
+    if (!estab || !f.code.trim()) return toast.error("Código obrigatório");
+    const payload = {
+      establishment_id: estab.id, code: f.code.trim().toUpperCase(),
+      type: f.type as "percent" | "fixed", ativo: true,
+      min_order_cents: f.minimo ? Math.round(parseFloat(f.minimo) * 100) : 0,
+      usage_limit: f.usos ? parseInt(f.usos) : null,
+      value_cents: f.type === "fixed" ? Math.round(parseFloat(f.valor) * 100) : 0,
+      percent: f.type === "percent" ? parseFloat(f.valor) : 0,
     };
-    if (f.tipo === "percentual") payload.percentual_desconto = parseFloat(f.valor);
-    else payload.valor_desconto_cents = Math.round(parseFloat(f.valor) * 100);
-    const { error } = await supabase.from("coupons").insert(payload as never);
+    const { error } = await supabase.from("coupons").insert(payload);
     if (error) toast.error("Falha: " + error.message); else { toast.success("Cupom criado"); onSaved(); }
   }
   return (
     <>
       <DialogHeader><DialogTitle>Novo cupom</DialogTitle></DialogHeader>
       <div className="grid gap-3">
-        <div><Label>Código</Label><Input value={f.codigo} onChange={(e) => setF({ ...f, codigo: e.target.value })} placeholder="WELCOME10" /></div>
+        <div><Label>Código</Label><Input value={f.code} onChange={(e) => setF({ ...f, code: e.target.value })} placeholder="WELCOME10" /></div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Tipo</Label>
-            <select className="w-full rounded-md border border-input bg-background p-2 text-sm" value={f.tipo} onChange={(e) => setF({ ...f, tipo: e.target.value })}>
-              <option value="percentual">Percentual (%)</option>
-              <option value="valor">Valor fixo (R$)</option>
+            <select className="w-full rounded-md border border-input bg-background p-2 text-sm" value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })}>
+              <option value="percent">Percentual (%)</option>
+              <option value="fixed">Valor fixo (R$)</option>
             </select>
           </div>
           <div><Label>Valor</Label><Input value={f.valor} onChange={(e) => setF({ ...f, valor: e.target.value })} /></div>
