@@ -85,6 +85,7 @@ function ClienteHome() {
   const [promoIds, setPromoIds] = useState<Set<string>>(new Set());
   const [salesCount, setSalesCount] = useState<Record<string, number>>({});
   const [threshold, setThreshold] = useState<number>(15);
+  const [hoursById, setHoursById] = useState<Record<string, { abre: string; fecha: string }>>({});
   const catsScrollRef = useRef<HTMLDivElement | null>(null);
   const catsPausedRef = useRef(false);
 
@@ -189,6 +190,24 @@ function ClienteHome() {
       });
       setSalesCount(counts);
       if (ps.data?.bestseller_threshold) setThreshold(ps.data.bestseller_threshold);
+
+      // Horário de hoje para as lojas listadas
+      const ids = (e.data ?? []).map((x: any) => x.id);
+      if (ids.length) {
+        const today = new Date().getDay();
+        const { data: hrs } = await supabase
+          .from("establishment_hours")
+          .select("establishment_id,abre,fecha,ativo,dia_semana")
+          .in("establishment_id", ids)
+          .eq("dia_semana", today)
+          .eq("ativo", true);
+        const map: Record<string, { abre: string; fecha: string }> = {};
+        (hrs ?? []).forEach((h: any) => {
+          map[h.establishment_id] = { abre: String(h.abre).slice(0, 5), fecha: String(h.fecha).slice(0, 5) };
+        });
+        setHoursById(map);
+      }
+
       setLoading(false);
     })();
   }, []);
@@ -334,7 +353,9 @@ function ClienteHome() {
                 estab={e}
                 hasPromo={promoIds.has(e.id)}
                 isBestseller={(salesCount[e.id] ?? 0) >= threshold}
+                hoje={hoursById[e.id]}
               />
+
             ))}
           </div>
         )}
@@ -347,10 +368,12 @@ function EstabRow({
   estab,
   hasPromo,
   isBestseller,
+  hoje,
 }: {
   estab: Estab;
   hasPromo: boolean;
   isBestseller: boolean;
+  hoje?: { abre: string; fecha: string };
 }) {
   return (
     <Link
@@ -358,14 +381,14 @@ function EstabRow({
       params={{ id: estab.id }}
       className="group relative flex items-center gap-3 rounded-2xl border border-border bg-card p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-brand"
     >
-      {/* Badge de status: pequenininho no canto superior direito */}
+      {/* Badge de status: minúsculo no canto superior direito */}
       {estab.is_open ? (
-        <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-0.5 rounded-full bg-emerald-500/15 px-1.5 py-[2px] text-[9px] font-black uppercase tracking-wide text-emerald-600 ring-1 ring-emerald-500/40">
-          <span className="h-1 w-1 animate-pulse rounded-full bg-emerald-500" />
+        <span className="absolute right-1.5 top-1.5 z-10 inline-flex items-center gap-0.5 rounded-full bg-emerald-500/15 px-1 py-[1px] text-[7px] font-bold uppercase tracking-wide text-emerald-600 ring-1 ring-emerald-500/40">
+          <span className="h-[3px] w-[3px] animate-pulse rounded-full bg-emerald-500" />
           Aberto
         </span>
       ) : (
-        <span className="absolute right-2 top-2 z-10 inline-flex items-center rounded-full bg-muted px-1.5 py-[2px] text-[9px] font-black uppercase tracking-wide text-muted-foreground ring-1 ring-border">
+        <span className="absolute right-1.5 top-1.5 z-10 inline-flex items-center rounded-full bg-muted px-1 py-[1px] text-[7px] font-bold uppercase tracking-wide text-muted-foreground ring-1 ring-border">
           Fechado
         </span>
       )}
@@ -432,6 +455,12 @@ function EstabRow({
           ) : (
             fmt(estab.taxa_entrega_cents)
           )}
+          {hoje ? (
+            <>
+              {" · "}
+              <span className="font-semibold text-foreground">Hoje {hoje.abre}–{hoje.fecha}</span>
+            </>
+          ) : null}
         </p>
       </div>
 
