@@ -62,6 +62,13 @@ export type Database = {
             foreignKeyName: "addon_groups_establishment_id_fkey"
             columns: ["establishment_id"]
             isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
+          {
+            foreignKeyName: "addon_groups_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
             referencedRelation: "establishments"
             referencedColumns: ["id"]
           },
@@ -264,6 +271,7 @@ export type Database = {
           id: string
           metrics: Json
           nome: string
+          regras_json: Json | null
           starts_at: string | null
           status: Database["public"]["Enums"]["campaign_status"]
           updated_at: string
@@ -281,6 +289,7 @@ export type Database = {
           id?: string
           metrics?: Json
           nome: string
+          regras_json?: Json | null
           starts_at?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
           updated_at?: string
@@ -298,6 +307,7 @@ export type Database = {
           id?: string
           metrics?: Json
           nome?: string
+          regras_json?: Json | null
           starts_at?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
           updated_at?: string
@@ -350,6 +360,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "cart_items_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
           {
             foreignKeyName: "cart_items_establishment_id_fkey"
             columns: ["establishment_id"]
@@ -432,6 +449,13 @@ export type Database = {
           value_cents?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "coupons_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
           {
             foreignKeyName: "coupons_establishment_id_fkey"
             columns: ["establishment_id"]
@@ -540,18 +564,21 @@ export type Database = {
           aceitacao_pct: number | null
           aprovacao: string | null
           avaliacao: number | null
+          bairros_atuacao: string[] | null
           banco_agencia: string | null
           banco_conta: string | null
           banco_nome: string | null
           banco_tipo: string | null
           banco_titular: string | null
           cancelamento_pct: number | null
+          cidade_atuacao: string | null
           cidades_atuacao: string[] | null
           cnh: string | null
           cnh_categoria: string | null
           cnh_validade: string | null
           contato_emergencia_nome: string | null
           contato_emergencia_tel: string | null
+          contato_emergencia_telefone: string | null
           cpf: string | null
           created_at: string
           doc_frente_url: string | null
@@ -563,6 +590,8 @@ export type Database = {
           lat: number | null
           lng: number | null
           nascimento: string | null
+          pin_atualizado_em: string | null
+          pin_saque_hash: string | null
           pix_key: string | null
           pix_tipo: string | null
           placa: string | null
@@ -579,18 +608,21 @@ export type Database = {
           aceitacao_pct?: number | null
           aprovacao?: string | null
           avaliacao?: number | null
+          bairros_atuacao?: string[] | null
           banco_agencia?: string | null
           banco_conta?: string | null
           banco_nome?: string | null
           banco_tipo?: string | null
           banco_titular?: string | null
           cancelamento_pct?: number | null
+          cidade_atuacao?: string | null
           cidades_atuacao?: string[] | null
           cnh?: string | null
           cnh_categoria?: string | null
           cnh_validade?: string | null
           contato_emergencia_nome?: string | null
           contato_emergencia_tel?: string | null
+          contato_emergencia_telefone?: string | null
           cpf?: string | null
           created_at?: string
           doc_frente_url?: string | null
@@ -602,6 +634,8 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           nascimento?: string | null
+          pin_atualizado_em?: string | null
+          pin_saque_hash?: string | null
           pix_key?: string | null
           pix_tipo?: string | null
           placa?: string | null
@@ -618,18 +652,21 @@ export type Database = {
           aceitacao_pct?: number | null
           aprovacao?: string | null
           avaliacao?: number | null
+          bairros_atuacao?: string[] | null
           banco_agencia?: string | null
           banco_conta?: string | null
           banco_nome?: string | null
           banco_tipo?: string | null
           banco_titular?: string | null
           cancelamento_pct?: number | null
+          cidade_atuacao?: string | null
           cidades_atuacao?: string[] | null
           cnh?: string | null
           cnh_categoria?: string | null
           cnh_validade?: string | null
           contato_emergencia_nome?: string | null
           contato_emergencia_tel?: string | null
+          contato_emergencia_telefone?: string | null
           cpf?: string | null
           created_at?: string
           doc_frente_url?: string | null
@@ -641,6 +678,8 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           nascimento?: string | null
+          pin_atualizado_em?: string | null
+          pin_saque_hash?: string | null
           pix_key?: string | null
           pix_tipo?: string | null
           placa?: string | null
@@ -870,6 +909,13 @@ export type Database = {
             foreignKeyName: "estab_banners_establishment_id_fkey"
             columns: ["establishment_id"]
             isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
+          {
+            foreignKeyName: "estab_banners_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
             referencedRelation: "establishments"
             referencedColumns: ["id"]
           },
@@ -935,6 +981,13 @@ export type Database = {
             foreignKeyName: "establishment_delivery_zones_establishment_id_fkey"
             columns: ["establishment_id"]
             isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
+          {
+            foreignKeyName: "establishment_delivery_zones_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
             referencedRelation: "establishments"
             referencedColumns: ["id"]
           },
@@ -976,6 +1029,13 @@ export type Database = {
           id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "establishment_hours_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
           {
             foreignKeyName: "establishment_hours_establishment_id_fkey"
             columns: ["establishment_id"]
@@ -1144,6 +1204,13 @@ export type Database = {
             foreignKeyName: "favorites_establishment_id_fkey"
             columns: ["establishment_id"]
             isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
+          {
+            foreignKeyName: "favorites_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
             referencedRelation: "establishments"
             referencedColumns: ["id"]
           },
@@ -1186,6 +1253,39 @@ export type Database = {
         }
         Relationships: []
       }
+      login_sessions: {
+        Row: {
+          created_at: string
+          dispositivo: string | null
+          id: string
+          ip: string | null
+          revogada: boolean
+          ultimo_acesso: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dispositivo?: string | null
+          id?: string
+          ip?: string | null
+          revogada?: boolean
+          ultimo_acesso?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dispositivo?: string | null
+          id?: string
+          ip?: string | null
+          revogada?: boolean
+          ultimo_acesso?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       menu_categories: {
         Row: {
           ativo: boolean
@@ -1212,6 +1312,13 @@ export type Database = {
           ordem?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "menu_categories_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
           {
             foreignKeyName: "menu_categories_establishment_id_fkey"
             columns: ["establishment_id"]
@@ -1261,6 +1368,79 @@ export type Database = {
         }
         Relationships: []
       }
+      order_chats: {
+        Row: {
+          created_at: string
+          escopo: string
+          id: string
+          order_id: string
+        }
+        Insert: {
+          created_at?: string
+          escopo: string
+          id?: string
+          order_id: string
+        }
+        Update: {
+          created_at?: string
+          escopo?: string
+          id?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_chats_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_incidents: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          entregador_id: string | null
+          foto_url: string | null
+          id: string
+          order_id: string
+          protocolo: string
+          status: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          entregador_id?: string | null
+          foto_url?: string | null
+          id?: string
+          order_id: string
+          protocolo?: string
+          status?: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          entregador_id?: string | null
+          foto_url?: string | null
+          id?: string
+          order_id?: string
+          protocolo?: string
+          status?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_incidents_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
@@ -1305,6 +1485,56 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_messages: {
+        Row: {
+          anexo_url: string | null
+          chat_id: string
+          conteudo: string | null
+          created_at: string
+          id: string
+          lat: number | null
+          lida_em: string | null
+          lng: number | null
+          sender_id: string
+          sender_role: string
+          tipo: string
+        }
+        Insert: {
+          anexo_url?: string | null
+          chat_id: string
+          conteudo?: string | null
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lida_em?: string | null
+          lng?: number | null
+          sender_id: string
+          sender_role: string
+          tipo?: string
+        }
+        Update: {
+          anexo_url?: string | null
+          chat_id?: string
+          conteudo?: string | null
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lida_em?: string | null
+          lng?: number | null
+          sender_id?: string
+          sender_role?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "order_chats"
             referencedColumns: ["id"]
           },
         ]
@@ -1357,12 +1587,17 @@ export type Database = {
           codigo_entrega: string | null
           created_at: string
           desconto_cents: number
+          dinheiro_recebido: boolean
           endereco_entrega: Json | null
+          entrega_metodo_prova: string | null
+          entrega_observacao: string | null
           establishment_id: string
           forma_pagamento: Database["public"]["Enums"]["payment_method"]
           frete_cents: number
           id: string
           observacoes: string | null
+          prova_assinatura: string | null
+          prova_url: string | null
           refund_amount_cents: number
           refund_status: Database["public"]["Enums"]["refund_status"]
           refunded_at: string | null
@@ -1370,6 +1605,7 @@ export type Database = {
           subtotal_cents: number
           tempo_estimado_min: number | null
           total_cents: number
+          troco_para_cents: number | null
           updated_at: string
         }
         Insert: {
@@ -1381,12 +1617,17 @@ export type Database = {
           codigo_entrega?: string | null
           created_at?: string
           desconto_cents?: number
+          dinheiro_recebido?: boolean
           endereco_entrega?: Json | null
+          entrega_metodo_prova?: string | null
+          entrega_observacao?: string | null
           establishment_id: string
           forma_pagamento?: Database["public"]["Enums"]["payment_method"]
           frete_cents?: number
           id?: string
           observacoes?: string | null
+          prova_assinatura?: string | null
+          prova_url?: string | null
           refund_amount_cents?: number
           refund_status?: Database["public"]["Enums"]["refund_status"]
           refunded_at?: string | null
@@ -1394,6 +1635,7 @@ export type Database = {
           subtotal_cents?: number
           tempo_estimado_min?: number | null
           total_cents?: number
+          troco_para_cents?: number | null
           updated_at?: string
         }
         Update: {
@@ -1405,12 +1647,17 @@ export type Database = {
           codigo_entrega?: string | null
           created_at?: string
           desconto_cents?: number
+          dinheiro_recebido?: boolean
           endereco_entrega?: Json | null
+          entrega_metodo_prova?: string | null
+          entrega_observacao?: string | null
           establishment_id?: string
           forma_pagamento?: Database["public"]["Enums"]["payment_method"]
           frete_cents?: number
           id?: string
           observacoes?: string | null
+          prova_assinatura?: string | null
+          prova_url?: string | null
           refund_amount_cents?: number
           refund_status?: Database["public"]["Enums"]["refund_status"]
           refunded_at?: string | null
@@ -1418,9 +1665,17 @@ export type Database = {
           subtotal_cents?: number
           tempo_estimado_min?: number | null
           total_cents?: number
+          troco_para_cents?: number | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
           {
             foreignKeyName: "orders_establishment_id_fkey"
             columns: ["establishment_id"]
@@ -1481,6 +1736,13 @@ export type Database = {
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "platform_ledger_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
           {
             foreignKeyName: "platform_ledger_establishment_id_fkey"
             columns: ["establishment_id"]
@@ -1677,6 +1939,13 @@ export type Database = {
             foreignKeyName: "products_establishment_id_fkey"
             columns: ["establishment_id"]
             isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
+          {
+            foreignKeyName: "products_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
             referencedRelation: "establishments"
             referencedColumns: ["id"]
           },
@@ -1777,6 +2046,13 @@ export type Database = {
             foreignKeyName: "reviews_establishment_id_fkey"
             columns: ["establishment_id"]
             isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
+          {
+            foreignKeyName: "reviews_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
             referencedRelation: "establishments"
             referencedColumns: ["id"]
           },
@@ -1791,6 +2067,50 @@ export type Database = {
             foreignKeyName: "reviews_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sos_events: {
+        Row: {
+          courier_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          order_id: string | null
+          resolvido: boolean
+          tipo: string
+        }
+        Insert: {
+          courier_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          order_id?: string | null
+          resolvido?: boolean
+          tipo: string
+        }
+        Update: {
+          courier_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          order_id?: string | null
+          resolvido?: boolean
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sos_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
@@ -1828,6 +2148,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "stock_movements_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
           {
             foreignKeyName: "stock_movements_establishment_id_fkey"
             columns: ["establishment_id"]
@@ -1972,6 +2299,13 @@ export type Database = {
             foreignKeyName: "team_members_establishment_id_fkey"
             columns: ["establishment_id"]
             isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
+          {
+            foreignKeyName: "team_members_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
             referencedRelation: "establishments"
             referencedColumns: ["id"]
           },
@@ -2051,6 +2385,19 @@ export type Database = {
       }
     }
     Views: {
+      demand_zones_view: {
+        Row: {
+          cidade: string | null
+          estabelecimento: string | null
+          establishment_id: string | null
+          lat: number | null
+          lng: number | null
+          pedidos_2h: number | null
+          ticket_medio_cents: number | null
+          ultimo_pedido: string | null
+        }
+        Relationships: []
+      }
       establishments_public: {
         Row: {
           avaliacao: number | null
