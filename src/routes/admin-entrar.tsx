@@ -30,18 +30,20 @@ function AdminLogin() {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error || !data.user) throw error ?? new Error("Falha no login");
 
-      // Verify admin role
-      // @ts-expect-error has_role RPC lives in private schema
-      const { data: isAdmin } = await supabase.rpc("has_role", {
-        _user_id: data.user.id,
-        _role: "admin",
-      });
+      // Verify admin role via user_roles (RLS permite ler as próprias linhas)
+      const { data: roleRow, error: roleErr } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id)
+        .eq("role", "admin")
+        .maybeSingle();
 
-      if (!isAdmin) {
+      if (roleErr || !roleRow) {
         await supabase.auth.signOut();
         toast.error("Acesso negado. Esta área é exclusiva para administradores master.");
         return;
       }
+
 
       toast.success("Bem-vindo, Admin Master");
       navigate({ to: "/admin" });
