@@ -1,0 +1,1 @@
+ALTER VIEW public.demand_zones_view SET (security_invoker = true);
