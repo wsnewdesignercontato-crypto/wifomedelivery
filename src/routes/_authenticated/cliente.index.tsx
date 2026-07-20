@@ -217,7 +217,10 @@ function ClienteHome() {
             {showAllCats ? "Ver menos" : "Ver todas"}
           </button>
         </div>
-        <div className="-mx-1 flex gap-3 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory">
+        <div
+          ref={catsScrollRef}
+          className="-mx-1 flex gap-3 overflow-x-auto pb-1 scrollbar-hide"
+        >
           {visibleCats.map((c) => {
             const img = CAT_IMG[c.slug];
             const active = catSel === c.id;
