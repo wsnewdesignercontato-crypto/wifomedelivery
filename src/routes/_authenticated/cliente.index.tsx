@@ -82,19 +82,43 @@ function ClienteHome() {
   const [catSel, setCatSel] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAllCats, setShowAllCats] = useState(false);
+  const [promoIds, setPromoIds] = useState<Set<string>>(new Set());
+  const [salesCount, setSalesCount] = useState<Record<string, number>>({});
+  const [threshold, setThreshold] = useState<number>(15);
 
   useEffect(() => {
     (async () => {
-      const [c, e] = await Promise.all([
+      const nowIso = new Date().toISOString();
+      const [c, e, cp, od, ps] = await Promise.all([
         supabase.from("global_categories").select("id,nome,slug,icone").eq("ativo", true).order("ordem"),
         supabase
           .from("establishments")
           .select("id,nome,descricao,categoria_id,logo_url,capa_url,taxa_entrega_cents,tempo_medio_min,avaliacao,is_open,cidade")
           .eq("status", "aprovado")
           .order("avaliacao", { ascending: false, nullsFirst: false }),
+        supabase
+          .from("coupons")
+          .select("establishment_id,expires_at,ativo")
+          .eq("ativo", true),
+        supabase
+          .from("orders")
+          .select("establishment_id")
+          .eq("status", "delivered"),
+        supabase.from("platform_settings").select("bestseller_threshold").eq("id", 1).maybeSingle(),
       ]);
       setCats((c.data ?? []) as Categoria[]);
       setEstabs((e.data ?? []) as Estab[]);
+      const promos = new Set<string>();
+      (cp.data ?? []).forEach((r: any) => {
+        if (r.establishment_id && (!r.expires_at || r.expires_at > nowIso)) promos.add(r.establishment_id);
+      });
+      setPromoIds(promos);
+      const counts: Record<string, number> = {};
+      (od.data ?? []).forEach((r: any) => {
+        if (r.establishment_id) counts[r.establishment_id] = (counts[r.establishment_id] ?? 0) + 1;
+      });
+      setSalesCount(counts);
+      if (ps.data?.bestseller_threshold) setThreshold(ps.data.bestseller_threshold);
       setLoading(false);
     })();
   }, []);
