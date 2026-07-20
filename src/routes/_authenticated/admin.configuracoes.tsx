@@ -20,6 +20,7 @@ type Config = {
   default_delivery_fee_cents: number;
   default_radius_km: number;
   maintenance_mode: boolean;
+  bestseller_threshold: number;
 };
 
 async function fetchConfig() {
@@ -50,6 +51,7 @@ function ConfigPage() {
         default_delivery_fee_cents: form.default_delivery_fee_cents,
         default_radius_km: form.default_radius_km,
         maintenance_mode: form.maintenance_mode,
+        bestseller_threshold: form.bestseller_threshold,
         updated_by: uid,
         updated_at: new Date().toISOString(),
       })
@@ -125,6 +127,20 @@ function ConfigPage() {
               className="mt-1.5"
             />
           </div>
+        </div>
+        <div>
+          <Label htmlFor="best">Vendas mínimas para selo "Mais vendido"</Label>
+          <Input
+            id="best"
+            type="number"
+            min={1}
+            value={form.bestseller_threshold}
+            onChange={(e) => setForm({ ...form, bestseller_threshold: Number(e.target.value) })}
+            className="mt-1.5"
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Estabelecimentos com pelo menos esse número de pedidos entregues ganham o selo laranja "Mais vendido".
+          </p>
         </div>
         <div className="flex items-center justify-between rounded-xl border border-border bg-background/50 p-4">
           <div>

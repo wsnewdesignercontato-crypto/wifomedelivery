@@ -1774,6 +1774,7 @@ export type Database = {
       }
       platform_settings: {
         Row: {
+          bestseller_threshold: number
           commission_pct: number
           default_delivery_fee_cents: number
           default_radius_km: number
@@ -1784,6 +1785,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          bestseller_threshold?: number
           commission_pct?: number
           default_delivery_fee_cents?: number
           default_radius_km?: number
@@ -1794,6 +1796,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          bestseller_threshold?: number
           commission_pct?: number
           default_delivery_fee_cents?: number
           default_radius_km?: number
