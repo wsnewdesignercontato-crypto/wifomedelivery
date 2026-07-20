@@ -68,6 +68,36 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
       courier_profiles: {
         Row: {
           cnh: string | null
@@ -508,6 +538,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      platform_settings: {
+        Row: {
+          commission_pct: number
+          default_delivery_fee_cents: number
+          default_radius_km: number
+          id: number
+          maintenance_mode: boolean
+          platform_name: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          commission_pct?: number
+          default_delivery_fee_cents?: number
+          default_radius_km?: number
+          id?: number
+          maintenance_mode?: boolean
+          platform_name?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          commission_pct?: number
+          default_delivery_fee_cents?: number
+          default_radius_km?: number
+          id?: number
+          maintenance_mode?: boolean
+          platform_name?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       products: {
         Row: {
