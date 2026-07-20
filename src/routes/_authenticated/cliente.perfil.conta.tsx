@@ -123,12 +123,36 @@ function ContaPage() {
               onChange={(e) => setProfile(profile ? { ...profile, telefone: e.target.value } : null)}
             />
           </div>
-          <div className="sm:col-span-2">
-            <Label>Foto (URL)</Label>
+          <div className="sm:col-span-2 space-y-2">
+            <Label>Foto do perfil</Label>
+            {profile?.foto_url ? (
+              <img src={profile.foto_url} alt="Avatar" className="h-20 w-20 rounded-full object-cover border border-border" />
+            ) : null}
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) uploadFoto(f);
+                  e.target.value = "";
+                }}
+              />
+              <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Upload className="h-4 w-4 mr-1" /> Enviar imagem</>}
+              </Button>
+              {profile?.foto_url && (
+                <Button type="button" variant="ghost" size="sm" onClick={() => setProfile(profile ? { ...profile, foto_url: "" } : null)}>
+                  Remover
+                </Button>
+              )}
+            </div>
             <Input
               value={profile?.foto_url ?? ""}
               onChange={(e) => setProfile(profile ? { ...profile, foto_url: e.target.value } : null)}
-              placeholder="https://..."
+              placeholder="ou cole uma URL: https://..."
             />
           </div>
         </div>
