@@ -22,7 +22,7 @@ type Produto = {
   id: string; nome: string; descricao: string | null;
   preco_cents: number; preco_promo_cents?: number | null;
   foto_url: string | null; disponivel: boolean; estoque?: number | null;
-  categoria_id?: string | null; tempo_preparo_min?: number | null;
+  menu_category_id?: string | null; tempo_preparo_min?: number | null;
 };
 
 function ProdutosPage() {
@@ -37,7 +37,7 @@ function ProdutosPage() {
   async function reload() {
     if (!estab) return;
     const { data } = await supabase.from("products")
-      .select("id,nome,descricao,preco_cents,preco_promo_cents,foto_url,disponivel,estoque,categoria_id,tempo_preparo_min")
+      .select("id,nome,descricao,preco_cents,preco_promo_cents,foto_url,disponivel,estoque,menu_category_id,tempo_preparo_min")
       .eq("establishment_id", estab.id).order("created_at", { ascending: false });
     setProdutos((data ?? []) as Produto[]);
     const { data: c } = await supabase.from("menu_categories")
@@ -61,14 +61,14 @@ function ProdutosPage() {
       establishment_id: estab.id,
       nome: p.nome + " (cópia)", descricao: p.descricao, preco_cents: p.preco_cents,
       preco_promo_cents: p.preco_promo_cents, foto_url: p.foto_url,
-      disponivel: false, categoria_id: p.categoria_id, estoque: p.estoque,
+      disponivel: false, menu_category_id: p.menu_category_id, estoque: p.estoque,
       tempo_preparo_min: p.tempo_preparo_min,
     });
     if (error) toast.error("Falha ao duplicar"); else { toast.success("Duplicado"); reload(); }
   }
 
   const filtrados = produtos.filter((p) =>
-    (filterCat === "todas" || p.categoria_id === filterCat) &&
+    (filterCat === "todas" || p.menu_category_id === filterCat) &&
     (!busca || p.nome.toLowerCase().includes(busca.toLowerCase()))
   );
 
@@ -158,7 +158,7 @@ function ProdutoForm({ cats, produto, onSaved }: { cats: Categoria[]; produto?: 
     preco: produto ? (produto.preco_cents / 100).toFixed(2) : "",
     preco_promo: produto?.preco_promo_cents ? (produto.preco_promo_cents / 100).toFixed(2) : "",
     foto_url: produto?.foto_url ?? "",
-    categoria_id: produto?.categoria_id ?? "",
+    menu_category_id: produto?.menu_category_id ?? "",
     estoque: produto?.estoque?.toString() ?? "",
     tempo: produto?.tempo_preparo_min?.toString() ?? "",
     disponivel: produto?.disponivel ?? true,
@@ -175,7 +175,7 @@ function ProdutoForm({ cats, produto, onSaved }: { cats: Categoria[]; produto?: 
       preco_cents: Math.round(parseFloat(form.preco) * 100),
       preco_promo_cents: form.preco_promo ? Math.round(parseFloat(form.preco_promo) * 100) : null,
       foto_url: form.foto_url || null,
-      categoria_id: form.categoria_id || null,
+      menu_category_id: form.menu_category_id || null,
       estoque: form.estoque ? parseInt(form.estoque) : null,
       tempo_preparo_min: form.tempo ? parseInt(form.tempo) : null,
       disponivel: form.disponivel,
@@ -200,7 +200,7 @@ function ProdutoForm({ cats, produto, onSaved }: { cats: Categoria[]; produto?: 
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label>Categoria</Label>
-          <Select value={form.categoria_id} onValueChange={(v) => setForm({ ...form, categoria_id: v })}>
+          <Select value={form.menu_category_id} onValueChange={(v) => setForm({ ...form, menu_category_id: v })}>
             <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
             <SelectContent>
               {cats.map((c) => (<SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>))}
