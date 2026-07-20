@@ -23,6 +23,7 @@ import { Route as AuthenticatedClienteRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedEstabelecimentoIndexRouteImport } from './routes/_authenticated/estabelecimento.index'
+import { Route as AuthenticatedEntregadorIndexRouteImport } from './routes/_authenticated/entregador.index'
 import { Route as AuthenticatedClienteIndexRouteImport } from './routes/_authenticated/cliente.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as ApiPublicSeedDemoRouteImport } from './routes/api/public/seed-demo'
@@ -40,6 +41,19 @@ import { Route as AuthenticatedEstabelecimentoComplementosRouteImport } from './
 import { Route as AuthenticatedEstabelecimentoCategoriasRouteImport } from './routes/_authenticated/estabelecimento.categorias'
 import { Route as AuthenticatedEstabelecimentoBannersRouteImport } from './routes/_authenticated/estabelecimento.banners'
 import { Route as AuthenticatedEstabelecimentoAvaliacoesRouteImport } from './routes/_authenticated/estabelecimento.avaliacoes'
+import { Route as AuthenticatedEntregadorVeiculoRouteImport } from './routes/_authenticated/entregador.veiculo'
+import { Route as AuthenticatedEntregadorSuporteRouteImport } from './routes/_authenticated/entregador.suporte'
+import { Route as AuthenticatedEntregadorPerfilRouteImport } from './routes/_authenticated/entregador.perfil'
+import { Route as AuthenticatedEntregadorNotificacoesRouteImport } from './routes/_authenticated/entregador.notificacoes'
+import { Route as AuthenticatedEntregadorMetasRouteImport } from './routes/_authenticated/entregador.metas'
+import { Route as AuthenticatedEntregadorHistoricoRouteImport } from './routes/_authenticated/entregador.historico'
+import { Route as AuthenticatedEntregadorGanhosRouteImport } from './routes/_authenticated/entregador.ganhos'
+import { Route as AuthenticatedEntregadorDocumentosRouteImport } from './routes/_authenticated/entregador.documentos'
+import { Route as AuthenticatedEntregadorCorridasRouteImport } from './routes/_authenticated/entregador.corridas'
+import { Route as AuthenticatedEntregadorConfiguracoesRouteImport } from './routes/_authenticated/entregador.configuracoes'
+import { Route as AuthenticatedEntregadorChatRouteImport } from './routes/_authenticated/entregador.chat'
+import { Route as AuthenticatedEntregadorCarteiraRouteImport } from './routes/_authenticated/entregador.carteira'
+import { Route as AuthenticatedEntregadorAvaliacoesRouteImport } from './routes/_authenticated/entregador.avaliacoes'
 import { Route as AuthenticatedClientePerfilRouteImport } from './routes/_authenticated/cliente.perfil'
 import { Route as AuthenticatedClientePedidosRouteImport } from './routes/_authenticated/cliente.pedidos'
 import { Route as AuthenticatedClienteFavoritosRouteImport } from './routes/_authenticated/cliente.favoritos'
@@ -135,6 +149,12 @@ const AuthenticatedEstabelecimentoIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
+const AuthenticatedEntregadorIndexRoute =
+  AuthenticatedEntregadorIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedEntregadorRoute,
   } as any)
 const AuthenticatedClienteIndexRoute =
   AuthenticatedClienteIndexRouteImport.update({
@@ -235,6 +255,84 @@ const AuthenticatedEstabelecimentoAvaliacoesRoute =
     id: '/avaliacoes',
     path: '/avaliacoes',
     getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
+const AuthenticatedEntregadorVeiculoRoute =
+  AuthenticatedEntregadorVeiculoRouteImport.update({
+    id: '/veiculo',
+    path: '/veiculo',
+    getParentRoute: () => AuthenticatedEntregadorRoute,
+  } as any)
+const AuthenticatedEntregadorSuporteRoute =
+  AuthenticatedEntregadorSuporteRouteImport.update({
+    id: '/suporte',
+    path: '/suporte',
+    getParentRoute: () => AuthenticatedEntregadorRoute,
+  } as any)
+const AuthenticatedEntregadorPerfilRoute =
+  AuthenticatedEntregadorPerfilRouteImport.update({
+    id: '/perfil',
+    path: '/perfil',
+    getParentRoute: () => AuthenticatedEntregadorRoute,
+  } as any)
+const AuthenticatedEntregadorNotificacoesRoute =
+  AuthenticatedEntregadorNotificacoesRouteImport.update({
+    id: '/notificacoes',
+    path: '/notificacoes',
+    getParentRoute: () => AuthenticatedEntregadorRoute,
+  } as any)
+const AuthenticatedEntregadorMetasRoute =
+  AuthenticatedEntregadorMetasRouteImport.update({
+    id: '/metas',
+    path: '/metas',
+    getParentRoute: () => AuthenticatedEntregadorRoute,
+  } as any)
+const AuthenticatedEntregadorHistoricoRoute =
+  AuthenticatedEntregadorHistoricoRouteImport.update({
+    id: '/historico',
+    path: '/historico',
+    getParentRoute: () => AuthenticatedEntregadorRoute,
+  } as any)
+const AuthenticatedEntregadorGanhosRoute =
+  AuthenticatedEntregadorGanhosRouteImport.update({
+    id: '/ganhos',
+    path: '/ganhos',
+    getParentRoute: () => AuthenticatedEntregadorRoute,
+  } as any)
+const AuthenticatedEntregadorDocumentosRoute =
+  AuthenticatedEntregadorDocumentosRouteImport.update({
+    id: '/documentos',
+    path: '/documentos',
+    getParentRoute: () => AuthenticatedEntregadorRoute,
+  } as any)
+const AuthenticatedEntregadorCorridasRoute =
+  AuthenticatedEntregadorCorridasRouteImport.update({
+    id: '/corridas',
+    path: '/corridas',
+    getParentRoute: () => AuthenticatedEntregadorRoute,
+  } as any)
+const AuthenticatedEntregadorConfiguracoesRoute =
+  AuthenticatedEntregadorConfiguracoesRouteImport.update({
+    id: '/configuracoes',
+    path: '/configuracoes',
+    getParentRoute: () => AuthenticatedEntregadorRoute,
+  } as any)
+const AuthenticatedEntregadorChatRoute =
+  AuthenticatedEntregadorChatRouteImport.update({
+    id: '/chat',
+    path: '/chat',
+    getParentRoute: () => AuthenticatedEntregadorRoute,
+  } as any)
+const AuthenticatedEntregadorCarteiraRoute =
+  AuthenticatedEntregadorCarteiraRouteImport.update({
+    id: '/carteira',
+    path: '/carteira',
+    getParentRoute: () => AuthenticatedEntregadorRoute,
+  } as any)
+const AuthenticatedEntregadorAvaliacoesRoute =
+  AuthenticatedEntregadorAvaliacoesRouteImport.update({
+    id: '/avaliacoes',
+    path: '/avaliacoes',
+    getParentRoute: () => AuthenticatedEntregadorRoute,
   } as any)
 const AuthenticatedClientePerfilRoute =
   AuthenticatedClientePerfilRouteImport.update({
@@ -389,7 +487,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRoute
   '/cliente': typeof AuthenticatedClienteRouteWithChildren
-  '/entregador': typeof AuthenticatedEntregadorRoute
+  '/entregador': typeof AuthenticatedEntregadorRouteWithChildren
   '/estabelecimento': typeof AuthenticatedEstabelecimentoRouteWithChildren
   '/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
@@ -413,6 +511,19 @@ export interface FileRoutesByFullPath {
   '/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
   '/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
   '/cliente/perfil': typeof AuthenticatedClientePerfilRoute
+  '/entregador/avaliacoes': typeof AuthenticatedEntregadorAvaliacoesRoute
+  '/entregador/carteira': typeof AuthenticatedEntregadorCarteiraRoute
+  '/entregador/chat': typeof AuthenticatedEntregadorChatRoute
+  '/entregador/configuracoes': typeof AuthenticatedEntregadorConfiguracoesRoute
+  '/entregador/corridas': typeof AuthenticatedEntregadorCorridasRoute
+  '/entregador/documentos': typeof AuthenticatedEntregadorDocumentosRoute
+  '/entregador/ganhos': typeof AuthenticatedEntregadorGanhosRoute
+  '/entregador/historico': typeof AuthenticatedEntregadorHistoricoRoute
+  '/entregador/metas': typeof AuthenticatedEntregadorMetasRoute
+  '/entregador/notificacoes': typeof AuthenticatedEntregadorNotificacoesRoute
+  '/entregador/perfil': typeof AuthenticatedEntregadorPerfilRoute
+  '/entregador/suporte': typeof AuthenticatedEntregadorSuporteRoute
+  '/entregador/veiculo': typeof AuthenticatedEntregadorVeiculoRoute
   '/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
   '/estabelecimento/banners': typeof AuthenticatedEstabelecimentoBannersRoute
   '/estabelecimento/categorias': typeof AuthenticatedEstabelecimentoCategoriasRoute
@@ -430,6 +541,7 @@ export interface FileRoutesByFullPath {
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/cliente/': typeof AuthenticatedClienteIndexRoute
+  '/entregador/': typeof AuthenticatedEntregadorIndexRoute
   '/estabelecimento/': typeof AuthenticatedEstabelecimentoIndexRoute
   '/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
@@ -443,7 +555,6 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app': typeof AuthenticatedAppRoute
-  '/entregador': typeof AuthenticatedEntregadorRoute
   '/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/admin/campanhas': typeof AuthenticatedAdminCampanhasRoute
@@ -466,6 +577,19 @@ export interface FileRoutesByTo {
   '/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
   '/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
   '/cliente/perfil': typeof AuthenticatedClientePerfilRoute
+  '/entregador/avaliacoes': typeof AuthenticatedEntregadorAvaliacoesRoute
+  '/entregador/carteira': typeof AuthenticatedEntregadorCarteiraRoute
+  '/entregador/chat': typeof AuthenticatedEntregadorChatRoute
+  '/entregador/configuracoes': typeof AuthenticatedEntregadorConfiguracoesRoute
+  '/entregador/corridas': typeof AuthenticatedEntregadorCorridasRoute
+  '/entregador/documentos': typeof AuthenticatedEntregadorDocumentosRoute
+  '/entregador/ganhos': typeof AuthenticatedEntregadorGanhosRoute
+  '/entregador/historico': typeof AuthenticatedEntregadorHistoricoRoute
+  '/entregador/metas': typeof AuthenticatedEntregadorMetasRoute
+  '/entregador/notificacoes': typeof AuthenticatedEntregadorNotificacoesRoute
+  '/entregador/perfil': typeof AuthenticatedEntregadorPerfilRoute
+  '/entregador/suporte': typeof AuthenticatedEntregadorSuporteRoute
+  '/entregador/veiculo': typeof AuthenticatedEntregadorVeiculoRoute
   '/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
   '/estabelecimento/banners': typeof AuthenticatedEstabelecimentoBannersRoute
   '/estabelecimento/categorias': typeof AuthenticatedEstabelecimentoCategoriasRoute
@@ -483,6 +607,7 @@ export interface FileRoutesByTo {
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/cliente': typeof AuthenticatedClienteIndexRoute
+  '/entregador': typeof AuthenticatedEntregadorIndexRoute
   '/estabelecimento': typeof AuthenticatedEstabelecimentoIndexRoute
   '/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
@@ -500,7 +625,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/cliente': typeof AuthenticatedClienteRouteWithChildren
-  '/_authenticated/entregador': typeof AuthenticatedEntregadorRoute
+  '/_authenticated/entregador': typeof AuthenticatedEntregadorRouteWithChildren
   '/_authenticated/estabelecimento': typeof AuthenticatedEstabelecimentoRouteWithChildren
   '/_authenticated/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
   '/_authenticated/admin/banners': typeof AuthenticatedAdminBannersRoute
@@ -524,6 +649,19 @@ export interface FileRoutesById {
   '/_authenticated/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
   '/_authenticated/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
   '/_authenticated/cliente/perfil': typeof AuthenticatedClientePerfilRoute
+  '/_authenticated/entregador/avaliacoes': typeof AuthenticatedEntregadorAvaliacoesRoute
+  '/_authenticated/entregador/carteira': typeof AuthenticatedEntregadorCarteiraRoute
+  '/_authenticated/entregador/chat': typeof AuthenticatedEntregadorChatRoute
+  '/_authenticated/entregador/configuracoes': typeof AuthenticatedEntregadorConfiguracoesRoute
+  '/_authenticated/entregador/corridas': typeof AuthenticatedEntregadorCorridasRoute
+  '/_authenticated/entregador/documentos': typeof AuthenticatedEntregadorDocumentosRoute
+  '/_authenticated/entregador/ganhos': typeof AuthenticatedEntregadorGanhosRoute
+  '/_authenticated/entregador/historico': typeof AuthenticatedEntregadorHistoricoRoute
+  '/_authenticated/entregador/metas': typeof AuthenticatedEntregadorMetasRoute
+  '/_authenticated/entregador/notificacoes': typeof AuthenticatedEntregadorNotificacoesRoute
+  '/_authenticated/entregador/perfil': typeof AuthenticatedEntregadorPerfilRoute
+  '/_authenticated/entregador/suporte': typeof AuthenticatedEntregadorSuporteRoute
+  '/_authenticated/entregador/veiculo': typeof AuthenticatedEntregadorVeiculoRoute
   '/_authenticated/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
   '/_authenticated/estabelecimento/banners': typeof AuthenticatedEstabelecimentoBannersRoute
   '/_authenticated/estabelecimento/categorias': typeof AuthenticatedEstabelecimentoCategoriasRoute
@@ -541,6 +679,7 @@ export interface FileRoutesById {
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/cliente/': typeof AuthenticatedClienteIndexRoute
+  '/_authenticated/entregador/': typeof AuthenticatedEntregadorIndexRoute
   '/_authenticated/estabelecimento/': typeof AuthenticatedEstabelecimentoIndexRoute
   '/_authenticated/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/_authenticated/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
@@ -582,6 +721,19 @@ export interface FileRouteTypes {
     | '/cliente/favoritos'
     | '/cliente/pedidos'
     | '/cliente/perfil'
+    | '/entregador/avaliacoes'
+    | '/entregador/carteira'
+    | '/entregador/chat'
+    | '/entregador/configuracoes'
+    | '/entregador/corridas'
+    | '/entregador/documentos'
+    | '/entregador/ganhos'
+    | '/entregador/historico'
+    | '/entregador/metas'
+    | '/entregador/notificacoes'
+    | '/entregador/perfil'
+    | '/entregador/suporte'
+    | '/entregador/veiculo'
     | '/estabelecimento/avaliacoes'
     | '/estabelecimento/banners'
     | '/estabelecimento/categorias'
@@ -599,6 +751,7 @@ export interface FileRouteTypes {
     | '/api/public/seed-demo'
     | '/admin/'
     | '/cliente/'
+    | '/entregador/'
     | '/estabelecimento/'
     | '/cliente/estabelecimento/$id'
     | '/cliente/pedido/$id'
@@ -612,7 +765,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/sitemap.xml'
     | '/app'
-    | '/entregador'
     | '/admin/avaliacoes'
     | '/admin/banners'
     | '/admin/campanhas'
@@ -635,6 +787,19 @@ export interface FileRouteTypes {
     | '/cliente/favoritos'
     | '/cliente/pedidos'
     | '/cliente/perfil'
+    | '/entregador/avaliacoes'
+    | '/entregador/carteira'
+    | '/entregador/chat'
+    | '/entregador/configuracoes'
+    | '/entregador/corridas'
+    | '/entregador/documentos'
+    | '/entregador/ganhos'
+    | '/entregador/historico'
+    | '/entregador/metas'
+    | '/entregador/notificacoes'
+    | '/entregador/perfil'
+    | '/entregador/suporte'
+    | '/entregador/veiculo'
     | '/estabelecimento/avaliacoes'
     | '/estabelecimento/banners'
     | '/estabelecimento/categorias'
@@ -652,6 +817,7 @@ export interface FileRouteTypes {
     | '/api/public/seed-demo'
     | '/admin'
     | '/cliente'
+    | '/entregador'
     | '/estabelecimento'
     | '/cliente/estabelecimento/$id'
     | '/cliente/pedido/$id'
@@ -692,6 +858,19 @@ export interface FileRouteTypes {
     | '/_authenticated/cliente/favoritos'
     | '/_authenticated/cliente/pedidos'
     | '/_authenticated/cliente/perfil'
+    | '/_authenticated/entregador/avaliacoes'
+    | '/_authenticated/entregador/carteira'
+    | '/_authenticated/entregador/chat'
+    | '/_authenticated/entregador/configuracoes'
+    | '/_authenticated/entregador/corridas'
+    | '/_authenticated/entregador/documentos'
+    | '/_authenticated/entregador/ganhos'
+    | '/_authenticated/entregador/historico'
+    | '/_authenticated/entregador/metas'
+    | '/_authenticated/entregador/notificacoes'
+    | '/_authenticated/entregador/perfil'
+    | '/_authenticated/entregador/suporte'
+    | '/_authenticated/entregador/veiculo'
     | '/_authenticated/estabelecimento/avaliacoes'
     | '/_authenticated/estabelecimento/banners'
     | '/_authenticated/estabelecimento/categorias'
@@ -709,6 +888,7 @@ export interface FileRouteTypes {
     | '/api/public/seed-demo'
     | '/_authenticated/admin/'
     | '/_authenticated/cliente/'
+    | '/_authenticated/entregador/'
     | '/_authenticated/estabelecimento/'
     | '/_authenticated/cliente/estabelecimento/$id'
     | '/_authenticated/cliente/pedido/$id'
@@ -825,6 +1005,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/estabelecimento/'
       preLoaderRoute: typeof AuthenticatedEstabelecimentoIndexRouteImport
       parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
+    '/_authenticated/entregador/': {
+      id: '/_authenticated/entregador/'
+      path: '/'
+      fullPath: '/entregador/'
+      preLoaderRoute: typeof AuthenticatedEntregadorIndexRouteImport
+      parentRoute: typeof AuthenticatedEntregadorRoute
     }
     '/_authenticated/cliente/': {
       id: '/_authenticated/cliente/'
@@ -944,6 +1131,97 @@ declare module '@tanstack/react-router' {
       fullPath: '/estabelecimento/avaliacoes'
       preLoaderRoute: typeof AuthenticatedEstabelecimentoAvaliacoesRouteImport
       parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
+    '/_authenticated/entregador/veiculo': {
+      id: '/_authenticated/entregador/veiculo'
+      path: '/veiculo'
+      fullPath: '/entregador/veiculo'
+      preLoaderRoute: typeof AuthenticatedEntregadorVeiculoRouteImport
+      parentRoute: typeof AuthenticatedEntregadorRoute
+    }
+    '/_authenticated/entregador/suporte': {
+      id: '/_authenticated/entregador/suporte'
+      path: '/suporte'
+      fullPath: '/entregador/suporte'
+      preLoaderRoute: typeof AuthenticatedEntregadorSuporteRouteImport
+      parentRoute: typeof AuthenticatedEntregadorRoute
+    }
+    '/_authenticated/entregador/perfil': {
+      id: '/_authenticated/entregador/perfil'
+      path: '/perfil'
+      fullPath: '/entregador/perfil'
+      preLoaderRoute: typeof AuthenticatedEntregadorPerfilRouteImport
+      parentRoute: typeof AuthenticatedEntregadorRoute
+    }
+    '/_authenticated/entregador/notificacoes': {
+      id: '/_authenticated/entregador/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/entregador/notificacoes'
+      preLoaderRoute: typeof AuthenticatedEntregadorNotificacoesRouteImport
+      parentRoute: typeof AuthenticatedEntregadorRoute
+    }
+    '/_authenticated/entregador/metas': {
+      id: '/_authenticated/entregador/metas'
+      path: '/metas'
+      fullPath: '/entregador/metas'
+      preLoaderRoute: typeof AuthenticatedEntregadorMetasRouteImport
+      parentRoute: typeof AuthenticatedEntregadorRoute
+    }
+    '/_authenticated/entregador/historico': {
+      id: '/_authenticated/entregador/historico'
+      path: '/historico'
+      fullPath: '/entregador/historico'
+      preLoaderRoute: typeof AuthenticatedEntregadorHistoricoRouteImport
+      parentRoute: typeof AuthenticatedEntregadorRoute
+    }
+    '/_authenticated/entregador/ganhos': {
+      id: '/_authenticated/entregador/ganhos'
+      path: '/ganhos'
+      fullPath: '/entregador/ganhos'
+      preLoaderRoute: typeof AuthenticatedEntregadorGanhosRouteImport
+      parentRoute: typeof AuthenticatedEntregadorRoute
+    }
+    '/_authenticated/entregador/documentos': {
+      id: '/_authenticated/entregador/documentos'
+      path: '/documentos'
+      fullPath: '/entregador/documentos'
+      preLoaderRoute: typeof AuthenticatedEntregadorDocumentosRouteImport
+      parentRoute: typeof AuthenticatedEntregadorRoute
+    }
+    '/_authenticated/entregador/corridas': {
+      id: '/_authenticated/entregador/corridas'
+      path: '/corridas'
+      fullPath: '/entregador/corridas'
+      preLoaderRoute: typeof AuthenticatedEntregadorCorridasRouteImport
+      parentRoute: typeof AuthenticatedEntregadorRoute
+    }
+    '/_authenticated/entregador/configuracoes': {
+      id: '/_authenticated/entregador/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/entregador/configuracoes'
+      preLoaderRoute: typeof AuthenticatedEntregadorConfiguracoesRouteImport
+      parentRoute: typeof AuthenticatedEntregadorRoute
+    }
+    '/_authenticated/entregador/chat': {
+      id: '/_authenticated/entregador/chat'
+      path: '/chat'
+      fullPath: '/entregador/chat'
+      preLoaderRoute: typeof AuthenticatedEntregadorChatRouteImport
+      parentRoute: typeof AuthenticatedEntregadorRoute
+    }
+    '/_authenticated/entregador/carteira': {
+      id: '/_authenticated/entregador/carteira'
+      path: '/carteira'
+      fullPath: '/entregador/carteira'
+      preLoaderRoute: typeof AuthenticatedEntregadorCarteiraRouteImport
+      parentRoute: typeof AuthenticatedEntregadorRoute
+    }
+    '/_authenticated/entregador/avaliacoes': {
+      id: '/_authenticated/entregador/avaliacoes'
+      path: '/avaliacoes'
+      fullPath: '/entregador/avaliacoes'
+      preLoaderRoute: typeof AuthenticatedEntregadorAvaliacoesRouteImport
+      parentRoute: typeof AuthenticatedEntregadorRoute
     }
     '/_authenticated/cliente/perfil': {
       id: '/_authenticated/cliente/perfil'
@@ -1188,6 +1466,51 @@ const AuthenticatedClienteRouteChildren: AuthenticatedClienteRouteChildren = {
 const AuthenticatedClienteRouteWithChildren =
   AuthenticatedClienteRoute._addFileChildren(AuthenticatedClienteRouteChildren)
 
+interface AuthenticatedEntregadorRouteChildren {
+  AuthenticatedEntregadorAvaliacoesRoute: typeof AuthenticatedEntregadorAvaliacoesRoute
+  AuthenticatedEntregadorCarteiraRoute: typeof AuthenticatedEntregadorCarteiraRoute
+  AuthenticatedEntregadorChatRoute: typeof AuthenticatedEntregadorChatRoute
+  AuthenticatedEntregadorConfiguracoesRoute: typeof AuthenticatedEntregadorConfiguracoesRoute
+  AuthenticatedEntregadorCorridasRoute: typeof AuthenticatedEntregadorCorridasRoute
+  AuthenticatedEntregadorDocumentosRoute: typeof AuthenticatedEntregadorDocumentosRoute
+  AuthenticatedEntregadorGanhosRoute: typeof AuthenticatedEntregadorGanhosRoute
+  AuthenticatedEntregadorHistoricoRoute: typeof AuthenticatedEntregadorHistoricoRoute
+  AuthenticatedEntregadorMetasRoute: typeof AuthenticatedEntregadorMetasRoute
+  AuthenticatedEntregadorNotificacoesRoute: typeof AuthenticatedEntregadorNotificacoesRoute
+  AuthenticatedEntregadorPerfilRoute: typeof AuthenticatedEntregadorPerfilRoute
+  AuthenticatedEntregadorSuporteRoute: typeof AuthenticatedEntregadorSuporteRoute
+  AuthenticatedEntregadorVeiculoRoute: typeof AuthenticatedEntregadorVeiculoRoute
+  AuthenticatedEntregadorIndexRoute: typeof AuthenticatedEntregadorIndexRoute
+}
+
+const AuthenticatedEntregadorRouteChildren: AuthenticatedEntregadorRouteChildren =
+  {
+    AuthenticatedEntregadorAvaliacoesRoute:
+      AuthenticatedEntregadorAvaliacoesRoute,
+    AuthenticatedEntregadorCarteiraRoute: AuthenticatedEntregadorCarteiraRoute,
+    AuthenticatedEntregadorChatRoute: AuthenticatedEntregadorChatRoute,
+    AuthenticatedEntregadorConfiguracoesRoute:
+      AuthenticatedEntregadorConfiguracoesRoute,
+    AuthenticatedEntregadorCorridasRoute: AuthenticatedEntregadorCorridasRoute,
+    AuthenticatedEntregadorDocumentosRoute:
+      AuthenticatedEntregadorDocumentosRoute,
+    AuthenticatedEntregadorGanhosRoute: AuthenticatedEntregadorGanhosRoute,
+    AuthenticatedEntregadorHistoricoRoute:
+      AuthenticatedEntregadorHistoricoRoute,
+    AuthenticatedEntregadorMetasRoute: AuthenticatedEntregadorMetasRoute,
+    AuthenticatedEntregadorNotificacoesRoute:
+      AuthenticatedEntregadorNotificacoesRoute,
+    AuthenticatedEntregadorPerfilRoute: AuthenticatedEntregadorPerfilRoute,
+    AuthenticatedEntregadorSuporteRoute: AuthenticatedEntregadorSuporteRoute,
+    AuthenticatedEntregadorVeiculoRoute: AuthenticatedEntregadorVeiculoRoute,
+    AuthenticatedEntregadorIndexRoute: AuthenticatedEntregadorIndexRoute,
+  }
+
+const AuthenticatedEntregadorRouteWithChildren =
+  AuthenticatedEntregadorRoute._addFileChildren(
+    AuthenticatedEntregadorRouteChildren,
+  )
+
 interface AuthenticatedEstabelecimentoRouteChildren {
   AuthenticatedEstabelecimentoAvaliacoesRoute: typeof AuthenticatedEstabelecimentoAvaliacoesRoute
   AuthenticatedEstabelecimentoBannersRoute: typeof AuthenticatedEstabelecimentoBannersRoute
@@ -1249,7 +1572,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedClienteRoute: typeof AuthenticatedClienteRouteWithChildren
-  AuthenticatedEntregadorRoute: typeof AuthenticatedEntregadorRoute
+  AuthenticatedEntregadorRoute: typeof AuthenticatedEntregadorRouteWithChildren
   AuthenticatedEstabelecimentoRoute: typeof AuthenticatedEstabelecimentoRouteWithChildren
 }
 
@@ -1257,7 +1580,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedClienteRoute: AuthenticatedClienteRouteWithChildren,
-  AuthenticatedEntregadorRoute: AuthenticatedEntregadorRoute,
+  AuthenticatedEntregadorRoute: AuthenticatedEntregadorRouteWithChildren,
   AuthenticatedEstabelecimentoRoute:
     AuthenticatedEstabelecimentoRouteWithChildren,
 }
