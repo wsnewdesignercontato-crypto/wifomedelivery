@@ -48,7 +48,7 @@ function SuportePage() {
     setText("");
   }
 
-  async function setStatus(status: string) {
+  async function setStatus(status: 'closed' | 'open' | 'pending' | 'resolved') {
     if (!sel) return;
     await supabase.from("support_tickets").update({ status }).eq("id", sel.id);
     qc.invalidateQueries({ queryKey:["tickets"] });

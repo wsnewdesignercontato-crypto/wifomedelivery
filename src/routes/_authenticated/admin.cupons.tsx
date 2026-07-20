@@ -28,7 +28,7 @@ function CuponsPage() {
   const { data = [], isLoading } = useQuery({ queryKey: ["coupons"], queryFn: fetchCoupons });
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ code: "", type: "percent" as const, percent: 10, value_cents: 0, descricao: "", usage_limit: "" });
+  const [form, setForm] = useState({ code: "", type: "percent" as "percent" | "fixed" | "free_delivery", percent: 10, value_cents: 0, descricao: "", usage_limit: "" });
 
   async function create() {
     if (!form.code.trim()) return toast.error("Código obrigatório");

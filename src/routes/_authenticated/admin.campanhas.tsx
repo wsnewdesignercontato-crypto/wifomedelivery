@@ -34,7 +34,7 @@ function CampanhasPage() {
     setOpen(false); setF({ nome:"", descricao:"", audience:"all" });
     qc.invalidateQueries({ queryKey:["campaigns"] });
   }
-  async function setStatus(id: string, status: string) {
+  async function setStatus(id: string, status: 'active' | 'draft' | 'ended' | 'paused' | 'scheduled') {
     await supabase.from("campaigns").update({ status }).eq("id", id);
     qc.invalidateQueries({ queryKey:["campaigns"] });
   }

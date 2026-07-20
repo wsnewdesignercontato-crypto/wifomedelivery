@@ -88,7 +88,7 @@ function FinanceiroPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard label="GMV (bruto)" value={fmtBRL(totals.gross)} icon={DollarSign} />
-        <KpiCard label="Receita plataforma" value={fmtBRL(totals.revenue)} icon={TrendingUp} accent />
+        <KpiCard label="Receita plataforma" value={fmtBRL(totals.revenue)} icon={TrendingUp} tone="primary" />
         <KpiCard label="Repasse lojas" value={fmtBRL(totals.merchant)} icon={Wallet} />
         <KpiCard label="Take-rate" value={`${takeRate.toFixed(1)}%`} icon={Percent} />
       </div>
