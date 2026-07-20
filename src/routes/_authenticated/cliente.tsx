@@ -111,6 +111,7 @@ function ClienteApp() {
   const [obs, setObs] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [meusPedidos, setMeusPedidos] = useState<Order[]>([]);
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     (async () => {
