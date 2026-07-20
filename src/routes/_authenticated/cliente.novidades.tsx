@@ -25,12 +25,11 @@ type Ad = {
 type Novo = {
   id: string;
   nome: string;
-  categoria: string | null;
   logo_url: string | null;
   capa_url: string | null;
-  avaliacao_media: number | null;
+  avaliacao: number | null;
   tempo_medio_min: number | null;
-  created_at: string;
+  created_at: string | null;
 };
 
 async function fetchAds(): Promise<Ad[]> {
@@ -45,12 +44,12 @@ async function fetchAds(): Promise<Ad[]> {
 
 async function fetchNovos(): Promise<Novo[]> {
   const { data, error } = await supabase
-    .from("public_establishments")
-    .select("id, nome, categoria, logo_url, capa_url, avaliacao_media, tempo_medio_min, created_at")
+    .from("establishments_public")
+    .select("id, nome, logo_url, capa_url, avaliacao, tempo_medio_min, created_at")
     .order("created_at", { ascending: false })
     .limit(12);
   if (error) throw error;
-  return (data ?? []) as Novo[];
+  return (data ?? []).filter((e): e is Novo => !!e.id && !!e.nome);
 }
 
 function NovidadesPage() {
