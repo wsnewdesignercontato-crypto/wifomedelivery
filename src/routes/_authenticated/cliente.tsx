@@ -66,6 +66,9 @@ type Order = {
   total_cents: number;
   created_at: string;
   observacoes: string | null;
+  cancellation_reason?: string | null;
+  refund_status?: string | null;
+  refund_amount_cents?: number | null;
 };
 
 const fmt = (c: number) =>
@@ -83,7 +86,11 @@ const STATUS_LABEL: Record<string, string> = {
   arriving: "Chegando",
   delivered: "Entregue",
   cancelled: "Cancelado",
+  refunded: "Reembolsado",
 };
+
+const CANCELABLE_BY_CLIENTE = new Set(["placed", "accepted"]);
+
 
 function ClienteApp() {
   const { user } = Route.useRouteContext() as { user: { id: string } };
@@ -126,11 +133,12 @@ function ClienteApp() {
     (async () => {
       const { data } = await supabase
         .from("orders")
-        .select("id,establishment_id,status,total_cents,created_at,observacoes")
+        .select("id,establishment_id,status,total_cents,created_at,observacoes,cancellation_reason,refund_status,refund_amount_cents")
         .eq("cliente_id", user.id)
         .order("created_at", { ascending: false })
         .limit(30);
       if (active) setMeusPedidos((data ?? []) as Order[]);
+
     })();
     const ch = supabase
       .channel("cliente-pedidos")
