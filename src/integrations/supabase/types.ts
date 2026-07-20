@@ -1243,20 +1243,7 @@ export type Database = {
       }
     }
     Functions: {
-      admin_grant_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _target_user: string
-        }
-        Returns: undefined
-      }
-      admin_revoke_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _target_user: string
-        }
-        Returns: undefined
-      }
+      [_ in never]: never
     }
     Enums: {
       app_role: "cliente" | "estabelecimento" | "entregador" | "admin"
