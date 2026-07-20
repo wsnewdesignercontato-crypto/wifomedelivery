@@ -104,7 +104,7 @@ function ClienteHome() {
     [estabs, catSel],
   );
 
-  const visibleCats = showAllCats ? cats : cats.slice(0, 8);
+  const visibleCats = showAllCats ? cats : cats.slice(0, 4);
 
   return (
     <div className="space-y-6">
@@ -129,7 +129,7 @@ function ClienteHome() {
         <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/30 blur-3xl" />
       </button>
 
-      {/* Categorias */}
+      {/* Categorias - uma única fileira horizontal */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-black text-foreground">Categorias</h2>
@@ -140,7 +140,7 @@ function ClienteHome() {
             {showAllCats ? "Ver menos" : "Ver todas"}
           </button>
         </div>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="-mx-1 flex gap-3 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory">
           {visibleCats.map((c) => {
             const img = CAT_IMG[c.slug];
             const active = catSel === c.id;
@@ -148,7 +148,8 @@ function ClienteHome() {
               <button
                 key={c.id}
                 onClick={() => setCatSel(active ? null : c.id)}
-                className="flex flex-col items-center gap-1.5"
+                className="flex shrink-0 snap-start flex-col items-center gap-1.5"
+                style={{ width: "72px" }}
               >
                 <div
                   className={`aspect-square w-full overflow-hidden rounded-2xl bg-muted shadow-sm transition-all ${
@@ -159,13 +160,13 @@ function ClienteHome() {
                     <img
                       src={img}
                       alt={c.nome}
-                      width={200}
-                      height={200}
+                      width={144}
+                      height={144}
                       loading="lazy"
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="grid h-full w-full place-items-center bg-gradient-to-br from-primary/15 to-primary/5 text-3xl">
+                    <div className="grid h-full w-full place-items-center bg-gradient-to-br from-primary/15 to-primary/5 text-2xl">
                       🍽️
                     </div>
                   )}
@@ -180,6 +181,20 @@ function ClienteHome() {
               </button>
             );
           })}
+          {!showAllCats && cats.length > 4 && (
+            <button
+              onClick={() => setShowAllCats(true)}
+              className="flex shrink-0 snap-start flex-col items-center gap-1.5"
+              style={{ width: "72px" }}
+            >
+              <div className="grid aspect-square w-full place-items-center rounded-2xl bg-primary/10 text-primary shadow-sm transition-all hover:scale-[1.03]">
+                <span className="text-2xl font-black">+</span>
+              </div>
+              <span className="text-center text-[11px] font-semibold leading-tight text-primary">
+                Ver todas
+              </span>
+            </button>
+          )}
         </div>
       </section>
 
