@@ -5,43 +5,107 @@ import { supabase } from "@/integrations/supabase/client";
 
 type Courier = { user_id: string; status: string | null; aprovacao?: string | null } | null;
 
-function playBeep() {
+// Contexto de áudio global reutilizável — precisa ser criado/resumido após
+// interação do usuário, senão o browser bloqueia som (autoplay policy).
+let sharedCtx: AudioContext | null = null;
+let unlocked = false;
+
+function getCtx(): AudioContext | null {
   try {
     const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
-    if (!Ctx) return;
-    const ctx = new Ctx();
-    const now = ctx.currentTime;
-    [0, 0.18, 0.36].forEach((t) => {
+    if (!Ctx) return null;
+    if (!sharedCtx) sharedCtx = new Ctx();
+    if (sharedCtx.state === "suspended") sharedCtx.resume().catch(() => {});
+    return sharedCtx;
+  } catch { return null; }
+}
+
+function unlockAudio() {
+  if (unlocked) return;
+  unlocked = true;
+  const ctx = getCtx();
+  if (!ctx) return;
+  // Toca um "silêncio" pra destravar
+  try {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    gain.gain.value = 0.0001;
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.02);
+  } catch {}
+}
+
+function playSiren() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  // Sirene tipo "urgente": 5 bipes ascendentes bem audíveis
+  [0, 0.15, 0.30, 0.45, 0.60].forEach((t, i) => {
+    try {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(880, now + t);
-      osc.frequency.linearRampToValueAtTime(1320, now + t + 0.12);
+      osc.type = "square";
+      const base = 900 + i * 60;
+      osc.frequency.setValueAtTime(base, now + t);
+      osc.frequency.linearRampToValueAtTime(base + 500, now + t + 0.12);
       gain.gain.setValueAtTime(0.0001, now + t);
-      gain.gain.exponentialRampToValueAtTime(0.35, now + t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.8, now + t + 0.015);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.14);
       osc.connect(gain).connect(ctx.destination);
       osc.start(now + t);
       osc.stop(now + t + 0.16);
-    });
-    setTimeout(() => ctx.close(), 800);
+    } catch {}
+  });
+  try { navigator.vibrate?.([200, 80, 200, 80, 200, 80, 300]); } catch {}
+}
+
+function nativeNotify() {
+  try {
+    if (typeof Notification === "undefined") return;
+    if (Notification.permission === "granted") {
+      const n = new Notification("🛵 Nova corrida WiFome!", {
+        body: "Toque para aceitar antes de outro entregador.",
+        tag: "wifome-ride",
+        requireInteraction: true,
+      });
+      n.onclick = () => { window.focus(); n.close(); };
+    } else if (Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
   } catch {}
-  try { navigator.vibrate?.([120, 60, 120, 60, 200]); } catch {}
 }
 
 /**
- * Toca beep continuamente enquanto houver corridas broadcasting disponíveis
- * e o entregador estiver online, aprovado e sem entrega ativa. Para ao aceitar
- * (fica ocupado) ou quando não sobra nenhuma corrida.
+ * Toca sirene continuamente enquanto houver corridas broadcasting disponíveis
+ * e o entregador estiver online, aprovado e sem entrega ativa.
  */
 export function useNewRideAlert(courier: Courier, soundEnabled = true) {
   const navigate = useNavigate();
   const toastIdRef = useRef<string | number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Destrava áudio no primeiro clique/toque/tecla do usuário
+  useEffect(() => {
+    const handler = () => { unlockAudio(); };
+    window.addEventListener("click", handler, { once: false });
+    window.addEventListener("touchstart", handler, { once: false });
+    window.addEventListener("keydown", handler, { once: false });
+    // Pede permissão de notificação nativa uma vez
+    try {
+      if (typeof Notification !== "undefined" && Notification.permission === "default") {
+        Notification.requestPermission().catch(() => {});
+      }
+    } catch {}
+    return () => {
+      window.removeEventListener("click", handler);
+      window.removeEventListener("touchstart", handler);
+      window.removeEventListener("keydown", handler);
+    };
+  }, []);
+
   useEffect(() => {
     if (!courier || courier.status !== "online" || (courier.aprovacao && courier.aprovacao !== "approved")) {
-      // limpa qualquer alerta ativo se ele mudou de status
       if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
       if (toastIdRef.current != null) { toast.dismiss(toastIdRef.current); toastIdRef.current = null; }
       return;
@@ -52,7 +116,6 @@ export function useNewRideAlert(courier: Courier, soundEnabled = true) {
     async function evaluate() {
       if (cancelled || !courier) return;
 
-      // Já tem entrega ativa? Não alerta.
       const { data: ativa } = await supabase
         .from("deliveries")
         .select("id")
@@ -61,7 +124,6 @@ export function useNewRideAlert(courier: Courier, soundEnabled = true) {
         .limit(1)
         .maybeSingle();
 
-      // Tem corrida disponível? (broadcast geral OU direcionada pra mim)
       const { data: disp } = await supabase
         .from("deliveries")
         .select("id")
@@ -73,15 +135,16 @@ export function useNewRideAlert(courier: Courier, soundEnabled = true) {
 
       if (hasRide) {
         if (!intervalRef.current) {
-          if (soundEnabled) playBeep();
+          if (soundEnabled) playSiren();
+          nativeNotify();
           toastIdRef.current = toast("🛵 Nova corrida disponível!", {
-            description: "Aceite antes que outro entregador.",
+            description: "Aceite antes que outro entregador!",
             duration: Infinity,
-            action: { label: "Ver", onClick: () => navigate({ to: "/entregador/corridas" }) },
+            action: { label: "Ver agora", onClick: () => navigate({ to: "/entregador/corridas" }) },
           });
           intervalRef.current = setInterval(() => {
-            if (soundEnabled) playBeep();
-          }, 4000);
+            if (soundEnabled) playSiren();
+          }, 2500);
         }
       } else {
         if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
