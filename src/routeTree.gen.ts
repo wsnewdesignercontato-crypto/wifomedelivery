@@ -26,6 +26,7 @@ import { Route as AuthenticatedEstabelecimentoIndexRouteImport } from './routes/
 import { Route as AuthenticatedClienteIndexRouteImport } from './routes/_authenticated/cliente.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as ApiPublicSeedDemoRouteImport } from './routes/api/public/seed-demo'
+import { Route as AuthenticatedEstabelecimentoProdutosRouteImport } from './routes/_authenticated/estabelecimento.produtos'
 import { Route as AuthenticatedEstabelecimentoPedidosRouteImport } from './routes/_authenticated/estabelecimento.pedidos'
 import { Route as AuthenticatedClientePerfilRouteImport } from './routes/_authenticated/cliente.perfil'
 import { Route as AuthenticatedClientePedidosRouteImport } from './routes/_authenticated/cliente.pedidos'
@@ -139,6 +140,12 @@ const ApiPublicSeedDemoRoute = ApiPublicSeedDemoRouteImport.update({
   path: '/api/public/seed-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedEstabelecimentoProdutosRoute =
+  AuthenticatedEstabelecimentoProdutosRouteImport.update({
+    id: '/produtos',
+    path: '/produtos',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
 const AuthenticatedEstabelecimentoPedidosRoute =
   AuthenticatedEstabelecimentoPedidosRouteImport.update({
     id: '/pedidos',
@@ -323,6 +330,7 @@ export interface FileRoutesByFullPath {
   '/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
   '/cliente/perfil': typeof AuthenticatedClientePerfilRoute
   '/estabelecimento/pedidos': typeof AuthenticatedEstabelecimentoPedidosRoute
+  '/estabelecimento/produtos': typeof AuthenticatedEstabelecimentoProdutosRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/cliente/': typeof AuthenticatedClienteIndexRoute
@@ -363,6 +371,7 @@ export interface FileRoutesByTo {
   '/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
   '/cliente/perfil': typeof AuthenticatedClientePerfilRoute
   '/estabelecimento/pedidos': typeof AuthenticatedEstabelecimentoPedidosRoute
+  '/estabelecimento/produtos': typeof AuthenticatedEstabelecimentoProdutosRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/cliente': typeof AuthenticatedClienteIndexRoute
@@ -408,6 +417,7 @@ export interface FileRoutesById {
   '/_authenticated/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
   '/_authenticated/cliente/perfil': typeof AuthenticatedClientePerfilRoute
   '/_authenticated/estabelecimento/pedidos': typeof AuthenticatedEstabelecimentoPedidosRoute
+  '/_authenticated/estabelecimento/produtos': typeof AuthenticatedEstabelecimentoProdutosRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/cliente/': typeof AuthenticatedClienteIndexRoute
@@ -453,6 +463,7 @@ export interface FileRouteTypes {
     | '/cliente/pedidos'
     | '/cliente/perfil'
     | '/estabelecimento/pedidos'
+    | '/estabelecimento/produtos'
     | '/api/public/seed-demo'
     | '/admin/'
     | '/cliente/'
@@ -493,6 +504,7 @@ export interface FileRouteTypes {
     | '/cliente/pedidos'
     | '/cliente/perfil'
     | '/estabelecimento/pedidos'
+    | '/estabelecimento/produtos'
     | '/api/public/seed-demo'
     | '/admin'
     | '/cliente'
@@ -537,6 +549,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cliente/pedidos'
     | '/_authenticated/cliente/perfil'
     | '/_authenticated/estabelecimento/pedidos'
+    | '/_authenticated/estabelecimento/produtos'
     | '/api/public/seed-demo'
     | '/_authenticated/admin/'
     | '/_authenticated/cliente/'
@@ -677,6 +690,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/seed-demo'
       preLoaderRoute: typeof ApiPublicSeedDemoRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/estabelecimento/produtos': {
+      id: '/_authenticated/estabelecimento/produtos'
+      path: '/produtos'
+      fullPath: '/estabelecimento/produtos'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoProdutosRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
     }
     '/_authenticated/estabelecimento/pedidos': {
       id: '/_authenticated/estabelecimento/pedidos'
@@ -930,6 +950,7 @@ const AuthenticatedClienteRouteWithChildren =
 
 interface AuthenticatedEstabelecimentoRouteChildren {
   AuthenticatedEstabelecimentoPedidosRoute: typeof AuthenticatedEstabelecimentoPedidosRoute
+  AuthenticatedEstabelecimentoProdutosRoute: typeof AuthenticatedEstabelecimentoProdutosRoute
   AuthenticatedEstabelecimentoIndexRoute: typeof AuthenticatedEstabelecimentoIndexRoute
 }
 
@@ -937,6 +958,8 @@ const AuthenticatedEstabelecimentoRouteChildren: AuthenticatedEstabelecimentoRou
   {
     AuthenticatedEstabelecimentoPedidosRoute:
       AuthenticatedEstabelecimentoPedidosRoute,
+    AuthenticatedEstabelecimentoProdutosRoute:
+      AuthenticatedEstabelecimentoProdutosRoute,
     AuthenticatedEstabelecimentoIndexRoute:
       AuthenticatedEstabelecimentoIndexRoute,
   }
