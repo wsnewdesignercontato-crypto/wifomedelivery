@@ -23,6 +23,7 @@ type Order = {
   refund_amount_cents: number;
   establishment_id: string;
   forma_pagamento: string;
+  codigo_entrega: string | null;
   created_at: string;
 };
 type Item = { id: string; nome_snapshot: string; preco_unit_cents: number; quantidade: number; observacoes: string | null };
