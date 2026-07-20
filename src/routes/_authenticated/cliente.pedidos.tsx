@@ -125,6 +125,9 @@ function PedidosPage() {
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{lojas[o.establishment_id] ?? "Restaurante"}</p>
                   <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("pt-BR")}</p>
+                  <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                    {o.tipo_entrega === "pickup" ? <><Store className="h-3 w-3" /> Retirada no local</> : <><Bike className="h-3 w-3" /> Entrega</>}
+                  </div>
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-primary">{fmt(o.total_cents)}</p>
