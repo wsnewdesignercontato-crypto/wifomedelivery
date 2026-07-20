@@ -72,6 +72,26 @@ function Corridas() {
   const [savingIncident, setSavingIncident] = useState(false);
   const watchIdRef = useRef<number | null>(null);
   const proofInputRef = useRef<HTMLInputElement>(null);
+  const [myPos, setMyPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [availMeta, setAvailMeta] = useState<Record<string, { nome: string; distKm: number | null }>>({});
+
+  useEffect(() => {
+    if (!("geolocation" in navigator)) return;
+    navigator.geolocation.getCurrentPosition(
+      (p) => setMyPos({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 60000, timeout: 8000 },
+    );
+  }, []);
+
+  function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+    const R = 6371;
+    const toRad = (d: number) => (d * Math.PI) / 180;
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(s));
+  }
 
   async function load() {
     if (!courier) return;
