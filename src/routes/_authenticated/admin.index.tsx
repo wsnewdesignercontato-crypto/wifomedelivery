@@ -85,9 +85,12 @@ async function fetchOverview() {
 
   const orders = (ordersMonthRes.data ?? []) as Order[];
   const clientesTotal = clientesRes.count ?? 0;
-  const estabsTotal = estabsRes.count ?? 0;
   const estabsList = (estabsRes.data ?? []) as { id: string; nome: string; is_open: boolean; status: string }[];
-  const estabsAbertos = estabsList.filter((e) => e.is_open).length;
+  const estabsTotal = estabsRes.count ?? estabsList.length;
+  const estabsAtivos = estabsList.filter((e) => e.status === "aprovado").length;
+  const estabsAbertos = estabsList.filter((e) => e.status === "aprovado" && e.is_open).length;
+  const estabsFechados = estabsList.filter((e) => e.status === "aprovado" && !e.is_open).length;
+  const estabsPendentes = estabsList.filter((e) => e.status === "pendente").length;
   const entregadoresOnline = couriersOnlineRes.count ?? 0;
   const entregadoresTotal = couriersRes.count ?? 0;
 
@@ -167,7 +170,10 @@ async function fetchOverview() {
       ticketMedio,
       clientesTotal,
       estabsTotal,
+      estabsAtivos,
       estabsAbertos,
+      estabsFechados,
+      estabsPendentes,
       entregadoresOnline,
       entregadoresTotal,
     },
@@ -265,8 +271,8 @@ function AdminDashboard() {
         />
         <KpiCard
           label="Estabelecimentos"
-          value={num(k?.estabsTotal ?? 0)}
-          hint={`${num(k?.estabsAbertos ?? 0)} abertos agora`}
+          value={num(k?.estabsAtivos ?? 0)}
+          hint={`${num(k?.estabsAbertos ?? 0)} abertos • ${num(k?.estabsFechados ?? 0)} fechados${k?.estabsPendentes ? ` • ${num(k.estabsPendentes)} pendentes` : ""}`}
           icon={Store}
           tone="primary"
           loading={isLoading}

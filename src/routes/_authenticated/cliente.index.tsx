@@ -164,6 +164,7 @@ function ClienteHome() {
           .from("establishments")
           .select("id,nome,descricao,categoria_id,logo_url,capa_url,taxa_entrega_cents,tempo_medio_min,avaliacao,is_open,cidade")
           .eq("status", "aprovado")
+          .eq("is_open", true)
           .order("avaliacao", { ascending: false, nullsFirst: false }),
         supabase
           .from("coupons")
