@@ -75,6 +75,7 @@ import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminCampanhasRouteImport } from './routes/_authenticated/admin.campanhas'
 import { Route as AuthenticatedAdminBannersRouteImport } from './routes/_authenticated/admin.banners'
 import { Route as AuthenticatedAdminAvaliacoesRouteImport } from './routes/_authenticated/admin.avaliacoes'
+import { Route as AuthenticatedClientePerfilIndexRouteImport } from './routes/_authenticated/cliente.perfil.index'
 import { Route as AuthenticatedClientePerfilContaRouteImport } from './routes/_authenticated/cliente.perfil.conta'
 import { Route as AuthenticatedClientePedidoIdRouteImport } from './routes/_authenticated/cliente.pedido.$id'
 import { Route as AuthenticatedClienteEstabelecimentoIdRouteImport } from './routes/_authenticated/cliente.estabelecimento.$id'
@@ -457,6 +458,12 @@ const AuthenticatedAdminAvaliacoesRoute =
     path: '/avaliacoes',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedClientePerfilIndexRoute =
+  AuthenticatedClientePerfilIndexRouteImport.update({
+    id: '/perfil/',
+    path: '/perfil/',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
 const AuthenticatedClientePerfilContaRoute =
   AuthenticatedClientePerfilContaRouteImport.update({
     id: '/perfil/conta',
@@ -545,6 +552,7 @@ export interface FileRoutesByFullPath {
   '/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
   '/cliente/perfil/conta': typeof AuthenticatedClientePerfilContaRoute
+  '/cliente/perfil/': typeof AuthenticatedClientePerfilIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -611,6 +619,7 @@ export interface FileRoutesByTo {
   '/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
   '/cliente/perfil/conta': typeof AuthenticatedClientePerfilContaRoute
+  '/cliente/perfil': typeof AuthenticatedClientePerfilIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -683,6 +692,7 @@ export interface FileRoutesById {
   '/_authenticated/cliente/estabelecimento/$id': typeof AuthenticatedClienteEstabelecimentoIdRoute
   '/_authenticated/cliente/pedido/$id': typeof AuthenticatedClientePedidoIdRoute
   '/_authenticated/cliente/perfil/conta': typeof AuthenticatedClientePerfilContaRoute
+  '/_authenticated/cliente/perfil/': typeof AuthenticatedClientePerfilIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -755,6 +765,7 @@ export interface FileRouteTypes {
     | '/cliente/estabelecimento/$id'
     | '/cliente/pedido/$id'
     | '/cliente/perfil/conta'
+    | '/cliente/perfil/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -821,6 +832,7 @@ export interface FileRouteTypes {
     | '/cliente/estabelecimento/$id'
     | '/cliente/pedido/$id'
     | '/cliente/perfil/conta'
+    | '/cliente/perfil'
   id:
     | '__root__'
     | '/'
@@ -892,6 +904,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cliente/estabelecimento/$id'
     | '/_authenticated/cliente/pedido/$id'
     | '/_authenticated/cliente/perfil/conta'
+    | '/_authenticated/cliente/perfil/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1370,6 +1383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAvaliacoesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/cliente/perfil/': {
+      id: '/_authenticated/cliente/perfil/'
+      path: '/perfil'
+      fullPath: '/cliente/perfil/'
+      preLoaderRoute: typeof AuthenticatedClientePerfilIndexRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
     '/_authenticated/cliente/perfil/conta': {
       id: '/_authenticated/cliente/perfil/conta'
       path: '/perfil/conta'
@@ -1448,6 +1468,7 @@ interface AuthenticatedClienteRouteChildren {
   AuthenticatedClienteEstabelecimentoIdRoute: typeof AuthenticatedClienteEstabelecimentoIdRoute
   AuthenticatedClientePedidoIdRoute: typeof AuthenticatedClientePedidoIdRoute
   AuthenticatedClientePerfilContaRoute: typeof AuthenticatedClientePerfilContaRoute
+  AuthenticatedClientePerfilIndexRoute: typeof AuthenticatedClientePerfilIndexRoute
 }
 
 const AuthenticatedClienteRouteChildren: AuthenticatedClienteRouteChildren = {
@@ -1461,6 +1482,7 @@ const AuthenticatedClienteRouteChildren: AuthenticatedClienteRouteChildren = {
     AuthenticatedClienteEstabelecimentoIdRoute,
   AuthenticatedClientePedidoIdRoute: AuthenticatedClientePedidoIdRoute,
   AuthenticatedClientePerfilContaRoute: AuthenticatedClientePerfilContaRoute,
+  AuthenticatedClientePerfilIndexRoute: AuthenticatedClientePerfilIndexRoute,
 }
 
 const AuthenticatedClienteRouteWithChildren =
