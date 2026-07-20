@@ -62,7 +62,7 @@ function PedidoPage() {
     async function load() {
       const { data: o } = await supabase
         .from("orders")
-        .select("id,status,subtotal_cents,frete_cents,desconto_cents,total_cents,observacoes,cancellation_reason,refund_status,refund_amount_cents,establishment_id,forma_pagamento,created_at")
+        .select("id,status,subtotal_cents,frete_cents,desconto_cents,total_cents,observacoes,cancellation_reason,refund_status,refund_amount_cents,establishment_id,forma_pagamento,codigo_entrega,created_at")
         .eq("id", id)
         .maybeSingle();
       setOrder(o as Order | null);
