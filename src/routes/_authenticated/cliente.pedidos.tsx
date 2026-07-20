@@ -16,6 +16,7 @@ type Order = {
   total_cents: number;
   created_at: string;
   establishment_id: string;
+  tipo_entrega: "delivery" | "pickup" | null;
 };
 
 const STATUS_LABEL: Record<string, string> = {
