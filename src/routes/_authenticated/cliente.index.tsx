@@ -24,7 +24,7 @@ import catCafeteria from "@/assets/cat-cafeteria.jpg";
 import catPorcoes from "@/assets/cat-porcoes.jpg";
 import catMercado from "@/assets/cat-mercado.jpg";
 import catFarmacia from "@/assets/cat-farmacia.jpg";
-import bannerScooter from "@/assets/banner-scooter.png";
+import bannerFreteGratis from "@/assets/banner-frete-gratis-premium.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/cliente/")({
   component: ClienteHome,
@@ -132,25 +132,25 @@ function ClienteHome() {
 
   return (
     <div className="space-y-6">
-      {/* Banner escuro: Frete grátis */}
+      {/* Banner premium: Frete grátis */}
       <button
         onClick={() => navigate({ to: "/cliente/buscar" })}
-        className="relative block w-full overflow-hidden rounded-2xl bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900 p-5 text-left text-white shadow-brand"
+        className="relative block w-full overflow-hidden rounded-2xl text-left shadow-brand"
       >
-        <div className="relative z-10 max-w-[60%]">
-          <p className="text-2xl font-black leading-tight">Frete grátis</p>
-          <p className="mt-1 text-sm font-medium text-white/80">nas suas primeiras</p>
-          <p className="text-2xl font-black leading-tight text-primary">3 entregas</p>
-        </div>
         <img
-          src={bannerScooter}
-          alt="Scooter de entrega"
-          width={240}
-          height={160}
+          src={bannerFreteGratis.url}
+          alt="Frete grátis nas suas primeiras 3 entregas"
+          width={1200}
+          height={600}
           loading="lazy"
-          className="pointer-events-none absolute -right-2 bottom-0 h-[110%] w-auto object-contain drop-shadow-2xl"
+          className="h-40 w-full object-cover sm:h-48 md:h-56"
         />
-        <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/30 blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+        <div className="absolute inset-0 flex flex-col justify-center p-5">
+          <p className="text-2xl font-black leading-tight text-white drop-shadow-lg sm:text-3xl">Frete grátis</p>
+          <p className="mt-1 text-sm font-medium text-white/90 drop-shadow-md">nas suas primeiras</p>
+          <p className="text-2xl font-black leading-tight text-primary drop-shadow-lg sm:text-3xl">3 entregas</p>
+        </div>
       </button>
 
       {/* Categorias - uma única fileira horizontal */}
