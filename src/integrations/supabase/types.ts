@@ -98,6 +98,182 @@ export type Database = {
         }
         Relationships: []
       }
+      banners: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          ends_at: string | null
+          id: string
+          image_url: string
+          link_url: string | null
+          posicao: number
+          starts_at: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          image_url: string
+          link_url?: string | null
+          posicao?: number
+          starts_at?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          image_url?: string
+          link_url?: string | null
+          posicao?: number
+          starts_at?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      campaigns: {
+        Row: {
+          audience: string
+          banner_url: string | null
+          coupon_id: string | null
+          created_at: string
+          created_by: string | null
+          cta_label: string | null
+          cta_url: string | null
+          descricao: string | null
+          ends_at: string | null
+          id: string
+          metrics: Json
+          nome: string
+          starts_at: string | null
+          status: Database["public"]["Enums"]["campaign_status"]
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          banner_url?: string | null
+          coupon_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          cta_label?: string | null
+          cta_url?: string | null
+          descricao?: string | null
+          ends_at?: string | null
+          id?: string
+          metrics?: Json
+          nome: string
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["campaign_status"]
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          banner_url?: string | null
+          coupon_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          cta_label?: string | null
+          cta_url?: string | null
+          descricao?: string | null
+          ends_at?: string | null
+          id?: string
+          metrics?: Json
+          nome?: string
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["campaign_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          ativo: boolean
+          code: string
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          establishment_id: string | null
+          expires_at: string | null
+          id: string
+          max_discount_cents: number | null
+          min_order_cents: number
+          percent: number
+          starts_at: string | null
+          type: Database["public"]["Enums"]["coupon_type"]
+          updated_at: string
+          usage_limit: number | null
+          used_count: number
+          value_cents: number
+        }
+        Insert: {
+          ativo?: boolean
+          code: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          establishment_id?: string | null
+          expires_at?: string | null
+          id?: string
+          max_discount_cents?: number | null
+          min_order_cents?: number
+          percent?: number
+          starts_at?: string | null
+          type?: Database["public"]["Enums"]["coupon_type"]
+          updated_at?: string
+          usage_limit?: number | null
+          used_count?: number
+          value_cents?: number
+        }
+        Update: {
+          ativo?: boolean
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          establishment_id?: string | null
+          expires_at?: string | null
+          id?: string
+          max_discount_cents?: number | null
+          min_order_cents?: number
+          percent?: number
+          starts_at?: string | null
+          type?: Database["public"]["Enums"]["coupon_type"]
+          updated_at?: string
+          usage_limit?: number | null
+          used_count?: number
+          value_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupons_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupons_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courier_profiles: {
         Row: {
           cnh: string | null
@@ -366,6 +542,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          audience: string | null
+          created_at: string
+          id: string
+          lida: boolean
+          link_url: string | null
+          mensagem: string
+          titulo: string
+          user_id: string | null
+        }
+        Insert: {
+          audience?: string | null
+          created_at?: string
+          id?: string
+          lida?: boolean
+          link_url?: string | null
+          mensagem: string
+          titulo: string
+          user_id?: string | null
+        }
+        Update: {
+          audience?: string | null
+          created_at?: string
+          id?: string
+          lida?: boolean
+          link_url?: string | null
+          mensagem?: string
+          titulo?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string
@@ -535,6 +744,73 @@ export type Database = {
             columns: ["establishment_id"]
             isOneToOne: false
             referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_ledger: {
+        Row: {
+          commission_cents: number
+          courier_id: string | null
+          courier_payout_cents: number
+          created_at: string
+          delivery_fee_cents: number
+          establishment_id: string | null
+          gross_cents: number
+          id: string
+          merchant_payout_cents: number
+          order_id: string | null
+          platform_revenue_cents: number
+          status: string
+        }
+        Insert: {
+          commission_cents?: number
+          courier_id?: string | null
+          courier_payout_cents?: number
+          created_at?: string
+          delivery_fee_cents?: number
+          establishment_id?: string | null
+          gross_cents?: number
+          id?: string
+          merchant_payout_cents?: number
+          order_id?: string | null
+          platform_revenue_cents?: number
+          status?: string
+        }
+        Update: {
+          commission_cents?: number
+          courier_id?: string | null
+          courier_payout_cents?: number
+          created_at?: string
+          delivery_fee_cents?: number
+          establishment_id?: string | null
+          gross_cents?: number
+          id?: string
+          merchant_payout_cents?: number
+          order_id?: string | null
+          platform_revenue_cents?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_ledger_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_ledger_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_ledger_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -742,6 +1018,126 @@ export type Database = {
           },
         ]
       }
+      support_messages: {
+        Row: {
+          created_at: string
+          id: string
+          mensagem: string
+          sender_id: string
+          ticket_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mensagem: string
+          sender_id: string
+          ticket_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mensagem?: string
+          sender_id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          assunto: string
+          created_at: string
+          id: string
+          order_id: string | null
+          priority: Database["public"]["Enums"]["ticket_priority"]
+          status: Database["public"]["Enums"]["ticket_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          assunto: string
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          status?: Database["public"]["Enums"]["ticket_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          assunto?: string
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          status?: Database["public"]["Enums"]["ticket_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tracking_points: {
+        Row: {
+          accuracy: number | null
+          courier_id: string
+          created_at: string
+          heading: number | null
+          id: string
+          lat: number
+          lng: number
+          order_id: string | null
+          speed: number | null
+        }
+        Insert: {
+          accuracy?: number | null
+          courier_id: string
+          created_at?: string
+          heading?: number | null
+          id?: string
+          lat: number
+          lng: number
+          order_id?: string | null
+          speed?: number | null
+        }
+        Update: {
+          accuracy?: number | null
+          courier_id?: string
+          created_at?: string
+          heading?: number | null
+          id?: string
+          lat?: number
+          lng?: number
+          order_id?: string | null
+          speed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracking_points_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -851,6 +1247,8 @@ export type Database = {
     }
     Enums: {
       app_role: "cliente" | "estabelecimento" | "entregador" | "admin"
+      campaign_status: "draft" | "scheduled" | "active" | "paused" | "ended"
+      coupon_type: "percent" | "fixed" | "free_delivery"
       courier_status:
         | "pendente"
         | "aprovado"
@@ -886,6 +1284,8 @@ export type Database = {
         | "refunded"
       payment_method: "pix" | "cartao" | "dinheiro" | "carteira"
       refund_status: "none" | "pending" | "completed" | "failed"
+      ticket_priority: "low" | "normal" | "high" | "urgent"
+      ticket_status: "open" | "pending" | "resolved" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1014,6 +1414,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["cliente", "estabelecimento", "entregador", "admin"],
+      campaign_status: ["draft", "scheduled", "active", "paused", "ended"],
+      coupon_type: ["percent", "fixed", "free_delivery"],
       courier_status: [
         "pendente",
         "aprovado",
@@ -1052,6 +1454,8 @@ export const Constants = {
       ],
       payment_method: ["pix", "cartao", "dinheiro", "carteira"],
       refund_status: ["none", "pending", "completed", "failed"],
+      ticket_priority: ["low", "normal", "high", "urgent"],
+      ticket_status: ["open", "pending", "resolved", "closed"],
     },
   },
 } as const
