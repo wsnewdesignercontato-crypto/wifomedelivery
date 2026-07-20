@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Star, ChevronRight, Loader2 } from "lucide-react";
+import { Star, ChevronRight, Loader2, Tag, Flame } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 import catPizza from "@/assets/cat-pizza.jpg";
