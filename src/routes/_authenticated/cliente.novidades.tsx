@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 
 export const Route = createFileRoute("/_authenticated/cliente/novidades")({
   component: NovidadesPage,
@@ -59,14 +60,15 @@ function NovidadesPage() {
   const { data: novos = [], isLoading: loadingNovos } = useQuery({ queryKey: ["novos_estabelecimentos"], queryFn: fetchNovos });
 
   const [idx, setIdx] = useState(0);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
-    if (ads.length <= 1) return;
+    if (ads.length <= 1 || prefersReducedMotion) return;
     const current = ads[idx % ads.length];
     const seconds = Math.max(3, current?.duracao_segundos ?? 6);
     const t = setTimeout(() => setIdx((i) => (i + 1) % ads.length), seconds * 1000);
     return () => clearTimeout(t);
-  }, [idx, ads]);
+  }, [idx, ads, prefersReducedMotion]);
 
   const currentAd = ads.length ? ads[idx % ads.length] : null;
 
