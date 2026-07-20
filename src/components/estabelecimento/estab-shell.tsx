@@ -50,6 +50,7 @@ const NAV: NavItem[] = [
   { label: "Horários", to: "/estabelecimento/horarios", icon: Clock },
   { label: "Área de entrega", to: "/estabelecimento/entrega", icon: Truck },
   { label: "Financeiro", to: "/estabelecimento/financeiro", icon: DollarSign },
+  { label: "Carteira / Saques", to: "/estabelecimento/carteira", icon: DollarSign },
   { label: "Relatórios", to: "/estabelecimento/relatorios", icon: BarChart3 },
   { label: "Avaliações", to: "/estabelecimento/avaliacoes", icon: Star },
   { label: "Equipe", to: "/estabelecimento/equipe", icon: Users },
