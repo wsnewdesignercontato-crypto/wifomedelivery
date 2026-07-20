@@ -48,6 +48,9 @@ export function EntregadorShell({ children }: { children: React.ReactNode }) {
       .then(({ count }) => setUnread(count ?? 0));
   }, [courier]);
 
+  useNewRideAlert(courier as any, true);
+
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
