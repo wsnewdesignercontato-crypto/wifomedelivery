@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { ReviewForm } from "@/components/reviews";
 import { IFomeLogo } from "@/components/ifome-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
