@@ -363,7 +363,7 @@ function PedidosPanel({ estab }: { estab: Estab }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estab.id]);
 
-  async function mudarStatus(id: string, novo: string) {
+  async function mudarStatus(id: string, novo: "accepted" | "preparing" | "ready" | "cancelled") {
     const { error } = await supabase.from("orders").update({ status: novo }).eq("id", id);
     if (error) return toast.error("Falha ao atualizar");
     if (novo === "ready") {
