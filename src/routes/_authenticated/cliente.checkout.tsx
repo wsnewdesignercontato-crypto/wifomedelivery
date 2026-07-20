@@ -52,6 +52,7 @@ function CheckoutPage() {
   const [addrs, setAddrs] = useState<Addr[]>([]);
   const [addrId, setAddrId] = useState<string | null>(null);
   const [pagto, setPagto] = useState<Pay>("pix");
+  const [tipoEntrega, setTipoEntrega] = useState<"delivery" | "pickup">("delivery");
   const [obs, setObs] = useState("");
   const [estab, setEstab] = useState<Estab | null>(null);
   const [subtotal, setSubtotal] = useState(0);
