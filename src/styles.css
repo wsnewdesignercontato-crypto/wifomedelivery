@@ -364,6 +364,15 @@
   .reveal-zoom, .reveal-zoom.is-visible,
   .word-split .word { opacity: 1 !important; animation: none !important; transform: none !important; filter: none !important; }
   .heading-shine { animation: none; }
+  /* Pausa marquee/vitrines automáticas */
+  .scroll-marquee { animation: none !important; }
+  /* Reduz todas as animações e transições restantes ao mínimo */
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 
