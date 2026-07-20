@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Star, Clock, Heart, Plus, Minus, Loader2 } from "lucide-react";
+import { ArrowLeft, Star, Clock, Heart, Plus, Minus, Loader2, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/cliente/estabelecimento/$id")({
@@ -44,6 +43,31 @@ type Produto = {
   menu_category_id: string | null;
   destaque: boolean;
 };
+type Addon = {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  preco_extra_cents: number;
+  ordem: number;
+};
+type AddonGroup = {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  minimo: number;
+  maximo: number;
+  obrigatorio: boolean;
+  selecao_multipla: boolean;
+  ordem: number;
+  addons: Addon[];
+};
+type SavedAddon = {
+  id: string;
+  nome: string;
+  preco_extra_cents: number;
+  group_id: string;
+  group_nome: string;
+};
 
 const fmt = (c: number) =>
   (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -58,10 +82,15 @@ function EstabelecimentoPage() {
   const [busca, setBusca] = useState("");
   const [fav, setFav] = useState(false);
   const [loading, setLoading] = useState(true);
+
   const [openProd, setOpenProd] = useState<Produto | null>(null);
   const [qty, setQty] = useState(1);
   const [obs, setObs] = useState("");
   const [saving, setSaving] = useState(false);
+  const [groups, setGroups] = useState<AddonGroup[]>([]);
+  const [loadingGroups, setLoadingGroups] = useState(false);
+  // seleção: groupId -> lista de addonIds
+  const [sel, setSel] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     (async () => {
@@ -91,16 +120,118 @@ function EstabelecimentoPage() {
     }
   }
 
-  function abrirProd(p: Produto) {
+  async function abrirProd(p: Produto) {
     setOpenProd(p);
     setQty(1);
     setObs("");
+    setSel({});
+    setGroups([]);
+    setLoadingGroups(true);
+    // Busca grupos vinculados ao produto + seus addons ativos
+    const { data: pag } = await supabase
+      .from("product_addon_groups")
+      .select("ordem,addon_group_id,addon_groups(id,nome,descricao,minimo,maximo,obrigatorio,selecao_multipla,ordem,ativo)")
+      .eq("product_id", p.id)
+      .order("ordem");
+    type Row = {
+      ordem: number;
+      addon_group_id: string;
+      addon_groups:
+        | (Omit<AddonGroup, "addons"> & { ativo: boolean })
+        | null;
+    };
+    const rows = ((pag ?? []) as unknown as Row[]).filter(
+      (r) => r.addon_groups && r.addon_groups.ativo,
+    );
+    if (rows.length === 0) {
+      setGroups([]);
+      setLoadingGroups(false);
+      return;
+    }
+    const groupIds = rows.map((r) => r.addon_group_id);
+    const { data: adns } = await supabase
+      .from("addons")
+      .select("id,nome,descricao,preco_extra_cents,ordem,addon_group_id,ativo")
+      .in("addon_group_id", groupIds)
+      .eq("ativo", true)
+      .order("ordem");
+    const byGroup = new Map<string, Addon[]>();
+    (adns ?? []).forEach((a) => {
+      const arr = byGroup.get(a.addon_group_id) ?? [];
+      arr.push({
+        id: a.id,
+        nome: a.nome,
+        descricao: a.descricao,
+        preco_extra_cents: a.preco_extra_cents,
+        ordem: a.ordem,
+      });
+      byGroup.set(a.addon_group_id, arr);
+    });
+    const built: AddonGroup[] = rows
+      .map((r) => ({
+        id: r.addon_groups!.id,
+        nome: r.addon_groups!.nome,
+        descricao: r.addon_groups!.descricao,
+        minimo: r.addon_groups!.minimo,
+        maximo: r.addon_groups!.maximo,
+        obrigatorio: r.addon_groups!.obrigatorio,
+        selecao_multipla: r.addon_groups!.selecao_multipla,
+        ordem: r.addon_groups!.ordem,
+        addons: byGroup.get(r.addon_group_id) ?? [],
+      }))
+      .filter((g) => g.addons.length > 0);
+    setGroups(built);
+    setLoadingGroups(false);
   }
+
+  function toggleAddon(g: AddonGroup, addonId: string) {
+    setSel((prev) => {
+      const cur = prev[g.id] ?? [];
+      const has = cur.includes(addonId);
+      let next: string[];
+      if (g.selecao_multipla) {
+        if (has) next = cur.filter((x) => x !== addonId);
+        else if (g.maximo > 0 && cur.length >= g.maximo)
+          next = cur; // limite atingido
+        else next = [...cur, addonId];
+      } else {
+        next = has ? [] : [addonId];
+      }
+      return { ...prev, [g.id]: next };
+    });
+  }
+
+  const chosen: SavedAddon[] = useMemo(() => {
+    const out: SavedAddon[] = [];
+    for (const g of groups) {
+      const ids = sel[g.id] ?? [];
+      for (const aid of ids) {
+        const a = g.addons.find((x) => x.id === aid);
+        if (a) out.push({ id: a.id, nome: a.nome, preco_extra_cents: a.preco_extra_cents, group_id: g.id, group_nome: g.nome });
+      }
+    }
+    return out;
+  }, [sel, groups]);
+
+  const extras = chosen.reduce((s, a) => s + a.preco_extra_cents, 0);
+  const precoBase = openProd ? (openProd.preco_promo_cents ?? openProd.preco_cents) : 0;
+  const precoUnit = precoBase + extras;
+
+  const invalid = useMemo(() => {
+    for (const g of groups) {
+      const n = (sel[g.id] ?? []).length;
+      if (g.obrigatorio && n < Math.max(1, g.minimo)) return `Escolha "${g.nome}"`;
+      if (g.minimo > 0 && n < g.minimo) return `Escolha ao menos ${g.minimo} em "${g.nome}"`;
+      if (g.maximo > 0 && n > g.maximo) return `Máximo ${g.maximo} em "${g.nome}"`;
+    }
+    return null;
+  }, [groups, sel]);
 
   async function adicionar() {
     if (!openProd || !estab) return;
+    if (invalid) { toast.error(invalid); return; }
     setSaving(true);
-    // Se já há itens de outra loja, alerta
+    // Bloqueia mistura de lojas
     const { data: existing } = await supabase
       .from("cart_items")
       .select("id,establishment_id")
@@ -111,28 +242,34 @@ function EstabelecimentoPage() {
       if (!ok) { setSaving(false); return; }
       await supabase.from("cart_items").delete().eq("user_id", user.id);
     }
-    const preco = openProd.preco_promo_cents ?? openProd.preco_cents;
-    // Aumenta se já existe o mesmo produto
-    const { data: same } = await supabase
-      .from("cart_items")
-      .select("id,quantidade")
-      .eq("user_id", user.id)
-      .eq("establishment_id", estab.id)
-      .eq("product_id", openProd.id)
-      .maybeSingle();
-    if (same) {
-      await supabase.from("cart_items").update({ quantidade: same.quantidade + qty, observacoes: obs || null }).eq("id", same.id);
-    } else {
-      await supabase.from("cart_items").insert({
-        user_id: user.id,
-        establishment_id: estab.id,
-        product_id: openProd.id,
-        nome_snapshot: openProd.nome,
-        preco_unit_cents: preco,
-        quantidade: qty,
-        observacoes: obs || null,
-      });
+    // Sempre insere linha nova quando há opcionais ou observações
+    // (para não misturar combinações diferentes do mesmo produto)
+    const temCustom = chosen.length > 0 || !!obs.trim();
+    if (!temCustom) {
+      const { data: same } = await supabase
+        .from("cart_items")
+        .select("id,quantidade,addons")
+        .eq("user_id", user.id)
+        .eq("establishment_id", estab.id)
+        .eq("product_id", openProd.id)
+        .maybeSingle();
+      if (same && Array.isArray(same.addons) && (same.addons as unknown[]).length === 0) {
+        await supabase.from("cart_items").update({ quantidade: same.quantidade + qty }).eq("id", same.id);
+        setSaving(false); setOpenProd(null);
+        toast.success(`${openProd.nome} no carrinho`);
+        return;
+      }
     }
+    await supabase.from("cart_items").insert({
+      user_id: user.id,
+      establishment_id: estab.id,
+      product_id: openProd.id,
+      nome_snapshot: openProd.nome,
+      preco_unit_cents: precoUnit,
+      quantidade: qty,
+      observacoes: obs || null,
+      addons: chosen,
+    });
     setSaving(false);
     setOpenProd(null);
     toast.success(`${openProd.nome} no carrinho`);
@@ -204,38 +341,135 @@ function EstabelecimentoPage() {
       )}
 
       <Dialog open={!!openProd} onOpenChange={(o) => !o && setOpenProd(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0">
           {openProd && (
-            <>
-              <DialogHeader>
-                <DialogTitle>{openProd.nome}</DialogTitle>
-              </DialogHeader>
-              {openProd.foto_url && <img src={openProd.foto_url} alt={openProd.nome} className="h-40 w-full rounded-lg object-cover" />}
-              {openProd.descricao && <p className="text-sm text-muted-foreground">{openProd.descricao}</p>}
-              <div className="text-lg font-bold text-primary">
-                {fmt(openProd.preco_promo_cents ?? openProd.preco_cents)}
-                {openProd.preco_promo_cents != null && (
-                  <span className="ml-2 text-sm font-normal text-muted-foreground line-through">{fmt(openProd.preco_cents)}</span>
+            <div className="flex flex-col">
+              {openProd.foto_url && (
+                <img src={openProd.foto_url} alt={openProd.nome} className="h-48 w-full object-cover" />
+              )}
+              <div className="space-y-4 p-5 pb-32">
+                <DialogHeader>
+                  <DialogTitle className="text-xl">{openProd.nome}</DialogTitle>
+                </DialogHeader>
+                {openProd.descricao && (
+                  <p className="text-sm text-muted-foreground">{openProd.descricao}</p>
                 )}
+                <div className="text-lg font-bold text-primary">
+                  {fmt(precoBase)}
+                  {openProd.preco_promo_cents != null && (
+                    <span className="ml-2 text-sm font-normal text-muted-foreground line-through">{fmt(openProd.preco_cents)}</span>
+                  )}
+                </div>
+
+                {loadingGroups && (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  </div>
+                )}
+
+                {!loadingGroups && groups.map((g) => {
+                  const cur = sel[g.id] ?? [];
+                  return (
+                    <div key={g.id} className="rounded-xl border border-border">
+                      <div className="flex items-start justify-between gap-2 border-b border-border bg-muted/40 px-3 py-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold">{g.nome}</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {g.obrigatorio && <span className="font-semibold text-primary">Obrigatório · </span>}
+                            {g.selecao_multipla
+                              ? g.maximo > 0
+                                ? `Escolha até ${g.maximo}`
+                                : "Escolha quantos quiser"
+                              : "Escolha 1"}
+                            {g.minimo > 0 && !g.obrigatorio && ` · Mín. ${g.minimo}`}
+                          </p>
+                        </div>
+                        {g.obrigatorio && (
+                          <Badge variant={cur.length >= Math.max(1, g.minimo) ? "default" : "secondary"} className="text-[10px]">
+                            {cur.length >= Math.max(1, g.minimo) ? "OK" : "Escolha"}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="divide-y divide-border">
+                        {g.addons.map((a) => {
+                          const active = cur.includes(a.id);
+                          const disabled =
+                            !active &&
+                            g.selecao_multipla &&
+                            g.maximo > 0 &&
+                            cur.length >= g.maximo;
+                          return (
+                            <button
+                              key={a.id}
+                              type="button"
+                              onClick={() => !disabled && toggleAddon(g, a.id)}
+                              disabled={disabled}
+                              className={`flex w-full items-center gap-3 px-3 py-3 text-left transition-colors ${
+                                active ? "bg-primary/5" : "hover:bg-muted/40"
+                              } ${disabled ? "opacity-40" : ""}`}
+                            >
+                              <div
+                                className={`flex h-5 w-5 shrink-0 items-center justify-center border-2 ${
+                                  g.selecao_multipla ? "rounded" : "rounded-full"
+                                } ${active ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+                              >
+                                {active && <Check className="h-3 w-3" />}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-semibold">{a.nome}</p>
+                                {a.descricao && (
+                                  <p className="text-[11px] text-muted-foreground">{a.descricao}</p>
+                                )}
+                              </div>
+                              {a.preco_extra_cents > 0 ? (
+                                <span className="text-sm font-bold text-primary">
+                                  +{fmt(a.preco_extra_cents)}
+                                </span>
+                              ) : (
+                                <span className="text-xs font-medium text-muted-foreground">Grátis</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                <div>
+                  <label className="text-xs font-medium">Alguma observação?</label>
+                  <Textarea value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Ex: sem cebola, ponto da carne, troco para..." maxLength={200} />
+                </div>
               </div>
-              <div>
-                <label className="text-xs font-medium">Observações</label>
-                <Textarea value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Ex: sem cebola" maxLength={200} />
-              </div>
-              <div className="flex items-center justify-between">
+
+              {/* Rodapé fixo */}
+              <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-border bg-background p-4">
                 <div className="flex items-center gap-2">
                   <Button size="icon" variant="outline" onClick={() => setQty(Math.max(1, qty - 1))}><Minus className="h-4 w-4" /></Button>
-                  <span className="w-8 text-center font-bold">{qty}</span>
+                  <span className="w-6 text-center font-bold">{qty}</span>
                   <Button size="icon" variant="outline" onClick={() => setQty(qty + 1)}><Plus className="h-4 w-4" /></Button>
                 </div>
-                <DialogFooter>
-                  <Button onClick={adicionar} disabled={saving || !estab.is_open}>
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : `Adicionar · ${fmt((openProd.preco_promo_cents ?? openProd.preco_cents) * qty)}`}
-                  </Button>
-                </DialogFooter>
+                <Button
+                  className="flex-1"
+                  onClick={adicionar}
+                  disabled={saving || !estab.is_open || !!invalid}
+                >
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <span className="flex w-full items-center justify-between gap-2">
+                      <span>Adicionar</span>
+                      <span className="font-black">{fmt(precoUnit * qty)}</span>
+                    </span>
+                  )}
+                </Button>
               </div>
-              {!estab.is_open && <p className="text-xs text-destructive">Loja fechada. Não é possível adicionar agora.</p>}
-            </>
+
+              {!estab.is_open && <p className="px-4 pb-3 text-xs text-destructive">Loja fechada. Não é possível adicionar agora.</p>}
+              {invalid && estab.is_open && (
+                <p className="px-4 pb-3 text-xs text-muted-foreground">{invalid}</p>
+              )}
+            </div>
           )}
         </DialogContent>
       </Dialog>
@@ -244,15 +478,16 @@ function EstabelecimentoPage() {
 }
 
 function ProdRow({ p, onClick }: { p: Produto; onClick: () => void }) {
+  const fmt2 = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   return (
     <button onClick={onClick} className="flex gap-3 rounded-2xl border border-border bg-card p-3 text-left transition hover:border-primary/40">
       <div className="flex-1">
         <p className="font-semibold text-foreground">{p.nome}</p>
         {p.descricao && <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{p.descricao}</p>}
         <p className="mt-1 text-sm font-bold text-primary">
-          {fmt(p.preco_promo_cents ?? p.preco_cents)}
+          {fmt2(p.preco_promo_cents ?? p.preco_cents)}
           {p.preco_promo_cents != null && (
-            <span className="ml-2 text-xs font-normal text-muted-foreground line-through">{fmt(p.preco_cents)}</span>
+            <span className="ml-2 text-xs font-normal text-muted-foreground line-through">{fmt2(p.preco_cents)}</span>
           )}
         </p>
       </div>

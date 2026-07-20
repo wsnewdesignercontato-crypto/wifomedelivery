@@ -324,6 +324,7 @@ export type Database = {
       }
       cart_items: {
         Row: {
+          addons: Json
           created_at: string
           establishment_id: string
           id: string
@@ -336,6 +337,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          addons?: Json
           created_at?: string
           establishment_id: string
           id?: string
@@ -348,6 +350,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          addons?: Json
           created_at?: string
           establishment_id?: string
           id?: string
@@ -1443,6 +1446,7 @@ export type Database = {
       }
       order_items: {
         Row: {
+          addons: Json
           created_at: string
           id: string
           nome_snapshot: string
@@ -1453,6 +1457,7 @@ export type Database = {
           quantidade: number
         }
         Insert: {
+          addons?: Json
           created_at?: string
           id?: string
           nome_snapshot: string
@@ -1463,6 +1468,7 @@ export type Database = {
           quantidade: number
         }
         Update: {
+          addons?: Json
           created_at?: string
           id?: string
           nome_snapshot?: string
