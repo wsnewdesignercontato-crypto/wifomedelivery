@@ -34,6 +34,7 @@ import {
   Settings,
   LogOut,
   Bell,
+  FileText,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Estab } from "@/hooks/use-estab";
@@ -50,7 +51,8 @@ const NAV: NavItem[] = [
   { label: "Horários", to: "/estabelecimento/horarios", icon: Clock },
   { label: "Área de entrega", to: "/estabelecimento/entrega", icon: Truck },
   { label: "Financeiro", to: "/estabelecimento/financeiro", icon: DollarSign },
-  { label: "Carteira / Saques", to: "/estabelecimento/carteira", icon: DollarSign },
+  { label: "Carteira", to: "/estabelecimento/carteira", icon: DollarSign },
+  { label: "Histórico de saques", to: "/estabelecimento/saques", icon: FileText },
   { label: "Relatórios", to: "/estabelecimento/relatorios", icon: BarChart3 },
   { label: "Avaliações", to: "/estabelecimento/avaliacoes", icon: Star },
   { label: "Equipe", to: "/estabelecimento/equipe", icon: Users },

@@ -17,6 +17,7 @@ const NAV = [
   { to: "/entregador/historico", label: "Histórico", icon: History },
   { to: "/entregador/ganhos", label: "Ganhos", icon: DollarSign },
   { to: "/entregador/carteira", label: "Carteira", icon: Wallet },
+  { to: "/entregador/saques", label: "Saques", icon: DollarSign },
   { to: "/entregador/metas", label: "Metas", icon: Trophy },
   { to: "/entregador/avaliacoes", label: "Avaliações", icon: Star },
   { to: "/entregador/documentos", label: "Documentos", icon: FileText },
