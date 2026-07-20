@@ -49,9 +49,18 @@ const GROUPS = [
 ] as const;
 
 function PerfilHub() {
-  const { courier, isLoading } = useMyCourier();
+  const { courier, userId, isLoading } = useMyCourier();
   const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState(false);
+
+  const profileQ = useQuery({
+    queryKey: ["profile", userId],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("nome, foto_url, telefone").eq("id", userId).maybeSingle();
+      return data;
+    },
+    enabled: !!userId,
+  });
 
   async function sair() {
     setSigningOut(true);
@@ -71,7 +80,10 @@ function PerfilHub() {
     kyc === "rejeitado" ? "bg-red-500 text-white" :
     "bg-muted text-muted-foreground";
 
-  const initials = "EN";
+  const nome = profileQ.data?.nome?.trim() || "Entregador WiFome";
+  const foto = courier?.foto_url || profileQ.data?.foto_url || "";
+  const telefone = courier?.telefone || profileQ.data?.telefone || "—";
+  const initials = nome.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase() || "EN";
 
   if (isLoading) {
     return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
@@ -82,11 +94,11 @@ function PerfilHub() {
       {/* Header perfil */}
       <section className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
         <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-lg font-black text-primary">
-          {courier?.foto_url ? <img src={courier.foto_url} alt="" className="h-full w-full object-cover" /> : initials}
+          {foto ? <img src={foto} alt="" className="h-full w-full object-cover" /> : initials}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-bold">Entregador WiFome</p>
-          <p className="truncate text-xs text-muted-foreground">{courier?.telefone ?? "—"}</p>
+          <p className="truncate font-bold">{nome}</p>
+          <p className="truncate text-xs text-muted-foreground">{telefone}</p>
           <div className="mt-1 flex gap-1">
             <Badge className={kycColor} variant="secondary">
               <ShieldCheck className="mr-1 h-3 w-3" />
