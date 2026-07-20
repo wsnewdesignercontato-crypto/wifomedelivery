@@ -55,6 +55,7 @@ import { Route as AuthenticatedEntregadorChatRouteImport } from './routes/_authe
 import { Route as AuthenticatedEntregadorCarteiraRouteImport } from './routes/_authenticated/entregador.carteira'
 import { Route as AuthenticatedEntregadorAvaliacoesRouteImport } from './routes/_authenticated/entregador.avaliacoes'
 import { Route as AuthenticatedClientePedidosRouteImport } from './routes/_authenticated/cliente.pedidos'
+import { Route as AuthenticatedClienteNovidadesRouteImport } from './routes/_authenticated/cliente.novidades'
 import { Route as AuthenticatedClienteFavoritosRouteImport } from './routes/_authenticated/cliente.favoritos'
 import { Route as AuthenticatedClienteCheckoutRouteImport } from './routes/_authenticated/cliente.checkout'
 import { Route as AuthenticatedClienteCarrinhoRouteImport } from './routes/_authenticated/cliente.carrinho'
@@ -348,6 +349,12 @@ const AuthenticatedClientePedidosRoute =
     path: '/pedidos',
     getParentRoute: () => AuthenticatedClienteRoute,
   } as any)
+const AuthenticatedClienteNovidadesRoute =
+  AuthenticatedClienteNovidadesRouteImport.update({
+    id: '/novidades',
+    path: '/novidades',
+    getParentRoute: () => AuthenticatedClienteRoute,
+  } as any)
 const AuthenticatedClienteFavoritosRoute =
   AuthenticatedClienteFavoritosRouteImport.update({
     id: '/favoritos',
@@ -565,6 +572,7 @@ export interface FileRoutesByFullPath {
   '/cliente/carrinho': typeof AuthenticatedClienteCarrinhoRoute
   '/cliente/checkout': typeof AuthenticatedClienteCheckoutRoute
   '/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
+  '/cliente/novidades': typeof AuthenticatedClienteNovidadesRoute
   '/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
   '/entregador/avaliacoes': typeof AuthenticatedEntregadorAvaliacoesRoute
   '/entregador/carteira': typeof AuthenticatedEntregadorCarteiraRoute
@@ -639,6 +647,7 @@ export interface FileRoutesByTo {
   '/cliente/carrinho': typeof AuthenticatedClienteCarrinhoRoute
   '/cliente/checkout': typeof AuthenticatedClienteCheckoutRoute
   '/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
+  '/cliente/novidades': typeof AuthenticatedClienteNovidadesRoute
   '/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
   '/entregador/avaliacoes': typeof AuthenticatedEntregadorAvaliacoesRoute
   '/entregador/carteira': typeof AuthenticatedEntregadorCarteiraRoute
@@ -719,6 +728,7 @@ export interface FileRoutesById {
   '/_authenticated/cliente/carrinho': typeof AuthenticatedClienteCarrinhoRoute
   '/_authenticated/cliente/checkout': typeof AuthenticatedClienteCheckoutRoute
   '/_authenticated/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
+  '/_authenticated/cliente/novidades': typeof AuthenticatedClienteNovidadesRoute
   '/_authenticated/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
   '/_authenticated/entregador/avaliacoes': typeof AuthenticatedEntregadorAvaliacoesRoute
   '/_authenticated/entregador/carteira': typeof AuthenticatedEntregadorCarteiraRoute
@@ -799,6 +809,7 @@ export interface FileRouteTypes {
     | '/cliente/carrinho'
     | '/cliente/checkout'
     | '/cliente/favoritos'
+    | '/cliente/novidades'
     | '/cliente/pedidos'
     | '/entregador/avaliacoes'
     | '/entregador/carteira'
@@ -873,6 +884,7 @@ export interface FileRouteTypes {
     | '/cliente/carrinho'
     | '/cliente/checkout'
     | '/cliente/favoritos'
+    | '/cliente/novidades'
     | '/cliente/pedidos'
     | '/entregador/avaliacoes'
     | '/entregador/carteira'
@@ -952,6 +964,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cliente/carrinho'
     | '/_authenticated/cliente/checkout'
     | '/_authenticated/cliente/favoritos'
+    | '/_authenticated/cliente/novidades'
     | '/_authenticated/cliente/pedidos'
     | '/_authenticated/entregador/avaliacoes'
     | '/_authenticated/entregador/carteira'
@@ -1334,6 +1347,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientePedidosRouteImport
       parentRoute: typeof AuthenticatedClienteRoute
     }
+    '/_authenticated/cliente/novidades': {
+      id: '/_authenticated/cliente/novidades'
+      path: '/novidades'
+      fullPath: '/cliente/novidades'
+      preLoaderRoute: typeof AuthenticatedClienteNovidadesRouteImport
+      parentRoute: typeof AuthenticatedClienteRoute
+    }
     '/_authenticated/cliente/favoritos': {
       id: '/_authenticated/cliente/favoritos'
       path: '/favoritos'
@@ -1603,6 +1623,7 @@ interface AuthenticatedClienteRouteChildren {
   AuthenticatedClienteCarrinhoRoute: typeof AuthenticatedClienteCarrinhoRoute
   AuthenticatedClienteCheckoutRoute: typeof AuthenticatedClienteCheckoutRoute
   AuthenticatedClienteFavoritosRoute: typeof AuthenticatedClienteFavoritosRoute
+  AuthenticatedClienteNovidadesRoute: typeof AuthenticatedClienteNovidadesRoute
   AuthenticatedClientePedidosRoute: typeof AuthenticatedClientePedidosRoute
   AuthenticatedClienteIndexRoute: typeof AuthenticatedClienteIndexRoute
   AuthenticatedClienteEstabelecimentoIdRoute: typeof AuthenticatedClienteEstabelecimentoIdRoute
@@ -1623,6 +1644,7 @@ const AuthenticatedClienteRouteChildren: AuthenticatedClienteRouteChildren = {
   AuthenticatedClienteCarrinhoRoute: AuthenticatedClienteCarrinhoRoute,
   AuthenticatedClienteCheckoutRoute: AuthenticatedClienteCheckoutRoute,
   AuthenticatedClienteFavoritosRoute: AuthenticatedClienteFavoritosRoute,
+  AuthenticatedClienteNovidadesRoute: AuthenticatedClienteNovidadesRoute,
   AuthenticatedClientePedidosRoute: AuthenticatedClientePedidosRoute,
   AuthenticatedClienteIndexRoute: AuthenticatedClienteIndexRoute,
   AuthenticatedClienteEstabelecimentoIdRoute:
