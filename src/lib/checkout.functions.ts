@@ -107,7 +107,8 @@ export const placeOrder = createServerFn({ method: "POST" })
         desconto_cents: desconto,
         total_cents: total,
         forma_pagamento: data.forma_pagamento,
-        endereco_entrega: data.endereco,
+        tipo_entrega: data.tipo_entrega,
+        endereco_entrega: isPickup ? null : data.endereco,
         observacoes: data.observacoes ?? null,
       })
       .select("id")
