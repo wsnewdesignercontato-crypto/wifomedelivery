@@ -135,8 +135,6 @@ export function EntregadorShell({ children }: { children: React.ReactNode }) {
           })}
         </div>
       </nav>
-
-      {children}
     </div>
   );
 }
