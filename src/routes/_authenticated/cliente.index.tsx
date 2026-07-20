@@ -138,7 +138,7 @@ function ClienteHome() {
         className="relative block w-full overflow-hidden rounded-2xl text-left shadow-brand"
       >
         <img
-          src={bannerFreteGratis}
+          src={bannerFreteGratis.url}
           alt="Frete grátis nas suas primeiras 3 entregas"
           width={1200}
           height={600}
