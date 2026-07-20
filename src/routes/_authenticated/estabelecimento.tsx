@@ -514,7 +514,27 @@ function PedidosPanel({ estab }: { estab: Estab }) {
                   Reembolsar
                 </Button>
               )}
+              <Button
+                size="sm"
+                variant="ghost"
+                className="ml-auto"
+                onClick={() =>
+                  setOpenHistory((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(o.id)) next.delete(o.id);
+                    else next.add(o.id);
+                    return next;
+                  })
+                }
+              >
+                {openHistory.has(o.id) ? "Ocultar histórico" : "Ver histórico"}
+              </Button>
             </div>
+            {openHistory.has(o.id) && (
+              <div className="mt-4 border-t border-border pt-4">
+                <OrderHistory orderId={o.id} />
+              </div>
+            )}
           </div>
         );
       })}
