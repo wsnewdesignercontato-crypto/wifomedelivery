@@ -21,7 +21,15 @@ import { Route as AuthenticatedEntregadorRouteImport } from './routes/_authentic
 import { Route as AuthenticatedClienteRouteImport } from './routes/_authenticated/cliente'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as ApiPublicSeedDemoRouteImport } from './routes/api/public/seed-demo'
+import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin.pedidos'
+import { Route as AuthenticatedAdminLogsRouteImport } from './routes/_authenticated/admin.logs'
+import { Route as AuthenticatedAdminEstabelecimentosRouteImport } from './routes/_authenticated/admin.estabelecimentos'
+import { Route as AuthenticatedAdminEntregadoresRouteImport } from './routes/_authenticated/admin.entregadores'
+import { Route as AuthenticatedAdminConfiguracoesRouteImport } from './routes/_authenticated/admin.configuracoes'
+import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authenticated/admin.clientes'
+import { Route as AuthenticatedAdminAvaliacoesRouteImport } from './routes/_authenticated/admin.avaliacoes'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -83,11 +91,57 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const ApiPublicSeedDemoRoute = ApiPublicSeedDemoRouteImport.update({
   id: '/api/public/seed-demo',
   path: '/api/public/seed-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminPedidosRoute =
+  AuthenticatedAdminPedidosRouteImport.update({
+    id: '/pedidos',
+    path: '/pedidos',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminLogsRoute = AuthenticatedAdminLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedAdminEstabelecimentosRoute =
+  AuthenticatedAdminEstabelecimentosRouteImport.update({
+    id: '/estabelecimentos',
+    path: '/estabelecimentos',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminEntregadoresRoute =
+  AuthenticatedAdminEntregadoresRouteImport.update({
+    id: '/entregadores',
+    path: '/entregadores',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminConfiguracoesRoute =
+  AuthenticatedAdminConfiguracoesRouteImport.update({
+    id: '/configuracoes',
+    path: '/configuracoes',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminClientesRoute =
+  AuthenticatedAdminClientesRouteImport.update({
+    id: '/clientes',
+    path: '/clientes',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminAvaliacoesRoute =
+  AuthenticatedAdminAvaliacoesRouteImport.update({
+    id: '/avaliacoes',
+    path: '/avaliacoes',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -96,12 +150,20 @@ export interface FileRoutesByFullPath {
   '/entrar': typeof EntrarRoute
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRoute
   '/cliente': typeof AuthenticatedClienteRoute
   '/entregador': typeof AuthenticatedEntregadorRoute
   '/estabelecimento': typeof AuthenticatedEstabelecimentoRoute
+  '/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
+  '/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
+  '/admin/entregadores': typeof AuthenticatedAdminEntregadoresRoute
+  '/admin/estabelecimentos': typeof AuthenticatedAdminEstabelecimentosRoute
+  '/admin/logs': typeof AuthenticatedAdminLogsRoute
+  '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -110,12 +172,19 @@ export interface FileRoutesByTo {
   '/entrar': typeof EntrarRoute
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/admin': typeof AuthenticatedAdminRoute
   '/app': typeof AuthenticatedAppRoute
   '/cliente': typeof AuthenticatedClienteRoute
   '/entregador': typeof AuthenticatedEntregadorRoute
   '/estabelecimento': typeof AuthenticatedEstabelecimentoRoute
+  '/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
+  '/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
+  '/admin/entregadores': typeof AuthenticatedAdminEntregadoresRoute
+  '/admin/estabelecimentos': typeof AuthenticatedAdminEstabelecimentosRoute
+  '/admin/logs': typeof AuthenticatedAdminLogsRoute
+  '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -126,12 +195,20 @@ export interface FileRoutesById {
   '/entrar': typeof EntrarRoute
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/cliente': typeof AuthenticatedClienteRoute
   '/_authenticated/entregador': typeof AuthenticatedEntregadorRoute
   '/_authenticated/estabelecimento': typeof AuthenticatedEstabelecimentoRoute
+  '/_authenticated/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
+  '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/_authenticated/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
+  '/_authenticated/admin/entregadores': typeof AuthenticatedAdminEntregadoresRoute
+  '/_authenticated/admin/estabelecimentos': typeof AuthenticatedAdminEstabelecimentosRoute
+  '/_authenticated/admin/logs': typeof AuthenticatedAdminLogsRoute
+  '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -147,7 +224,15 @@ export interface FileRouteTypes {
     | '/cliente'
     | '/entregador'
     | '/estabelecimento'
+    | '/admin/avaliacoes'
+    | '/admin/clientes'
+    | '/admin/configuracoes'
+    | '/admin/entregadores'
+    | '/admin/estabelecimentos'
+    | '/admin/logs'
+    | '/admin/pedidos'
     | '/api/public/seed-demo'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -156,12 +241,19 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/login'
     | '/sitemap.xml'
-    | '/admin'
     | '/app'
     | '/cliente'
     | '/entregador'
     | '/estabelecimento'
+    | '/admin/avaliacoes'
+    | '/admin/clientes'
+    | '/admin/configuracoes'
+    | '/admin/entregadores'
+    | '/admin/estabelecimentos'
+    | '/admin/logs'
+    | '/admin/pedidos'
     | '/api/public/seed-demo'
+    | '/admin'
   id:
     | '__root__'
     | '/'
@@ -176,7 +268,15 @@ export interface FileRouteTypes {
     | '/_authenticated/cliente'
     | '/_authenticated/entregador'
     | '/_authenticated/estabelecimento'
+    | '/_authenticated/admin/avaliacoes'
+    | '/_authenticated/admin/clientes'
+    | '/_authenticated/admin/configuracoes'
+    | '/_authenticated/admin/entregadores'
+    | '/_authenticated/admin/estabelecimentos'
+    | '/_authenticated/admin/logs'
+    | '/_authenticated/admin/pedidos'
     | '/api/public/seed-demo'
+    | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -276,6 +376,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/api/public/seed-demo': {
       id: '/api/public/seed-demo'
       path: '/api/public/seed-demo'
@@ -283,11 +390,86 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSeedDemoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/pedidos': {
+      id: '/_authenticated/admin/pedidos'
+      path: '/pedidos'
+      fullPath: '/admin/pedidos'
+      preLoaderRoute: typeof AuthenticatedAdminPedidosRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/logs': {
+      id: '/_authenticated/admin/logs'
+      path: '/logs'
+      fullPath: '/admin/logs'
+      preLoaderRoute: typeof AuthenticatedAdminLogsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/estabelecimentos': {
+      id: '/_authenticated/admin/estabelecimentos'
+      path: '/estabelecimentos'
+      fullPath: '/admin/estabelecimentos'
+      preLoaderRoute: typeof AuthenticatedAdminEstabelecimentosRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/entregadores': {
+      id: '/_authenticated/admin/entregadores'
+      path: '/entregadores'
+      fullPath: '/admin/entregadores'
+      preLoaderRoute: typeof AuthenticatedAdminEntregadoresRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/configuracoes': {
+      id: '/_authenticated/admin/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/admin/configuracoes'
+      preLoaderRoute: typeof AuthenticatedAdminConfiguracoesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/clientes': {
+      id: '/_authenticated/admin/clientes'
+      path: '/clientes'
+      fullPath: '/admin/clientes'
+      preLoaderRoute: typeof AuthenticatedAdminClientesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/avaliacoes': {
+      id: '/_authenticated/admin/avaliacoes'
+      path: '/avaliacoes'
+      fullPath: '/admin/avaliacoes'
+      preLoaderRoute: typeof AuthenticatedAdminAvaliacoesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAvaliacoesRoute: typeof AuthenticatedAdminAvaliacoesRoute
+  AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
+  AuthenticatedAdminConfiguracoesRoute: typeof AuthenticatedAdminConfiguracoesRoute
+  AuthenticatedAdminEntregadoresRoute: typeof AuthenticatedAdminEntregadoresRoute
+  AuthenticatedAdminEstabelecimentosRoute: typeof AuthenticatedAdminEstabelecimentosRoute
+  AuthenticatedAdminLogsRoute: typeof AuthenticatedAdminLogsRoute
+  AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAvaliacoesRoute: AuthenticatedAdminAvaliacoesRoute,
+  AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,
+  AuthenticatedAdminConfiguracoesRoute: AuthenticatedAdminConfiguracoesRoute,
+  AuthenticatedAdminEntregadoresRoute: AuthenticatedAdminEntregadoresRoute,
+  AuthenticatedAdminEstabelecimentosRoute:
+    AuthenticatedAdminEstabelecimentosRoute,
+  AuthenticatedAdminLogsRoute: AuthenticatedAdminLogsRoute,
+  AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedClienteRoute: typeof AuthenticatedClienteRoute
   AuthenticatedEntregadorRoute: typeof AuthenticatedEntregadorRoute
@@ -295,7 +477,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedClienteRoute: AuthenticatedClienteRoute,
   AuthenticatedEntregadorRoute: AuthenticatedEntregadorRoute,
