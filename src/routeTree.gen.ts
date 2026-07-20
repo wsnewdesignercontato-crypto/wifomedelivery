@@ -26,6 +26,7 @@ import { Route as AuthenticatedEstabelecimentoIndexRouteImport } from './routes/
 import { Route as AuthenticatedClienteIndexRouteImport } from './routes/_authenticated/cliente.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as ApiPublicSeedDemoRouteImport } from './routes/api/public/seed-demo'
+import { Route as AuthenticatedEstabelecimentoPedidosRouteImport } from './routes/_authenticated/estabelecimento.pedidos'
 import { Route as AuthenticatedClientePerfilRouteImport } from './routes/_authenticated/cliente.perfil'
 import { Route as AuthenticatedClientePedidosRouteImport } from './routes/_authenticated/cliente.pedidos'
 import { Route as AuthenticatedClienteFavoritosRouteImport } from './routes/_authenticated/cliente.favoritos'
@@ -138,6 +139,12 @@ const ApiPublicSeedDemoRoute = ApiPublicSeedDemoRouteImport.update({
   path: '/api/public/seed-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedEstabelecimentoPedidosRoute =
+  AuthenticatedEstabelecimentoPedidosRouteImport.update({
+    id: '/pedidos',
+    path: '/pedidos',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
 const AuthenticatedClientePerfilRoute =
   AuthenticatedClientePerfilRouteImport.update({
     id: '/perfil',
@@ -315,6 +322,7 @@ export interface FileRoutesByFullPath {
   '/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
   '/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
   '/cliente/perfil': typeof AuthenticatedClientePerfilRoute
+  '/estabelecimento/pedidos': typeof AuthenticatedEstabelecimentoPedidosRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/cliente/': typeof AuthenticatedClienteIndexRoute
@@ -354,6 +362,7 @@ export interface FileRoutesByTo {
   '/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
   '/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
   '/cliente/perfil': typeof AuthenticatedClientePerfilRoute
+  '/estabelecimento/pedidos': typeof AuthenticatedEstabelecimentoPedidosRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/cliente': typeof AuthenticatedClienteIndexRoute
@@ -398,6 +407,7 @@ export interface FileRoutesById {
   '/_authenticated/cliente/favoritos': typeof AuthenticatedClienteFavoritosRoute
   '/_authenticated/cliente/pedidos': typeof AuthenticatedClientePedidosRoute
   '/_authenticated/cliente/perfil': typeof AuthenticatedClientePerfilRoute
+  '/_authenticated/estabelecimento/pedidos': typeof AuthenticatedEstabelecimentoPedidosRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/cliente/': typeof AuthenticatedClienteIndexRoute
@@ -442,6 +452,7 @@ export interface FileRouteTypes {
     | '/cliente/favoritos'
     | '/cliente/pedidos'
     | '/cliente/perfil'
+    | '/estabelecimento/pedidos'
     | '/api/public/seed-demo'
     | '/admin/'
     | '/cliente/'
@@ -481,6 +492,7 @@ export interface FileRouteTypes {
     | '/cliente/favoritos'
     | '/cliente/pedidos'
     | '/cliente/perfil'
+    | '/estabelecimento/pedidos'
     | '/api/public/seed-demo'
     | '/admin'
     | '/cliente'
@@ -524,6 +536,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cliente/favoritos'
     | '/_authenticated/cliente/pedidos'
     | '/_authenticated/cliente/perfil'
+    | '/_authenticated/estabelecimento/pedidos'
     | '/api/public/seed-demo'
     | '/_authenticated/admin/'
     | '/_authenticated/cliente/'
@@ -664,6 +677,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/seed-demo'
       preLoaderRoute: typeof ApiPublicSeedDemoRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/estabelecimento/pedidos': {
+      id: '/_authenticated/estabelecimento/pedidos'
+      path: '/pedidos'
+      fullPath: '/estabelecimento/pedidos'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoPedidosRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
     }
     '/_authenticated/cliente/perfil': {
       id: '/_authenticated/cliente/perfil'
@@ -909,11 +929,14 @@ const AuthenticatedClienteRouteWithChildren =
   AuthenticatedClienteRoute._addFileChildren(AuthenticatedClienteRouteChildren)
 
 interface AuthenticatedEstabelecimentoRouteChildren {
+  AuthenticatedEstabelecimentoPedidosRoute: typeof AuthenticatedEstabelecimentoPedidosRoute
   AuthenticatedEstabelecimentoIndexRoute: typeof AuthenticatedEstabelecimentoIndexRoute
 }
 
 const AuthenticatedEstabelecimentoRouteChildren: AuthenticatedEstabelecimentoRouteChildren =
   {
+    AuthenticatedEstabelecimentoPedidosRoute:
+      AuthenticatedEstabelecimentoPedidosRoute,
     AuthenticatedEstabelecimentoIndexRoute:
       AuthenticatedEstabelecimentoIndexRoute,
   }
