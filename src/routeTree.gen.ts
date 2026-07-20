@@ -43,7 +43,6 @@ import { Route as AuthenticatedEstabelecimentoBannersRouteImport } from './route
 import { Route as AuthenticatedEstabelecimentoAvaliacoesRouteImport } from './routes/_authenticated/estabelecimento.avaliacoes'
 import { Route as AuthenticatedEntregadorVeiculoRouteImport } from './routes/_authenticated/entregador.veiculo'
 import { Route as AuthenticatedEntregadorSuporteRouteImport } from './routes/_authenticated/entregador.suporte'
-import { Route as AuthenticatedEntregadorPerfilRouteImport } from './routes/_authenticated/entregador.perfil'
 import { Route as AuthenticatedEntregadorNotificacoesRouteImport } from './routes/_authenticated/entregador.notificacoes'
 import { Route as AuthenticatedEntregadorMetasRouteImport } from './routes/_authenticated/entregador.metas'
 import { Route as AuthenticatedEntregadorHistoricoRouteImport } from './routes/_authenticated/entregador.historico'
@@ -78,6 +77,7 @@ import { Route as AuthenticatedAdminBannersRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminAvaliacoesRouteImport } from './routes/_authenticated/admin.avaliacoes'
 import { Route as AuthenticatedAdminAnunciosRouteImport } from './routes/_authenticated/admin.anuncios'
 import { Route as AuthenticatedClientePerfilIndexRouteImport } from './routes/_authenticated/cliente.perfil.index'
+import { Route as AuthenticatedEntregadorPerfilDadosRouteImport } from './routes/_authenticated/entregador.perfil.dados'
 import { Route as AuthenticatedClientePerfilTermosRouteImport } from './routes/_authenticated/cliente.perfil.termos'
 import { Route as AuthenticatedClientePerfilRecompensasRouteImport } from './routes/_authenticated/cliente.perfil.recompensas'
 import { Route as AuthenticatedClientePerfilNotificacoesRouteImport } from './routes/_authenticated/cliente.perfil.notificacoes'
@@ -276,12 +276,6 @@ const AuthenticatedEntregadorSuporteRoute =
   AuthenticatedEntregadorSuporteRouteImport.update({
     id: '/suporte',
     path: '/suporte',
-    getParentRoute: () => AuthenticatedEntregadorRoute,
-  } as any)
-const AuthenticatedEntregadorPerfilRoute =
-  AuthenticatedEntregadorPerfilRouteImport.update({
-    id: '/perfil',
-    path: '/perfil',
     getParentRoute: () => AuthenticatedEntregadorRoute,
   } as any)
 const AuthenticatedEntregadorNotificacoesRoute =
@@ -485,6 +479,12 @@ const AuthenticatedClientePerfilIndexRoute =
     path: '/perfil/',
     getParentRoute: () => AuthenticatedClienteRoute,
   } as any)
+const AuthenticatedEntregadorPerfilDadosRoute =
+  AuthenticatedEntregadorPerfilDadosRouteImport.update({
+    id: '/perfil/dados',
+    path: '/perfil/dados',
+    getParentRoute: () => AuthenticatedEntregadorRoute,
+  } as any)
 const AuthenticatedClientePerfilTermosRoute =
   AuthenticatedClientePerfilTermosRouteImport.update({
     id: '/perfil/termos',
@@ -592,7 +592,6 @@ export interface FileRoutesByFullPath {
   '/entregador/historico': typeof AuthenticatedEntregadorHistoricoRoute
   '/entregador/metas': typeof AuthenticatedEntregadorMetasRoute
   '/entregador/notificacoes': typeof AuthenticatedEntregadorNotificacoesRoute
-  '/entregador/perfil': typeof AuthenticatedEntregadorPerfilRoute
   '/entregador/suporte': typeof AuthenticatedEntregadorSuporteRoute
   '/entregador/veiculo': typeof AuthenticatedEntregadorVeiculoRoute
   '/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
@@ -624,6 +623,7 @@ export interface FileRoutesByFullPath {
   '/cliente/perfil/notificacoes': typeof AuthenticatedClientePerfilNotificacoesRoute
   '/cliente/perfil/recompensas': typeof AuthenticatedClientePerfilRecompensasRoute
   '/cliente/perfil/termos': typeof AuthenticatedClientePerfilTermosRoute
+  '/entregador/perfil/dados': typeof AuthenticatedEntregadorPerfilDadosRoute
   '/cliente/perfil/': typeof AuthenticatedClientePerfilIndexRoute
 }
 export interface FileRoutesByTo {
@@ -668,7 +668,6 @@ export interface FileRoutesByTo {
   '/entregador/historico': typeof AuthenticatedEntregadorHistoricoRoute
   '/entregador/metas': typeof AuthenticatedEntregadorMetasRoute
   '/entregador/notificacoes': typeof AuthenticatedEntregadorNotificacoesRoute
-  '/entregador/perfil': typeof AuthenticatedEntregadorPerfilRoute
   '/entregador/suporte': typeof AuthenticatedEntregadorSuporteRoute
   '/entregador/veiculo': typeof AuthenticatedEntregadorVeiculoRoute
   '/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
@@ -700,6 +699,7 @@ export interface FileRoutesByTo {
   '/cliente/perfil/notificacoes': typeof AuthenticatedClientePerfilNotificacoesRoute
   '/cliente/perfil/recompensas': typeof AuthenticatedClientePerfilRecompensasRoute
   '/cliente/perfil/termos': typeof AuthenticatedClientePerfilTermosRoute
+  '/entregador/perfil/dados': typeof AuthenticatedEntregadorPerfilDadosRoute
   '/cliente/perfil': typeof AuthenticatedClientePerfilIndexRoute
 }
 export interface FileRoutesById {
@@ -750,7 +750,6 @@ export interface FileRoutesById {
   '/_authenticated/entregador/historico': typeof AuthenticatedEntregadorHistoricoRoute
   '/_authenticated/entregador/metas': typeof AuthenticatedEntregadorMetasRoute
   '/_authenticated/entregador/notificacoes': typeof AuthenticatedEntregadorNotificacoesRoute
-  '/_authenticated/entregador/perfil': typeof AuthenticatedEntregadorPerfilRoute
   '/_authenticated/entregador/suporte': typeof AuthenticatedEntregadorSuporteRoute
   '/_authenticated/entregador/veiculo': typeof AuthenticatedEntregadorVeiculoRoute
   '/_authenticated/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
@@ -782,6 +781,7 @@ export interface FileRoutesById {
   '/_authenticated/cliente/perfil/notificacoes': typeof AuthenticatedClientePerfilNotificacoesRoute
   '/_authenticated/cliente/perfil/recompensas': typeof AuthenticatedClientePerfilRecompensasRoute
   '/_authenticated/cliente/perfil/termos': typeof AuthenticatedClientePerfilTermosRoute
+  '/_authenticated/entregador/perfil/dados': typeof AuthenticatedEntregadorPerfilDadosRoute
   '/_authenticated/cliente/perfil/': typeof AuthenticatedClientePerfilIndexRoute
 }
 export interface FileRouteTypes {
@@ -832,7 +832,6 @@ export interface FileRouteTypes {
     | '/entregador/historico'
     | '/entregador/metas'
     | '/entregador/notificacoes'
-    | '/entregador/perfil'
     | '/entregador/suporte'
     | '/entregador/veiculo'
     | '/estabelecimento/avaliacoes'
@@ -864,6 +863,7 @@ export interface FileRouteTypes {
     | '/cliente/perfil/notificacoes'
     | '/cliente/perfil/recompensas'
     | '/cliente/perfil/termos'
+    | '/entregador/perfil/dados'
     | '/cliente/perfil/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -908,7 +908,6 @@ export interface FileRouteTypes {
     | '/entregador/historico'
     | '/entregador/metas'
     | '/entregador/notificacoes'
-    | '/entregador/perfil'
     | '/entregador/suporte'
     | '/entregador/veiculo'
     | '/estabelecimento/avaliacoes'
@@ -940,6 +939,7 @@ export interface FileRouteTypes {
     | '/cliente/perfil/notificacoes'
     | '/cliente/perfil/recompensas'
     | '/cliente/perfil/termos'
+    | '/entregador/perfil/dados'
     | '/cliente/perfil'
   id:
     | '__root__'
@@ -989,7 +989,6 @@ export interface FileRouteTypes {
     | '/_authenticated/entregador/historico'
     | '/_authenticated/entregador/metas'
     | '/_authenticated/entregador/notificacoes'
-    | '/_authenticated/entregador/perfil'
     | '/_authenticated/entregador/suporte'
     | '/_authenticated/entregador/veiculo'
     | '/_authenticated/estabelecimento/avaliacoes'
@@ -1021,6 +1020,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cliente/perfil/notificacoes'
     | '/_authenticated/cliente/perfil/recompensas'
     | '/_authenticated/cliente/perfil/termos'
+    | '/_authenticated/entregador/perfil/dados'
     | '/_authenticated/cliente/perfil/'
   fileRoutesById: FileRoutesById
 }
@@ -1276,13 +1276,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEntregadorSuporteRouteImport
       parentRoute: typeof AuthenticatedEntregadorRoute
     }
-    '/_authenticated/entregador/perfil': {
-      id: '/_authenticated/entregador/perfil'
-      path: '/perfil'
-      fullPath: '/entregador/perfil'
-      preLoaderRoute: typeof AuthenticatedEntregadorPerfilRouteImport
-      parentRoute: typeof AuthenticatedEntregadorRoute
-    }
     '/_authenticated/entregador/notificacoes': {
       id: '/_authenticated/entregador/notificacoes'
       path: '/notificacoes'
@@ -1521,6 +1514,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientePerfilIndexRouteImport
       parentRoute: typeof AuthenticatedClienteRoute
     }
+    '/_authenticated/entregador/perfil/dados': {
+      id: '/_authenticated/entregador/perfil/dados'
+      path: '/perfil/dados'
+      fullPath: '/entregador/perfil/dados'
+      preLoaderRoute: typeof AuthenticatedEntregadorPerfilDadosRouteImport
+      parentRoute: typeof AuthenticatedEntregadorRoute
+    }
     '/_authenticated/cliente/perfil/termos': {
       id: '/_authenticated/cliente/perfil/termos'
       path: '/perfil/termos'
@@ -1701,10 +1701,10 @@ interface AuthenticatedEntregadorRouteChildren {
   AuthenticatedEntregadorHistoricoRoute: typeof AuthenticatedEntregadorHistoricoRoute
   AuthenticatedEntregadorMetasRoute: typeof AuthenticatedEntregadorMetasRoute
   AuthenticatedEntregadorNotificacoesRoute: typeof AuthenticatedEntregadorNotificacoesRoute
-  AuthenticatedEntregadorPerfilRoute: typeof AuthenticatedEntregadorPerfilRoute
   AuthenticatedEntregadorSuporteRoute: typeof AuthenticatedEntregadorSuporteRoute
   AuthenticatedEntregadorVeiculoRoute: typeof AuthenticatedEntregadorVeiculoRoute
   AuthenticatedEntregadorIndexRoute: typeof AuthenticatedEntregadorIndexRoute
+  AuthenticatedEntregadorPerfilDadosRoute: typeof AuthenticatedEntregadorPerfilDadosRoute
 }
 
 const AuthenticatedEntregadorRouteChildren: AuthenticatedEntregadorRouteChildren =
@@ -1724,10 +1724,11 @@ const AuthenticatedEntregadorRouteChildren: AuthenticatedEntregadorRouteChildren
     AuthenticatedEntregadorMetasRoute: AuthenticatedEntregadorMetasRoute,
     AuthenticatedEntregadorNotificacoesRoute:
       AuthenticatedEntregadorNotificacoesRoute,
-    AuthenticatedEntregadorPerfilRoute: AuthenticatedEntregadorPerfilRoute,
     AuthenticatedEntregadorSuporteRoute: AuthenticatedEntregadorSuporteRoute,
     AuthenticatedEntregadorVeiculoRoute: AuthenticatedEntregadorVeiculoRoute,
     AuthenticatedEntregadorIndexRoute: AuthenticatedEntregadorIndexRoute,
+    AuthenticatedEntregadorPerfilDadosRoute:
+      AuthenticatedEntregadorPerfilDadosRoute,
   }
 
 const AuthenticatedEntregadorRouteWithChildren =

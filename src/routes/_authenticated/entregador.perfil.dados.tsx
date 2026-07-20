@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useMyCourier } from "@/hooks/use-courier";
 import { useQueryClient } from "@tanstack/react-query";
 
-export const Route = createFileRoute("/_authenticated/entregador/perfil")({
+export const Route = createFileRoute("/_authenticated/entregador/perfil/dados")({
   component: Perfil,
 });
 
