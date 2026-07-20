@@ -448,54 +448,315 @@ export type Database = {
           },
         ]
       }
+      courier_documents: {
+        Row: {
+          courier_id: string
+          created_at: string | null
+          enviado_em: string | null
+          id: string
+          motivo_recusa: string | null
+          revisado_em: string | null
+          status: string | null
+          tipo: string
+          updated_at: string | null
+          url: string | null
+          validade: string | null
+        }
+        Insert: {
+          courier_id: string
+          created_at?: string | null
+          enviado_em?: string | null
+          id?: string
+          motivo_recusa?: string | null
+          revisado_em?: string | null
+          status?: string | null
+          tipo: string
+          updated_at?: string | null
+          url?: string | null
+          validade?: string | null
+        }
+        Update: {
+          courier_id?: string
+          created_at?: string | null
+          enviado_em?: string | null
+          id?: string
+          motivo_recusa?: string | null
+          revisado_em?: string | null
+          status?: string | null
+          tipo?: string
+          updated_at?: string | null
+          url?: string | null
+          validade?: string | null
+        }
+        Relationships: []
+      }
+      courier_missions: {
+        Row: {
+          bonus_cents: number | null
+          courier_id: string
+          created_at: string | null
+          descricao: string | null
+          id: string
+          meta_entregas: number | null
+          periodo_fim: string | null
+          periodo_inicio: string | null
+          progresso: number | null
+          status: string | null
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          bonus_cents?: number | null
+          courier_id: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          meta_entregas?: number | null
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          progresso?: number | null
+          status?: string | null
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          bonus_cents?: number | null
+          courier_id?: string
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          meta_entregas?: number | null
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          progresso?: number | null
+          status?: string | null
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       courier_profiles: {
         Row: {
+          aceitacao_pct: number | null
+          aprovacao: string | null
+          avaliacao: number | null
+          banco_agencia: string | null
+          banco_conta: string | null
+          banco_nome: string | null
+          banco_tipo: string | null
+          banco_titular: string | null
+          cancelamento_pct: number | null
+          cidades_atuacao: string[] | null
           cnh: string | null
+          cnh_categoria: string | null
+          cnh_validade: string | null
+          contato_emergencia_nome: string | null
+          contato_emergencia_tel: string | null
+          cpf: string | null
           created_at: string
           doc_frente_url: string | null
           doc_verso_url: string | null
+          endereco: Json | null
+          entregas_total: number | null
+          foto_url: string | null
           last_seen: string | null
           lat: number | null
           lng: number | null
+          nascimento: string | null
           pix_key: string | null
+          pix_tipo: string | null
           placa: string | null
+          rg: string | null
           selfie_url: string | null
           status: Database["public"]["Enums"]["courier_status"]
+          telefone: string | null
           updated_at: string
           user_id: string
           veiculo: string | null
+          whatsapp: string | null
         }
         Insert: {
+          aceitacao_pct?: number | null
+          aprovacao?: string | null
+          avaliacao?: number | null
+          banco_agencia?: string | null
+          banco_conta?: string | null
+          banco_nome?: string | null
+          banco_tipo?: string | null
+          banco_titular?: string | null
+          cancelamento_pct?: number | null
+          cidades_atuacao?: string[] | null
           cnh?: string | null
+          cnh_categoria?: string | null
+          cnh_validade?: string | null
+          contato_emergencia_nome?: string | null
+          contato_emergencia_tel?: string | null
+          cpf?: string | null
           created_at?: string
           doc_frente_url?: string | null
           doc_verso_url?: string | null
+          endereco?: Json | null
+          entregas_total?: number | null
+          foto_url?: string | null
           last_seen?: string | null
           lat?: number | null
           lng?: number | null
+          nascimento?: string | null
           pix_key?: string | null
+          pix_tipo?: string | null
           placa?: string | null
+          rg?: string | null
           selfie_url?: string | null
           status?: Database["public"]["Enums"]["courier_status"]
+          telefone?: string | null
           updated_at?: string
           user_id: string
           veiculo?: string | null
+          whatsapp?: string | null
         }
         Update: {
+          aceitacao_pct?: number | null
+          aprovacao?: string | null
+          avaliacao?: number | null
+          banco_agencia?: string | null
+          banco_conta?: string | null
+          banco_nome?: string | null
+          banco_tipo?: string | null
+          banco_titular?: string | null
+          cancelamento_pct?: number | null
+          cidades_atuacao?: string[] | null
           cnh?: string | null
+          cnh_categoria?: string | null
+          cnh_validade?: string | null
+          contato_emergencia_nome?: string | null
+          contato_emergencia_tel?: string | null
+          cpf?: string | null
           created_at?: string
           doc_frente_url?: string | null
           doc_verso_url?: string | null
+          endereco?: Json | null
+          entregas_total?: number | null
+          foto_url?: string | null
           last_seen?: string | null
           lat?: number | null
           lng?: number | null
+          nascimento?: string | null
           pix_key?: string | null
+          pix_tipo?: string | null
           placa?: string | null
+          rg?: string | null
           selfie_url?: string | null
           status?: Database["public"]["Enums"]["courier_status"]
+          telefone?: string | null
           updated_at?: string
           user_id?: string
           veiculo?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      courier_vehicles: {
+        Row: {
+          ano: number | null
+          ativo: boolean | null
+          cor: string | null
+          courier_id: string
+          created_at: string | null
+          documento_url: string | null
+          foto_url: string | null
+          id: string
+          marca: string | null
+          modelo: string | null
+          placa: string | null
+          renavam: string | null
+          status: string | null
+          tipo: string
+          updated_at: string | null
+        }
+        Insert: {
+          ano?: number | null
+          ativo?: boolean | null
+          cor?: string | null
+          courier_id: string
+          created_at?: string | null
+          documento_url?: string | null
+          foto_url?: string | null
+          id?: string
+          marca?: string | null
+          modelo?: string | null
+          placa?: string | null
+          renavam?: string | null
+          status?: string | null
+          tipo: string
+          updated_at?: string | null
+        }
+        Update: {
+          ano?: number | null
+          ativo?: boolean | null
+          cor?: string | null
+          courier_id?: string
+          created_at?: string | null
+          documento_url?: string | null
+          foto_url?: string | null
+          id?: string
+          marca?: string | null
+          modelo?: string | null
+          placa?: string | null
+          renavam?: string | null
+          status?: string | null
+          tipo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      courier_withdrawals: {
+        Row: {
+          banco_info: Json | null
+          comprovante_url: string | null
+          courier_id: string
+          created_at: string | null
+          id: string
+          liquido_cents: number | null
+          metodo: string
+          motivo_recusa: string | null
+          pix_key: string | null
+          processado_em: string | null
+          status: string | null
+          taxa_cents: number | null
+          updated_at: string | null
+          valor_cents: number
+        }
+        Insert: {
+          banco_info?: Json | null
+          comprovante_url?: string | null
+          courier_id: string
+          created_at?: string | null
+          id?: string
+          liquido_cents?: number | null
+          metodo?: string
+          motivo_recusa?: string | null
+          pix_key?: string | null
+          processado_em?: string | null
+          status?: string | null
+          taxa_cents?: number | null
+          updated_at?: string | null
+          valor_cents: number
+        }
+        Update: {
+          banco_info?: Json | null
+          comprovante_url?: string | null
+          courier_id?: string
+          created_at?: string | null
+          id?: string
+          liquido_cents?: number | null
+          metodo?: string
+          motivo_recusa?: string | null
+          pix_key?: string | null
+          processado_em?: string | null
+          status?: string | null
+          taxa_cents?: number | null
+          updated_at?: string | null
+          valor_cents?: number
         }
         Relationships: []
       }
