@@ -95,7 +95,7 @@ export function AdminShell() {
             {navItems.map(({ to, label, icon: Icon, exact }) => (
               <Link
                 key={to}
-                to={to}
+                to={to as "/admin"}
                 onClick={() => setOpen(false)}
                 className={cn(
                   "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
