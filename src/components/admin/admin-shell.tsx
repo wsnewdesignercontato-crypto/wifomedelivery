@@ -14,6 +14,14 @@ import {
   Menu,
   X,
   Shield,
+  DollarSign,
+  Ticket,
+  Megaphone,
+  Image as ImageIcon,
+  Send,
+  LifeBuoy,
+  Map as MapIcon,
+  Sparkles,
 } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,31 +30,24 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean };
+type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean; group?: string };
 const navItems: NavItem[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/admin/clientes", label: "Clientes", icon: Users },
-  { to: "/admin/estabelecimentos", label: "Estabelecimentos", icon: Store },
-  { to: "/admin/entregadores", label: "Entregadores", icon: Bike },
   { to: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag },
-  { to: "/admin/avaliacoes", label: "Avaliações", icon: Star },
-  { to: "/admin/logs", label: "Logs & Auditoria", icon: ScrollText },
-  { to: "/admin/configuracoes", label: "Configurações", icon: Settings },
-];
-
-const soonItems = [
-  "Financeiro",
-  "Pagamentos",
-  "Comissões",
-  "Saques",
-  "Assinaturas",
-  "Marketing",
-  "Cupons",
-  "Chat",
-  "Mapa em tempo real",
-  "IA administrativa",
-  "Backup",
-  "Integrações",
+  { to: "/admin/mapa", label: "Mapa ao vivo", icon: MapIcon },
+  { to: "/admin/clientes", label: "Clientes", icon: Users, group: "Pessoas" },
+  { to: "/admin/estabelecimentos", label: "Estabelecimentos", icon: Store, group: "Pessoas" },
+  { to: "/admin/entregadores", label: "Entregadores", icon: Bike, group: "Pessoas" },
+  { to: "/admin/financeiro", label: "Financeiro", icon: DollarSign, group: "Operação" },
+  { to: "/admin/avaliacoes", label: "Avaliações", icon: Star, group: "Operação" },
+  { to: "/admin/cupons", label: "Cupons", icon: Ticket, group: "Marketing" },
+  { to: "/admin/campanhas", label: "Campanhas", icon: Megaphone, group: "Marketing" },
+  { to: "/admin/banners", label: "Banners", icon: ImageIcon, group: "Marketing" },
+  { to: "/admin/notificacoes", label: "Notificações", icon: Send, group: "Marketing" },
+  { to: "/admin/suporte", label: "Suporte", icon: LifeBuoy, group: "Atendimento" },
+  { to: "/admin/ia", label: "IA Insights", icon: Sparkles, group: "Atendimento" },
+  { to: "/admin/logs", label: "Logs & Auditoria", icon: ScrollText, group: "Sistema" },
+  { to: "/admin/configuracoes", label: "Configurações", icon: Settings, group: "Sistema" },
 ];
 
 export function AdminShell() {
@@ -91,50 +92,44 @@ export function AdminShell() {
           </button>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          <div className="space-y-0.5">
-            {navItems.map(({ to, label, icon: Icon, exact }) => (
-              <Link
-                key={to}
-                to={to as "/admin"}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
-                  isActive(to, exact)
-                    ? "bg-primary/10 text-primary shadow-sm"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+          {(() => {
+            const groups = new Map<string, NavItem[]>();
+            for (const it of navItems) {
+              const g = it.group ?? "";
+              if (!groups.has(g)) groups.set(g, []);
+              groups.get(g)!.push(it);
+            }
+            return Array.from(groups.entries()).map(([group, items], gi) => (
+              <div key={group || "root"} className={gi > 0 ? "mt-5" : ""}>
+                {group && (
+                  <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    {group}
+                  </p>
                 )}
-              >
-                <Icon
-                  className={cn(
-                    "h-4 w-4 transition-transform group-hover:scale-110",
-                    isActive(to, exact) && "text-primary",
-                  )}
-                />
-                {label}
-                {isActive(to, exact) && (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
-                )}
-              </Link>
-            ))}
-          </div>
-          <div className="mt-6 border-t border-border pt-4">
-            <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Em breve
-            </p>
-            <div className="space-y-0.5">
-              {soonItems.map((label) => (
-                <div
-                  key={label}
-                  className="flex cursor-not-allowed items-center justify-between rounded-lg px-3 py-1.5 text-xs text-muted-foreground/70"
-                >
-                  {label}
-                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider">
-                    Fase 2+
-                  </span>
+                <div className="space-y-0.5">
+                  {items.map(({ to, label, icon: Icon, exact }) => (
+                    <Link
+                      key={to}
+                      to={to as "/admin"}
+                      onClick={() => setOpen(false)}
+                      className={cn(
+                        "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
+                        isActive(to, exact)
+                          ? "bg-primary/10 text-primary shadow-sm"
+                          : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                      )}
+                    >
+                      <Icon className={cn("h-4 w-4", isActive(to, exact) && "text-primary")} />
+                      {label}
+                      {isActive(to, exact) && (
+                        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+                      )}
+                    </Link>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            ));
+          })()}
         </nav>
         <div className="border-t border-border p-3">
           <Button
