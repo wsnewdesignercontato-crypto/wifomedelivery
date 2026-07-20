@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, ReceiptText } from "lucide-react";
+import { Loader2, ReceiptText, Bike, Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ type Order = {
   total_cents: number;
   created_at: string;
   establishment_id: string;
+  tipo_entrega: "delivery" | "pickup" | null;
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -39,7 +40,7 @@ function PedidosPage() {
     async function load() {
       const { data } = await supabase
         .from("orders")
-        .select("id,status,total_cents,created_at,establishment_id")
+        .select("id,status,total_cents,created_at,establishment_id,tipo_entrega")
         .eq("cliente_id", user.id)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -124,6 +125,9 @@ function PedidosPage() {
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{lojas[o.establishment_id] ?? "Restaurante"}</p>
                   <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("pt-BR")}</p>
+                  <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                    {o.tipo_entrega === "pickup" ? <><Store className="h-3 w-3" /> Retirada no local</> : <><Bike className="h-3 w-3" /> Entrega</>}
+                  </div>
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-primary">{fmt(o.total_cents)}</p>

@@ -16,6 +16,7 @@ type Order = {
   id: string; cliente_id: string; status: string; total_cents: number;
   observacoes: string | null; created_at: string;
   endereco_entrega: { endereco?: string } | null;
+  tipo_entrega: "delivery" | "pickup" | null;
   cancellation_reason?: string | null; cancelled_role?: string | null;
   refund_status?: string | null; refund_amount_cents?: number | null;
 };
@@ -40,7 +41,7 @@ function PedidosPage() {
     if (!estab) return;
     const { data } = await supabase
       .from("orders")
-      .select("id,cliente_id,status,total_cents,observacoes,created_at,endereco_entrega,cancellation_reason,cancelled_role,refund_status,refund_amount_cents")
+      .select("id,cliente_id,status,total_cents,observacoes,created_at,endereco_entrega,tipo_entrega,cancellation_reason,cancelled_role,refund_status,refund_amount_cents")
       .eq("establishment_id", estab.id)
       .order("created_at", { ascending: false })
       .limit(80);
@@ -146,10 +147,15 @@ function PedidosPage() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge className="bg-primary/15 text-primary hover:bg-primary/20">{STATUS_LABEL[o.status] ?? o.status}</Badge>
+                      <Badge variant="outline" className={o.tipo_entrega === "pickup" ? "border-amber-500/50 text-amber-600" : "border-primary/40 text-primary"}>
+                        {o.tipo_entrega === "pickup" ? "🏪 Retirada" : "🛵 Entrega"}
+                      </Badge>
                       {o.refund_status === "completed" && (<Badge variant="secondary">Reembolso {fmt(o.refund_amount_cents ?? 0)}</Badge>)}
                       <span className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleTimeString("pt-BR")}</span>
                     </div>
-                    <p className="mt-2 text-sm text-muted-foreground">Entregar em: {o.endereco_entrega?.endereco ?? "—"}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {o.tipo_entrega === "pickup" ? "Cliente retira no local" : `Entregar em: ${o.endereco_entrega?.endereco ?? "—"}`}
+                    </p>
                   </div>
                   <span className="font-bold text-primary">{fmt(o.total_cents)}</span>
                 </div>

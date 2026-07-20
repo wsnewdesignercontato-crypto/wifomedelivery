@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, MapPin, Package, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, Package, CheckCircle2, XCircle, Bike, Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,7 @@ type Order = {
   establishment_id: string;
   forma_pagamento: string;
   codigo_entrega: string | null;
+  tipo_entrega: "delivery" | "pickup" | null;
   created_at: string;
 };
 type Item = { id: string; nome_snapshot: string; preco_unit_cents: number; quantidade: number; observacoes: string | null };
@@ -62,7 +63,7 @@ function PedidoPage() {
     async function load() {
       const { data: o } = await supabase
         .from("orders")
-        .select("id,status,subtotal_cents,frete_cents,desconto_cents,total_cents,observacoes,cancellation_reason,refund_status,refund_amount_cents,establishment_id,forma_pagamento,codigo_entrega,created_at")
+        .select("id,status,subtotal_cents,frete_cents,desconto_cents,total_cents,observacoes,cancellation_reason,refund_status,refund_amount_cents,establishment_id,forma_pagamento,codigo_entrega,tipo_entrega,created_at")
         .eq("id", id)
         .maybeSingle();
       setOrder(o as Order | null);
@@ -130,9 +131,12 @@ function PedidoPage() {
     <div className="space-y-5">
       <div className="flex items-center gap-3">
         <Button size="icon" variant="ghost" onClick={() => navigate({ to: "/cliente/pedidos" })} aria-label="Voltar"><ArrowLeft className="h-4 w-4" /></Button>
-        <div>
+        <div className="min-w-0 flex-1">
           <h1 className="text-xl font-bold">{loja?.nome ?? "Pedido"}</h1>
           <p className="text-xs text-muted-foreground">#{order.id.slice(0, 8)} · {new Date(order.created_at).toLocaleString("pt-BR")}</p>
+          <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-[11px] font-semibold text-primary">
+            {order.tipo_entrega === "pickup" ? <><Store className="h-3 w-3" /> Retirada no local</> : <><Bike className="h-3 w-3" /> Entrega</>}
+          </div>
         </div>
       </div>
 
@@ -186,7 +190,7 @@ function PedidoPage() {
         </ul>
         <div className="mt-3 space-y-1 border-t border-border pt-2 text-sm">
           <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>{fmt(order.subtotal_cents)}</span></div>
-          <div className="flex justify-between text-muted-foreground"><span>Entrega</span><span>{order.frete_cents === 0 ? "Grátis" : fmt(order.frete_cents)}</span></div>
+          <div className="flex justify-between text-muted-foreground"><span>{order.tipo_entrega === "pickup" ? "Retirada" : "Entrega"}</span><span>{order.tipo_entrega === "pickup" ? "Grátis" : order.frete_cents === 0 ? "Grátis" : fmt(order.frete_cents)}</span></div>
           {order.desconto_cents > 0 && <div className="flex justify-between text-primary"><span>Desconto</span><span>-{fmt(order.desconto_cents)}</span></div>}
           <div className="flex justify-between font-bold"><span>Total</span><span>{fmt(order.total_cents)}</span></div>
         </div>
