@@ -451,6 +451,18 @@ function ClienteApp() {
                     {o.status === "cancelled" && o.cancellation_reason && (
                       <p className="mt-2 rounded-lg bg-muted p-2 text-xs">Motivo: {o.cancellation_reason}</p>
                     )}
+                    {o.status === "delivered" && loja && (
+                      reviewedIds.has(o.id) ? (
+                        <p className="mt-3 text-xs text-muted-foreground">✓ Você já avaliou este pedido</p>
+                      ) : (
+                        <ReviewForm
+                          orderId={o.id}
+                          clienteId={user.id}
+                          establishmentId={loja.id}
+                          onSubmitted={() => setReviewedIds((prev) => new Set(prev).add(o.id))}
+                        />
+                      )
+                    )}
                   </div>
                 );
               })
