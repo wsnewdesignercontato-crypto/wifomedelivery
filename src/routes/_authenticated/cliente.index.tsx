@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Star, ChevronRight, Loader2, Tag, Flame } from "lucide-react";
+import { Star, ChevronRight, Loader2, Tag, Flame, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 import catPizza from "@/assets/cat-pizza.jpg";
@@ -380,8 +380,20 @@ function EstabRow({
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
-          <h3 className="truncate text-sm font-bold text-foreground">{estab.nome}</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="truncate text-base font-extrabold tracking-tight text-foreground">
+            {estab.nome}
+          </h3>
+          {estab.is_open ? (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-600 ring-1 ring-emerald-500/40">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+              Aberto
+            </span>
+          ) : (
+            <span className="inline-flex shrink-0 items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground ring-1 ring-border">
+              Fechado
+            </span>
+          )}
         </div>
         {(isBestseller || hasPromo) && (
           <div className="mt-1 flex flex-wrap items-center gap-1">
@@ -404,17 +416,25 @@ function EstabRow({
               {Number(estab.avaliacao).toFixed(1)}
             </span>
           )}
-          {estab.tempo_medio_min && (
+          {estab.tempo_medio_min ? (
             <>
               <span aria-hidden>·</span>
-              <span>{estab.tempo_medio_min} min</span>
+              <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                <Clock className="h-3.5 w-3.5 text-primary" />
+                {estab.tempo_medio_min}–{estab.tempo_medio_min + 10} min
+              </span>
             </>
-          )}
+          ) : null}
         </div>
         <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-          Entrega {estab.taxa_entrega_cents === 0 ? "grátis" : fmt(estab.taxa_entrega_cents)}
+          Entrega {estab.taxa_entrega_cents === 0 ? (
+            <span className="font-bold text-emerald-600">grátis</span>
+          ) : (
+            fmt(estab.taxa_entrega_cents)
+          )}
         </p>
       </div>
+
       <ChevronRight className="h-5 w-5 shrink-0 text-primary" />
     </Link>
   );
