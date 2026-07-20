@@ -301,7 +301,23 @@ function EstabRow({
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <h3 className="truncate text-sm font-bold text-foreground">{estab.nome}</h3>
+        <div className="flex items-center gap-1.5">
+          <h3 className="truncate text-sm font-bold text-foreground">{estab.nome}</h3>
+        </div>
+        {(isBestseller || hasPromo) && (
+          <div className="mt-1 flex flex-wrap items-center gap-1">
+            {isBestseller && (
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-600 ring-1 ring-orange-500/30">
+                <Flame className="h-3 w-3" /> Mais vendido
+              </span>
+            )}
+            {hasPromo && (
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary ring-1 ring-primary/30">
+                <Tag className="h-3 w-3" /> Promoção
+              </span>
+            )}
+          </div>
+        )}
         <div className="mt-1 flex items-center gap-2 text-[12px] text-muted-foreground">
           {estab.avaliacao != null && (
             <span className="flex items-center gap-0.5 font-semibold text-foreground">
