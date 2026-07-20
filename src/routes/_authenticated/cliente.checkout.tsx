@@ -225,7 +225,7 @@ function CheckoutPage() {
 
       <div className="rounded-2xl border border-border bg-card p-4 space-y-1.5 text-sm">
         <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
-        <div className="flex justify-between text-muted-foreground"><span>Entrega</span><span>{estab.taxa_entrega_cents === 0 ? "Grátis" : fmt(estab.taxa_entrega_cents)}</span></div>
+        <div className="flex justify-between text-muted-foreground"><span>{tipoEntrega === "pickup" ? "Retirada" : "Entrega"}</span><span>{tipoEntrega === "pickup" ? "Grátis" : (estab.taxa_entrega_cents === 0 ? "Grátis" : fmt(estab.taxa_entrega_cents))}</span></div>
         {search.cupom && <div className="flex justify-between text-primary"><span>Cupom</span><span>{search.cupom}</span></div>}
         <div className="my-2 border-t border-border" />
         <div className="flex justify-between text-base font-bold"><span>Total</span><span>{fmt(total)}</span></div>
