@@ -110,12 +110,12 @@ function Home() {
 
   async function avancar(next: "to_store" | "at_store" | "picked_up" | "to_customer" | "at_customer" | "delivered") {
     if (!ativa || !courier) return;
-    const patch: { status: typeof next; coletado_em?: string; entregue_em?: string } = { status: next };
+    const patch: Record<string, unknown> = { status: next };
     if (next === "picked_up") patch.coletado_em = new Date().toISOString();
     if (next === "delivered") patch.entregue_em = new Date().toISOString();
-    await supabase.from("deliveries").update(patch).eq("id", ativa.id);
+    await supabase.from("deliveries").update(patch as never).eq("id", ativa.id);
     const orderMap: Record<string, string> = { to_store: "courier_assigned", picked_up: "picked_up", to_customer: "on_the_way", at_customer: "arriving", delivered: "delivered" };
-    if (orderMap[next]) await supabase.from("orders").update({ status: orderMap[next] }).eq("id", ativa.order_id);
+    if (orderMap[next]) await supabase.from("orders").update({ status: orderMap[next] as never }).eq("id", ativa.order_id);
     if (next === "delivered") {
       await supabase.from("courier_profiles").update({ status: "online" }).eq("user_id", courier.user_id);
       toast.success("Entrega concluída!");

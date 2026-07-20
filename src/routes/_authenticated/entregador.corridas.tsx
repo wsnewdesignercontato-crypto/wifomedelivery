@@ -77,13 +77,12 @@ function Corridas() {
 
   async function avancar(next: string) {
     if (!ativa || !courier) return;
-    type Patch = { status: string; coletado_em?: string; entregue_em?: string };
-    const patch: Patch = { status: next };
+    const patch: Record<string, unknown> = { status: next };
     if (next === "picked_up") patch.coletado_em = new Date().toISOString();
     if (next === "delivered") patch.entregue_em = new Date().toISOString();
-    await supabase.from("deliveries").update(patch).eq("id", ativa.id);
+    await supabase.from("deliveries").update(patch as never).eq("id", ativa.id);
     const map: Record<string, string> = { to_store: "courier_assigned", picked_up: "picked_up", to_customer: "on_the_way", at_customer: "arriving", delivered: "delivered" };
-    if (map[next]) await supabase.from("orders").update({ status: map[next] }).eq("id", ativa.order_id);
+    if (map[next]) await supabase.from("orders").update({ status: map[next] as never }).eq("id", ativa.order_id);
     if (next === "delivered") {
       await supabase.from("courier_profiles").update({ status: "online" }).eq("user_id", courier.user_id);
       toast.success("Entrega concluída!");

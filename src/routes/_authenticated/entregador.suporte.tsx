@@ -9,24 +9,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { LifeBuoy } from "lucide-react";
 import { useMyCourier } from "@/hooks/use-courier";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/entregador/suporte")({
   component: Suporte,
 });
 
-type Ticket = { id: string; categoria: string; assunto: string; status: string; created_at: string };
-
-const CATS = ["corrida", "pagamento", "saque", "cadastro", "documento", "veiculo", "cliente", "estabelecimento", "seguranca", "outro"];
+type Ticket = { id: string; assunto: string; status: string; created_at: string; priority: string | null };
 
 function Suporte() {
   const { courier } = useMyCourier();
   const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [f, setF] = useState({ categoria: "outro", assunto: "", mensagem: "" });
+  const [f, setF] = useState({ assunto: "", mensagem: "", priority: "normal" });
 
   async function load() {
     if (!courier) return;
-    const { data } = await supabase.from("support_tickets").select("id,categoria,assunto,status,created_at")
+    const { data } = await supabase.from("support_tickets").select("id,assunto,status,created_at,priority")
       .eq("user_id", courier.user_id).order("created_at", { ascending: false });
     setTickets((data ?? []) as Ticket[]);
   }
@@ -35,12 +32,12 @@ function Suporte() {
   async function abrir() {
     if (!courier || !f.assunto || !f.mensagem) return toast.error("Preencha assunto e mensagem");
     const { data, error } = await supabase.from("support_tickets").insert({
-      user_id: courier.user_id, categoria: f.categoria, assunto: f.assunto, status: "aberto",
+      user_id: courier.user_id, assunto: f.assunto, status: "open", priority: f.priority,
     }).select("id").single();
     if (error || !data) return toast.error(error?.message ?? "Erro");
-    await supabase.from("support_messages").insert({ ticket_id: data.id, autor_id: courier.user_id, mensagem: f.mensagem });
+    await supabase.from("support_messages").insert({ ticket_id: data.id, sender_id: courier.user_id, mensagem: f.mensagem });
     toast.success("Chamado aberto");
-    setF({ categoria: "outro", assunto: "", mensagem: "" });
+    setF({ assunto: "", mensagem: "", priority: "normal" });
     load();
   }
 
@@ -51,13 +48,6 @@ function Suporte() {
       <section className="rounded-2xl border border-border bg-card p-4 shadow-card">
         <h2 className="mb-3 font-semibold">Abrir chamado</h2>
         <div className="space-y-3">
-          <div>
-            <Label>Categoria</Label>
-            <Select value={f.categoria} onValueChange={(v) => setF({ ...f, categoria: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{CATS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
           <div><Label>Assunto</Label><Input value={f.assunto} onChange={(e) => setF({ ...f, assunto: e.target.value })} /></div>
           <div><Label>Mensagem</Label><Textarea rows={4} value={f.mensagem} onChange={(e) => setF({ ...f, mensagem: e.target.value })} /></div>
           <Button onClick={abrir}>Enviar</Button>
@@ -77,9 +67,9 @@ function Suporte() {
               <div key={t.id} className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 shadow-card">
                 <div>
                   <p className="font-semibold">{t.assunto}</p>
-                  <p className="text-xs text-muted-foreground">{t.categoria} · {new Date(t.created_at).toLocaleString("pt-BR")}</p>
+                  <p className="text-xs text-muted-foreground">{new Date(t.created_at).toLocaleString("pt-BR")}</p>
                 </div>
-                <Badge variant={t.status === "resolvido" ? "default" : "secondary"}>{t.status}</Badge>
+                <Badge variant={t.status === "resolved" ? "default" : "secondary"}>{t.status}</Badge>
               </div>
             ))}
           </div>
