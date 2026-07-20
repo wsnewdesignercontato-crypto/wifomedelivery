@@ -20,6 +20,7 @@ import { Route as AuthenticatedEstabelecimentoRouteImport } from './routes/_auth
 import { Route as AuthenticatedEntregadorRouteImport } from './routes/_authenticated/entregador'
 import { Route as AuthenticatedClienteRouteImport } from './routes/_authenticated/cliente'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as ApiPublicSeedDemoRouteImport } from './routes/api/public/seed-demo'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -76,6 +77,11 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   path: '/app',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicSeedDemoRoute = ApiPublicSeedDemoRouteImport.update({
+  id: '/api/public/seed-demo',
+  path: '/api/public/seed-demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/cliente': typeof AuthenticatedClienteRoute
   '/entregador': typeof AuthenticatedEntregadorRoute
   '/estabelecimento': typeof AuthenticatedEstabelecimentoRoute
+  '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/cliente': typeof AuthenticatedClienteRoute
   '/entregador': typeof AuthenticatedEntregadorRoute
   '/estabelecimento': typeof AuthenticatedEstabelecimentoRoute
+  '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/_authenticated/cliente': typeof AuthenticatedClienteRoute
   '/_authenticated/entregador': typeof AuthenticatedEntregadorRoute
   '/_authenticated/estabelecimento': typeof AuthenticatedEstabelecimentoRoute
+  '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/cliente'
     | '/entregador'
     | '/estabelecimento'
+    | '/api/public/seed-demo'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/cliente'
     | '/entregador'
     | '/estabelecimento'
+    | '/api/public/seed-demo'
   id:
     | '__root__'
     | '/'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cliente'
     | '/_authenticated/entregador'
     | '/_authenticated/estabelecimento'
+    | '/api/public/seed-demo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -163,6 +175,7 @@ export interface RootRouteChildren {
   EntrarRoute: typeof EntrarRoute
   LoginRoute: typeof LoginRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiPublicSeedDemoRoute: typeof ApiPublicSeedDemoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -244,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/seed-demo': {
+      id: '/api/public/seed-demo'
+      path: '/api/public/seed-demo'
+      fullPath: '/api/public/seed-demo'
+      preLoaderRoute: typeof ApiPublicSeedDemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -272,6 +292,7 @@ const rootRouteChildren: RootRouteChildren = {
   EntrarRoute: EntrarRoute,
   LoginRoute: LoginRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiPublicSeedDemoRoute: ApiPublicSeedDemoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
