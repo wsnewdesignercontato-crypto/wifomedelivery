@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import {
   Home,
   Search,
-  Sparkles,
+  ShoppingBag,
   ReceiptText,
   User,
   ShoppingCart,
