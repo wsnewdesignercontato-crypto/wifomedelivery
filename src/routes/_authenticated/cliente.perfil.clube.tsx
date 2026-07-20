@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronLeft, Crown, Check, Truck, Sparkles, BadgePercent } from "lucide-react";
+import { ChevronLeft, Crown, Check, Truck, MessageCircle, BadgePercent } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import clubeBanner from "@/assets/clube-wifome-banner.png.asset.json";
+import clubeBanner from "@/assets/clube-wifome-banner-hd.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/clube")({
   component: ClubePage,
@@ -12,7 +12,7 @@ function ClubePage() {
   const beneficios = [
     { icon: Truck, title: "Frete grátis ilimitado", desc: "Em pedidos elegíveis acima de R$ 20" },
     { icon: BadgePercent, title: "Descontos exclusivos", desc: "Cupons semanais só para membros" },
-    { icon: Sparkles, title: "Suporte prioritário", desc: "Atendimento em até 2 minutos" },
+    { icon: MessageCircle, title: "Suporte prioritário", desc: "Atendimento em até 2 minutos" },
     { icon: Crown, title: "Acesso antecipado", desc: "Novidades e restaurantes primeiro" },
   ];
 
