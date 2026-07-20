@@ -140,7 +140,11 @@ function ClienteApp() {
         .order("created_at", { ascending: false })
         .limit(30);
       if (active) setMeusPedidos((data ?? []) as Order[]);
-
+      const delivered = (data ?? []).filter((o: Order) => o.status === "delivered").map((o: Order) => o.id);
+      if (delivered.length > 0) {
+        const { data: revs } = await supabase.from("reviews").select("order_id").in("order_id", delivered);
+        if (active) setReviewedIds(new Set((revs ?? []).map((r: { order_id: string }) => r.order_id)));
+      }
     })();
     const ch = supabase
       .channel("cliente-pedidos")
