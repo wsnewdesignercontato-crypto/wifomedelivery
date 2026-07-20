@@ -8,10 +8,10 @@ import {
   User,
   ShoppingCart,
   MapPin,
+  ChevronDown,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { IFomeLogo } from "@/components/ifome-logo";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/cliente/notifications-bell";
 
@@ -19,7 +19,6 @@ type Ctx = { user: { id: string; email?: string } };
 
 const NAV = [
   { to: "/cliente" as const, label: "Início", icon: Home, exact: true },
-  { to: "/cliente/buscar" as const, label: "Buscar", icon: Search, exact: false },
   { to: "/cliente/pedidos" as const, label: "Pedidos", icon: ReceiptText, exact: false },
   { to: "/cliente/favoritos" as const, label: "Favoritos", icon: Heart, exact: false },
   { to: "/cliente/perfil" as const, label: "Perfil", icon: User, exact: false },
@@ -47,9 +46,7 @@ export function ClienteShell({ user }: Ctx) {
       setCartQty((cart ?? []).reduce((s, i) => s + i.quantidade, 0));
       if (addr && addr[0]) {
         const a = addr[0];
-        setEndereco(
-          `${a.label} · ${a.rua}${a.numero ? `, ${a.numero}` : ""} — ${a.cidade}`,
-        );
+        setEndereco(`${a.rua}${a.numero ? `, ${a.numero}` : ""}`);
       }
     }
     reload();
@@ -67,34 +64,55 @@ export function ClienteShell({ user }: Ctx) {
     };
   }, [user.id]);
 
+  const isHome = location.pathname === "/cliente";
+
   return (
     <div className="min-h-screen bg-background pb-24">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3">
-          <Link to="/cliente" className="shrink-0">
-            <IFomeLogo size="sm" />
-          </Link>
+      {/* Premium orange header — mobile-first, iFood-style */}
+      <header className="sticky top-0 z-40 bg-gradient-to-b from-primary to-[hsl(19,100%,45%)] text-primary-foreground shadow-lg">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-2 px-4 pt-3 pb-3">
           <button
             onClick={() => navigate({ to: "/cliente/perfil" })}
-            className="flex min-w-0 flex-1 items-center gap-1.5 truncate rounded-full bg-muted px-3 py-1.5 text-left text-xs text-foreground"
+            className="flex min-w-0 flex-1 flex-col items-start text-left"
           >
-            <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
-            <span className="truncate">{endereco}</span>
+            <span className="text-[11px] font-medium uppercase tracking-wider text-primary-foreground/80">
+              Enviar para
+            </span>
+            <span className="mt-0.5 flex items-center gap-1 text-sm font-bold">
+              <MapPin className="h-4 w-4 shrink-0" />
+              <span className="max-w-[190px] truncate">{endereco}</span>
+              <ChevronDown className="h-4 w-4 shrink-0 opacity-90" />
+            </span>
           </button>
           <NotificationsBell userId={user.id} />
           <Button
-            size="sm"
-            variant={cartQty > 0 ? "default" : "ghost"}
-            className="relative"
+            size="icon"
+            variant="ghost"
+            className="relative h-9 w-9 rounded-full text-primary-foreground hover:bg-white/15 hover:text-primary-foreground"
             onClick={() => navigate({ to: "/cliente/carrinho" })}
             aria-label="Carrinho"
           >
-            <ShoppingCart className="h-4 w-4" />
+            <ShoppingCart className="h-5 w-5" />
             {cartQty > 0 && (
-              <span className="ml-1 text-xs font-bold">{cartQty}</span>
+              <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-black text-primary shadow">
+                {cartQty}
+              </span>
             )}
           </Button>
         </div>
+
+        {/* Search bar embedded in header on home */}
+        {isHome && (
+          <div className="px-4 pb-4">
+            <button
+              onClick={() => navigate({ to: "/cliente/buscar" })}
+              className="flex w-full items-center gap-2 rounded-xl bg-white px-3 py-2.5 text-left text-sm text-muted-foreground shadow-md"
+            >
+              <Search className="h-4 w-4 text-primary" />
+              Buscar pratos, lojas, categorias
+            </button>
+          </div>
+        )}
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-4">
@@ -102,10 +120,10 @@ export function ClienteShell({ user }: Ctx) {
       </main>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/98 backdrop-blur"
         aria-label="Navegação principal"
       >
-        <div className="mx-auto grid max-w-4xl grid-cols-5">
+        <div className="mx-auto grid max-w-4xl grid-cols-4">
           {NAV.map(({ to, label, icon: Icon, exact }) => {
             const active = exact
               ? location.pathname === to
@@ -114,11 +132,11 @@ export function ClienteShell({ user }: Ctx) {
               <Link
                 key={to}
                 to={to}
-                className={`flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors ${
+                className={`flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-semibold transition-colors ${
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className={`h-5 w-5 ${active ? "fill-primary/10" : ""}`} />
                 {label}
               </Link>
             );

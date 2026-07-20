@@ -1,9 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Star, Clock, Search, Loader2, Sparkles } from "lucide-react";
+import { Star, Clock, Loader2, Bike } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/cliente/")({
   component: ClienteHome,
@@ -27,10 +25,33 @@ type Estab = {
 const fmt = (c: number) =>
   (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+// Ícone + gradiente por slug (fallback usa 🍽️)
+const CAT_STYLE: Record<string, { emoji: string; bg: string }> = {
+  pizza: { emoji: "🍕", bg: "from-red-100 to-orange-100" },
+  hamburguer: { emoji: "🍔", bg: "from-amber-100 to-yellow-100" },
+  hamburgueres: { emoji: "🍔", bg: "from-amber-100 to-yellow-100" },
+  lanches: { emoji: "🥪", bg: "from-yellow-100 to-orange-100" },
+  japonesa: { emoji: "🍣", bg: "from-rose-100 to-pink-100" },
+  acai: { emoji: "🍨", bg: "from-purple-100 to-fuchsia-100" },
+  sorvete: { emoji: "🍦", bg: "from-sky-100 to-blue-100" },
+  doces: { emoji: "🍰", bg: "from-pink-100 to-rose-100" },
+  bebidas: { emoji: "🥤", bg: "from-cyan-100 to-teal-100" },
+  saudavel: { emoji: "🥗", bg: "from-emerald-100 to-lime-100" },
+  padaria: { emoji: "🥐", bg: "from-amber-100 to-orange-100" },
+  marmita: { emoji: "🍱", bg: "from-orange-100 to-red-100" },
+  mercado: { emoji: "🛒", bg: "from-red-100 to-orange-100" },
+  farmacia: { emoji: "💊", bg: "from-blue-100 to-cyan-100" },
+  pastel: { emoji: "🥟", bg: "from-yellow-100 to-amber-100" },
+};
+
+function catStyle(slug: string) {
+  return CAT_STYLE[slug] ?? { emoji: "🍽️", bg: "from-orange-100 to-red-100" };
+}
+
 function ClienteHome() {
+  const navigate = useNavigate();
   const [cats, setCats] = useState<Categoria[]>([]);
   const [estabs, setEstabs] = useState<Estab[]>([]);
-  const [busca, setBusca] = useState("");
   const [catSel, setCatSel] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -50,107 +71,92 @@ function ClienteHome() {
     })();
   }, []);
 
-  const filtered = useMemo(() => {
-    const q = busca.trim().toLowerCase();
-    return estabs.filter(
-      (e) =>
-        (!catSel || e.categoria_id === catSel) &&
-        (!q || e.nome.toLowerCase().includes(q) || (e.descricao ?? "").toLowerCase().includes(q)),
-    );
-  }, [estabs, catSel, busca]);
-
-  const destaques = filtered.filter((e) => (e.avaliacao ?? 0) >= 4.5).slice(0, 8);
-  const freeShip = filtered.filter((e) => e.taxa_entrega_cents === 0).slice(0, 8);
-  const todos = filtered;
+  const filtered = useMemo(
+    () => (catSel ? estabs.filter((e) => e.categoria_id === catSel) : estabs),
+    [estabs, catSel],
+  );
 
   return (
     <div className="space-y-6">
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          placeholder="Buscar restaurantes, pratos, categorias"
-          className="pl-9"
-        />
-      </div>
+      {/* Categorias — círculos coloridos horizontais */}
+      <section className="-mx-4">
+        <div className="scrollbar-hide flex gap-4 overflow-x-auto px-4 pb-1">
+          {cats.map((c) => {
+            const st = catStyle(c.slug);
+            const active = catSel === c.id;
+            return (
+              <button
+                key={c.id}
+                onClick={() => setCatSel(active ? null : c.id)}
+                className="flex w-16 shrink-0 flex-col items-center gap-1.5"
+              >
+                <div
+                  className={`grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br ${st.bg} text-2xl shadow-sm transition-all ${
+                    active ? "ring-2 ring-primary ring-offset-2 scale-105" : "hover:scale-105"
+                  }`}
+                >
+                  <span aria-hidden>{st.emoji}</span>
+                </div>
+                <span className={`text-center text-[11px] font-semibold leading-tight ${active ? "text-primary" : "text-foreground"}`}>
+                  {c.nome}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2">
-        <CatChip active={!catSel} onClick={() => setCatSel(null)} label="Todas" />
-        {cats.map((c) => (
-          <CatChip
-            key={c.id}
-            active={catSel === c.id}
-            onClick={() => setCatSel(catSel === c.id ? null : c.id)}
-            label={c.nome}
-          />
-        ))}
-      </div>
+      {/* Banner promocional premium */}
+      <button
+        onClick={() => navigate({ to: "/cliente/buscar" })}
+        className="relative block w-full overflow-hidden rounded-2xl bg-gradient-to-r from-primary via-[hsl(19,100%,50%)] to-[hsl(14,100%,52%)] p-5 text-left text-primary-foreground shadow-brand"
+      >
+        <div className="relative z-10 max-w-[65%]">
+          <p className="text-xs font-bold uppercase tracking-widest opacity-90">Promoção especial</p>
+          <p className="mt-1 text-2xl font-black leading-tight">
+            até <span className="text-white drop-shadow">50% OFF</span>
+          </p>
+          <span className="mt-3 inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-bold text-primary shadow">
+            Ver ofertas
+          </span>
+        </div>
+        <div className="pointer-events-none absolute -right-2 -bottom-2 text-8xl opacity-90 drop-shadow-xl">
+          🍔
+        </div>
+        <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+      </button>
 
+      {/* Restaurantes */}
       {loading ? (
-        <div className="flex justify-center py-20">
+        <div className="flex justify-center py-16">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
-      ) : todos.length === 0 ? (
-        <EmptyState msg="Nenhum estabelecimento encontrado." />
-      ) : (
-        <>
-          {destaques.length > 0 && (
-            <Section title="Destaques" icon={<Sparkles className="h-4 w-4 text-primary" />}>
-              <RailRow items={destaques} />
-            </Section>
-          )}
-          {freeShip.length > 0 && (
-            <Section title="Entrega grátis">
-              <RailRow items={freeShip} />
-            </Section>
-          )}
-          <Section title={catSel ? cats.find((c) => c.id === catSel)?.nome ?? "Todos" : "Todos os restaurantes"}>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {todos.map((e) => (
-                <EstabCard key={e.id} estab={e} />
-              ))}
-            </div>
-          </Section>
-        </>
-      )}
-    </div>
-  );
-}
-
-function CatChip({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition ${
-        active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"
-      }`}
-    >
-      {label}
-    </button>
-  );
-}
-
-function Section({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <section className="space-y-3">
-      <h2 className="flex items-center gap-1.5 text-base font-bold text-foreground">
-        {icon}
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-}
-
-function RailRow({ items }: { items: Estab[] }) {
-  return (
-    <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
-      {items.map((e) => (
-        <div key={e.id} className="w-56 shrink-0">
-          <EstabCard estab={e} />
+      ) : filtered.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
+          <p className="text-sm text-muted-foreground">Nenhum estabelecimento encontrado.</p>
         </div>
-      ))}
+      ) : (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-black text-foreground">
+              {catSel ? cats.find((c) => c.id === catSel)?.nome : "Restaurantes perto de você"}
+            </h2>
+            {catSel && (
+              <button
+                onClick={() => setCatSel(null)}
+                className="text-xs font-bold text-primary"
+              >
+                Ver todos
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {filtered.map((e) => (
+              <EstabCard key={e.id} estab={e} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
@@ -160,48 +166,51 @@ function EstabCard({ estab }: { estab: Estab }) {
     <Link
       to="/cliente/estabelecimento/$id"
       params={{ id: estab.id }}
-      className="group block overflow-hidden rounded-2xl border border-border bg-card shadow-card transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-brand"
+      className="group block overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-brand"
     >
-      <div className="relative h-32 w-full bg-gradient-to-br from-primary/20 to-primary/5">
-        {estab.capa_url && (
-          <img src={estab.capa_url} alt={estab.nome} className="h-full w-full object-cover" loading="lazy" />
+      <div className="relative h-24 w-full bg-gradient-to-br from-primary/15 to-primary/5">
+        {estab.capa_url ? (
+          <img
+            src={estab.capa_url}
+            alt={estab.nome}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="grid h-full w-full place-items-center text-3xl opacity-40">🍽️</div>
         )}
         {!estab.is_open && (
-          <Badge variant="secondary" className="absolute right-2 top-2">Fechado</Badge>
+          <span className="absolute inset-0 grid place-items-center bg-black/50 text-[11px] font-bold uppercase text-white">
+            Fechado
+          </span>
         )}
-        {estab.taxa_entrega_cents === 0 && (
-          <Badge className="absolute left-2 top-2 bg-primary text-primary-foreground">Grátis</Badge>
+        {estab.taxa_entrega_cents === 0 && estab.is_open && (
+          <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-black uppercase text-white shadow">
+            <Bike className="h-3 w-3" /> Grátis
+          </span>
         )}
       </div>
-      <div className="p-3">
-        <h3 className="truncate font-semibold text-foreground">{estab.nome}</h3>
-        {estab.descricao && (
-          <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{estab.descricao}</p>
-        )}
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+      <div className="p-2.5">
+        <h3 className="truncate text-sm font-bold text-foreground">{estab.nome}</h3>
+        <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
           {estab.avaliacao != null && (
-            <span className="flex items-center gap-1">
-              <Star className="h-3 w-3 fill-primary text-primary" />
+            <span className="flex items-center gap-0.5 font-semibold text-foreground">
+              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
               {Number(estab.avaliacao).toFixed(1)}
             </span>
           )}
+          <span aria-hidden>·</span>
           {estab.tempo_medio_min && (
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-0.5">
               <Clock className="h-3 w-3" />
               {estab.tempo_medio_min} min
             </span>
           )}
-          <span>{estab.taxa_entrega_cents === 0 ? "Grátis" : fmt(estab.taxa_entrega_cents)}</span>
         </div>
+        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+          Entrega {estab.taxa_entrega_cents === 0 ? "grátis" : fmt(estab.taxa_entrega_cents)}
+        </p>
       </div>
     </Link>
-  );
-}
-
-function EmptyState({ msg }: { msg: string }) {
-  return (
-    <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-      <p className="text-sm text-muted-foreground">{msg}</p>
-    </div>
   );
 }
