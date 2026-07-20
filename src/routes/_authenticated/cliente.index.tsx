@@ -250,7 +250,12 @@ function ClienteHome() {
         ) : (
           <div className="space-y-3">
             {filtered.map((e) => (
-              <EstabRow key={e.id} estab={e} />
+              <EstabRow
+                key={e.id}
+                estab={e}
+                hasPromo={promoIds.has(e.id)}
+                isBestseller={(salesCount[e.id] ?? 0) >= threshold}
+              />
             ))}
           </div>
         )}
@@ -259,7 +264,15 @@ function ClienteHome() {
   );
 }
 
-function EstabRow({ estab }: { estab: Estab }) {
+function EstabRow({
+  estab,
+  hasPromo,
+  isBestseller,
+}: {
+  estab: Estab;
+  hasPromo: boolean;
+  isBestseller: boolean;
+}) {
   return (
     <Link
       to="/cliente/estabelecimento/$id"
