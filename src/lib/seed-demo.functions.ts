@@ -186,7 +186,6 @@ export const seedDemoData = createServerFn({ method: "POST" }).handler(async () 
       preco_cents: p.preco_cents,
       foto_url: p.foto_url,
       ordem: i,
-      ativo: true,
       disponivel: true,
     }));
     await supabaseAdmin.from("products").insert(rows);
