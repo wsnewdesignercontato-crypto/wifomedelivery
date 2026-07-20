@@ -2130,7 +2130,18 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      available_couriers: {
+        Args: never
+        Returns: {
+          avaliacao: number
+          last_seen: string
+          lat: number
+          lng: number
+          nome: string
+          user_id: string
+          veiculo: string
+        }[]
+      }
     }
     Enums: {
       app_role: "cliente" | "estabelecimento" | "entregador" | "admin"
