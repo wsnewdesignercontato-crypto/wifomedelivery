@@ -1354,6 +1354,7 @@ export type Database = {
           cancelled_by: string | null
           cancelled_role: string | null
           cliente_id: string
+          codigo_entrega: string | null
           created_at: string
           desconto_cents: number
           endereco_entrega: Json | null
@@ -1377,6 +1378,7 @@ export type Database = {
           cancelled_by?: string | null
           cancelled_role?: string | null
           cliente_id: string
+          codigo_entrega?: string | null
           created_at?: string
           desconto_cents?: number
           endereco_entrega?: Json | null
@@ -1400,6 +1402,7 @@ export type Database = {
           cancelled_by?: string | null
           cancelled_role?: string | null
           cliente_id?: string
+          codigo_entrega?: string | null
           created_at?: string
           desconto_cents?: number
           endereco_entrega?: Json | null
