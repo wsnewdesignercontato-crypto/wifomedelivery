@@ -101,7 +101,7 @@ function CheckoutPage() {
 
   async function confirmar() {
     const addr = addrs.find((a) => a.id === addrId);
-    if (!addr) { toast.error("Selecione um endereço"); return; }
+    if (tipoEntrega === "delivery" && !addr) { toast.error("Selecione um endereço"); return; }
     if (!estab) { toast.error("Carrinho vazio"); return; }
     setEnviando(true);
     try {
@@ -109,7 +109,8 @@ function CheckoutPage() {
         data: {
           establishment_id: estab.id,
           forma_pagamento: pagto,
-          endereco: {
+          tipo_entrega: tipoEntrega,
+          endereco: tipoEntrega === "pickup" || !addr ? null : {
             label: addr.label, rua: addr.rua, numero: addr.numero, complemento: addr.complemento,
             bairro: addr.bairro, cidade: addr.cidade, estado: addr.estado, cep: addr.cep,
             lat: addr.lat, lng: addr.lng,
