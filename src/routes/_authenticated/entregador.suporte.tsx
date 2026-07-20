@@ -32,7 +32,7 @@ function Suporte() {
   async function abrir() {
     if (!courier || !f.assunto || !f.mensagem) return toast.error("Preencha assunto e mensagem");
     const { data, error } = await supabase.from("support_tickets").insert({
-      user_id: courier.user_id, assunto: f.assunto, status: "open", priority: f.priority,
+      user_id: courier.user_id, assunto: f.assunto, status: "open", priority: f.priority as "normal",
     }).select("id").single();
     if (error || !data) return toast.error(error?.message ?? "Erro");
     await supabase.from("support_messages").insert({ ticket_id: data.id, sender_id: courier.user_id, mensagem: f.mensagem });
