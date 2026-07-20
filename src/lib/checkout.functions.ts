@@ -62,7 +62,7 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     // Cupom (opcional)
     let desconto = 0;
-    let frete = loja.taxa_entrega_cents;
+    let frete = isPickup ? 0 : loja.taxa_entrega_cents;
     if (data.coupon_code) {
       const { data: cup } = await supabase
         .from("coupons")
