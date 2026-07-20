@@ -204,7 +204,6 @@ export const seedDemoData = createServerFn({ method: "POST" }).handler(async () 
       .upsert(
         {
           user_id: userId,
-          nome: c.nome,
           veiculo: "moto",
           placa: "ABC1D23",
           status: "offline",
