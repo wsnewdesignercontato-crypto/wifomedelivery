@@ -27,6 +27,7 @@ import { Route as AuthenticatedEntregadorIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedClienteIndexRouteImport } from './routes/_authenticated/cliente.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as ApiPublicSeedDemoRouteImport } from './routes/api/public/seed-demo'
+import { Route as AuthenticatedEstabelecimentoSaquesRouteImport } from './routes/_authenticated/estabelecimento.saques'
 import { Route as AuthenticatedEstabelecimentoRelatoriosRouteImport } from './routes/_authenticated/estabelecimento.relatorios'
 import { Route as AuthenticatedEstabelecimentoProdutosRouteImport } from './routes/_authenticated/estabelecimento.produtos'
 import { Route as AuthenticatedEstabelecimentoPedidosRouteImport } from './routes/_authenticated/estabelecimento.pedidos'
@@ -44,6 +45,7 @@ import { Route as AuthenticatedEstabelecimentoBannersRouteImport } from './route
 import { Route as AuthenticatedEstabelecimentoAvaliacoesRouteImport } from './routes/_authenticated/estabelecimento.avaliacoes'
 import { Route as AuthenticatedEntregadorVeiculoRouteImport } from './routes/_authenticated/entregador.veiculo'
 import { Route as AuthenticatedEntregadorSuporteRouteImport } from './routes/_authenticated/entregador.suporte'
+import { Route as AuthenticatedEntregadorSaquesRouteImport } from './routes/_authenticated/entregador.saques'
 import { Route as AuthenticatedEntregadorPerfilRouteImport } from './routes/_authenticated/entregador.perfil'
 import { Route as AuthenticatedEntregadorNotificacoesRouteImport } from './routes/_authenticated/entregador.notificacoes'
 import { Route as AuthenticatedEntregadorMetasRouteImport } from './routes/_authenticated/entregador.metas'
@@ -186,6 +188,12 @@ const ApiPublicSeedDemoRoute = ApiPublicSeedDemoRouteImport.update({
   path: '/api/public/seed-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedEstabelecimentoSaquesRoute =
+  AuthenticatedEstabelecimentoSaquesRouteImport.update({
+    id: '/saques',
+    path: '/saques',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
 const AuthenticatedEstabelecimentoRelatoriosRoute =
   AuthenticatedEstabelecimentoRelatoriosRouteImport.update({
     id: '/relatorios',
@@ -286,6 +294,12 @@ const AuthenticatedEntregadorSuporteRoute =
   AuthenticatedEntregadorSuporteRouteImport.update({
     id: '/suporte',
     path: '/suporte',
+    getParentRoute: () => AuthenticatedEntregadorRoute,
+  } as any)
+const AuthenticatedEntregadorSaquesRoute =
+  AuthenticatedEntregadorSaquesRouteImport.update({
+    id: '/saques',
+    path: '/saques',
     getParentRoute: () => AuthenticatedEntregadorRoute,
   } as any)
 const AuthenticatedEntregadorPerfilRoute =
@@ -622,6 +636,7 @@ export interface FileRoutesByFullPath {
   '/entregador/metas': typeof AuthenticatedEntregadorMetasRoute
   '/entregador/notificacoes': typeof AuthenticatedEntregadorNotificacoesRoute
   '/entregador/perfil': typeof AuthenticatedEntregadorPerfilRouteWithChildren
+  '/entregador/saques': typeof AuthenticatedEntregadorSaquesRoute
   '/entregador/suporte': typeof AuthenticatedEntregadorSuporteRoute
   '/entregador/veiculo': typeof AuthenticatedEntregadorVeiculoRoute
   '/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
@@ -639,6 +654,7 @@ export interface FileRoutesByFullPath {
   '/estabelecimento/pedidos': typeof AuthenticatedEstabelecimentoPedidosRoute
   '/estabelecimento/produtos': typeof AuthenticatedEstabelecimentoProdutosRoute
   '/estabelecimento/relatorios': typeof AuthenticatedEstabelecimentoRelatoriosRoute
+  '/estabelecimento/saques': typeof AuthenticatedEstabelecimentoSaquesRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/cliente/': typeof AuthenticatedClienteIndexRoute
@@ -702,6 +718,7 @@ export interface FileRoutesByTo {
   '/entregador/metas': typeof AuthenticatedEntregadorMetasRoute
   '/entregador/notificacoes': typeof AuthenticatedEntregadorNotificacoesRoute
   '/entregador/perfil': typeof AuthenticatedEntregadorPerfilRouteWithChildren
+  '/entregador/saques': typeof AuthenticatedEntregadorSaquesRoute
   '/entregador/suporte': typeof AuthenticatedEntregadorSuporteRoute
   '/entregador/veiculo': typeof AuthenticatedEntregadorVeiculoRoute
   '/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
@@ -719,6 +736,7 @@ export interface FileRoutesByTo {
   '/estabelecimento/pedidos': typeof AuthenticatedEstabelecimentoPedidosRoute
   '/estabelecimento/produtos': typeof AuthenticatedEstabelecimentoProdutosRoute
   '/estabelecimento/relatorios': typeof AuthenticatedEstabelecimentoRelatoriosRoute
+  '/estabelecimento/saques': typeof AuthenticatedEstabelecimentoSaquesRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/cliente': typeof AuthenticatedClienteIndexRoute
@@ -788,6 +806,7 @@ export interface FileRoutesById {
   '/_authenticated/entregador/metas': typeof AuthenticatedEntregadorMetasRoute
   '/_authenticated/entregador/notificacoes': typeof AuthenticatedEntregadorNotificacoesRoute
   '/_authenticated/entregador/perfil': typeof AuthenticatedEntregadorPerfilRouteWithChildren
+  '/_authenticated/entregador/saques': typeof AuthenticatedEntregadorSaquesRoute
   '/_authenticated/entregador/suporte': typeof AuthenticatedEntregadorSuporteRoute
   '/_authenticated/entregador/veiculo': typeof AuthenticatedEntregadorVeiculoRoute
   '/_authenticated/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
@@ -805,6 +824,7 @@ export interface FileRoutesById {
   '/_authenticated/estabelecimento/pedidos': typeof AuthenticatedEstabelecimentoPedidosRoute
   '/_authenticated/estabelecimento/produtos': typeof AuthenticatedEstabelecimentoProdutosRoute
   '/_authenticated/estabelecimento/relatorios': typeof AuthenticatedEstabelecimentoRelatoriosRoute
+  '/_authenticated/estabelecimento/saques': typeof AuthenticatedEstabelecimentoSaquesRoute
   '/api/public/seed-demo': typeof ApiPublicSeedDemoRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/cliente/': typeof AuthenticatedClienteIndexRoute
@@ -874,6 +894,7 @@ export interface FileRouteTypes {
     | '/entregador/metas'
     | '/entregador/notificacoes'
     | '/entregador/perfil'
+    | '/entregador/saques'
     | '/entregador/suporte'
     | '/entregador/veiculo'
     | '/estabelecimento/avaliacoes'
@@ -891,6 +912,7 @@ export interface FileRouteTypes {
     | '/estabelecimento/pedidos'
     | '/estabelecimento/produtos'
     | '/estabelecimento/relatorios'
+    | '/estabelecimento/saques'
     | '/api/public/seed-demo'
     | '/admin/'
     | '/cliente/'
@@ -954,6 +976,7 @@ export interface FileRouteTypes {
     | '/entregador/metas'
     | '/entregador/notificacoes'
     | '/entregador/perfil'
+    | '/entregador/saques'
     | '/entregador/suporte'
     | '/entregador/veiculo'
     | '/estabelecimento/avaliacoes'
@@ -971,6 +994,7 @@ export interface FileRouteTypes {
     | '/estabelecimento/pedidos'
     | '/estabelecimento/produtos'
     | '/estabelecimento/relatorios'
+    | '/estabelecimento/saques'
     | '/api/public/seed-demo'
     | '/admin'
     | '/cliente'
@@ -1039,6 +1063,7 @@ export interface FileRouteTypes {
     | '/_authenticated/entregador/metas'
     | '/_authenticated/entregador/notificacoes'
     | '/_authenticated/entregador/perfil'
+    | '/_authenticated/entregador/saques'
     | '/_authenticated/entregador/suporte'
     | '/_authenticated/entregador/veiculo'
     | '/_authenticated/estabelecimento/avaliacoes'
@@ -1056,6 +1081,7 @@ export interface FileRouteTypes {
     | '/_authenticated/estabelecimento/pedidos'
     | '/_authenticated/estabelecimento/produtos'
     | '/_authenticated/estabelecimento/relatorios'
+    | '/_authenticated/estabelecimento/saques'
     | '/api/public/seed-demo'
     | '/_authenticated/admin/'
     | '/_authenticated/cliente/'
@@ -1216,6 +1242,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSeedDemoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/estabelecimento/saques': {
+      id: '/_authenticated/estabelecimento/saques'
+      path: '/saques'
+      fullPath: '/estabelecimento/saques'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoSaquesRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
     '/_authenticated/estabelecimento/relatorios': {
       id: '/_authenticated/estabelecimento/relatorios'
       path: '/relatorios'
@@ -1333,6 +1366,13 @@ declare module '@tanstack/react-router' {
       path: '/suporte'
       fullPath: '/entregador/suporte'
       preLoaderRoute: typeof AuthenticatedEntregadorSuporteRouteImport
+      parentRoute: typeof AuthenticatedEntregadorRoute
+    }
+    '/_authenticated/entregador/saques': {
+      id: '/_authenticated/entregador/saques'
+      path: '/saques'
+      fullPath: '/entregador/saques'
+      preLoaderRoute: typeof AuthenticatedEntregadorSaquesRouteImport
       parentRoute: typeof AuthenticatedEntregadorRoute
     }
     '/_authenticated/entregador/perfil': {
@@ -1802,6 +1842,7 @@ interface AuthenticatedEntregadorRouteChildren {
   AuthenticatedEntregadorMetasRoute: typeof AuthenticatedEntregadorMetasRoute
   AuthenticatedEntregadorNotificacoesRoute: typeof AuthenticatedEntregadorNotificacoesRoute
   AuthenticatedEntregadorPerfilRoute: typeof AuthenticatedEntregadorPerfilRouteWithChildren
+  AuthenticatedEntregadorSaquesRoute: typeof AuthenticatedEntregadorSaquesRoute
   AuthenticatedEntregadorSuporteRoute: typeof AuthenticatedEntregadorSuporteRoute
   AuthenticatedEntregadorVeiculoRoute: typeof AuthenticatedEntregadorVeiculoRoute
   AuthenticatedEntregadorIndexRoute: typeof AuthenticatedEntregadorIndexRoute
@@ -1826,6 +1867,7 @@ const AuthenticatedEntregadorRouteChildren: AuthenticatedEntregadorRouteChildren
       AuthenticatedEntregadorNotificacoesRoute,
     AuthenticatedEntregadorPerfilRoute:
       AuthenticatedEntregadorPerfilRouteWithChildren,
+    AuthenticatedEntregadorSaquesRoute: AuthenticatedEntregadorSaquesRoute,
     AuthenticatedEntregadorSuporteRoute: AuthenticatedEntregadorSuporteRoute,
     AuthenticatedEntregadorVeiculoRoute: AuthenticatedEntregadorVeiculoRoute,
     AuthenticatedEntregadorIndexRoute: AuthenticatedEntregadorIndexRoute,
@@ -1852,6 +1894,7 @@ interface AuthenticatedEstabelecimentoRouteChildren {
   AuthenticatedEstabelecimentoPedidosRoute: typeof AuthenticatedEstabelecimentoPedidosRoute
   AuthenticatedEstabelecimentoProdutosRoute: typeof AuthenticatedEstabelecimentoProdutosRoute
   AuthenticatedEstabelecimentoRelatoriosRoute: typeof AuthenticatedEstabelecimentoRelatoriosRoute
+  AuthenticatedEstabelecimentoSaquesRoute: typeof AuthenticatedEstabelecimentoSaquesRoute
   AuthenticatedEstabelecimentoIndexRoute: typeof AuthenticatedEstabelecimentoIndexRoute
 }
 
@@ -1887,6 +1930,8 @@ const AuthenticatedEstabelecimentoRouteChildren: AuthenticatedEstabelecimentoRou
       AuthenticatedEstabelecimentoProdutosRoute,
     AuthenticatedEstabelecimentoRelatoriosRoute:
       AuthenticatedEstabelecimentoRelatoriosRoute,
+    AuthenticatedEstabelecimentoSaquesRoute:
+      AuthenticatedEstabelecimentoSaquesRoute,
     AuthenticatedEstabelecimentoIndexRoute:
       AuthenticatedEstabelecimentoIndexRoute,
   }
