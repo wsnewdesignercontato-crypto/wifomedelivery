@@ -5,7 +5,7 @@ export const generateAdminInsights = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { question: string }) => data)
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    const { data: isAdmin } = await (context.supabase as unknown as { rpc: (n: string, p: unknown) => Promise<{ data: boolean }> }).rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (!isAdmin) throw new Error("Forbidden");
 
     // Aggregate key metrics
