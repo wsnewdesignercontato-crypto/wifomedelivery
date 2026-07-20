@@ -22,15 +22,14 @@ function ClubePage() {
         <ChevronLeft className="h-4 w-4" /> Voltar
       </Link>
 
-      <div className="relative overflow-hidden rounded-3xl bg-black shadow-xl ring-1 ring-white/5">
-        <div className="aspect-[16/9] w-full">
-          <img
-            src={clubeBanner.url}
-            alt="Clube WiFome — assine e economize em cada pedido"
-            className="h-full w-full object-cover object-center"
-            loading="eager"
-          />
-        </div>
+      <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-3xl shadow-xl ring-1 ring-white/10">
+        <img
+          src={clubeBanner.url}
+          alt="Clube WiFome — assine e economize em cada pedido"
+          className="block h-auto w-full select-none"
+          draggable={false}
+          loading="eager"
+        />
       </div>
 
       <div className="space-y-2 rounded-2xl border border-border bg-card p-4">
