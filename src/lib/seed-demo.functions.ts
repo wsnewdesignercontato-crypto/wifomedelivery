@@ -8,13 +8,14 @@ import { createServerFn } from "@tanstack/react-start";
 export const seedDemoData = createServerFn({ method: "POST" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  // If any approved establishment exists already, don't reseed.
-  const { count: existing } = await supabaseAdmin
+  // Skip if demo restaurants were already inserted.
+  const { data: alreadySeeded } = await supabaseAdmin
     .from("establishments")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "aprovado");
-  if ((existing ?? 0) > 0) {
-    return { ok: true, skipped: true, count: existing };
+    .select("id")
+    .eq("nome", "Burguer da Praça")
+    .limit(1);
+  if (alreadySeeded && alreadySeeded.length > 0) {
+    return { ok: true, skipped: true };
   }
 
   // Look up global categories to attach establishments to.
