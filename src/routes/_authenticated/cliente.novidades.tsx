@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Sparkles, Store, ChevronRight, Megaphone } from "lucide-react";
+import { ShoppingBag, Store, ChevronRight } from "lucide-react";
+import adBurgerPremium from "@/assets/ad-burger-premium.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
