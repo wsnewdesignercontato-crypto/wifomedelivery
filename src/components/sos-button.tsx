@@ -26,12 +26,12 @@ export function SOSButton({ orderId, deliveryId }: { orderId?: string | null; de
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) { setSending(false); return toast.error("Sessão expirada"); }
 
+    void deliveryId;
     const { error } = await supabase.from("sos_events").insert({
-      user_id: u.user.id,
+      courier_id: u.user.id,
       order_id: orderId ?? null,
-      delivery_id: deliveryId ?? null,
       tipo,
-      detalhes: detalhes.trim() || null,
+      descricao: detalhes.trim() || null,
       lat, lng,
     });
     setSending(false);
