@@ -39,7 +39,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Estab } from "@/hooks/use-estab";
 import { useQueryClient } from "@tanstack/react-query";
 
-const NAV = [
+type NavItem = { label: string; to: string; icon: typeof LayoutDashboard; exact?: boolean };
+const NAV: NavItem[] = [
   { label: "Visão geral", to: "/estabelecimento", icon: LayoutDashboard, exact: true },
   { label: "Pedidos", to: "/estabelecimento/pedidos", icon: ShoppingBag },
   { label: "Produtos", to: "/estabelecimento/produtos", icon: Package },
@@ -55,7 +56,7 @@ const NAV = [
   { label: "Avaliações", to: "/estabelecimento/avaliacoes", icon: Star },
   { label: "Equipe", to: "/estabelecimento/equipe", icon: Users },
   { label: "Configurações", to: "/estabelecimento/configuracoes", icon: Settings },
-] as const;
+];
 
 function AppSidebar() {
   const { state } = useSidebar();
