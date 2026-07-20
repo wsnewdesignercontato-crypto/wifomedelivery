@@ -5,8 +5,8 @@ import { z } from "zod";
 type AppRole = "cliente" | "estabelecimento" | "entregador" | "admin";
 
 async function assertAdmin(context: { supabase: any; userId: string }) {
-  // @ts-expect-error has_role RPC is in private schema
-  const { data, error } = await context.supabase.rpc("has_role", {
+  const { data, error } = await (context.supabase.rpc as any)("has_role", {
+
     _user_id: context.userId,
     _role: "admin",
   });
