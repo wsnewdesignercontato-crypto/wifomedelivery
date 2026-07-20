@@ -22,7 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean };
+const navItems: NavItem[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/clientes", label: "Clientes", icon: Users },
   { to: "/admin/estabelecimentos", label: "Estabelecimentos", icon: Store },
@@ -31,7 +32,7 @@ const navItems = [
   { to: "/admin/avaliacoes", label: "Avaliações", icon: Star },
   { to: "/admin/logs", label: "Logs & Auditoria", icon: ScrollText },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings },
-] as const;
+];
 
 const soonItems = [
   "Financeiro",

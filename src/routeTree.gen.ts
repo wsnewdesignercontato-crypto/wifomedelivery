@@ -20,6 +20,7 @@ import { Route as AuthenticatedEstabelecimentoRouteImport } from './routes/_auth
 import { Route as AuthenticatedEntregadorRouteImport } from './routes/_authenticated/entregador'
 import { Route as AuthenticatedClienteRouteImport } from './routes/_authenticated/cliente'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicSeedDemoRouteImport } from './routes/api/public/seed-demo'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -77,6 +78,11 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   path: '/app',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiPublicSeedDemoRoute = ApiPublicSeedDemoRouteImport.update({
   id: '/api/public/seed-demo',
   path: '/api/public/seed-demo',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/entrar': typeof EntrarRoute
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/app': typeof AuthenticatedAppRoute
   '/cliente': typeof AuthenticatedClienteRoute
   '/entregador': typeof AuthenticatedEntregadorRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/entrar': typeof EntrarRoute
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/app': typeof AuthenticatedAppRoute
   '/cliente': typeof AuthenticatedClienteRoute
   '/entregador': typeof AuthenticatedEntregadorRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/entrar': typeof EntrarRoute
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/cliente': typeof AuthenticatedClienteRoute
   '/_authenticated/entregador': typeof AuthenticatedEntregadorRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/login'
     | '/sitemap.xml'
+    | '/admin'
     | '/app'
     | '/cliente'
     | '/entregador'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/login'
     | '/sitemap.xml'
+    | '/admin'
     | '/app'
     | '/cliente'
     | '/entregador'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/entrar'
     | '/login'
     | '/sitemap.xml'
+    | '/_authenticated/admin'
     | '/_authenticated/app'
     | '/_authenticated/cliente'
     | '/_authenticated/entregador'
@@ -257,6 +269,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/seed-demo': {
       id: '/api/public/seed-demo'
       path: '/api/public/seed-demo'
@@ -268,6 +287,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedClienteRoute: typeof AuthenticatedClienteRoute
   AuthenticatedEntregadorRoute: typeof AuthenticatedEntregadorRoute
@@ -275,6 +295,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedClienteRoute: AuthenticatedClienteRoute,
   AuthenticatedEntregadorRoute: AuthenticatedEntregadorRoute,
