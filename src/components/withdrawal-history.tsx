@@ -52,12 +52,14 @@ export function WithdrawalHistory({ table, ownerColumn, ownerId, bucket }: Props
     async function load() {
       if (!ownerId) { setRows([]); setLoading(false); return; }
       setLoading(true);
-      const { data, error } = await supabase
+      const query = supabase
         .from(table)
         .select("id,valor_cents,liquido_cents,taxa_cents,metodo,status,motivo_recusa,processado_em,comprovante_url,created_at")
-        .eq(ownerColumn, ownerId)
         .order("created_at", { ascending: false })
         .limit(200);
+      const { data, error } = await (query as unknown as {
+        eq: (col: string, val: string) => Promise<{ data: WithdrawalRow[] | null; error: unknown }>;
+      }).eq(ownerColumn, ownerId);
       if (!mounted) return;
       if (!error && data) setRows(data as WithdrawalRow[]);
       setLoading(false);
