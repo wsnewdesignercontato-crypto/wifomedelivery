@@ -2048,18 +2048,6 @@ export type Database = {
       }
     }
     Views: {
-      available_couriers: {
-        Row: {
-          avaliacao: number | null
-          last_seen: string | null
-          lat: number | null
-          lng: number | null
-          nome: string | null
-          user_id: string | null
-          veiculo: string | null
-        }
-        Relationships: []
-      }
       establishments_public: {
         Row: {
           avaliacao: number | null
