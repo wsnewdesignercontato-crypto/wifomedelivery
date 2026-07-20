@@ -55,7 +55,7 @@ const GROUPS: Array<{
   {
     title: "Vantagens WiFome",
     items: [
-      { to: "/cliente/perfil/clube", label: "Clube WiFi", desc: "Assinatura com fretes grátis", icon: Crown, accent: true },
+      { to: "/cliente/perfil/clube", label: "Clube WiFome", desc: "Assinatura com fretes grátis", icon: Crown, accent: true },
       { to: "/cliente/perfil/recompensas", label: "Recompensas e benefícios", desc: "Cupons, cashback e conquistas", icon: Gift },
     ],
   },
