@@ -40,7 +40,7 @@ function PedidosPage() {
     async function load() {
       const { data } = await supabase
         .from("orders")
-        .select("id,status,total_cents,created_at,establishment_id")
+        .select("id,status,total_cents,created_at,establishment_id,tipo_entrega")
         .eq("cliente_id", user.id)
         .order("created_at", { ascending: false })
         .limit(50);
