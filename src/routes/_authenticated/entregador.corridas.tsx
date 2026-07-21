@@ -417,10 +417,11 @@ function Corridas() {
                   </p>
                 </div>
               )}
-              <div className="md:col-span-2 flex items-center justify-between rounded-xl border border-border bg-background p-3 text-xs">
-                <span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" /> Pagamento: <strong className="text-foreground">{order.forma_pagamento}</strong></span>
-                <span>Total pedido: <strong className="text-foreground">{fmt(order.total_cents)}</strong></span>
+              <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-background p-3 text-xs">
+                <span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 shrink-0" /> Pagamento: <strong className="text-foreground">{order.forma_pagamento}</strong></span>
+                <span className="shrink-0">Total pedido: <strong className="text-foreground">{fmt(order.total_cents)}</strong></span>
               </div>
+
 
               {currentStage?.key === "at_customer" && (
                 <div className="md:col-span-2 rounded-2xl border-2 border-primary bg-primary/5 p-4">
