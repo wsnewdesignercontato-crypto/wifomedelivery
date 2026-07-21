@@ -165,10 +165,12 @@ export function OrderHistory({ orderId }: { orderId: string }) {
           <p className="text-sm text-muted-foreground">Nenhuma mudança registrada ainda.</p>
         ) : (
           <ol className="relative space-y-4 border-l border-border pl-5">
-            {rows.map((r) => (
+            {rows.map((r) => {
+              const isDelivered = r.to_status === "delivered";
+              return (
               <li key={r.id} className="relative">
-                <span className="absolute -left-[27px] top-1.5 h-3 w-3 rounded-full bg-primary ring-4 ring-background" />
-                <p className="text-sm font-medium text-foreground">
+                <span className={`absolute -left-[27px] top-1.5 h-3 w-3 rounded-full ring-4 ring-background ${isDelivered ? "bg-success" : "bg-primary"}`} />
+                <p className={`text-sm font-medium ${isDelivered ? "text-success" : "text-foreground"}`}>
                   {STATUS_LABEL[r.to_status] ?? r.to_status}
                   {r.from_status && (
                     <span className="ml-1 text-xs font-normal text-muted-foreground">
@@ -181,7 +183,7 @@ export function OrderHistory({ orderId }: { orderId: string }) {
                   <p className="mt-1 rounded-md bg-muted px-2 py-1 text-xs text-foreground">Motivo: {r.reason}</p>
                 )}
               </li>
-            ))}
+            );})}
           </ol>
         )}
       </div>

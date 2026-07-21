@@ -159,17 +159,25 @@ function PedidoPage() {
           <div className="flex items-center gap-2 text-destructive"><XCircle className="h-5 w-5" /><span className="font-semibold">Pedido cancelado</span></div>
           {order.cancellation_reason && <p className="mt-1 text-xs">{order.cancellation_reason}</p>}
         </div>
+      ) : order.status === "delivered" ? (
+        <div className="rounded-2xl border border-success/50 bg-success/10 p-4">
+          <div className="flex items-center gap-2 text-success">
+            <CheckCircle2 className="h-5 w-5" />
+            <span className="font-semibold">Pedido entregue</span>
+          </div>
+        </div>
       ) : (
         <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
           {STAGES.map((s, i) => {
             const done = i < stageIdx;
             const current = i === stageIdx;
+            const isDeliveredStep = s.key === "delivered" && current;
             return (
               <div key={s.key} className="flex items-center gap-3">
-                <div className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${done ? "bg-primary text-primary-foreground" : current ? "bg-primary/20 text-primary ring-2 ring-primary" : "bg-muted text-muted-foreground"}`}>
-                  {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
+                <div className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${isDeliveredStep ? "bg-success text-white" : done ? "bg-primary text-primary-foreground" : current ? "bg-primary/20 text-primary ring-2 ring-primary" : "bg-muted text-muted-foreground"}`}>
+                  {done || isDeliveredStep ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
                 </div>
-                <span className={`text-sm ${current ? "font-bold text-foreground" : done ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
+                <span className={`text-sm ${isDeliveredStep ? "font-bold text-success" : current ? "font-bold text-foreground" : done ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
               </div>
             );
           })}

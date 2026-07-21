@@ -103,7 +103,7 @@ function PedidosPage() {
                       <span className="font-mono text-[10px] text-muted-foreground">
                         #{o.id.slice(0, 8)}
                       </span>
-                      <span className="font-bold tabular-nums text-foreground">
+                      <span className={`font-bold tabular-nums ${o.status === "delivered" ? "text-success" : "text-foreground"}`}>
                         {brl(o.total_cents)}
                       </span>
                     </div>
