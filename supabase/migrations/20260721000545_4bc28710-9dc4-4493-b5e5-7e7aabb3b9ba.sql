@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.notify_estab_ad_sub_status() FROM PUBLIC, anon, authenticated;
