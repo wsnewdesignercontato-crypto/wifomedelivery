@@ -157,7 +157,7 @@ function AnunciosEstabPage() {
                 {p.destaque_home && (<li className="flex items-center gap-1.5 text-emerald-600"><Check className="h-3.5 w-3.5" /> Destaque na Home</li>)}
                 {p.destaque_categoria && (<li className="flex items-center gap-1.5 text-emerald-600"><Check className="h-3.5 w-3.5" /> Destaque na Categoria</li>)}
                 {p.destaque_busca && (<li className="flex items-center gap-1.5 text-emerald-600"><Check className="h-3.5 w-3.5" /> Destaque na Busca</li>)}
-                {p.impressoes_estimadas && (<li className="flex items-center gap-1.5 text-muted-foreground"><Sparkles className="h-3.5 w-3.5" /> ~{p.impressoes_estimadas.toLocaleString("pt-BR")} impressões</li>)}
+                
               </ul>
               <Button className="mt-4 w-full" onClick={() => setPick(p)} disabled={!!ativo}>
                 {ativo ? "Já existe plano ativo" : "Contratar"}
