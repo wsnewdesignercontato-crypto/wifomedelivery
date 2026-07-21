@@ -177,7 +177,7 @@ function PlanosPage() {
               <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
                 <li>• Prioridade: <b>{p.prioridade}</b></li>
                 <li>• Máx. anúncios: <b>{p.max_anuncios}</b></li>
-                <li>• Impressões estimadas: <b>{(p.impressoes_estimadas ?? 0).toLocaleString("pt-BR")}</b></li>
+                
                 <li className="flex flex-wrap gap-1 pt-1">
                   {p.destaque_home && <Badge variant="outline" className="text-[10px]">Home</Badge>}
                   {p.destaque_categoria && <Badge variant="outline" className="text-[10px]">Categoria</Badge>}
