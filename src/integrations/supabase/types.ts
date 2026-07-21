@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_plans: {
+        Row: {
+          ativo: boolean
+          cor: string | null
+          created_at: string
+          descricao: string | null
+          destaque_busca: boolean
+          destaque_categoria: boolean
+          destaque_home: boolean
+          duracao_dias: number
+          id: string
+          impressoes_estimadas: number | null
+          max_anuncios: number
+          nome: string
+          preco_cents: number
+          prioridade: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cor?: string | null
+          created_at?: string
+          descricao?: string | null
+          destaque_busca?: boolean
+          destaque_categoria?: boolean
+          destaque_home?: boolean
+          duracao_dias?: number
+          id?: string
+          impressoes_estimadas?: number | null
+          max_anuncios?: number
+          nome: string
+          preco_cents?: number
+          prioridade?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cor?: string | null
+          created_at?: string
+          descricao?: string | null
+          destaque_busca?: boolean
+          destaque_categoria?: boolean
+          destaque_home?: boolean
+          duracao_dias?: number
+          id?: string
+          impressoes_estimadas?: number | null
+          max_anuncios?: number
+          nome?: string
+          preco_cents?: number
+          prioridade?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       addon_groups: {
         Row: {
           ativo: boolean
@@ -857,6 +911,83 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: true
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estab_ad_subscriptions: {
+        Row: {
+          aprovado_em: string | null
+          aprovado_por: string | null
+          created_at: string
+          establishment_id: string
+          fim_em: string | null
+          id: string
+          inicio_em: string | null
+          metodo_pagamento: string | null
+          observacao: string | null
+          plan_id: string
+          preco_pago_cents: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          created_at?: string
+          establishment_id: string
+          fim_em?: string | null
+          id?: string
+          inicio_em?: string | null
+          metodo_pagamento?: string | null
+          observacao?: string | null
+          plan_id: string
+          preco_pago_cents?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          created_at?: string
+          establishment_id?: string
+          fim_em?: string | null
+          id?: string
+          inicio_em?: string | null
+          metodo_pagamento?: string | null
+          observacao?: string | null
+          plan_id?: string
+          preco_pago_cents?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estab_ad_subscriptions_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
+          {
+            foreignKeyName: "estab_ad_subscriptions_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estab_ad_subscriptions_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estab_ad_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "ad_plans"
             referencedColumns: ["id"]
           },
         ]
