@@ -29,12 +29,13 @@ async function geocodeOne(query: string): Promise<{ lat: number; lng: number } |
 export const geocodeMissingEstablishments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: isAdmin } = await (
-      context.supabase as unknown as {
-        rpc: (n: string, p: unknown) => Promise<{ data: boolean }>;
-      }
-    ).rpc("has_role", { _user_id: context.userId, _role: "admin" });
-    if (!isAdmin) throw new Error("Forbidden");
+    const { data: roleRow } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!roleRow) throw new Error("Forbidden");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
