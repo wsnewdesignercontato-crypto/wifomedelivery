@@ -51,8 +51,8 @@ function Historico() {
                 <p className="text-xs text-muted-foreground">{r.entregue_em ? new Date(r.entregue_em).toLocaleString("pt-BR") : "—"}</p>
               </div>
               <div className="text-right">
-                <p className="font-bold text-primary">{fmt(r.valor_entrega_cents)}</p>
-                <Badge variant={r.status === "delivered" ? "default" : "destructive"} className="mt-1">{r.status}</Badge>
+                <p className={`font-bold ${r.status === "delivered" ? "text-success" : "text-primary"}`}>{fmt(r.valor_entrega_cents)}</p>
+                <Badge variant={r.status === "delivered" ? "success" : "destructive"} className="mt-1">{r.status === "delivered" ? "Entregue" : r.status}</Badge>
               </div>
             </div>
           ))}
