@@ -62,7 +62,7 @@ export function AdRotator({
   const { data: seconds = 8 } = useQuery({
     queryKey: ["ad_default_seconds"],
     queryFn: async () => {
-      const { data } = await supabase.from("platform_settings").select("ad_default_seconds").eq("id", 1).single();
+      const { data } = await supabase.rpc("get_public_platform_settings").maybeSingle();
       return (data as { ad_default_seconds?: number } | null)?.ad_default_seconds ?? 8;
     },
   });
