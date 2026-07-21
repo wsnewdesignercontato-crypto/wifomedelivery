@@ -2,7 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, lazy, Suspense } from "react";
-import { MapPin, Store, Bike, Loader2 } from "lucide-react";
+import { MapPin, Store, Bike, Loader2, AlertTriangle, Wand2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { geocodeMissingEstablishments } from "@/lib/admin-map.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/mapa")({ component: MapaPage });
 
@@ -11,51 +14,73 @@ const LiveMap = lazy(() => import("@/components/admin/live-map"));
 type Point = { courier_id: string; lat: number; lng: number; created_at: string; order_id: string | null };
 type Estab = { id: string; nome: string; lat: number; lng: number; is_open: boolean; cidade: string | null };
 
-async function fetchLatestPoints() {
+async function fetchLatestPoints(): Promise<Point[]> {
   const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-  const { data, error } = await supabase
+  const map = new Map<string, Point>();
+
+  // 1) Últimos tracking_points por entregador (entregas ativas)
+  const { data: tp } = await supabase
     .from("tracking_points")
     .select("courier_id,lat,lng,created_at,order_id")
     .gte("created_at", since)
     .order("created_at", { ascending: false })
     .limit(500);
-  if (error) throw error;
-  const seen = new Set<string>();
-  const latest: Point[] = [];
-  for (const p of (data ?? []) as Point[]) {
-    if (seen.has(p.courier_id)) continue;
-    seen.add(p.courier_id);
-    latest.push(p);
+  for (const p of (tp ?? []) as Point[]) {
+    if (!map.has(p.courier_id)) map.set(p.courier_id, p);
   }
-  return latest;
+
+  // 2) Couriers online (mesmo sem entrega em andamento) via RPC
+  const { data: online } = await (supabase as unknown as {
+    rpc: (n: string) => Promise<{ data: Array<{ user_id: string; lat: number | null; lng: number | null; last_seen: string | null }> | null }>;
+  }).rpc("list_available_couriers");
+  for (const c of online ?? []) {
+    if (c.lat == null || c.lng == null) continue;
+    if (map.has(c.user_id)) continue;
+    map.set(c.user_id, {
+      courier_id: c.user_id,
+      lat: c.lat,
+      lng: c.lng,
+      created_at: c.last_seen ?? new Date().toISOString(),
+      order_id: null,
+    });
+  }
+  return Array.from(map.values());
 }
 
-async function fetchEstablishments(): Promise<Estab[]> {
+async function fetchEstablishments(): Promise<{ withGeo: Estab[]; withoutGeo: { id: string; nome: string; cidade: string | null }[] }> {
   const { data, error } = await supabase
     .from("establishments")
     .select("id,nome,lat,lng,is_open,cidade,status")
-    .eq("status", "aprovado")
-    .not("lat", "is", null)
-    .not("lng", "is", null);
+    .eq("status", "aprovado");
   if (error) throw error;
-  return (data ?? []).filter((e: any) => e.lat != null && e.lng != null) as Estab[];
+  const withGeo: Estab[] = [];
+  const withoutGeo: { id: string; nome: string; cidade: string | null }[] = [];
+  for (const e of (data ?? []) as (Estab & { lat: number | null; lng: number | null })[]) {
+    if (e.lat != null && e.lng != null) withGeo.push(e as Estab);
+    else withoutGeo.push({ id: e.id, nome: e.nome, cidade: e.cidade });
+  }
+  return { withGeo, withoutGeo };
 }
 
 function MapaPage() {
+  const qc = useQueryClient();
   const { data: points = [], isLoading: loadingPts } = useQuery({
     queryKey: ["tracking-latest"],
     queryFn: fetchLatestPoints,
     refetchInterval: 8000,
   });
-  const { data: estabs = [], isLoading: loadingEst } = useQuery({
+  const { data: estabData, isLoading: loadingEst } = useQuery({
     queryKey: ["map-establishments"],
     queryFn: fetchEstablishments,
     refetchInterval: 60000,
   });
-  const qc = useQueryClient();
+  const estabs = estabData?.withGeo ?? [];
+  const semGeo = estabData?.withoutGeo ?? [];
 
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
+  const [geocoding, setGeocoding] = useState(false);
+  const geocodeFn = useServerFn(geocodeMissingEstablishments);
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -79,16 +104,33 @@ function MapaPage() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "tracking_points" }, () =>
         qc.invalidateQueries({ queryKey: ["tracking-latest"] }),
       )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "establishments" },
-        () => qc.invalidateQueries({ queryKey: ["map-establishments"] }),
+      .on("postgres_changes", { event: "*", schema: "public", table: "courier_profiles" }, () =>
+        qc.invalidateQueries({ queryKey: ["tracking-latest"] }),
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "establishments" }, () =>
+        qc.invalidateQueries({ queryKey: ["map-establishments"] }),
       )
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
   }, [qc]);
+
+  async function rodarGeocoding() {
+    setGeocoding(true);
+    try {
+      const res = await geocodeFn();
+      toast.success(`Geocodificação concluída: ${res.atualizados}/${res.total} localizados.`);
+      if (res.falhas.length) {
+        toast.warning(`${res.falhas.length} sem coordenadas: ${res.falhas.map((f) => f.nome).join(", ")}`);
+      }
+      qc.invalidateQueries({ queryKey: ["map-establishments"] });
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setGeocoding(false);
+    }
+  }
 
   const loading = loadingPts || loadingEst;
 
@@ -116,17 +158,39 @@ function MapaPage() {
       <div className="flex flex-wrap gap-2 text-xs">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1">
           <Store className="h-3.5 w-3.5 text-emerald-600" />
-          {estabs.length} estabelecimento{estabs.length === 1 ? "" : "s"}
+          {estabs.length} estabelecimento{estabs.length === 1 ? "" : "s"} no mapa
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1">
           <Bike className="h-3.5 w-3.5 text-primary" />
-          {points.length} entregador{points.length === 1 ? "" : "es"} online (15min)
+          {points.length} entregador{points.length === 1 ? "" : "es"} online
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1">
           <MapPin className="h-3.5 w-3.5 text-blue-500" />
           {userLoc ? "Sua localização ativa" : geoError ? geoError : "Aguardando localização…"}
         </span>
       </div>
+
+      {semGeo.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-amber-700 dark:text-amber-400">
+              {semGeo.length} estabelecimento{semGeo.length === 1 ? "" : "s"} sem coordenadas
+            </p>
+            <p className="truncate text-xs text-amber-700/80 dark:text-amber-400/80">
+              {semGeo.map((e) => e.nome).join(" • ")}
+            </p>
+          </div>
+          <button
+            onClick={rodarGeocoding}
+            disabled={geocoding}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-amber-700 disabled:opacity-50"
+          >
+            {geocoding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+            Geocodificar endereços
+          </button>
+        </div>
+      )}
 
       <div className="h-[calc(100vh-260px)] overflow-hidden rounded-xl border border-border bg-card">
         <Suspense
