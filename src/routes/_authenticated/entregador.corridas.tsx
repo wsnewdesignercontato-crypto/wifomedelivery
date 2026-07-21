@@ -443,9 +443,19 @@ function Corridas() {
                         maxLength={4}
                         placeholder="0000"
                         value={codeInput}
-                        onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                        className="h-14 text-center text-3xl font-black tracking-[0.45em]"
+                        onChange={(e) => {
+                          setCodeInput(e.target.value.replace(/\D/g, "").slice(0, 4));
+                          if (codeError) setCodeError(null);
+                        }}
+                        aria-invalid={!!codeError}
+                        aria-describedby="codigo-erro-inline"
+                        className={`h-14 text-center text-3xl font-black tracking-[0.45em] ${codeError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                       />
+                      {codeError && (
+                        <p id="codigo-erro-inline" role="alert" className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-destructive">
+                          <AlertTriangle className="h-3.5 w-3.5" /> {codeError}
+                        </p>
+                      )}
                     </div>
                     <Button size="lg" onClick={confirmarEntrega} disabled={advancing || codeInput.length !== 4}>
                       {advancing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
