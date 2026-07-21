@@ -71,6 +71,8 @@ function Corridas() {
   const [chatOpen, setChatOpen] = useState<"client_courier" | "store_courier" | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [codeAttempts, setCodeAttempts] = useState(0);
   const [deliveredInfo, setDeliveredInfo] = useState<{ valorCents: number; clienteNome: string | null } | null>(null);
   
   const [incidentOpen, setIncidentOpen] = useState(false);
