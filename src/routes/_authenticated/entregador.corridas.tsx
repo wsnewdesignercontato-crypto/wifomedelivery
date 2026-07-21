@@ -331,28 +331,28 @@ function Corridas() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-black">Corridas</h1>
-        {ativa && <SOSButton orderId={ativa.order_id} deliveryId={ativa.id} />}
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="truncate text-2xl font-black">Corridas</h1>
+        {ativa && <div className="shrink-0"><SOSButton orderId={ativa.order_id} deliveryId={ativa.id} /></div>}
       </div>
 
       {ativa && (
         <section className="rounded-2xl border-2 border-primary bg-card p-4 shadow-brand">
-          <div className="flex items-center justify-between">
-            <Badge className="bg-primary text-primary-foreground">Corrida ativa</Badge>
-            <span className="font-bold text-primary">{fmt(ativa.valor_entrega_cents)}</span>
+          <div className="flex items-center justify-between gap-3">
+            <Badge className="bg-primary text-primary-foreground shrink-0">Corrida ativa</Badge>
+            <span className="font-bold text-primary shrink-0">{fmt(ativa.valor_entrega_cents)}</span>
           </div>
 
           <div className="mt-4">
-            <div className="flex items-center gap-1">
+            <div className="grid grid-cols-6 gap-1">
               {STAGES.map((s, i) => {
                 const done = i < currentStageIdx;
                 const active = i === currentStageIdx;
                 return (
-                  <div key={s.key} className="flex flex-1 items-center">
-                    <div className={`h-2 flex-1 rounded-full ${done || active ? "bg-primary" : "bg-muted"}`} />
-                    {i < STAGES.length - 1 && <div className="w-0.5" />}
-                  </div>
+                  <div
+                    key={s.key}
+                    className={`h-2 rounded-full ${done || active ? "bg-primary" : "bg-muted"}`}
+                  />
                 );
               })}
             </div>
@@ -360,6 +360,7 @@ function Corridas() {
               Etapa {Math.max(1, currentStageIdx + 1)} de {STAGES.length} · {currentStage?.label}
             </p>
           </div>
+
 
           {order && estab && (
             <div className="mt-4 grid gap-3 text-sm md:grid-cols-2">
@@ -416,10 +417,11 @@ function Corridas() {
                   </p>
                 </div>
               )}
-              <div className="md:col-span-2 flex items-center justify-between rounded-xl border border-border bg-background p-3 text-xs">
-                <span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" /> Pagamento: <strong className="text-foreground">{order.forma_pagamento}</strong></span>
-                <span>Total pedido: <strong className="text-foreground">{fmt(order.total_cents)}</strong></span>
+              <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-background p-3 text-xs">
+                <span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 shrink-0" /> Pagamento: <strong className="text-foreground">{order.forma_pagamento}</strong></span>
+                <span className="shrink-0">Total pedido: <strong className="text-foreground">{fmt(order.total_cents)}</strong></span>
               </div>
+
 
               {currentStage?.key === "at_customer" && (
                 <div className="md:col-span-2 rounded-2xl border-2 border-primary bg-primary/5 p-4">
