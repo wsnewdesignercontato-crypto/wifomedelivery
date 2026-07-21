@@ -65,7 +65,7 @@ function Corridas() {
   const [chatOpen, setChatOpen] = useState<"client_courier" | "store_courier" | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
-  const [contactless, setContactless] = useState(false);
+  
   const [incidentOpen, setIncidentOpen] = useState(false);
   const [incidentType, setIncidentType] = useState("cliente_ausente");
   const [incidentText, setIncidentText] = useState("");
@@ -209,7 +209,7 @@ function Corridas() {
 
   async function avancar(next: string) {
     if (!ativa || !courier || advancing) return;
-    if (next === "delivered") { setCodeInput(""); setProofFile(null); setProofPreview(null); setContactless(false); setCodeOpen(true); return; }
+    if (next === "delivered") { setCodeInput(""); setProofFile(null); setProofPreview(null); setCodeOpen(true); return; }
     setAdvancing(true);
     const patch: Record<string, unknown> = { status: next };
     if (next === "picked_up") patch.coletado_em = new Date().toISOString();
@@ -228,19 +228,22 @@ function Corridas() {
 
   async function confirmarEntrega() {
     if (!ativa || !order || !courier) return;
-    if (order.codigo_entrega && codeInput.trim() !== order.codigo_entrega) {
-      return toast.error("Código incorreto");
+    if (!order.codigo_entrega) {
+      return toast.error("Pedido sem código de entrega. Contate o suporte.");
+    }
+    if (codeInput.trim() !== order.codigo_entrega) {
+      return toast.error("Código incorreto. Peça o código de 4 dígitos ao cliente.");
     }
     setAdvancing(true);
     let prova_url: string | null = null;
-    let metodo: string = contactless ? "contactless" : "code";
+    let metodo: string = "code";
     if (proofFile) {
       const path = `${courier.user_id}/${order.id}/${Date.now()}-${proofFile.name}`;
       const up = await supabase.storage.from("delivery-proofs").upload(path, proofFile);
       if (up.error) { setAdvancing(false); return toast.error("Falha ao enviar foto"); }
       const { data: signed } = await supabase.storage.from("delivery-proofs").createSignedUrl(path, 60 * 60 * 24 * 30);
       prova_url = signed?.signedUrl ?? path;
-      metodo = "photo";
+      metodo = "code+photo";
     }
     const orderPatch: Record<string, unknown> = {
       status: "delivered",
@@ -470,13 +473,9 @@ function Corridas() {
               )}
             </div>
 
-            <label className="flex items-start gap-2 rounded-xl border border-border bg-background p-3 text-sm">
-              <input type="checkbox" checked={contactless} onChange={(e) => setContactless(e.target.checked)} className="mt-1" />
-              <span>
-                <strong>Entrega sem contato</strong>
-                <span className="block text-xs text-muted-foreground">O pedido foi deixado na porta conforme instruções.</span>
-              </span>
-            </label>
+            <p className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs text-muted-foreground">
+              <strong className="text-primary">Obrigatório:</strong> peça ao cliente o código de 4 dígitos que aparece no pedido dele. Sem o código, a entrega não pode ser finalizada.
+            </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCodeOpen(false)}>Cancelar</Button>

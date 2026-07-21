@@ -45,7 +45,7 @@ export function EntregadorShell({ children }: { children: React.ReactNode }) {
       .from("notifications")
       .select("id", { count: "exact", head: true })
       .eq("user_id", courier.user_id)
-      .or("audience.is.null,audience.eq.entregador,audience.eq.all")
+      .in("audience", ["entregador", "all"])
       .eq("lida", false)
       .then(({ count }) => setUnread(count ?? 0));
   }, [courier]);
