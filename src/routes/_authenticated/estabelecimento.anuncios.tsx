@@ -1,16 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { Megaphone, Sparkles, Check, Clock, ShieldAlert, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Megaphone, Sparkles, Check, Clock, ShieldAlert, XCircle, Upload, Play, Image as ImageIcon, Link2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyEstab } from "@/hooks/use-my-estab";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { brl } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/anuncios")({
   component: AnunciosEstabPage,
@@ -27,7 +30,6 @@ type Plan = {
   destaque_home: boolean;
   destaque_categoria: boolean;
   destaque_busca: boolean;
-  impressoes_estimadas: number | null;
   cor: string | null;
 };
 
@@ -41,7 +43,25 @@ type Sub = {
   metodo_pagamento: string | null;
   observacao: string | null;
   created_at: string;
-  ad_plans: { nome: string } | null;
+  ad_plans: { nome: string; max_anuncios: number } | null;
+};
+
+type Campaign = {
+  id: string;
+  subscription_id: string | null;
+  titulo: string;
+  subtitulo: string | null;
+  cta_texto: string | null;
+  banner_path: string | null;
+  imagem_url: string | null;
+  video_url: string | null;
+  destino_url: string | null;
+  status: string;
+  ativo: boolean;
+  motivo_recusa: string | null;
+  inicio_em: string | null;
+  fim_em: string | null;
+  created_at: string;
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -50,6 +70,12 @@ const STATUS_LABEL: Record<string, string> = {
   expired: "Expirado",
   cancelled: "Cancelado",
   rejected: "Recusado",
+};
+
+const CAMP_STATUS_LABEL: Record<string, string> = {
+  pending: "Em análise",
+  approved: "No ar",
+  rejected: "Recusada",
 };
 
 function AnunciosEstabPage() {
@@ -71,11 +97,25 @@ function AnunciosEstabPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("estab_ad_subscriptions")
-        .select("*, ad_plans(nome)")
+        .select("*, ad_plans(nome, max_anuncios)")
         .eq("establishment_id", estab!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as Sub[];
+    },
+  });
+
+  const { data: campaigns = [] } = useQuery({
+    queryKey: ["estab_campaigns", estab?.id],
+    enabled: !!estab?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sponsored_ads")
+        .select("id, subscription_id, titulo, subtitulo, cta_texto, banner_path, imagem_url, video_url, destino_url, status, ativo, motivo_recusa, inicio_em, fim_em, created_at")
+        .eq("establishment_id", estab!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Campaign[];
     },
   });
 
@@ -85,6 +125,10 @@ function AnunciosEstabPage() {
   const [saving, setSaving] = useState(false);
 
   const ativo = subs.find((s) => s.status === "active");
+  const maxCampanhas = ativo?.ad_plans?.max_anuncios ?? 0;
+  const campsAtivas = campaigns.filter((c) => c.status !== "rejected").length;
+
+  const [subirOpen, setSubirOpen] = useState(false);
 
   async function contratar() {
     if (!estab || !pick) return;
@@ -113,6 +157,16 @@ function AnunciosEstabPage() {
     qc.invalidateQueries({ queryKey: ["estab_ad_subs", estab?.id] });
   }
 
+  async function removerCamp(c: Campaign) {
+    if (!confirm("Remover esta campanha?")) return;
+    if (c.banner_path) await supabase.storage.from("ad-banners").remove([c.banner_path]);
+    const { error } = await supabase.from("sponsored_ads").delete().eq("id", c.id);
+    if (error) return toast.error(error.message);
+    toast.success("Campanha removida");
+    qc.invalidateQueries({ queryKey: ["estab_campaigns", estab?.id] });
+    qc.invalidateQueries({ queryKey: ["ad_rotator"] });
+  }
+
   if (!estab) return null;
 
   return (
@@ -125,7 +179,7 @@ function AnunciosEstabPage() {
       </div>
 
       {ativo && (
-        <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/5 p-4">
+        <div className="rounded-2xl border border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="flex items-center gap-2 text-sm font-bold text-emerald-700 dark:text-emerald-400">
@@ -134,10 +188,67 @@ function AnunciosEstabPage() {
               <p className="text-xs text-muted-foreground">
                 Válido até {ativo.fim_em ? new Date(ativo.fim_em).toLocaleDateString("pt-BR") : "—"} · Pago {brl(ativo.preco_pago_cents)}
               </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Campanhas: <b>{campsAtivas}</b> / {maxCampanhas}
+              </p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => cancelar(ativo)}>Cancelar</Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setSubirOpen(true)}
+                disabled={campsAtivas >= maxCampanhas}
+                className="gap-1.5"
+              >
+                <Upload className="h-4 w-4" />
+                Subir campanha
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => cancelar(ativo)}>Cancelar</Button>
+            </div>
           </div>
         </div>
+      )}
+
+      {ativo && (
+        <section>
+          <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Minhas campanhas</h2>
+          {campaigns.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+              Ainda sem campanha. Clique em <b>Subir campanha</b> para começar.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {campaigns.map((c) => (
+                <div key={c.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4">
+                  <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                    {c.video_url ? <Play className="h-5 w-5" /> : <ImageIcon className="h-5 w-5" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{c.titulo}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {c.video_url ? "Vídeo" : "Banner"} · criado em {new Date(c.created_at).toLocaleDateString("pt-BR")}
+                    </p>
+                    {c.status === "rejected" && c.motivo_recusa && (
+                      <p className="mt-1 flex items-center gap-1 text-xs text-rose-600">
+                        <ShieldAlert className="h-3 w-3" /> {c.motivo_recusa}
+                      </p>
+                    )}
+                  </div>
+                  <Badge
+                    className={cn(
+                      c.status === "approved" ? "bg-emerald-500 text-white" :
+                      c.status === "pending" ? "bg-amber-500 text-white" :
+                      "bg-rose-500 text-white",
+                    )}
+                  >
+                    {CAMP_STATUS_LABEL[c.status] ?? c.status}
+                  </Badge>
+                  <Button size="sm" variant="ghost" onClick={() => removerCamp(c)}>
+                    <Trash2 className="h-4 w-4 text-rose-600" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       )}
 
       <section>
@@ -157,7 +268,6 @@ function AnunciosEstabPage() {
                 {p.destaque_home && (<li className="flex items-center gap-1.5 text-emerald-600"><Check className="h-3.5 w-3.5" /> Destaque na Home</li>)}
                 {p.destaque_categoria && (<li className="flex items-center gap-1.5 text-emerald-600"><Check className="h-3.5 w-3.5" /> Destaque na Categoria</li>)}
                 {p.destaque_busca && (<li className="flex items-center gap-1.5 text-emerald-600"><Check className="h-3.5 w-3.5" /> Destaque na Busca</li>)}
-                
               </ul>
               <Button className="mt-4 w-full" onClick={() => setPick(p)} disabled={!!ativo}>
                 {ativo ? "Já existe plano ativo" : "Contratar"}
@@ -211,6 +321,7 @@ function AnunciosEstabPage() {
         </div>
       </section>
 
+      {/* Modal contratar plano */}
       <Dialog open={!!pick} onOpenChange={(v) => !v && setPick(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Contratar {pick?.nome}</DialogTitle></DialogHeader>
@@ -244,6 +355,233 @@ function AnunciosEstabPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal Premium: Subir campanha */}
+      <SubirCampanhaModal
+        open={subirOpen}
+        onOpenChange={setSubirOpen}
+        estabId={estab.id}
+        subscription={ativo ?? null}
+        onCreated={() => {
+          qc.invalidateQueries({ queryKey: ["estab_campaigns", estab.id] });
+          qc.invalidateQueries({ queryKey: ["ad_rotator"] });
+        }}
+      />
     </div>
+  );
+}
+
+function SubirCampanhaModal({
+  open,
+  onOpenChange,
+  estabId,
+  subscription,
+  onCreated,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  estabId: string;
+  subscription: Sub | null;
+  onCreated: () => void;
+}) {
+  const [tipo, setTipo] = useState<"banner" | "video">("banner");
+  const [titulo, setTitulo] = useState("");
+  const [subtitulo, setSubtitulo] = useState("");
+  const [ctaTexto, setCtaTexto] = useState("Ver oferta");
+  const [destinoUrl, setDestinoUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setTipo("banner");
+      setTitulo("");
+      setSubtitulo("");
+      setCtaTexto("Ver oferta");
+      setDestinoUrl("");
+      setVideoUrl("");
+      setFile(null);
+      setPreview(null);
+    }
+  }, [open]);
+
+  function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0] ?? null;
+    setFile(f);
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(f ? URL.createObjectURL(f) : null);
+  }
+
+  async function submit() {
+    if (!titulo.trim()) return toast.error("Dê um nome à campanha");
+    if (!destinoUrl.trim()) return toast.error("Informe o link da promoção (URL de destino)");
+
+    let banner_path: string | null = null;
+    let video_url: string | null = null;
+
+    if (tipo === "banner") {
+      if (!file) return toast.error("Selecione a imagem do banner");
+      if (file.size > 5 * 1024 * 1024) return toast.error("O banner deve ter no máximo 5 MB");
+    } else {
+      if (!videoUrl.trim()) return toast.error("Cole o link do YouTube (ou outra plataforma)");
+      video_url = videoUrl.trim();
+    }
+
+    setSaving(true);
+    try {
+      if (tipo === "banner" && file) {
+        const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+        const path = `${estabId}/${crypto.randomUUID()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from("ad-banners").upload(path, file, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: file.type,
+        });
+        if (upErr) throw upErr;
+        banner_path = path;
+      }
+
+      const inicio = subscription?.inicio_em ?? new Date().toISOString();
+      const fim = subscription?.fim_em ?? null;
+
+      const { error } = await supabase.from("sponsored_ads").insert({
+        establishment_id: estabId,
+        subscription_id: subscription?.id ?? null,
+        titulo: titulo.trim(),
+        subtitulo: subtitulo.trim() || null,
+        cta_texto: ctaTexto.trim() || "Ver oferta",
+        banner_path,
+        video_url,
+        destino_url: destinoUrl.trim(),
+        status: "pending",
+        ativo: true,
+        patrocinado: true,
+        prioridade: 0,
+        inicio_em: inicio,
+        fim_em: fim,
+      });
+      if (error) throw error;
+
+      toast.success("Campanha enviada para aprovação!");
+      onCreated();
+      onOpenChange(false);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erro ao enviar";
+      toast.error(msg);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <Sparkles className="h-5 w-5 text-primary" /> Subir campanha premium
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="grid gap-5">
+          {/* Tipo */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setTipo("banner")}
+              className={cn(
+                "flex items-center gap-2 rounded-xl border-2 p-3 text-left transition",
+                tipo === "banner" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40",
+              )}
+            >
+              <ImageIcon className={cn("h-5 w-5", tipo === "banner" ? "text-primary" : "text-muted-foreground")} />
+              <div>
+                <p className="text-sm font-semibold">Banner (imagem)</p>
+                <p className="text-[11px] text-muted-foreground">JPG/PNG até 5 MB</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTipo("video")}
+              className={cn(
+                "flex items-center gap-2 rounded-xl border-2 p-3 text-left transition",
+                tipo === "video" ? "border-primary bg-primary/5" : "border-border hover:border-primary/40",
+              )}
+            >
+              <Play className={cn("h-5 w-5", tipo === "video" ? "text-primary" : "text-muted-foreground")} />
+              <div>
+                <p className="text-sm font-semibold">Vídeo</p>
+                <p className="text-[11px] text-muted-foreground">Link do YouTube</p>
+              </div>
+            </button>
+          </div>
+
+          {/* Campos comuns */}
+          <div className="grid gap-3">
+            <div>
+              <Label>Nome da campanha *</Label>
+              <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ex.: Combo Duplo por R$ 29,90" />
+            </div>
+            <div>
+              <Label>Chamada curta (opcional)</Label>
+              <Input value={subtitulo} onChange={(e) => setSubtitulo(e.target.value)} placeholder="Ex.: Hambúrguer + batata + refri. Só hoje!" />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label>Texto do botão</Label>
+                <Input value={ctaTexto} onChange={(e) => setCtaTexto(e.target.value)} />
+              </div>
+              <div>
+                <Label className="flex items-center gap-1"><Link2 className="h-3.5 w-3.5" /> Link da promoção *</Label>
+                <Input value={destinoUrl} onChange={(e) => setDestinoUrl(e.target.value)} placeholder="https://... (a página que abre ao clicar)" />
+              </div>
+            </div>
+          </div>
+
+          {/* Mídia */}
+          {tipo === "banner" ? (
+            <div className="space-y-2">
+              <Label>Imagem do banner</Label>
+              <div className="rounded-xl border-2 border-dashed border-border bg-muted/30 p-4">
+                <div className="mb-3 flex items-center gap-4 rounded-lg bg-background/70 p-3 text-xs text-muted-foreground">
+                  <ImageIcon className="h-5 w-5 shrink-0 text-primary" />
+                  <div>
+                    <p><b>Medidas recomendadas:</b> 1200 × 630 px (proporção 16:9) — o mesmo tamanho aparece bonito no celular e no PC.</p>
+                    <p>Formatos: JPG ou PNG · até 5 MB.</p>
+                  </div>
+                </div>
+                <input type="file" accept="image/*" onChange={onPickFile} className="block w-full text-sm" />
+                {preview && (
+                  <div className="mt-3 overflow-hidden rounded-lg border border-border">
+                    <img src={preview} alt="Prévia" className="h-40 w-full object-cover sm:h-56" />
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label>Link do vídeo (YouTube)</Label>
+              <Input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://youtu.be/... ou https://www.youtube.com/watch?v=..." />
+              <p className="text-xs text-muted-foreground">
+                O vídeo tocará automaticamente sem som e sem botão de play para o cliente. Envie um vídeo curto — só os primeiros segundos serão exibidos.
+              </p>
+            </div>
+          )}
+
+          <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+            <p><b>Como funciona:</b> ao aprovar, sua campanha entra no rotador de anúncios da Home e da aba Novidades. Cada anúncio fica visível por alguns segundos (configurado pelo admin) antes de girar para o próximo. Ao clicar, o cliente vai direto para o link da promoção.</p>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={submit} disabled={saving} className="gap-1.5">
+            <Upload className="h-4 w-4" />
+            {saving ? "Enviando..." : "Enviar para aprovação"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

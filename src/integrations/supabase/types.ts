@@ -2066,6 +2066,7 @@ export type Database = {
       }
       platform_settings: {
         Row: {
+          ad_default_seconds: number
           bestseller_threshold: number
           commission_pct: number
           default_delivery_fee_cents: number
@@ -2077,6 +2078,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          ad_default_seconds?: number
           bestseller_threshold?: number
           commission_pct?: number
           default_delivery_fee_cents?: number
@@ -2088,6 +2090,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          ad_default_seconds?: number
           bestseller_threshold?: number
           commission_pct?: number
           default_delivery_fee_cents?: number
@@ -2420,51 +2423,69 @@ export type Database = {
       sponsored_ads: {
         Row: {
           ativo: boolean
+          banner_path: string | null
           created_at: string
           cta_texto: string
+          destino_url: string | null
           duracao_segundos: number
           establishment_id: string | null
           fim_em: string | null
           id: string
-          imagem_url: string
+          imagem_url: string | null
           inicio_em: string | null
+          motivo_recusa: string | null
           patrocinado: boolean
           prioridade: number
+          status: string
+          subscription_id: string | null
           subtitulo: string | null
           titulo: string
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           ativo?: boolean
+          banner_path?: string | null
           created_at?: string
           cta_texto?: string
+          destino_url?: string | null
           duracao_segundos?: number
           establishment_id?: string | null
           fim_em?: string | null
           id?: string
-          imagem_url: string
+          imagem_url?: string | null
           inicio_em?: string | null
+          motivo_recusa?: string | null
           patrocinado?: boolean
           prioridade?: number
+          status?: string
+          subscription_id?: string | null
           subtitulo?: string | null
           titulo: string
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           ativo?: boolean
+          banner_path?: string | null
           created_at?: string
           cta_texto?: string
+          destino_url?: string | null
           duracao_segundos?: number
           establishment_id?: string | null
           fim_em?: string | null
           id?: string
-          imagem_url?: string
+          imagem_url?: string | null
           inicio_em?: string | null
+          motivo_recusa?: string | null
           patrocinado?: boolean
           prioridade?: number
+          status?: string
+          subscription_id?: string | null
           subtitulo?: string | null
           titulo?: string
           updated_at?: string
+          video_url?: string | null
         }
         Relationships: [
           {
@@ -2486,6 +2507,13 @@ export type Database = {
             columns: ["establishment_id"]
             isOneToOne: false
             referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_ads_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "estab_ad_subscriptions"
             referencedColumns: ["id"]
           },
         ]
