@@ -222,29 +222,30 @@ function ClienteHome() {
 
   return (
     <div className="space-y-6">
-      {/* Rotador de anúncios patrocinados (campanhas dos estabelecimentos) */}
-      <AdRotator />
-
-      {/* Banner premium: Frete grátis */}
-      <button
-        onClick={() => navigate({ to: "/cliente/buscar" })}
-        className="relative block w-full overflow-hidden rounded-2xl text-left shadow-brand"
-      >
-        <img
-          src={bannerFreteGratis.url}
-          alt="Frete grátis nas suas primeiras 3 entregas"
-          width={1200}
-          height={600}
-          loading="lazy"
-          className="h-40 w-full object-cover sm:h-48 md:h-56"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
-        <div className="absolute inset-0 flex flex-col justify-center p-5">
-          <p className="text-2xl font-black leading-tight text-white drop-shadow-lg sm:text-3xl">Frete grátis</p>
-          <p className="mt-1 text-sm font-medium text-white/90 drop-shadow-md">nas suas primeiras</p>
-          <p className="text-2xl font-black leading-tight text-primary drop-shadow-lg sm:text-3xl">3 entregas</p>
-        </div>
-      </button>
+      {/* Banner único: anúncios patrocinados (rotativo) com fallback de frete grátis */}
+      <AdRotator
+        fallback={
+          <button
+            onClick={() => navigate({ to: "/cliente/buscar" })}
+            className="relative block w-full overflow-hidden rounded-2xl text-left shadow-brand"
+          >
+            <img
+              src={bannerFreteGratis.url}
+              alt="Frete grátis nas suas primeiras 3 entregas"
+              width={1200}
+              height={600}
+              loading="lazy"
+              className="h-40 w-full object-cover sm:h-48 md:h-56"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+            <div className="absolute inset-0 flex flex-col justify-center p-5">
+              <p className="text-2xl font-black leading-tight text-white drop-shadow-lg sm:text-3xl">Frete grátis</p>
+              <p className="mt-1 text-sm font-medium text-white/90 drop-shadow-md">nas suas primeiras</p>
+              <p className="text-2xl font-black leading-tight text-primary drop-shadow-lg sm:text-3xl">3 entregas</p>
+            </div>
+          </button>
+        }
+      />
 
       {/* Categorias - uma única fileira horizontal */}
       <section className="space-y-3">
