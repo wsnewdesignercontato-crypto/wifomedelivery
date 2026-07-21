@@ -209,7 +209,7 @@ function Corridas() {
 
   async function avancar(next: string) {
     if (!ativa || !courier || advancing) return;
-    if (next === "delivered") { setCodeInput(""); setProofFile(null); setProofPreview(null); setCodeOpen(true); return; }
+    if (next === "delivered") { setCodeOpen(true); return; }
     setAdvancing(true);
     const patch: Record<string, unknown> = { status: next };
     if (next === "picked_up") patch.coletado_em = new Date().toISOString();
@@ -378,6 +378,63 @@ function Corridas() {
                 <span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" /> Pagamento: <strong className="text-foreground">{order.forma_pagamento}</strong></span>
                 <span>Total pedido: <strong className="text-foreground">{fmt(order.total_cents)}</strong></span>
               </div>
+
+              {currentStage?.key === "at_customer" && (
+                <div className="md:col-span-2 rounded-2xl border-2 border-primary bg-primary/5 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-full bg-primary/15 p-2 text-primary">
+                      <ShieldCheck className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-black text-primary">Código obrigatório para finalizar</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Peça ao cliente o código de 4 dígitos que aparece no pedido dele. Sem esse código, a entrega não finaliza.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                    <div>
+                      <label className="mb-1 block text-xs font-bold uppercase text-muted-foreground">Digite o código do cliente</label>
+                      <Input
+                        inputMode="numeric"
+                        maxLength={4}
+                        placeholder="0000"
+                        value={codeInput}
+                        onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                        className="h-14 text-center text-3xl font-black tracking-[0.45em]"
+                      />
+                    </div>
+                    <Button size="lg" onClick={confirmarEntrega} disabled={advancing || codeInput.length !== 4}>
+                      {advancing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                      Finalizar entrega
+                    </Button>
+                  </div>
+
+                  <div className="mt-3">
+                    <input
+                      ref={proofInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={(e) => e.target.files?.[0] && pickProof(e.target.files[0])}
+                    />
+                    {proofPreview ? (
+                      <div className="rounded-xl border border-border bg-background p-2">
+                        <img src={proofPreview} alt="Prova de entrega" className="max-h-52 w-full rounded-lg object-cover" />
+                        <Button size="sm" variant="outline" className="mt-2 w-full" onClick={() => { setProofFile(null); setProofPreview(null); }}>
+                          Trocar foto da prova
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button variant="outline" className="w-full" onClick={() => proofInputRef.current?.click()}>
+                        <Camera className="mr-2 h-4 w-4" /> Adicionar foto da entrega (opcional)
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
