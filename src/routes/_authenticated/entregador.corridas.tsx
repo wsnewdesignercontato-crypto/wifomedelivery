@@ -556,10 +556,21 @@ function Corridas() {
           <div className="space-y-4">
             <Input
               inputMode="numeric" maxLength={4} placeholder="0000"
-              value={codeInput} onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
-              className="text-center text-3xl font-black tracking-[0.5em]"
+              value={codeInput}
+              onChange={(e) => {
+                setCodeInput(e.target.value.replace(/\D/g, "").slice(0, 4));
+                if (codeError) setCodeError(null);
+              }}
+              aria-invalid={!!codeError}
+              aria-describedby="codigo-erro-modal"
+              className={`text-center text-3xl font-black tracking-[0.5em] ${codeError ? "border-destructive focus-visible:ring-destructive" : ""}`}
               autoFocus
             />
+            {codeError && (
+              <p id="codigo-erro-modal" role="alert" className="flex items-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">
+                <AlertTriangle className="h-4 w-4 shrink-0" /> {codeError}
+              </p>
+            )}
 
             <div className="space-y-2">
               <p className="text-xs font-bold uppercase text-muted-foreground">Prova de entrega (opcional)</p>
