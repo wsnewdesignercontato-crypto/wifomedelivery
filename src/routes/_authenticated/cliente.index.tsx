@@ -176,7 +176,7 @@ function ClienteHome() {
           .from("orders")
           .select("establishment_id")
           .eq("status", "delivered"),
-        supabase.from("platform_settings").select("bestseller_threshold").eq("id", 1).maybeSingle(),
+        supabase.rpc("get_public_platform_settings").maybeSingle(),
       ]);
       setCats((c.data ?? []) as Categoria[]);
       setEstabs((e.data ?? []) as Estab[]);
