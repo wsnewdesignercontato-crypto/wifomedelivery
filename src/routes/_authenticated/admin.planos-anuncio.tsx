@@ -57,7 +57,7 @@ const empty: Omit<Plan, "id"> = {
   destaque_home: false,
   destaque_categoria: true,
   destaque_busca: false,
-  impressoes_estimadas: 5000,
+  impressoes_estimadas: null,
   cor: "#FF6B00",
   ativo: true,
 };
@@ -247,7 +247,7 @@ function PlanosPage() {
               <div><Label>Duração (dias)</Label><Input type="number" value={f.duracao_dias} onChange={(e) => setF({ ...f, duracao_dias: Number(e.target.value) })} /></div>
               <div><Label>Prioridade</Label><Input type="number" value={f.prioridade} onChange={(e) => setF({ ...f, prioridade: Number(e.target.value) })} /></div>
               <div><Label>Máx. anúncios</Label><Input type="number" value={f.max_anuncios} onChange={(e) => setF({ ...f, max_anuncios: Number(e.target.value) })} /></div>
-              <div><Label>Impressões estimadas</Label><Input type="number" value={f.impressoes_estimadas ?? 0} onChange={(e) => setF({ ...f, impressoes_estimadas: Number(e.target.value) })} /></div>
+              
               <div><Label>Cor</Label><Input type="color" value={f.cor ?? "#FF6B00"} onChange={(e) => setF({ ...f, cor: e.target.value })} /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
