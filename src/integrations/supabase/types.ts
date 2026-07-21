@@ -2787,6 +2787,39 @@ export type Database = {
       }
     }
     Views: {
+      couriers_available_public: {
+        Row: {
+          aprovacao: string | null
+          avaliacao: number | null
+          last_seen: string | null
+          lat: number | null
+          lng: number | null
+          status: Database["public"]["Enums"]["courier_status"] | null
+          user_id: string | null
+          veiculo: string | null
+        }
+        Insert: {
+          aprovacao?: string | null
+          avaliacao?: number | null
+          last_seen?: string | null
+          lat?: number | null
+          lng?: number | null
+          status?: Database["public"]["Enums"]["courier_status"] | null
+          user_id?: string | null
+          veiculo?: string | null
+        }
+        Update: {
+          aprovacao?: string | null
+          avaliacao?: number | null
+          last_seen?: string | null
+          lat?: number | null
+          lng?: number | null
+          status?: Database["public"]["Enums"]["courier_status"] | null
+          user_id?: string | null
+          veiculo?: string | null
+        }
+        Relationships: []
+      }
       demand_zones_view: {
         Row: {
           cidade: string | null
@@ -2879,6 +2912,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      platform_settings_public: {
+        Row: {
+          ad_default_seconds: number | null
+          bestseller_threshold: number | null
+          id: number | null
+        }
+        Insert: {
+          ad_default_seconds?: number | null
+          bestseller_threshold?: number | null
+          id?: number | null
+        }
+        Update: {
+          ad_default_seconds?: number | null
+          bestseller_threshold?: number | null
+          id?: number | null
+        }
+        Relationships: []
       }
     }
     Functions: {
