@@ -57,11 +57,7 @@ function EntregaPage() {
 
   async function loadCouriers() {
     setLoading(true);
-    const { data } = await supabase
-      .from("courier_profiles")
-      .select("user_id, veiculo, avaliacao, lat, lng, last_seen")
-      .eq("status", "online")
-      .eq("aprovacao", "approved");
+    const { data } = await supabase.rpc("list_available_couriers");
     const list = (data ?? []) as Omit<Courier, "nome">[];
     let nomes: Record<string, string> = {};
     if (list.length) {
