@@ -21,6 +21,7 @@ type Config = {
   default_radius_km: number;
   maintenance_mode: boolean;
   bestseller_threshold: number;
+  ad_default_seconds: number;
 };
 
 async function fetchConfig() {
@@ -52,6 +53,7 @@ function ConfigPage() {
         default_radius_km: form.default_radius_km,
         maintenance_mode: form.maintenance_mode,
         bestseller_threshold: form.bestseller_threshold,
+        ad_default_seconds: form.ad_default_seconds,
         updated_by: uid,
         updated_at: new Date().toISOString(),
       })
@@ -140,6 +142,21 @@ function ConfigPage() {
           />
           <p className="mt-1 text-xs text-muted-foreground">
             Estabelecimentos com pelo menos esse número de pedidos entregues ganham o selo laranja "Mais vendido".
+          </p>
+        </div>
+        <div>
+          <Label htmlFor="adsec">Duração de cada anúncio no rotador (segundos)</Label>
+          <Input
+            id="adsec"
+            type="number"
+            min={3}
+            max={60}
+            value={form.ad_default_seconds}
+            onChange={(e) => setForm({ ...form, ad_default_seconds: Number(e.target.value) })}
+            className="mt-1.5"
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Tempo padrão de exibição de cada anúncio antes de girar para o próximo. Sugerido: 5 a 10 segundos.
           </p>
         </div>
         <div className="flex items-center justify-between rounded-xl border border-border bg-background/50 p-4">
