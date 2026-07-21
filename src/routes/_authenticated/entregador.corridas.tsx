@@ -1,6 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const codigoEntregaSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{4}$/, { message: "O código deve ter exatamente 4 dígitos numéricos." });
 import { Bike, MapPin, Package, CheckCircle2, Phone, MessageSquare, Navigation, Clock, ShieldCheck, Loader2, Camera, Banknote, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
