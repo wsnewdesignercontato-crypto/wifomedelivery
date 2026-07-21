@@ -130,8 +130,12 @@ function PedidosPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-primary">{fmt(o.total_cents)}</p>
-                  <Badge className="mt-1 bg-primary/15 text-primary hover:bg-primary/20">{STATUS_LABEL[o.status] ?? o.status}</Badge>
+                  <p className={`font-bold ${o.status === "delivered" ? "text-success" : "text-primary"}`}>{fmt(o.total_cents)}</p>
+                  {o.status === "delivered" ? (
+                    <Badge variant="success" className="mt-1">{STATUS_LABEL[o.status]}</Badge>
+                  ) : (
+                    <Badge className="mt-1 bg-primary/15 text-primary hover:bg-primary/20">{STATUS_LABEL[o.status] ?? o.status}</Badge>
+                  )}
                 </div>
               </div>
               {(o.status === "delivered" || o.status === "cancelled") && (
