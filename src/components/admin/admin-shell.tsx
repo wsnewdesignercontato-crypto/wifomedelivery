@@ -47,6 +47,7 @@ const navItems: NavItem[] = [
   { to: "/admin/campanhas", label: "Campanhas", icon: Megaphone, group: "Marketing" },
   { to: "/admin/banners", label: "Banners", icon: ImageIcon, group: "Marketing" },
   { to: "/admin/anuncios", label: "Anúncios patrocinados", icon: Megaphone, group: "Marketing" },
+  { to: "/admin/planos-anuncio", label: "Planos de anúncio", icon: Sparkles, group: "Marketing" },
   { to: "/admin/notificacoes", label: "Notificações", icon: Send, group: "Marketing" },
   { to: "/admin/suporte", label: "Suporte", icon: LifeBuoy, group: "Atendimento" },
   { to: "/admin/ia", label: "IA Insights", icon: Sparkles, group: "Atendimento" },
