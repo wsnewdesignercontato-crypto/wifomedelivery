@@ -2882,7 +2882,24 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      get_public_platform_settings: {
+        Args: never
+        Returns: {
+          ad_default_seconds: number
+          bestseller_threshold: number
+        }[]
+      }
+      list_available_couriers: {
+        Args: never
+        Returns: {
+          avaliacao: number
+          last_seen: string
+          lat: number
+          lng: number
+          user_id: string
+          veiculo: string
+        }[]
+      }
     }
     Enums: {
       app_role: "cliente" | "estabelecimento" | "entregador" | "admin"
