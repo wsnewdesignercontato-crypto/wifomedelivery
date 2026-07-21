@@ -140,6 +140,20 @@ function PedidoPage() {
         </div>
       </div>
 
+      {order.codigo_entrega && !["delivered","cancelled","refunded"].includes(order.status) && (
+        <div className="rounded-2xl border-2 border-primary bg-gradient-to-br from-primary/10 to-primary/5 p-5 text-center shadow-lg">
+          <p className="text-xs font-bold uppercase tracking-wider text-primary">
+            {order.tipo_entrega === "pickup" ? "Código de retirada" : "Código de entrega"}
+          </p>
+          <p className="mt-2 text-5xl font-black tracking-[0.5em] text-primary">{order.codigo_entrega}</p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {order.tipo_entrega === "pickup"
+              ? "Informe este código na loja ao retirar o pedido."
+              : "Informe este código ao entregador para confirmar o recebimento."}
+          </p>
+        </div>
+      )}
+
       {order.status === "cancelled" ? (
         <div className="rounded-2xl border border-destructive/50 bg-destructive/5 p-4">
           <div className="flex items-center gap-2 text-destructive"><XCircle className="h-5 w-5" /><span className="font-semibold">Pedido cancelado</span></div>
@@ -159,14 +173,6 @@ function PedidoPage() {
               </div>
             );
           })}
-        </div>
-      )}
-
-      {order.codigo_entrega && !["delivered","cancelled","refunded"].includes(order.status) && (
-        <div className="rounded-2xl border-2 border-primary bg-primary/5 p-4 text-center">
-          <p className="text-xs font-bold uppercase tracking-wider text-primary">Código de entrega</p>
-          <p className="mt-1 text-4xl font-black tracking-[0.5em] text-primary">{order.codigo_entrega}</p>
-          <p className="mt-2 text-xs text-muted-foreground">Informe este código ao entregador para confirmar o recebimento.</p>
         </div>
       )}
 
