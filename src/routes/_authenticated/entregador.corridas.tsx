@@ -228,19 +228,22 @@ function Corridas() {
 
   async function confirmarEntrega() {
     if (!ativa || !order || !courier) return;
-    if (order.codigo_entrega && codeInput.trim() !== order.codigo_entrega) {
-      return toast.error("Código incorreto");
+    if (!order.codigo_entrega) {
+      return toast.error("Pedido sem código de entrega. Contate o suporte.");
+    }
+    if (codeInput.trim() !== order.codigo_entrega) {
+      return toast.error("Código incorreto. Peça o código de 4 dígitos ao cliente.");
     }
     setAdvancing(true);
     let prova_url: string | null = null;
-    let metodo: string = contactless ? "contactless" : "code";
+    let metodo: string = "code";
     if (proofFile) {
       const path = `${courier.user_id}/${order.id}/${Date.now()}-${proofFile.name}`;
       const up = await supabase.storage.from("delivery-proofs").upload(path, proofFile);
       if (up.error) { setAdvancing(false); return toast.error("Falha ao enviar foto"); }
       const { data: signed } = await supabase.storage.from("delivery-proofs").createSignedUrl(path, 60 * 60 * 24 * 30);
       prova_url = signed?.signedUrl ?? path;
-      metodo = "photo";
+      metodo = "code+photo";
     }
     const orderPatch: Record<string, unknown> = {
       status: "delivered",
