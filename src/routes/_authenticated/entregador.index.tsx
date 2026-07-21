@@ -108,19 +108,13 @@ function Home() {
     loadAtiva(); loadDisponiveis();
   }
 
-  async function avancar(next: "to_store" | "at_store" | "picked_up" | "to_customer" | "at_customer" | "delivered") {
+  async function avancar(next: "to_store" | "at_store" | "picked_up" | "to_customer" | "at_customer") {
     if (!ativa || !courier) return;
     const patch: Record<string, unknown> = { status: next };
     if (next === "picked_up") patch.coletado_em = new Date().toISOString();
-    if (next === "delivered") patch.entregue_em = new Date().toISOString();
     await supabase.from("deliveries").update(patch as never).eq("id", ativa.id);
-    const orderMap: Record<string, string> = { to_store: "courier_assigned", picked_up: "picked_up", to_customer: "on_the_way", at_customer: "arriving", delivered: "delivered" };
+    const orderMap: Record<string, string> = { to_store: "courier_assigned", picked_up: "picked_up", to_customer: "on_the_way", at_customer: "arriving" };
     if (orderMap[next]) await supabase.from("orders").update({ status: orderMap[next] as never }).eq("id", ativa.order_id);
-    if (next === "delivered") {
-      await supabase.from("courier_profiles").update({ status: "online" }).eq("user_id", courier.user_id);
-      toast.success("Entrega concluída!");
-      loadStats();
-    }
     loadAtiva();
   }
 
@@ -167,10 +161,20 @@ function Home() {
             {ativa.status === "at_store" && <Button size="sm" onClick={() => avancar("picked_up")}>Pedido coletado</Button>}
             {ativa.status === "picked_up" && <Button size="sm" onClick={() => avancar("to_customer")}>A caminho do cliente</Button>}
             {ativa.status === "to_customer" && <Button size="sm" onClick={() => avancar("at_customer")}>Cheguei no cliente</Button>}
-            {ativa.status === "at_customer" && <Button size="sm" onClick={() => avancar("delivered")}><CheckCircle2 className="mr-2 h-4 w-4" />Confirmar entrega</Button>}
+            {ativa.status === "at_customer" && (
+              <Link to="/entregador/corridas">
+                <Button size="sm"><CheckCircle2 className="mr-2 h-4 w-4" />Finalizar com código do cliente</Button>
+              </Link>
+            )}
           </div>
+          {ativa.status === "at_customer" && (
+            <p className="mt-2 text-xs font-semibold text-primary">
+              Para finalizar, peça o código de 4 dígitos ao cliente na tela "Corridas".
+            </p>
+          )}
         </div>
       )}
+
 
       {!ativa && online && (
         <div>
