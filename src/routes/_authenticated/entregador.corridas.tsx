@@ -65,6 +65,7 @@ function Corridas() {
   const [chatOpen, setChatOpen] = useState<"client_courier" | "store_courier" | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
+  const [deliveredInfo, setDeliveredInfo] = useState<{ valorCents: number; clienteNome: string | null } | null>(null);
   
   const [incidentOpen, setIncidentOpen] = useState(false);
   const [incidentType, setIncidentType] = useState("cliente_ausente");
@@ -259,9 +260,23 @@ function Corridas() {
     if (error) { setAdvancing(false); return toast.error("Falha ao finalizar"); }
     await supabase.from("orders").update(orderPatch as never).eq("id", ativa.order_id);
     await supabase.from("courier_profiles").update({ status: "online" }).eq("user_id", courier.user_id);
+
+    // Atualização imediata do estado local + confirmação visual
+    const valorCents = ativa.valor_entrega_cents ?? 0;
+    const clienteNome = cliente?.nome ?? null;
     setAdvancing(false);
     setCodeOpen(false);
-    toast.success("Entrega concluída! 🎉");
+    setCodeInput("");
+    setProofFile(null);
+    setProofPreview(null);
+    setAtiva(null);
+    setOrder(null);
+    setEstab(null);
+    setCliente(null);
+    setDeliveredInfo({ valorCents, clienteNome });
+    toast.success("Entrega confirmada! 🎉", {
+      description: `Código validado. +R$ ${(valorCents / 100).toFixed(2).replace(".", ",")} adicionados à sua carteira.`,
+    });
     load();
   }
 
@@ -597,6 +612,37 @@ function Corridas() {
               {savingIncident ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AlertTriangle className="mr-2 h-4 w-4" />}
               Registrar
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!deliveredInfo} onOpenChange={(o) => !o && setDeliveredInfo(null)}>
+        <DialogContent className="max-w-sm text-center">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl">Entrega confirmada! 🎉</DialogTitle>
+            <DialogDescription className="text-center">
+              O código foi validado e o pedido foi marcado como <b>entregue</b>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="my-4 flex flex-col items-center gap-2">
+            <div className="h-20 w-20 rounded-full bg-green-500/15 flex items-center justify-center text-4xl">✅</div>
+            {deliveredInfo?.clienteNome && (
+              <p className="text-sm text-muted-foreground">Cliente: <b>{deliveredInfo.clienteNome}</b></p>
+            )}
+            {deliveredInfo && deliveredInfo.valorCents > 0 && (
+              <p className="text-lg font-black text-primary">
+                + R$ {(deliveredInfo.valorCents / 100).toFixed(2).replace(".", ",")}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">Você já está online para novas corridas.</p>
+          </div>
+          <DialogFooter>
+            <button
+              className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-bold"
+              onClick={() => setDeliveredInfo(null)}
+            >
+              Fechar
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
