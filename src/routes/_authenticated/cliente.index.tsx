@@ -25,6 +25,7 @@ import catPorcoes from "@/assets/cat-porcoes.jpg";
 import catMercado from "@/assets/cat-mercado.jpg";
 import catFarmacia from "@/assets/cat-farmacia.jpg";
 import bannerFreteGratis from "@/assets/banner-frete-gratis-premium.png.asset.json";
+import { AdRotator } from "@/components/cliente/ad-rotator";
 
 export const Route = createFileRoute("/_authenticated/cliente/")({
   component: ClienteHome,
@@ -221,6 +222,9 @@ function ClienteHome() {
 
   return (
     <div className="space-y-6">
+      {/* Rotador de anúncios patrocinados (campanhas dos estabelecimentos) */}
+      <AdRotator />
+
       {/* Banner premium: Frete grátis */}
       <button
         onClick={() => navigate({ to: "/cliente/buscar" })}
