@@ -47,13 +47,17 @@ function HorariosPage() {
       <h1 className="text-2xl font-black tracking-tight">Horários de funcionamento</h1>
       <div className="space-y-2">
         {hours.map((h, idx) => (
-          <div key={h.dia_semana} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
-            <Switch checked={h.ativo} onCheckedChange={(v) => { const n = [...hours]; n[idx] = { ...h, ativo: v }; setHours(n); }} />
-            <span className="w-24 font-medium">{DIAS[h.dia_semana]}</span>
-            <Input type="time" value={h.abre} className="w-32" onChange={(e) => { const n = [...hours]; n[idx] = { ...h, abre: e.target.value }; setHours(n); }} />
-            <span>até</span>
-            <Input type="time" value={h.fecha} className="w-32" onChange={(e) => { const n = [...hours]; n[idx] = { ...h, fecha: e.target.value }; setHours(n); }} />
-            <Button size="sm" onClick={() => salvar(h)}>Salvar</Button>
+          <div key={h.dia_semana} className="rounded-2xl border border-border bg-card p-3">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <Switch checked={h.ativo} onCheckedChange={(v) => { const n = [...hours]; n[idx] = { ...h, ativo: v }; setHours(n); }} />
+              <span className="min-w-20 font-medium">{DIAS[h.dia_semana]}</span>
+              <div className="flex flex-1 flex-wrap items-center gap-2">
+                <Input type="time" value={h.abre} className="w-[7.5rem] min-w-0" onChange={(e) => { const n = [...hours]; n[idx] = { ...h, abre: e.target.value }; setHours(n); }} />
+                <span className="text-sm text-muted-foreground">até</span>
+                <Input type="time" value={h.fecha} className="w-[7.5rem] min-w-0" onChange={(e) => { const n = [...hours]; n[idx] = { ...h, fecha: e.target.value }; setHours(n); }} />
+              </div>
+              <Button size="sm" className="ml-auto shrink-0" onClick={() => salvar(h)}>Salvar</Button>
+            </div>
           </div>
         ))}
       </div>

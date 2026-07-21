@@ -281,11 +281,14 @@ function Extrato() {
 }
 
 function SummaryCard({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone: "in" | "out" | "net" }) {
-  const cls = tone === "in"
-    ? "text-emerald-600"
-    : tone === "out"
-      ? "text-rose-600"
-      : "text-foreground";
+  const isZero = /^R\$\s*0,00$/.test(value);
+  const cls = isZero
+    ? "text-foreground"
+    : tone === "in"
+      ? "text-emerald-600"
+      : tone === "out"
+        ? "text-rose-600"
+        : "text-foreground";
   return (
     <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
