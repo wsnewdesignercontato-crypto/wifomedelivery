@@ -65,7 +65,7 @@ function Corridas() {
   const [chatOpen, setChatOpen] = useState<"client_courier" | "store_courier" | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
-  const [contactless] = useState(false);
+  
   const [incidentOpen, setIncidentOpen] = useState(false);
   const [incidentType, setIncidentType] = useState("cliente_ausente");
   const [incidentText, setIncidentText] = useState("");
