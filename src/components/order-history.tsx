@@ -183,7 +183,7 @@ export function OrderHistory({ orderId }: { orderId: string }) {
                   <p className="mt-1 rounded-md bg-muted px-2 py-1 text-xs text-foreground">Motivo: {r.reason}</p>
                 )}
               </li>
-            ))}
+            );})}
           </ol>
         )}
       </div>
