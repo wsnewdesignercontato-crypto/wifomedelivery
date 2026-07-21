@@ -137,14 +137,22 @@ export function AdminShell() {
           })()}
         </nav>
         <div className="border-t border-border p-3">
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-muted-foreground hover:text-foreground"
-            onClick={signOut}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Sair
-          </Button>
+          <div className="flex items-center gap-3 rounded-xl bg-muted/40 p-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-orange-600 text-sm font-bold text-primary-foreground shadow-brand">
+              A
+            </div>
+            <div className="min-w-0 flex-1 leading-tight">
+              <p className="truncate text-sm font-semibold text-foreground">Admin</p>
+              <p className="truncate text-[11px] text-muted-foreground">Administrador</p>
+            </div>
+            <button
+              onClick={signOut}
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+              title="Sair"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </aside>
 
