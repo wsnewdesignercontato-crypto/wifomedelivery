@@ -209,7 +209,7 @@ function Corridas() {
 
   async function avancar(next: string) {
     if (!ativa || !courier || advancing) return;
-    if (next === "delivered") { setCodeInput(""); setProofFile(null); setProofPreview(null); setContactless(false); setCodeOpen(true); return; }
+    if (next === "delivered") { setCodeInput(""); setProofFile(null); setProofPreview(null); setCodeOpen(true); return; }
     setAdvancing(true);
     const patch: Record<string, unknown> = { status: next };
     if (next === "picked_up") patch.coletado_em = new Date().toISOString();
