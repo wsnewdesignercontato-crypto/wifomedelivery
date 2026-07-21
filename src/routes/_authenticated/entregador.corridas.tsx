@@ -615,6 +615,37 @@ function Corridas() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!deliveredInfo} onOpenChange={(o) => !o && setDeliveredInfo(null)}>
+        <DialogContent className="max-w-sm text-center">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl">Entrega confirmada! 🎉</DialogTitle>
+            <DialogDescription className="text-center">
+              O código foi validado e o pedido foi marcado como <b>entregue</b>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="my-4 flex flex-col items-center gap-2">
+            <div className="h-20 w-20 rounded-full bg-green-500/15 flex items-center justify-center text-4xl">✅</div>
+            {deliveredInfo?.clienteNome && (
+              <p className="text-sm text-muted-foreground">Cliente: <b>{deliveredInfo.clienteNome}</b></p>
+            )}
+            {deliveredInfo && deliveredInfo.valorCents > 0 && (
+              <p className="text-lg font-black text-primary">
+                + R$ {(deliveredInfo.valorCents / 100).toFixed(2).replace(".", ",")}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">Você já está online para novas corridas.</p>
+          </div>
+          <DialogFooter>
+            <button
+              className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-bold"
+              onClick={() => setDeliveredInfo(null)}
+            >
+              Fechar
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
