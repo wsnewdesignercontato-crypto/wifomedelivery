@@ -52,19 +52,25 @@ export function AdRotator({
       const { data, error } = await supabase
         .from("sponsored_ads")
         .select("id, establishment_id, titulo, subtitulo, imagem_url, banner_path, video_url, destino_url, cta_texto, patrocinado")
+        .eq("ativo", true)
+        .eq("status", "approved")
         .order("prioridade", { ascending: false })
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Ad[];
     },
+    refetchOnWindowFocus: false,
+    staleTime: 60_000,
   });
 
-  const { data: seconds = 8 } = useQuery({
+  const { data: seconds = 6 } = useQuery({
     queryKey: ["ad_default_seconds"],
     queryFn: async () => {
       const { data } = await supabase.rpc("get_public_platform_settings").maybeSingle();
-      return (data as { ad_default_seconds?: number } | null)?.ad_default_seconds ?? 8;
+      return (data as { ad_default_seconds?: number } | null)?.ad_default_seconds ?? 6;
     },
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60_000,
   });
 
   const [signed, setSigned] = useState<Record<string, string>>({});
@@ -82,11 +88,14 @@ export function AdRotator({
   }, [ads, signed]);
 
   const [idx, setIdx] = useState(0);
+  const count = ads.length;
   useEffect(() => {
-    if (ads.length <= 1 || prefersReducedMotion) return;
-    const t = setTimeout(() => setIdx((i) => (i + 1) % ads.length), Math.max(3, seconds) * 1000);
-    return () => clearTimeout(t);
-  }, [idx, ads, seconds, prefersReducedMotion]);
+    if (count <= 1 || prefersReducedMotion) return;
+    const ms = Math.max(3, seconds) * 1000;
+    const t = setInterval(() => setIdx((i) => (i + 1) % count), ms);
+    return () => clearInterval(t);
+  }, [count, seconds, prefersReducedMotion]);
+
 
   if (ads.length === 0) return fallback ? <>{fallback}</> : null;
 
