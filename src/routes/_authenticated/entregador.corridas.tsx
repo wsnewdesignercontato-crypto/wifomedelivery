@@ -473,13 +473,9 @@ function Corridas() {
               )}
             </div>
 
-            <label className="flex items-start gap-2 rounded-xl border border-border bg-background p-3 text-sm">
-              <input type="checkbox" checked={contactless} onChange={(e) => setContactless(e.target.checked)} className="mt-1" />
-              <span>
-                <strong>Entrega sem contato</strong>
-                <span className="block text-xs text-muted-foreground">O pedido foi deixado na porta conforme instruções.</span>
-              </span>
-            </label>
+            <p className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs text-muted-foreground">
+              <strong className="text-primary">Obrigatório:</strong> peça ao cliente o código de 4 dígitos que aparece no pedido dele. Sem o código, a entrega não pode ser finalizada.
+            </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCodeOpen(false)}>Cancelar</Button>
