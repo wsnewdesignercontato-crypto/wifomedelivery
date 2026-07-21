@@ -544,11 +544,12 @@ function SubirCampanhaModal({
             <div className="space-y-2">
               <Label>Imagem do banner</Label>
               <div className="rounded-xl border-2 border-dashed border-border bg-muted/30 p-4">
-                <div className="mb-3 flex items-center gap-4 rounded-lg bg-background/70 p-3 text-xs text-muted-foreground">
+                <div className="mb-3 flex items-start gap-3 rounded-lg bg-background/70 p-3 text-xs text-muted-foreground">
                   <ImageIcon className="h-5 w-5 shrink-0 text-primary" />
-                  <div>
-                    <p><b>Medidas recomendadas:</b> 1200 × 630 px (proporção 16:9) — o mesmo tamanho aparece bonito no celular e no PC.</p>
-                    <p>Formatos: JPG ou PNG · até 5 MB.</p>
+                  <div className="space-y-1">
+                    <p><b>Tamanho exato:</b> 1200 × 630 pixels (proporção 16:9 — horizontal).</p>
+                    <p><b>Formato:</b> JPG ou PNG · até 5 MB.</p>
+                    <p><b>Dica:</b> deixe o texto principal no centro — as bordas podem ser cortadas em telas menores.</p>
                   </div>
                 </div>
                 <input type="file" accept="image/*" onChange={onPickFile} className="block w-full text-sm" />
@@ -563,11 +564,17 @@ function SubirCampanhaModal({
             <div className="space-y-2">
               <Label>Link do vídeo (YouTube)</Label>
               <Input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://youtu.be/... ou https://www.youtube.com/watch?v=..." />
-              <p className="text-xs text-muted-foreground">
-                O vídeo tocará automaticamente sem som e sem botão de play para o cliente. Envie um vídeo curto — só os primeiros segundos serão exibidos.
-              </p>
+              <div className="flex items-start gap-3 rounded-lg border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+                <Play className="h-5 w-5 shrink-0 text-primary" />
+                <div className="space-y-1">
+                  <p><b>Resolução recomendada:</b> 1920 × 1080 px (Full HD, 16:9 horizontal).</p>
+                  <p><b>Duração ideal:</b> 15 a 30 segundos — só os primeiros segundos serão exibidos antes do rotador girar.</p>
+                  <p><b>Importante:</b> o vídeo toca automaticamente <b>sem som</b> e sem botão de play. Evite vídeos verticais (Shorts) — eles ficam com bordas pretas.</p>
+                </div>
+              </div>
             </div>
           )}
+
 
           <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
             <p><b>Como funciona:</b> ao aprovar, sua campanha entra no rotador de anúncios da Home e da aba Novidades. Cada anúncio fica visível por alguns segundos (configurado pelo admin) antes de girar para o próximo. Ao clicar, o cliente vai direto para o link da promoção.</p>
