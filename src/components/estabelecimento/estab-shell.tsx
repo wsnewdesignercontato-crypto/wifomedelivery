@@ -27,6 +27,7 @@ import {
   Truck,
   Image as ImageIcon,
   Ticket,
+  Megaphone,
   DollarSign,
   BarChart3,
   Star,
