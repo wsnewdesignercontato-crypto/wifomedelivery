@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 
 type Ad = {
   id: string;
@@ -44,7 +43,6 @@ export function AdRotator({
   fallback?: React.ReactNode;
 }) {
   const navigate = useNavigate();
-  const prefersReducedMotion = usePrefersReducedMotion();
 
   const { data: ads = [] } = useQuery({
     queryKey: ["ad_rotator"],
@@ -89,12 +87,19 @@ export function AdRotator({
 
   const [idx, setIdx] = useState(0);
   const count = ads.length;
+  const rotationMs = Math.min(30, Math.max(3, Number(seconds) || 6)) * 1000;
+
   useEffect(() => {
-    if (count <= 1 || prefersReducedMotion) return;
-    const ms = Math.max(3, seconds) * 1000;
-    const t = setInterval(() => setIdx((i) => (i + 1) % count), ms);
+    setIdx(0);
+  }, [ads.map((ad) => ad.id).join("|")]);
+
+  useEffect(() => {
+    if (count <= 1) return;
+    const t = window.setInterval(() => {
+      setIdx((i) => (i + 1) % count);
+    }, rotationMs);
     return () => clearInterval(t);
-  }, [count, seconds, prefersReducedMotion]);
+  }, [count, rotationMs]);
 
 
   if (ads.length === 0) return fallback ? <>{fallback}</> : null;
