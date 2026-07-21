@@ -144,7 +144,7 @@ function PedidosPage() {
             return (
               <div key={o.id} className="rounded-2xl border border-border bg-card p-4 shadow-card">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge className="bg-primary/15 text-primary hover:bg-primary/20">{STATUS_LABEL[o.status] ?? o.status}</Badge>
                       <Badge variant="outline" className={o.tipo_entrega === "pickup" ? "border-amber-500/50 text-amber-600" : "border-primary/40 text-primary"}>
@@ -153,11 +153,11 @@ function PedidosPage() {
                       {o.refund_status === "completed" && (<Badge variant="secondary">Reembolso {fmt(o.refund_amount_cents ?? 0)}</Badge>)}
                       <span className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleTimeString("pt-BR")}</span>
                     </div>
-                    <p className="mt-2 text-sm text-muted-foreground">
+                    <p className="mt-2 truncate text-sm text-muted-foreground">
                       {o.tipo_entrega === "pickup" ? "Cliente retira no local" : `Entregar em: ${o.endereco_entrega?.endereco ?? "—"}`}
                     </p>
                   </div>
-                  <span className="font-bold text-primary">{fmt(o.total_cents)}</span>
+                  <span className="shrink-0 whitespace-nowrap font-bold text-primary">{fmt(o.total_cents)}</span>
                 </div>
                 <ul className="mt-3 space-y-1 text-sm">
                   {(items[o.id] ?? []).map((it) => (
