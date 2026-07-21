@@ -2787,39 +2787,6 @@ export type Database = {
       }
     }
     Views: {
-      couriers_available_public: {
-        Row: {
-          aprovacao: string | null
-          avaliacao: number | null
-          last_seen: string | null
-          lat: number | null
-          lng: number | null
-          status: Database["public"]["Enums"]["courier_status"] | null
-          user_id: string | null
-          veiculo: string | null
-        }
-        Insert: {
-          aprovacao?: string | null
-          avaliacao?: number | null
-          last_seen?: string | null
-          lat?: number | null
-          lng?: number | null
-          status?: Database["public"]["Enums"]["courier_status"] | null
-          user_id?: string | null
-          veiculo?: string | null
-        }
-        Update: {
-          aprovacao?: string | null
-          avaliacao?: number | null
-          last_seen?: string | null
-          lat?: number | null
-          lng?: number | null
-          status?: Database["public"]["Enums"]["courier_status"] | null
-          user_id?: string | null
-          veiculo?: string | null
-        }
-        Relationships: []
-      }
       demand_zones_view: {
         Row: {
           cidade: string | null
@@ -2913,27 +2880,26 @@ export type Database = {
           },
         ]
       }
-      platform_settings_public: {
-        Row: {
-          ad_default_seconds: number | null
-          bestseller_threshold: number | null
-          id: number | null
-        }
-        Insert: {
-          ad_default_seconds?: number | null
-          bestseller_threshold?: number | null
-          id?: number | null
-        }
-        Update: {
-          ad_default_seconds?: number | null
-          bestseller_threshold?: number | null
-          id?: number | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
-      [_ in never]: never
+      get_public_platform_settings: {
+        Args: never
+        Returns: {
+          ad_default_seconds: number
+          bestseller_threshold: number
+        }[]
+      }
+      list_available_couriers: {
+        Args: never
+        Returns: {
+          avaliacao: number
+          last_seen: string
+          lat: number
+          lng: number
+          user_id: string
+          veiculo: string
+        }[]
+      }
     }
     Enums: {
       app_role: "cliente" | "estabelecimento" | "entregador" | "admin"
