@@ -260,9 +260,23 @@ function Corridas() {
     if (error) { setAdvancing(false); return toast.error("Falha ao finalizar"); }
     await supabase.from("orders").update(orderPatch as never).eq("id", ativa.order_id);
     await supabase.from("courier_profiles").update({ status: "online" }).eq("user_id", courier.user_id);
+
+    // Atualização imediata do estado local + confirmação visual
+    const valorCents = ativa.valor_entrega_cents ?? 0;
+    const clienteNome = cliente?.nome ?? null;
     setAdvancing(false);
     setCodeOpen(false);
-    toast.success("Entrega concluída! 🎉");
+    setCodeInput("");
+    setProofFile(null);
+    setProofPreview(null);
+    setAtiva(null);
+    setOrder(null);
+    setEstab(null);
+    setCliente(null);
+    setDeliveredInfo({ valorCents, clienteNome });
+    toast.success("Entrega confirmada! 🎉", {
+      description: `Código validado. +R$ ${(valorCents / 100).toFixed(2).replace(".", ",")} adicionados à sua carteira.`,
+    });
     load();
   }
 
