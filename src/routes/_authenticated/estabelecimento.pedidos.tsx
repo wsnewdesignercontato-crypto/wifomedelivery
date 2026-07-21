@@ -146,7 +146,7 @@ function PedidosPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <Badge className="bg-primary/15 text-primary hover:bg-primary/20">{STATUS_LABEL[o.status] ?? o.status}</Badge>
+                      <Badge variant={o.status === "delivered" ? "success" : "default"} className={o.status === "delivered" ? "" : "bg-primary/15 text-primary hover:bg-primary/20"}>{STATUS_LABEL[o.status] ?? o.status}</Badge>
                       <Badge variant="outline" className={o.tipo_entrega === "pickup" ? "border-amber-500/50 text-amber-600" : "border-primary/40 text-primary"}>
                         {o.tipo_entrega === "pickup" ? "🏪 Retirada" : "🛵 Entrega"}
                       </Badge>
@@ -157,7 +157,7 @@ function PedidosPage() {
                       {o.tipo_entrega === "pickup" ? "Cliente retira no local" : `Entregar em: ${o.endereco_entrega?.endereco ?? "—"}`}
                     </p>
                   </div>
-                  <span className="shrink-0 whitespace-nowrap font-bold text-primary">{fmt(o.total_cents)}</span>
+                  <span className={cn("shrink-0 whitespace-nowrap font-bold", o.status === "delivered" ? "text-success" : "text-primary")}>{fmt(o.total_cents)}</span>
                 </div>
                 <ul className="mt-3 space-y-1 text-sm">
                   {(items[o.id] ?? []).map((it) => (
