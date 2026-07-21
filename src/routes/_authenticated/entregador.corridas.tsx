@@ -1,6 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const codigoEntregaSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{4}$/, { message: "O código deve ter exatamente 4 dígitos numéricos." });
 import { Bike, MapPin, Package, CheckCircle2, Phone, MessageSquare, Navigation, Clock, ShieldCheck, Loader2, Camera, Banknote, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -65,6 +71,8 @@ function Corridas() {
   const [chatOpen, setChatOpen] = useState<"client_courier" | "store_courier" | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [codeAttempts, setCodeAttempts] = useState(0);
   const [deliveredInfo, setDeliveredInfo] = useState<{ valorCents: number; clienteNome: string | null } | null>(null);
   
   const [incidentOpen, setIncidentOpen] = useState(false);
@@ -230,11 +238,30 @@ function Corridas() {
   async function confirmarEntrega() {
     if (!ativa || !order || !courier) return;
     if (!order.codigo_entrega) {
-      return toast.error("Pedido sem código de entrega. Contate o suporte.");
+      const msg = "Pedido sem código de entrega. Contate o suporte.";
+      setCodeError(msg);
+      return toast.error(msg);
     }
-    if (codeInput.trim() !== order.codigo_entrega) {
-      return toast.error("Código incorreto. Peça o código de 4 dígitos ao cliente.");
+    // Validação de formato (zod)
+    const parsed = codigoEntregaSchema.safeParse(codeInput);
+    if (!parsed.success) {
+      const msg = parsed.error.issues[0]?.message ?? "Código inválido.";
+      setCodeError(msg);
+      return toast.error(msg);
     }
+    // Comparação com o código real do pedido
+    if (parsed.data !== order.codigo_entrega) {
+      const nextAttempts = codeAttempts + 1;
+      setCodeAttempts(nextAttempts);
+      const msg = `Código incorreto. Peça novamente ao cliente os 4 dígitos que aparecem na tela dele.${
+        nextAttempts >= 3 ? " (várias tentativas — confirme com o cliente)" : ""
+      }`;
+      setCodeError(msg);
+      setCodeInput("");
+      return toast.error("Código incorreto", { description: "Peça ao cliente o código de 4 dígitos correto." });
+    }
+    setCodeError(null);
+    setCodeAttempts(0);
     setAdvancing(true);
     let prova_url: string | null = null;
     let metodo: string = "code";
@@ -416,9 +443,19 @@ function Corridas() {
                         maxLength={4}
                         placeholder="0000"
                         value={codeInput}
-                        onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                        className="h-14 text-center text-3xl font-black tracking-[0.45em]"
+                        onChange={(e) => {
+                          setCodeInput(e.target.value.replace(/\D/g, "").slice(0, 4));
+                          if (codeError) setCodeError(null);
+                        }}
+                        aria-invalid={!!codeError}
+                        aria-describedby="codigo-erro-inline"
+                        className={`h-14 text-center text-3xl font-black tracking-[0.45em] ${codeError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                       />
+                      {codeError && (
+                        <p id="codigo-erro-inline" role="alert" className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-destructive">
+                          <AlertTriangle className="h-3.5 w-3.5" /> {codeError}
+                        </p>
+                      )}
                     </div>
                     <Button size="lg" onClick={confirmarEntrega} disabled={advancing || codeInput.length !== 4}>
                       {advancing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
@@ -519,10 +556,21 @@ function Corridas() {
           <div className="space-y-4">
             <Input
               inputMode="numeric" maxLength={4} placeholder="0000"
-              value={codeInput} onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
-              className="text-center text-3xl font-black tracking-[0.5em]"
+              value={codeInput}
+              onChange={(e) => {
+                setCodeInput(e.target.value.replace(/\D/g, "").slice(0, 4));
+                if (codeError) setCodeError(null);
+              }}
+              aria-invalid={!!codeError}
+              aria-describedby="codigo-erro-modal"
+              className={`text-center text-3xl font-black tracking-[0.5em] ${codeError ? "border-destructive focus-visible:ring-destructive" : ""}`}
               autoFocus
             />
+            {codeError && (
+              <p id="codigo-erro-modal" role="alert" className="flex items-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">
+                <AlertTriangle className="h-4 w-4 shrink-0" /> {codeError}
+              </p>
+            )}
 
             <div className="space-y-2">
               <p className="text-xs font-bold uppercase text-muted-foreground">Prova de entrega (opcional)</p>
