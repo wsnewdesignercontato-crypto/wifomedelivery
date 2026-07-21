@@ -57,6 +57,7 @@ const NAV: NavItem[] = [
   { label: "Histórico de saques", to: "/estabelecimento/saques", icon: FileText },
   { label: "Relatórios", to: "/estabelecimento/relatorios", icon: BarChart3 },
   { label: "Avaliações", to: "/estabelecimento/avaliacoes", icon: Star },
+  { label: "Anúncios", to: "/estabelecimento/anuncios", icon: Megaphone },
   { label: "Equipe", to: "/estabelecimento/equipe", icon: Users },
   { label: "Configurações", to: "/estabelecimento/configuracoes", icon: Settings },
 ];
