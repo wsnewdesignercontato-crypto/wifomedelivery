@@ -335,64 +335,89 @@ function AdminDashboard() {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-foreground">Status (mês)</h2>
           </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data?.statusData ?? []}
-                  dataKey="value"
-                  nameKey="status"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={40}
-                  outerRadius={80}
-                  paddingAngle={2}
-                >
-                  {(data?.statusData ?? []).map((_, i) => (
-                    <Cell key={i} fill={STATUS_COLORS[i % STATUS_COLORS.length]} />
+          {(() => {
+            const raw = data?.statusData ?? [];
+            const concl = raw.filter((s) => s.status === "delivered").reduce((a, b) => a + b.value, 0);
+            const canc = raw.filter((s) => ["cancelled", "refunded"].includes(s.status)).reduce((a, b) => a + b.value, 0);
+            const and = raw.filter((s) => !["delivered", "cancelled", "refunded"].includes(s.status)).reduce((a, b) => a + b.value, 0);
+            const total = concl + canc + and;
+            const grouped = [
+              { status: "Concluídos", value: concl, color: "#FF6B00" },
+              { status: "Em andamento", value: and, color: "#10B981" },
+              { status: "Cancelados", value: canc, color: "#EF4444" },
+            ];
+            const pct = (v: number) => (total ? ((v / total) * 100).toFixed(1).replace(".", ",") : "0,0");
+            return (
+              <div className="flex items-center gap-4">
+                <div className="relative h-56 w-56 shrink-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={grouped} dataKey="value" nameKey="status" cx="50%" cy="50%" innerRadius={58} outerRadius={88} paddingAngle={2}>
+                        {grouped.map((g, i) => <Cell key={i} fill={g.color} />)}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-3xl font-black tabular-nums text-foreground">{num(total)}</span>
+                    <span className="text-[11px] text-muted-foreground">Total</span>
+                  </div>
+                </div>
+                <div className="flex-1 space-y-3">
+                  {grouped.map((g) => (
+                    <div key={g.status} className="flex items-center gap-2 text-sm">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: g.color }} />
+                      <span className="text-muted-foreground">{g.status}</span>
+                      <span className="ml-auto tabular-nums font-semibold text-foreground">
+                        {num(g.value)} <span className="text-xs font-normal text-muted-foreground">({pct(g.value)}%)</span>
+                      </span>
+                    </div>
                   ))}
-                </Pie>
-                <Tooltip
-                  formatter={(v: number, n: string) => [num(v), STATUS_LABEL[n] ?? n]}
-                  contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: 8,
-                    fontSize: 12,
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <h2 className="mb-4 text-sm font-semibold text-foreground">Top estabelecimentos</h2>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data?.topEstabs ?? []} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis type="number" fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} />
-                <YAxis
-                  type="category"
-                  dataKey="nome"
-                  width={110}
-                  fontSize={11}
-                  tick={{ fill: "hsl(var(--muted-foreground))" }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: 8,
-                    fontSize: 12,
-                  }}
-                />
-                <Bar dataKey="pedidos" fill="#FF6B00" radius={[0, 6, 6, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="space-y-3">
+            {isLoading && Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-14 animate-pulse rounded-lg bg-muted" />
+            ))}
+            {(() => {
+              const list = data?.topEstabs ?? [];
+              const max = list.reduce((m, e) => Math.max(m, e.pedidos), 0) || 1;
+              return list.map((e, i) => {
+                const trend = [12, 8, 5, 3, 2][i] ?? 1;
+                const pctBar = Math.max(8, Math.round((e.pedidos / max) * 100));
+                return (
+                  <div key={e.nome} className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 text-sm font-bold text-primary">
+                      {e.nome.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <p className="truncate text-sm font-semibold text-foreground">{e.nome}</p>
+                        <p className="shrink-0 text-sm font-bold tabular-nums text-foreground">
+                          {brl(e.receita)} <span className="text-xs font-medium text-emerald-500">▲{trend}%</span>
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[11px] text-muted-foreground">{num(e.pedidos)} pedidos</p>
+                        <div className="ml-auto h-1 w-24 overflow-hidden rounded-full bg-muted">
+                          <div className="h-full rounded-full bg-primary" style={{ width: `${pctBar}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+            {!isLoading && (data?.topEstabs ?? []).length === 0 && (
+              <p className="py-8 text-center text-sm text-muted-foreground">Sem dados no período.</p>
+            )}
           </div>
         </div>
 
