@@ -238,11 +238,30 @@ function Corridas() {
   async function confirmarEntrega() {
     if (!ativa || !order || !courier) return;
     if (!order.codigo_entrega) {
-      return toast.error("Pedido sem código de entrega. Contate o suporte.");
+      const msg = "Pedido sem código de entrega. Contate o suporte.";
+      setCodeError(msg);
+      return toast.error(msg);
     }
-    if (codeInput.trim() !== order.codigo_entrega) {
-      return toast.error("Código incorreto. Peça o código de 4 dígitos ao cliente.");
+    // Validação de formato (zod)
+    const parsed = codigoEntregaSchema.safeParse(codeInput);
+    if (!parsed.success) {
+      const msg = parsed.error.issues[0]?.message ?? "Código inválido.";
+      setCodeError(msg);
+      return toast.error(msg);
     }
+    // Comparação com o código real do pedido
+    if (parsed.data !== order.codigo_entrega) {
+      const nextAttempts = codeAttempts + 1;
+      setCodeAttempts(nextAttempts);
+      const msg = `Código incorreto. Peça novamente ao cliente os 4 dígitos que aparecem na tela dele.${
+        nextAttempts >= 3 ? " (várias tentativas — confirme com o cliente)" : ""
+      }`;
+      setCodeError(msg);
+      setCodeInput("");
+      return toast.error("Código incorreto", { description: "Peça ao cliente o código de 4 dígitos correto." });
+    }
+    setCodeError(null);
+    setCodeAttempts(0);
     setAdvancing(true);
     let prova_url: string | null = null;
     let metodo: string = "code";
