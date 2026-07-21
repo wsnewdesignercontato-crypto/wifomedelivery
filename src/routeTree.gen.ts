@@ -44,6 +44,7 @@ import { Route as AuthenticatedEstabelecimentoCategoriasRouteImport } from './ro
 import { Route as AuthenticatedEstabelecimentoCarteiraRouteImport } from './routes/_authenticated/estabelecimento.carteira'
 import { Route as AuthenticatedEstabelecimentoBannersRouteImport } from './routes/_authenticated/estabelecimento.banners'
 import { Route as AuthenticatedEstabelecimentoAvaliacoesRouteImport } from './routes/_authenticated/estabelecimento.avaliacoes'
+import { Route as AuthenticatedEstabelecimentoAnunciosRouteImport } from './routes/_authenticated/estabelecimento.anuncios'
 import { Route as AuthenticatedEntregadorVeiculoRouteImport } from './routes/_authenticated/entregador.veiculo'
 import { Route as AuthenticatedEntregadorSuporteRouteImport } from './routes/_authenticated/entregador.suporte'
 import { Route as AuthenticatedEntregadorSaquesRouteImport } from './routes/_authenticated/entregador.saques'
@@ -67,6 +68,7 @@ import { Route as AuthenticatedClienteBuscarRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin.usuarios'
 import { Route as AuthenticatedAdminSuporteRouteImport } from './routes/_authenticated/admin.suporte'
 import { Route as AuthenticatedAdminSaquesRouteImport } from './routes/_authenticated/admin.saques'
+import { Route as AuthenticatedAdminPlanosAnuncioRouteImport } from './routes/_authenticated/admin.planos-anuncio'
 import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin.pedidos'
 import { Route as AuthenticatedAdminNotificacoesRouteImport } from './routes/_authenticated/admin.notificacoes'
 import { Route as AuthenticatedAdminMapaRouteImport } from './routes/_authenticated/admin.mapa'
@@ -291,6 +293,12 @@ const AuthenticatedEstabelecimentoAvaliacoesRoute =
     path: '/avaliacoes',
     getParentRoute: () => AuthenticatedEstabelecimentoRoute,
   } as any)
+const AuthenticatedEstabelecimentoAnunciosRoute =
+  AuthenticatedEstabelecimentoAnunciosRouteImport.update({
+    id: '/anuncios',
+    path: '/anuncios',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
 const AuthenticatedEntregadorVeiculoRoute =
   AuthenticatedEntregadorVeiculoRouteImport.update({
     id: '/veiculo',
@@ -427,6 +435,12 @@ const AuthenticatedAdminSaquesRoute =
   AuthenticatedAdminSaquesRouteImport.update({
     id: '/saques',
     path: '/saques',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminPlanosAnuncioRoute =
+  AuthenticatedAdminPlanosAnuncioRouteImport.update({
+    id: '/planos-anuncio',
+    path: '/planos-anuncio',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminPedidosRoute =
@@ -623,6 +637,7 @@ export interface FileRoutesByFullPath {
   '/admin/mapa': typeof AuthenticatedAdminMapaRoute
   '/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
+  '/admin/planos-anuncio': typeof AuthenticatedAdminPlanosAnuncioRoute
   '/admin/saques': typeof AuthenticatedAdminSaquesRoute
   '/admin/suporte': typeof AuthenticatedAdminSuporteRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
@@ -646,6 +661,7 @@ export interface FileRoutesByFullPath {
   '/entregador/saques': typeof AuthenticatedEntregadorSaquesRoute
   '/entregador/suporte': typeof AuthenticatedEntregadorSuporteRoute
   '/entregador/veiculo': typeof AuthenticatedEntregadorVeiculoRoute
+  '/estabelecimento/anuncios': typeof AuthenticatedEstabelecimentoAnunciosRoute
   '/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
   '/estabelecimento/banners': typeof AuthenticatedEstabelecimentoBannersRoute
   '/estabelecimento/carteira': typeof AuthenticatedEstabelecimentoCarteiraRoute
@@ -706,6 +722,7 @@ export interface FileRoutesByTo {
   '/admin/mapa': typeof AuthenticatedAdminMapaRoute
   '/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
+  '/admin/planos-anuncio': typeof AuthenticatedAdminPlanosAnuncioRoute
   '/admin/saques': typeof AuthenticatedAdminSaquesRoute
   '/admin/suporte': typeof AuthenticatedAdminSuporteRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
@@ -729,6 +746,7 @@ export interface FileRoutesByTo {
   '/entregador/saques': typeof AuthenticatedEntregadorSaquesRoute
   '/entregador/suporte': typeof AuthenticatedEntregadorSuporteRoute
   '/entregador/veiculo': typeof AuthenticatedEntregadorVeiculoRoute
+  '/estabelecimento/anuncios': typeof AuthenticatedEstabelecimentoAnunciosRoute
   '/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
   '/estabelecimento/banners': typeof AuthenticatedEstabelecimentoBannersRoute
   '/estabelecimento/carteira': typeof AuthenticatedEstabelecimentoCarteiraRoute
@@ -795,6 +813,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/mapa': typeof AuthenticatedAdminMapaRoute
   '/_authenticated/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
+  '/_authenticated/admin/planos-anuncio': typeof AuthenticatedAdminPlanosAnuncioRoute
   '/_authenticated/admin/saques': typeof AuthenticatedAdminSaquesRoute
   '/_authenticated/admin/suporte': typeof AuthenticatedAdminSuporteRoute
   '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
@@ -818,6 +837,7 @@ export interface FileRoutesById {
   '/_authenticated/entregador/saques': typeof AuthenticatedEntregadorSaquesRoute
   '/_authenticated/entregador/suporte': typeof AuthenticatedEntregadorSuporteRoute
   '/_authenticated/entregador/veiculo': typeof AuthenticatedEntregadorVeiculoRoute
+  '/_authenticated/estabelecimento/anuncios': typeof AuthenticatedEstabelecimentoAnunciosRoute
   '/_authenticated/estabelecimento/avaliacoes': typeof AuthenticatedEstabelecimentoAvaliacoesRoute
   '/_authenticated/estabelecimento/banners': typeof AuthenticatedEstabelecimentoBannersRoute
   '/_authenticated/estabelecimento/carteira': typeof AuthenticatedEstabelecimentoCarteiraRoute
@@ -884,6 +904,7 @@ export interface FileRouteTypes {
     | '/admin/mapa'
     | '/admin/notificacoes'
     | '/admin/pedidos'
+    | '/admin/planos-anuncio'
     | '/admin/saques'
     | '/admin/suporte'
     | '/admin/usuarios'
@@ -907,6 +928,7 @@ export interface FileRouteTypes {
     | '/entregador/saques'
     | '/entregador/suporte'
     | '/entregador/veiculo'
+    | '/estabelecimento/anuncios'
     | '/estabelecimento/avaliacoes'
     | '/estabelecimento/banners'
     | '/estabelecimento/carteira'
@@ -967,6 +989,7 @@ export interface FileRouteTypes {
     | '/admin/mapa'
     | '/admin/notificacoes'
     | '/admin/pedidos'
+    | '/admin/planos-anuncio'
     | '/admin/saques'
     | '/admin/suporte'
     | '/admin/usuarios'
@@ -990,6 +1013,7 @@ export interface FileRouteTypes {
     | '/entregador/saques'
     | '/entregador/suporte'
     | '/entregador/veiculo'
+    | '/estabelecimento/anuncios'
     | '/estabelecimento/avaliacoes'
     | '/estabelecimento/banners'
     | '/estabelecimento/carteira'
@@ -1055,6 +1079,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/mapa'
     | '/_authenticated/admin/notificacoes'
     | '/_authenticated/admin/pedidos'
+    | '/_authenticated/admin/planos-anuncio'
     | '/_authenticated/admin/saques'
     | '/_authenticated/admin/suporte'
     | '/_authenticated/admin/usuarios'
@@ -1078,6 +1103,7 @@ export interface FileRouteTypes {
     | '/_authenticated/entregador/saques'
     | '/_authenticated/entregador/suporte'
     | '/_authenticated/entregador/veiculo'
+    | '/_authenticated/estabelecimento/anuncios'
     | '/_authenticated/estabelecimento/avaliacoes'
     | '/_authenticated/estabelecimento/banners'
     | '/_authenticated/estabelecimento/carteira'
@@ -1374,6 +1400,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEstabelecimentoAvaliacoesRouteImport
       parentRoute: typeof AuthenticatedEstabelecimentoRoute
     }
+    '/_authenticated/estabelecimento/anuncios': {
+      id: '/_authenticated/estabelecimento/anuncios'
+      path: '/anuncios'
+      fullPath: '/estabelecimento/anuncios'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoAnunciosRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
     '/_authenticated/entregador/veiculo': {
       id: '/_authenticated/entregador/veiculo'
       path: '/veiculo'
@@ -1533,6 +1566,13 @@ declare module '@tanstack/react-router' {
       path: '/saques'
       fullPath: '/admin/saques'
       preLoaderRoute: typeof AuthenticatedAdminSaquesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/planos-anuncio': {
+      id: '/_authenticated/admin/planos-anuncio'
+      path: '/planos-anuncio'
+      fullPath: '/admin/planos-anuncio'
+      preLoaderRoute: typeof AuthenticatedAdminPlanosAnuncioRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/pedidos': {
@@ -1750,6 +1790,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminMapaRoute: typeof AuthenticatedAdminMapaRoute
   AuthenticatedAdminNotificacoesRoute: typeof AuthenticatedAdminNotificacoesRoute
   AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
+  AuthenticatedAdminPlanosAnuncioRoute: typeof AuthenticatedAdminPlanosAnuncioRoute
   AuthenticatedAdminSaquesRoute: typeof AuthenticatedAdminSaquesRoute
   AuthenticatedAdminSuporteRoute: typeof AuthenticatedAdminSuporteRoute
   AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
@@ -1773,6 +1814,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminMapaRoute: AuthenticatedAdminMapaRoute,
   AuthenticatedAdminNotificacoesRoute: AuthenticatedAdminNotificacoesRoute,
   AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
+  AuthenticatedAdminPlanosAnuncioRoute: AuthenticatedAdminPlanosAnuncioRoute,
   AuthenticatedAdminSaquesRoute: AuthenticatedAdminSaquesRoute,
   AuthenticatedAdminSuporteRoute: AuthenticatedAdminSuporteRoute,
   AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
@@ -1899,6 +1941,7 @@ const AuthenticatedEntregadorRouteWithChildren =
   )
 
 interface AuthenticatedEstabelecimentoRouteChildren {
+  AuthenticatedEstabelecimentoAnunciosRoute: typeof AuthenticatedEstabelecimentoAnunciosRoute
   AuthenticatedEstabelecimentoAvaliacoesRoute: typeof AuthenticatedEstabelecimentoAvaliacoesRoute
   AuthenticatedEstabelecimentoBannersRoute: typeof AuthenticatedEstabelecimentoBannersRoute
   AuthenticatedEstabelecimentoCarteiraRoute: typeof AuthenticatedEstabelecimentoCarteiraRoute
@@ -1921,6 +1964,8 @@ interface AuthenticatedEstabelecimentoRouteChildren {
 
 const AuthenticatedEstabelecimentoRouteChildren: AuthenticatedEstabelecimentoRouteChildren =
   {
+    AuthenticatedEstabelecimentoAnunciosRoute:
+      AuthenticatedEstabelecimentoAnunciosRoute,
     AuthenticatedEstabelecimentoAvaliacoesRoute:
       AuthenticatedEstabelecimentoAvaliacoesRoute,
     AuthenticatedEstabelecimentoBannersRoute:

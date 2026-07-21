@@ -119,7 +119,12 @@ function PlanosPage() {
   }
 
   async function decidir(s: Sub, novo: "active" | "rejected") {
-    const patch: Record<string, unknown> = { status: novo, aprovado_em: new Date().toISOString() };
+    const patch: {
+      status: string;
+      aprovado_em: string;
+      inicio_em?: string;
+      fim_em?: string;
+    } = { status: novo, aprovado_em: new Date().toISOString() };
     if (novo === "active") {
       const plan = plans.find((p) => p.id === s.plan_id);
       const dias = plan?.duracao_dias ?? 7;
