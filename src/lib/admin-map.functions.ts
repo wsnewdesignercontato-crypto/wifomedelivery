@@ -9,21 +9,32 @@ type EstabRow = {
   estado: string | null;
 };
 
+const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
+
 async function geocodeOne(query: string): Promise<{ lat: number; lng: number } | null> {
-  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q=${encodeURIComponent(query)}`;
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  const gmapsKey = process.env.GOOGLE_MAPS_API_KEY;
+  if (!lovableKey || !gmapsKey) return null;
+  const url = `${GATEWAY_URL}/maps/api/geocode/json?address=${encodeURIComponent(query)}&region=br&language=pt-BR`;
   const res = await fetch(url, {
     headers: {
-      "User-Agent": "WiFome-Admin/1.0 (contato@wifome.app)",
-      "Accept-Language": "pt-BR",
+      Authorization: `Bearer ${lovableKey}`,
+      "X-Connection-Api-Key": gmapsKey,
     },
   });
-  if (!res.ok) return null;
-  const arr = (await res.json()) as Array<{ lat: string; lon: string }>;
-  if (!arr.length) return null;
-  const lat = Number(arr[0].lat);
-  const lng = Number(arr[0].lon);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-  return { lat, lng };
+  if (!res.ok) {
+    const body = await res.text();
+    console.error(`Google Geocoding failed [${res.status}]: ${body}`);
+    return null;
+  }
+  const json = (await res.json()) as {
+    status: string;
+    results?: Array<{ geometry?: { location?: { lat: number; lng: number } } }>;
+  };
+  if (json.status !== "OK" || !json.results?.length) return null;
+  const loc = json.results[0].geometry?.location;
+  if (!loc || !Number.isFinite(loc.lat) || !Number.isFinite(loc.lng)) return null;
+  return { lat: loc.lat, lng: loc.lng };
 }
 
 export const geocodeMissingEstablishments = createServerFn({ method: "POST" })
@@ -56,7 +67,6 @@ export const geocodeMissingEstablishments = createServerFn({ method: "POST" })
       const fallback = [e.cidade, e.estado, "Brasil"].filter(Boolean).join(", ").trim();
       let coords = primary ? await geocodeOne(primary) : null;
       if (!coords && fallback && fallback !== primary) {
-        await new Promise((r) => setTimeout(r, 1100)); // respeitar rate limit Nominatim (1 req/s)
         coords = await geocodeOne(fallback);
       }
       if (!coords) {
@@ -69,8 +79,6 @@ export const geocodeMissingEstablishments = createServerFn({ method: "POST" })
         if (upErr) fails.push({ id: e.id, nome: e.nome, motivo: upErr.message });
         else ok += 1;
       }
-      // Rate limit 1 req/s
-      await new Promise((r) => setTimeout(r, 1100));
     }
 
     return { atualizados: ok, total: list.length, falhas: fails };
