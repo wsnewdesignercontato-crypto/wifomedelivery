@@ -384,9 +384,29 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
                   <MapPin className="h-3 w-3" /> Entrega
                   <span className="text-foreground">· {fmtKm(offer?.distanciaEntrega ?? 0)}</span>
                 </p>
-                <p className="truncate text-sm font-bold">{offer?.dropoff.endereco}</p>
+                <p className="flex items-center gap-1.5 text-sm font-bold">
+                  <User className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span className="truncate">{offer?.cliente.nome}</span>
+                  {offer?.cliente.telefone && (
+                    <a
+                      href={`tel:${offer.cliente.telefone}`}
+                      className="ml-auto flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-bold text-emerald-600"
+                    >
+                      <Phone className="h-3 w-3" /> {offer.cliente.telefone}
+                    </a>
+                  )}
+                </p>
+                <p className="text-sm font-semibold">{offer?.dropoff.endereco}</p>
                 {offer?.dropoff.bairro && (
-                  <p className="truncate text-xs text-muted-foreground">{offer.dropoff.bairro}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {offer.dropoff.bairro}
+                    {offer.dropoff.complemento ? ` · ${offer.dropoff.complemento}` : ""}
+                  </p>
+                )}
+                {offer?.dropoff.referencia && (
+                  <p className="mt-1 truncate text-xs italic text-muted-foreground">
+                    Ref.: {offer.dropoff.referencia}
+                  </p>
                 )}
               </div>
             </div>
