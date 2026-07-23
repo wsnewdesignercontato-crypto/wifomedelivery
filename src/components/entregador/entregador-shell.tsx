@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useMyCourier } from "@/hooks/use-courier";
 import { useNewRideAlert } from "@/hooks/use-new-ride-alert";
+import { NewRideOffer } from "@/components/entregador/new-ride-offer";
 
 const NAV = [
   { to: "/entregador", label: "Início", icon: Home, exact: true },
@@ -63,6 +64,7 @@ export function EntregadorShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
+      <NewRideOffer courier={courier as any} enabled={!!courier} />
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex items-center gap-3">
