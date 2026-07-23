@@ -56,8 +56,6 @@ function PedidoPage() {
   const [loja, setLoja] = useState<{ id: string; nome: string } | null>(null);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [loading, setLoading] = useState(true);
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
   const [reviewed, setReviewed] = useState(false);
 
   useEffect(() => {
