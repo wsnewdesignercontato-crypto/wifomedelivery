@@ -29,6 +29,7 @@ function BuscarPage() {
   const [estabs, setEstabs] = useState<Estab[]>([]);
   const [prods, setProds] = useState<Prod[]>([]);
   const [reviewCounts, setReviewCounts] = useState<Record<string, number>>({});
+  const [sortBy, setSortBy] = useState<"relevancia" | "rating" | "reviews">("relevancia");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
