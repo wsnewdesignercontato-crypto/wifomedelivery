@@ -195,7 +195,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
     if (!offer) return;
     let cancel = false;
     loadGoogleMaps()
-      .then(() => {
+      .then(async () => {
         if (cancel || !mapDivRef.current) return;
         const map = new google.maps.Map(mapDivRef.current, {
           center: offer.pickup,
