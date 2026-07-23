@@ -88,7 +88,7 @@ function ClienteHome() {
   const [threshold, setThreshold] = useState<number>(15);
   const [hoursById, setHoursById] = useState<Record<string, { abre: string; fecha: string }>>({});
   const [reviewCountById, setReviewCountById] = useState<Record<string, number>>({});
-  const [sortBy, setSortBy] = useState<"recomendados" | "rating" | "reviews">("recomendados");
+  const [sortBy, setSortBy] = useState<"recomendados" | "rating" | "reviews" | "vendas">("recomendados");
   const catsScrollRef = useRef<HTMLDivElement | null>(null);
   const catsPausedRef = useRef(false);
 
@@ -232,11 +232,13 @@ function ClienteHome() {
     const arr = [...base];
     if (sortBy === "rating") {
       arr.sort((a, b) => (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)) || ((reviewCountById[b.id] ?? 0) - (reviewCountById[a.id] ?? 0)));
-    } else {
+    } else if (sortBy === "reviews") {
       arr.sort((a, b) => ((reviewCountById[b.id] ?? 0) - (reviewCountById[a.id] ?? 0)) || (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)));
+    } else {
+      arr.sort((a, b) => ((salesCount[b.id] ?? 0) - (salesCount[a.id] ?? 0)) || (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)));
     }
     return arr;
-  }, [estabs, catSel, sortBy, reviewCountById]);
+  }, [estabs, catSel, sortBy, reviewCountById, salesCount]);
 
   const visibleCats = showAllCats ? cats : cats.slice(0, 4);
 
@@ -366,6 +368,7 @@ function ClienteHome() {
             ["recomendados", "Recomendados"],
             ["rating", "Melhor avaliados"],
             ["reviews", "Mais avaliados"],
+            ["vendas", "Mais vendidos"],
           ] as const).map(([k, label]) => (
             <button
               key={k}
