@@ -454,7 +454,7 @@ function Corridas() {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                  <div className="mt-4 space-y-3">
                     <div>
                       <label className="mb-1 block text-xs font-bold uppercase text-muted-foreground">Digite o código do cliente</label>
                       <Input
@@ -472,11 +472,11 @@ function Corridas() {
                       />
                       {codeError && (
                         <p id="codigo-erro-inline" role="alert" className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-destructive">
-                          <AlertTriangle className="h-3.5 w-3.5" /> {codeError}
+                          <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> {codeError}
                         </p>
                       )}
                     </div>
-                    <Button size="lg" onClick={confirmarEntrega} disabled={advancing || codeInput.length !== 4}>
+                    <Button size="lg" className="w-full" onClick={confirmarEntrega} disabled={advancing || codeInput.length !== 4}>
                       {advancing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
                       Finalizar entrega
                     </Button>
