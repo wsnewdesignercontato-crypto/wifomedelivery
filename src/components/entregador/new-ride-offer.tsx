@@ -144,20 +144,15 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
       supabase.removeChannel(ch);
       clearInterval(t);
     };
-  }, [enabled, courier?.user_id, courier?.status, myPos, dismissedIds]);
+  }, [enabled, courier?.user_id, courier?.status, dismissedIds]);
 
-  // Renderiza mapa quando a oferta abre
+  // Renderiza mapa quando a oferta abre (uma vez por oferta)
   useEffect(() => {
     if (!offer) return;
     let cancel = false;
     loadGoogleMaps()
       .then(() => {
         if (cancel || !mapDivRef.current) return;
-        const bounds = new google.maps.LatLngBounds();
-        bounds.extend(offer.pickup);
-        bounds.extend(offer.dropoff);
-        if (myPos) bounds.extend(myPos);
-
         const map = new google.maps.Map(mapDivRef.current, {
           center: offer.pickup,
           zoom: 13,
@@ -187,28 +182,51 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
           },
           label: { text: "B", color: "#fff", fontWeight: "700", fontSize: "11px" },
         });
-        if (myPos) {
-          new google.maps.Marker({
-            map, position: myPos, title: "Você",
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE, scale: 7,
-              fillColor: "#3B82F6", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 3,
-            },
-          });
-        }
-        new google.maps.Polyline({
+        myMarkerRef.current = new google.maps.Marker({
           map,
-          path: [offer.pickup, offer.dropoff],
+          position: myPos ?? offer.pickup,
+          visible: !!myPos,
+          title: "Você",
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE, scale: 7,
+            fillColor: "#3B82F6", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 3,
+          },
+        });
+        routeLineRef.current = new google.maps.Polyline({
+          map,
+          path: myPos ? [myPos, offer.pickup, offer.dropoff] : [offer.pickup, offer.dropoff],
           strokeColor: "#FF6B00",
           strokeOpacity: 0.9,
           strokeWeight: 4,
           icons: [{ icon: { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW }, offset: "100%" }],
         });
+
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend(offer.pickup);
+        bounds.extend(offer.dropoff);
+        if (myPos) bounds.extend(myPos);
         map.fitBounds(bounds, 60);
       })
       .catch(() => {});
-    return () => { cancel = true; };
-  }, [offer?.deliveryId, myPos]);
+    return () => {
+      cancel = true;
+      myMarkerRef.current = null;
+      routeLineRef.current = null;
+      mapObjRef.current = null;
+    };
+  }, [offer?.deliveryId]);
+
+  // Atualiza posição do entregador e rota conforme ele se move
+  useEffect(() => {
+    if (!offer || !myPos) return;
+    if (myMarkerRef.current) {
+      myMarkerRef.current.setPosition(myPos);
+      myMarkerRef.current.setVisible(true);
+    }
+    if (routeLineRef.current) {
+      routeLineRef.current.setPath([myPos, offer.pickup, offer.dropoff]);
+    }
+  }, [myPos, offer?.deliveryId]);
 
   async function aceitar() {
     if (!offer || !courier || accepting) return;
@@ -239,8 +257,15 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
     setOffer(null);
   }
 
-  const totalKm = offer ? (offer.distanciaColeta ?? 0) + offer.distanciaEntrega : 0;
-  const eta = offer ? estMin(offer.distanciaColeta) : null;
+  // Distância e ETA ao vivo — recomputa a cada atualização de posição
+  const distanciaColetaLive = useMemo(() => {
+    if (!offer) return null;
+    if (!myPos) return offer.distanciaColeta;
+    return Math.round(haversineKm(myPos, offer.pickup) * 10) / 10;
+  }, [myPos, offer?.deliveryId, offer?.distanciaColeta]);
+
+  const totalKm = offer ? (distanciaColetaLive ?? 0) + offer.distanciaEntrega : 0;
+  const eta = estMin(distanciaColetaLive);
 
   return (
     <Dialog open={!!offer} onOpenChange={(o) => !o && recusar()}>
