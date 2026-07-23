@@ -363,7 +363,7 @@ function ClienteHome() {
             </Link>
           )}
         </div>
-        <div className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-1 scrollbar-hide">
+        <div className="flex flex-wrap items-center gap-1.5">
           {([
             ["recomendados", "Recomendados"],
             ["rating", "Melhor avaliados"],
@@ -373,7 +373,7 @@ function ClienteHome() {
             <button
               key={k}
               onClick={() => setSortBy(k)}
-              className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+              className={`shrink-0 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors sm:px-3 sm:text-xs ${
                 sortBy === k
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card text-muted-foreground hover:text-foreground"
