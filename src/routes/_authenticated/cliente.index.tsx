@@ -371,6 +371,7 @@ function ClienteHome() {
                 hasPromo={promoIds.has(e.id)}
                 isBestseller={(salesCount[e.id] ?? 0) >= threshold}
                 hoje={hoursById[e.id]}
+                reviewCount={reviewCountById[e.id] ?? 0}
               />
 
             ))}
