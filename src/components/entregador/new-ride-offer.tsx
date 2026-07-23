@@ -328,8 +328,8 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
             <div className="min-w-0 flex-1 space-y-3">
               <div>
                 <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-muted-foreground">
-                  <Package className="h-3 w-3" /> Coleta {offer?.distanciaColeta != null && (
-                    <span className="text-foreground">· {fmtKm(offer.distanciaColeta)} de você</span>
+                  <Package className="h-3 w-3" /> Coleta {distanciaColetaLive != null && (
+                    <span className="text-foreground">· {fmtKm(distanciaColetaLive)} de você</span>
                   )}
                 </p>
                 <p className="truncate text-sm font-bold">{offer?.pickup.nome}</p>
