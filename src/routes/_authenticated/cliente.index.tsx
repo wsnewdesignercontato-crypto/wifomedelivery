@@ -368,6 +368,7 @@ function ClienteHome() {
             ["recomendados", "Recomendados"],
             ["rating", "Melhor avaliados"],
             ["reviews", "Mais avaliados"],
+            ["vendas", "Mais vendidos"],
           ] as const).map(([k, label]) => (
             <button
               key={k}
