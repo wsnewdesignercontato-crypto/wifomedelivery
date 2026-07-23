@@ -117,7 +117,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
 
       const { data: order } = await supabase
         .from("orders")
-        .select("id, establishment_id, total_cents, endereco_entrega, forma_pagamento, observacoes")
+        .select("id, cliente_id, establishment_id, total_cents, endereco_entrega, forma_pagamento, observacoes")
         .eq("id", candidato.order_id)
         .maybeSingle();
       if (!order) { setOffer(null); return; }
@@ -129,15 +129,33 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         .maybeSingle();
       if (!estab || estab.lat == null || estab.lng == null) { setOffer(null); return; }
 
+      const { data: cli } = await supabase
+        .from("profiles")
+        .select("nome, telefone")
+        .eq("id", (order as any).cliente_id)
+        .maybeSingle();
+
       const endereco = (order as any).endereco_entrega ?? {};
-      const dropLat = Number(endereco.lat);
-      const dropLng = Number(endereco.lng);
       const pickup = { lat: Number(estab.lat), lng: Number(estab.lng), nome: estab.nome, endereco: estab.endereco ?? null };
+      const enderecoFmt = fmtEndereco(endereco);
+
+      let dropLat = Number(endereco.lat);
+      let dropLng = Number(endereco.lng);
+      if (!Number.isFinite(dropLat) || !Number.isFinite(dropLng)) {
+        // Sem lat/lng salvos: geocodifica o endereço real do cliente
+        try { await loadGoogleMaps(); } catch {}
+        const geo = await geocode(enderecoFmt);
+        if (!geo) { setOffer(null); return; } // sem endereço real, não simula
+        dropLat = geo.lat; dropLng = geo.lng;
+      }
+
       const dropoff = {
-        lat: Number.isFinite(dropLat) ? dropLat : pickup.lat + 0.005,
-        lng: Number.isFinite(dropLng) ? dropLng : pickup.lng + 0.005,
-        endereco: endereco.endereco ?? "Endereço do cliente",
+        lat: dropLat,
+        lng: dropLng,
+        endereco: enderecoFmt,
         bairro: endereco.bairro ?? null,
+        complemento: endereco.complemento ?? null,
+        referencia: endereco.referencia ?? endereco.ponto_referencia ?? null,
       };
 
       const distanciaColeta = myPos ? Math.round(haversineKm(myPos, pickup) * 10) / 10 : null;
@@ -152,6 +170,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         formaPagamento: (order as any).forma_pagamento ?? "—",
         pickup,
         dropoff,
+        cliente: { nome: cli?.nome || "Cliente", telefone: cli?.telefone ?? null },
         distanciaColeta,
         distanciaEntrega,
         observacoes: (order as any).observacoes ?? null,
