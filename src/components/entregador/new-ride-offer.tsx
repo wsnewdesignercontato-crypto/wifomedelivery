@@ -236,14 +236,43 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
             fillColor: "#3B82F6", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 3,
           },
         });
+        // Linha viva entregador → loja (atualizada com watchPosition)
         routeLineRef.current = new google.maps.Polyline({
           map,
-          path: myPos ? [myPos, offer.pickup, offer.dropoff] : [offer.pickup, offer.dropoff],
-          strokeColor: "#FF6B00",
-          strokeOpacity: 0.9,
+          path: myPos ? [myPos, offer.pickup] : [offer.pickup, offer.pickup],
+          strokeColor: "#3B82F6",
+          strokeOpacity: 0.85,
           strokeWeight: 4,
-          icons: [{ icon: { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW }, offset: "100%" }],
+          icons: [
+            { icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 }, offset: "0", repeat: "12px" },
+          ],
         });
+
+        // Rota real da loja → cliente pelas ruas
+        try {
+          const ds = new google.maps.DirectionsService();
+          const dr = new google.maps.DirectionsRenderer({
+            map,
+            suppressMarkers: true,
+            preserveViewport: true,
+            polylineOptions: { strokeColor: "#FF6B00", strokeOpacity: 0.95, strokeWeight: 5 },
+          });
+          const res = await ds.route({
+            origin: offer.pickup,
+            destination: offer.dropoff,
+            travelMode: google.maps.TravelMode.DRIVING,
+          });
+          dr.setDirections(res);
+        } catch {
+          // Fallback: linha reta laranja
+          new google.maps.Polyline({
+            map,
+            path: [offer.pickup, offer.dropoff],
+            strokeColor: "#FF6B00",
+            strokeOpacity: 0.9,
+            strokeWeight: 4,
+          });
+        }
 
         const bounds = new google.maps.LatLngBounds();
         bounds.extend(offer.pickup);
