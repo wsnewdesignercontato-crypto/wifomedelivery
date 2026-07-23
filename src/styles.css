@@ -204,6 +204,66 @@
   box-shadow: var(--shadow-card);
 }
 
+/* ============= Premium Card System (aplicado globalmente via <Card />) ============= */
+@utility card-premium {
+  position: relative;
+  border-radius: 1rem;
+  background: var(--color-card);
+  color: var(--color-card-foreground);
+  border: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent);
+  box-shadow:
+    0 1px 0 0 color-mix(in oklab, white 6%, transparent) inset,
+    0 1px 2px 0 rgb(0 0 0 / 0.04),
+    0 8px 24px -12px rgb(0 0 0 / 0.12);
+  transition:
+    transform 200ms ease-out,
+    box-shadow 240ms ease-out,
+    border-color 200ms ease-out,
+    background-color 200ms ease-out;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      140deg,
+      color-mix(in oklab, var(--color-primary) 25%, transparent),
+      transparent 40%,
+      transparent 60%,
+      color-mix(in oklab, var(--color-primary) 10%, transparent)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 240ms ease-out;
+    pointer-events: none;
+  }
+
+  &:hover {
+    border-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
+    box-shadow:
+      0 1px 0 0 color-mix(in oklab, white 8%, transparent) inset,
+      0 2px 4px 0 rgb(0 0 0 / 0.05),
+      0 20px 40px -18px color-mix(in oklab, var(--color-primary) 30%, transparent),
+      0 0 0 1px color-mix(in oklab, var(--color-primary) 15%, transparent);
+    transform: translateY(-2px);
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-premium { transition: none; }
+  .card-premium:hover { transform: none; }
+}
+
 /* ============= Scroll reveal + micro-interactions ============= */
 @keyframes reveal-up {
   from { opacity: 0; transform: translateY(18px) scale(0.98); }
