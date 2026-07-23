@@ -361,6 +361,25 @@ function ClienteHome() {
             </Link>
           )}
         </div>
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+          {([
+            ["recomendados", "Recomendados"],
+            ["rating", "Melhor avaliados"],
+            ["reviews", "Mais avaliados"],
+          ] as const).map(([k, label]) => (
+            <button
+              key={k}
+              onClick={() => setSortBy(k)}
+              className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                sortBy === k
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
         {loading ? (
           <div className="flex justify-center py-16">
