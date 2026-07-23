@@ -72,6 +72,17 @@ function BuscarPage() {
     setLoading(false);
   }
 
+  const sortedEstabs = useMemo(() => {
+    if (sortBy === "relevancia") return estabs;
+    const arr = [...estabs];
+    if (sortBy === "rating") {
+      arr.sort((a, b) => (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)) || ((reviewCounts[b.id] ?? 0) - (reviewCounts[a.id] ?? 0)));
+    } else {
+      arr.sort((a, b) => ((reviewCounts[b.id] ?? 0) - (reviewCounts[a.id] ?? 0)) || (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)));
+    }
+    return arr;
+  }, [estabs, sortBy, reviewCounts]);
+
   const hasResult = estabs.length + prods.length > 0;
 
   return (
