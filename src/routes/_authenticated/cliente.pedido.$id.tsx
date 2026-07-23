@@ -5,6 +5,7 @@ import { ArrowLeft, Loader2, MapPin, Package, CheckCircle2, XCircle, Bike, Store
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ReviewForm } from "@/components/reviews";
 
 export const Route = createFileRoute("/_authenticated/cliente/pedido/$id")({
   component: PedidoPage,
