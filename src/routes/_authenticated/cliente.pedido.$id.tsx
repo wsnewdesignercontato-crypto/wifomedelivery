@@ -5,6 +5,7 @@ import { ArrowLeft, Loader2, MapPin, Package, CheckCircle2, XCircle, Bike, Store
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ReviewForm } from "@/components/reviews";
 
 export const Route = createFileRoute("/_authenticated/cliente/pedido/$id")({
   component: PedidoPage,
@@ -55,8 +56,6 @@ function PedidoPage() {
   const [loja, setLoja] = useState<{ id: string; nome: string } | null>(null);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [loading, setLoading] = useState(true);
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
   const [reviewed, setReviewed] = useState(false);
 
   useEffect(() => {
@@ -107,20 +106,6 @@ function PedidoPage() {
     else toast.success("Pedido cancelado");
   }
 
-  async function avaliar() {
-    if (!order) return;
-    const { error } = await supabase.from("reviews").insert({
-      order_id: order.id,
-      cliente_id: user.id,
-      establishment_id: order.establishment_id,
-      entregador_id: delivery?.entregador_id ?? null,
-      rating_loja: rating,
-      rating_entregador: delivery?.entregador_id ? rating : null,
-      comentario: comment || null,
-    });
-    if (error) toast.error(error.message);
-    else { toast.success("Obrigado pela avaliação!"); setReviewed(true); }
-  }
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   if (!order) return <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">Pedido não encontrado.</div>;
@@ -216,21 +201,18 @@ function PedidoPage() {
       )}
 
       {order.status === "delivered" && !reviewed && (
-        <div className="space-y-3 rounded-2xl border border-primary/40 bg-primary/5 p-4">
-          <p className="text-sm font-semibold">Como foi seu pedido?</p>
-          <div className="flex gap-1">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button key={n} onClick={() => setRating(n)} aria-label={`${n} estrelas`} className={`text-2xl ${n <= rating ? "text-primary" : "text-muted-foreground"}`}>★</button>
-            ))}
-          </div>
-          <textarea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Comentário (opcional)"
-            maxLength={500}
-            className="w-full rounded-md border border-border bg-background p-2 text-sm"
-          />
-          <Button onClick={avaliar}>Enviar avaliação</Button>
+        <ReviewForm
+          orderId={order.id}
+          clienteId={user.id}
+          establishmentId={order.establishment_id}
+          entregadorId={delivery?.entregador_id ?? null}
+          onSubmitted={() => setReviewed(true)}
+        />
+      )}
+
+      {order.status === "delivered" && reviewed && (
+        <div className="rounded-2xl border border-success/40 bg-success/10 p-4 text-center text-sm font-semibold text-success">
+          ✓ Avaliação enviada. Obrigado!
         </div>
       )}
     </div>
