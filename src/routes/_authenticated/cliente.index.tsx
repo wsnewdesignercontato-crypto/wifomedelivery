@@ -226,10 +226,17 @@ function ClienteHome() {
     })();
   }, []);
 
-  const filtered = useMemo(
-    () => (catSel ? estabs.filter((e) => e.categoria_id === catSel) : estabs),
-    [estabs, catSel],
-  );
+  const filtered = useMemo(() => {
+    const base = catSel ? estabs.filter((e) => e.categoria_id === catSel) : estabs;
+    if (sortBy === "recomendados") return base;
+    const arr = [...base];
+    if (sortBy === "rating") {
+      arr.sort((a, b) => (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)) || ((reviewCountById[b.id] ?? 0) - (reviewCountById[a.id] ?? 0)));
+    } else {
+      arr.sort((a, b) => ((reviewCountById[b.id] ?? 0) - (reviewCountById[a.id] ?? 0)) || (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)));
+    }
+    return arr;
+  }, [estabs, catSel, sortBy, reviewCountById]);
 
   const visibleCats = showAllCats ? cats : cats.slice(0, 4);
 
