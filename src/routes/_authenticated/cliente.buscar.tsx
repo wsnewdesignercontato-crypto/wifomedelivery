@@ -101,7 +101,7 @@ function BuscarPage() {
                     {!e.is_open && <Badge variant="secondary" className="text-[10px]">Fechado</Badge>}
                   </div>
                   <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    {e.avaliacao != null && <span className="flex items-center gap-1"><Star className="h-3 w-3 fill-primary text-primary" />{Number(e.avaliacao).toFixed(1)}</span>}
+                    {e.avaliacao != null && <span className="flex items-center gap-1"><Star className="h-3 w-3 fill-primary text-primary" />{Number(e.avaliacao).toFixed(1)} <span className="text-muted-foreground">({reviewCounts[e.id] ?? 0})</span></span>}
                     {e.tempo_medio_min && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{e.tempo_medio_min} min</span>}
                     <span>{e.taxa_entrega_cents === 0 ? "Grátis" : fmt(e.taxa_entrega_cents)}</span>
                   </div>
