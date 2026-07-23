@@ -387,11 +387,13 @@ function EstabRow({
   hasPromo,
   isBestseller,
   hoje,
+  reviewCount,
 }: {
   estab: Estab;
   hasPromo: boolean;
   isBestseller: boolean;
   hoje?: { abre: string; fecha: string };
+  reviewCount: number;
 }) {
   return (
     <Link
