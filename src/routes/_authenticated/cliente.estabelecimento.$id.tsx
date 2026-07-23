@@ -77,6 +77,7 @@ function EstabelecimentoPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const [estab, setEstab] = useState<Estab | null>(null);
+  const [reviewCount, setReviewCount] = useState<number>(0);
   const [cats, setCats] = useState<MenuCat[]>([]);
   const [prods, setProds] = useState<Produto[]>([]);
   const [busca, setBusca] = useState("");
@@ -95,16 +96,18 @@ function EstabelecimentoPage() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [e, c, p, f] = await Promise.all([
+      const [e, c, p, f, rc] = await Promise.all([
         supabase.from("establishments").select("*").eq("id", id).maybeSingle(),
         supabase.from("menu_categories").select("id,nome,ordem").eq("establishment_id", id).eq("ativo", true).order("ordem"),
         supabase.from("products").select("id,nome,descricao,foto_url,preco_cents,preco_promo_cents,disponivel,menu_category_id,destaque").eq("establishment_id", id).eq("disponivel", true).order("destaque", { ascending: false }).order("ordem"),
         supabase.from("favorites").select("id").eq("user_id", user.id).eq("establishment_id", id).maybeSingle(),
+        supabase.from("reviews").select("id", { count: "exact", head: true }).eq("establishment_id", id),
       ]);
       setEstab(e.data as Estab | null);
       setCats((c.data ?? []) as MenuCat[]);
       setProds((p.data ?? []) as Produto[]);
       setFav(!!f.data);
+      setReviewCount(rc.count ?? 0);
       setLoading(false);
     })();
   }, [id, user.id]);
@@ -303,7 +306,11 @@ function EstabelecimentoPage() {
         {estab.descricao && <p className="mt-1 text-sm text-muted-foreground">{estab.descricao}</p>}
         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           {estab.avaliacao != null && (
-            <span className="flex items-center gap-1"><Star className="h-3 w-3 fill-primary text-primary" />{Number(estab.avaliacao).toFixed(1)}</span>
+            <span className="flex items-center gap-1">
+              <Star className="h-3 w-3 fill-primary text-primary" />
+              <span className="font-semibold text-foreground">{Number(estab.avaliacao).toFixed(1)}</span>
+              <span className="text-muted-foreground">({reviewCount})</span>
+            </span>
           )}
           {estab.tempo_medio_min && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{estab.tempo_medio_min} min</span>}
           <span>Entrega {estab.taxa_entrega_cents === 0 ? "grátis" : fmt(estab.taxa_entrega_cents)}</span>

@@ -87,6 +87,7 @@ function ClienteHome() {
   const [salesCount, setSalesCount] = useState<Record<string, number>>({});
   const [threshold, setThreshold] = useState<number>(15);
   const [hoursById, setHoursById] = useState<Record<string, { abre: string; fecha: string }>>({});
+  const [reviewCountById, setReviewCountById] = useState<Record<string, number>>({});
   const catsScrollRef = useRef<HTMLDivElement | null>(null);
   const catsPausedRef = useRef(false);
 
@@ -207,7 +208,18 @@ function ClienteHome() {
           map[h.establishment_id] = { abre: String(h.abre).slice(0, 5), fecha: String(h.fecha).slice(0, 5) };
         });
         setHoursById(map);
+
+        const { data: revs } = await supabase
+          .from("reviews")
+          .select("establishment_id")
+          .in("establishment_id", ids);
+        const rc: Record<string, number> = {};
+        (revs ?? []).forEach((r: any) => {
+          if (r.establishment_id) rc[r.establishment_id] = (rc[r.establishment_id] ?? 0) + 1;
+        });
+        setReviewCountById(rc);
       }
+
 
       setLoading(false);
     })();
@@ -359,6 +371,7 @@ function ClienteHome() {
                 hasPromo={promoIds.has(e.id)}
                 isBestseller={(salesCount[e.id] ?? 0) >= threshold}
                 hoje={hoursById[e.id]}
+                reviewCount={reviewCountById[e.id] ?? 0}
               />
 
             ))}
@@ -374,11 +387,13 @@ function EstabRow({
   hasPromo,
   isBestseller,
   hoje,
+  reviewCount,
 }: {
   estab: Estab;
   hasPromo: boolean;
   isBestseller: boolean;
   hoje?: { abre: string; fecha: string };
+  reviewCount: number;
 }) {
   return (
     <Link
@@ -442,6 +457,7 @@ function EstabRow({
             <span className="flex items-center gap-0.5 font-semibold text-foreground">
               <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
               {Number(estab.avaliacao).toFixed(1)}
+              <span className="ml-0.5 font-normal text-muted-foreground">({reviewCount})</span>
             </span>
           )}
           {estab.tempo_medio_min ? (
