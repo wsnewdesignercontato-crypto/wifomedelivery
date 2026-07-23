@@ -177,8 +177,7 @@
 
 /* ============= Theme scopes ============= */
 /* Estabelecimento — verde */
-.theme-estab,
-.theme-estab.dark {
+.theme-estab {
   --primary: oklch(0.62 0.17 150);
   --primary-foreground: oklch(1 0 0);
   --primary-glow: oklch(0.74 0.17 155);
@@ -191,7 +190,7 @@
   --accent: oklch(0.95 0.05 150);
   --accent-foreground: oklch(0.30 0.12 150);
 }
-.theme-estab.dark {
+:is(.dark) .theme-estab {
   --sidebar-accent: oklch(0.25 0.05 150);
   --sidebar-accent-foreground: oklch(0.90 0.10 150);
   --accent: oklch(0.25 0.05 150);
@@ -199,8 +198,7 @@
 }
 
 /* Entregador — azul */
-.theme-entregador,
-.theme-entregador.dark {
+.theme-entregador {
   --primary: oklch(0.60 0.17 250);
   --primary-foreground: oklch(1 0 0);
   --primary-glow: oklch(0.72 0.15 245);
@@ -213,7 +211,7 @@
   --accent: oklch(0.95 0.04 250);
   --accent-foreground: oklch(0.30 0.13 250);
 }
-.theme-entregador.dark {
+:is(.dark) .theme-entregador {
   --sidebar-accent: oklch(0.25 0.05 250);
   --sidebar-accent-foreground: oklch(0.90 0.10 250);
   --accent: oklch(0.25 0.05 250);
