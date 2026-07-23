@@ -208,7 +208,18 @@ function ClienteHome() {
           map[h.establishment_id] = { abre: String(h.abre).slice(0, 5), fecha: String(h.fecha).slice(0, 5) };
         });
         setHoursById(map);
+
+        const { data: revs } = await supabase
+          .from("reviews")
+          .select("establishment_id")
+          .in("establishment_id", ids);
+        const rc: Record<string, number> = {};
+        (revs ?? []).forEach((r: any) => {
+          if (r.establishment_id) rc[r.establishment_id] = (rc[r.establishment_id] ?? 0) + 1;
+        });
+        setReviewCountById(rc);
       }
+
 
       setLoading(false);
     })();
