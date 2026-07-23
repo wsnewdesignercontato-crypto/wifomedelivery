@@ -217,21 +217,18 @@ function PedidoPage() {
       )}
 
       {order.status === "delivered" && !reviewed && (
-        <div className="space-y-3 rounded-2xl border border-primary/40 bg-primary/5 p-4">
-          <p className="text-sm font-semibold">Como foi seu pedido?</p>
-          <div className="flex gap-1">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button key={n} onClick={() => setRating(n)} aria-label={`${n} estrelas`} className={`text-2xl ${n <= rating ? "text-primary" : "text-muted-foreground"}`}>★</button>
-            ))}
-          </div>
-          <textarea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Comentário (opcional)"
-            maxLength={500}
-            className="w-full rounded-md border border-border bg-background p-2 text-sm"
-          />
-          <Button onClick={avaliar}>Enviar avaliação</Button>
+        <ReviewForm
+          orderId={order.id}
+          clienteId={user.id}
+          establishmentId={order.establishment_id}
+          entregadorId={delivery?.entregador_id ?? null}
+          onSubmitted={() => setReviewed(true)}
+        />
+      )}
+
+      {order.status === "delivered" && reviewed && (
+        <div className="rounded-2xl border border-success/40 bg-success/10 p-4 text-center text-sm font-semibold text-success">
+          ✓ Avaliação enviada. Obrigado!
         </div>
       )}
     </div>
