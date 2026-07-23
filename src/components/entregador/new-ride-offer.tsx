@@ -15,11 +15,36 @@ type Offer = {
   totalPedidoCents: number;
   formaPagamento: string;
   pickup: { lat: number; lng: number; nome: string; endereco: string | null };
-  dropoff: { lat: number; lng: number; endereco: string; bairro: string | null };
-  distanciaColeta: number | null; // km entregador → loja
-  distanciaEntrega: number; // km loja → cliente
+  dropoff: {
+    lat: number;
+    lng: number;
+    endereco: string;
+    bairro: string | null;
+    complemento: string | null;
+    referencia: string | null;
+  };
+  cliente: { nome: string; telefone: string | null };
+  distanciaColeta: number | null;
+  distanciaEntrega: number;
   observacoes: string | null;
 };
+
+function fmtEndereco(e: any): string {
+  if (!e) return "Endereço do cliente";
+  const rua = e.endereco || e.logradouro || e.rua || "";
+  const num = e.numero ? `, ${e.numero}` : "";
+  const cidade = e.cidade ? ` — ${e.cidade}${e.uf ? `/${e.uf}` : ""}` : "";
+  return `${rua}${num}${cidade}`.trim() || "Endereço do cliente";
+}
+
+async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const geocoder = new google.maps.Geocoder();
+    const res = await geocoder.geocode({ address });
+    const loc = res.results?.[0]?.geometry?.location;
+    return loc ? { lat: loc.lat(), lng: loc.lng() } : null;
+  } catch { return null; }
+}
 
 function fmtBrl(cents: number) {
   return ((cents ?? 0) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
