@@ -87,6 +87,7 @@ function ClienteHome() {
   const [salesCount, setSalesCount] = useState<Record<string, number>>({});
   const [threshold, setThreshold] = useState<number>(15);
   const [hoursById, setHoursById] = useState<Record<string, { abre: string; fecha: string }>>({});
+  const [reviewCountById, setReviewCountById] = useState<Record<string, number>>({});
   const catsScrollRef = useRef<HTMLDivElement | null>(null);
   const catsPausedRef = useRef(false);
 
