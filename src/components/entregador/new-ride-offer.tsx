@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { MapPin, Package, Navigation, Banknote, CreditCard, Timer, X, Bike, Route as RouteIcon } from "lucide-react";
+import { MapPin, Package, Navigation, Banknote, CreditCard, Timer, X, Bike, Route as RouteIcon, User, Phone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -15,11 +15,36 @@ type Offer = {
   totalPedidoCents: number;
   formaPagamento: string;
   pickup: { lat: number; lng: number; nome: string; endereco: string | null };
-  dropoff: { lat: number; lng: number; endereco: string; bairro: string | null };
-  distanciaColeta: number | null; // km entregador → loja
-  distanciaEntrega: number; // km loja → cliente
+  dropoff: {
+    lat: number;
+    lng: number;
+    endereco: string;
+    bairro: string | null;
+    complemento: string | null;
+    referencia: string | null;
+  };
+  cliente: { nome: string; telefone: string | null };
+  distanciaColeta: number | null;
+  distanciaEntrega: number;
   observacoes: string | null;
 };
+
+function fmtEndereco(e: any): string {
+  if (!e) return "Endereço do cliente";
+  const rua = e.endereco || e.logradouro || e.rua || "";
+  const num = e.numero ? `, ${e.numero}` : "";
+  const cidade = e.cidade ? ` — ${e.cidade}${e.uf ? `/${e.uf}` : ""}` : "";
+  return `${rua}${num}${cidade}`.trim() || "Endereço do cliente";
+}
+
+async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const geocoder = new google.maps.Geocoder();
+    const res = await geocoder.geocode({ address });
+    const loc = res.results?.[0]?.geometry?.location;
+    return loc ? { lat: loc.lat(), lng: loc.lng() } : null;
+  } catch { return null; }
+}
 
 function fmtBrl(cents: number) {
   return ((cents ?? 0) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -92,7 +117,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
 
       const { data: order } = await supabase
         .from("orders")
-        .select("id, establishment_id, total_cents, endereco_entrega, forma_pagamento, observacoes")
+        .select("id, cliente_id, establishment_id, total_cents, endereco_entrega, forma_pagamento, observacoes")
         .eq("id", candidato.order_id)
         .maybeSingle();
       if (!order) { setOffer(null); return; }
@@ -104,15 +129,33 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         .maybeSingle();
       if (!estab || estab.lat == null || estab.lng == null) { setOffer(null); return; }
 
+      const { data: cli } = await supabase
+        .from("profiles")
+        .select("nome, telefone")
+        .eq("id", (order as any).cliente_id)
+        .maybeSingle();
+
       const endereco = (order as any).endereco_entrega ?? {};
-      const dropLat = Number(endereco.lat);
-      const dropLng = Number(endereco.lng);
       const pickup = { lat: Number(estab.lat), lng: Number(estab.lng), nome: estab.nome, endereco: estab.endereco ?? null };
+      const enderecoFmt = fmtEndereco(endereco);
+
+      let dropLat = Number(endereco.lat);
+      let dropLng = Number(endereco.lng);
+      if (!Number.isFinite(dropLat) || !Number.isFinite(dropLng)) {
+        // Sem lat/lng salvos: geocodifica o endereço real do cliente
+        try { await loadGoogleMaps(); } catch {}
+        const geo = await geocode(enderecoFmt);
+        if (!geo) { setOffer(null); return; } // sem endereço real, não simula
+        dropLat = geo.lat; dropLng = geo.lng;
+      }
+
       const dropoff = {
-        lat: Number.isFinite(dropLat) ? dropLat : pickup.lat + 0.005,
-        lng: Number.isFinite(dropLng) ? dropLng : pickup.lng + 0.005,
-        endereco: endereco.endereco ?? "Endereço do cliente",
+        lat: dropLat,
+        lng: dropLng,
+        endereco: enderecoFmt,
         bairro: endereco.bairro ?? null,
+        complemento: endereco.complemento ?? null,
+        referencia: endereco.referencia ?? endereco.ponto_referencia ?? null,
       };
 
       const distanciaColeta = myPos ? Math.round(haversineKm(myPos, pickup) * 10) / 10 : null;
@@ -127,6 +170,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         formaPagamento: (order as any).forma_pagamento ?? "—",
         pickup,
         dropoff,
+        cliente: { nome: cli?.nome || "Cliente", telefone: cli?.telefone ?? null },
         distanciaColeta,
         distanciaEntrega,
         observacoes: (order as any).observacoes ?? null,
@@ -151,7 +195,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
     if (!offer) return;
     let cancel = false;
     loadGoogleMaps()
-      .then(() => {
+      .then(async () => {
         if (cancel || !mapDivRef.current) return;
         const map = new google.maps.Map(mapDivRef.current, {
           center: offer.pickup,
@@ -192,14 +236,43 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
             fillColor: "#3B82F6", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 3,
           },
         });
+        // Linha viva entregador → loja (atualizada com watchPosition)
         routeLineRef.current = new google.maps.Polyline({
           map,
-          path: myPos ? [myPos, offer.pickup, offer.dropoff] : [offer.pickup, offer.dropoff],
-          strokeColor: "#FF6B00",
-          strokeOpacity: 0.9,
+          path: myPos ? [myPos, offer.pickup] : [offer.pickup, offer.pickup],
+          strokeColor: "#3B82F6",
+          strokeOpacity: 0.85,
           strokeWeight: 4,
-          icons: [{ icon: { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW }, offset: "100%" }],
+          icons: [
+            { icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 }, offset: "0", repeat: "12px" },
+          ],
         });
+
+        // Rota real da loja → cliente pelas ruas
+        try {
+          const ds = new google.maps.DirectionsService();
+          const dr = new google.maps.DirectionsRenderer({
+            map,
+            suppressMarkers: true,
+            preserveViewport: true,
+            polylineOptions: { strokeColor: "#FF6B00", strokeOpacity: 0.95, strokeWeight: 5 },
+          });
+          const res = await ds.route({
+            origin: offer.pickup,
+            destination: offer.dropoff,
+            travelMode: google.maps.TravelMode.DRIVING,
+          });
+          dr.setDirections(res);
+        } catch {
+          // Fallback: linha reta laranja
+          new google.maps.Polyline({
+            map,
+            path: [offer.pickup, offer.dropoff],
+            strokeColor: "#FF6B00",
+            strokeOpacity: 0.9,
+            strokeWeight: 4,
+          });
+        }
 
         const bounds = new google.maps.LatLngBounds();
         bounds.extend(offer.pickup);
@@ -224,7 +297,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
       myMarkerRef.current.setVisible(true);
     }
     if (routeLineRef.current) {
-      routeLineRef.current.setPath([myPos, offer.pickup, offer.dropoff]);
+      routeLineRef.current.setPath([myPos, offer.pickup]);
     }
   }, [myPos, offer?.deliveryId]);
 
@@ -340,9 +413,29 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
                   <MapPin className="h-3 w-3" /> Entrega
                   <span className="text-foreground">· {fmtKm(offer?.distanciaEntrega ?? 0)}</span>
                 </p>
-                <p className="truncate text-sm font-bold">{offer?.dropoff.endereco}</p>
+                <p className="flex items-center gap-1.5 text-sm font-bold">
+                  <User className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span className="truncate">{offer?.cliente.nome}</span>
+                  {offer?.cliente.telefone && (
+                    <a
+                      href={`tel:${offer.cliente.telefone}`}
+                      className="ml-auto flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-bold text-emerald-600"
+                    >
+                      <Phone className="h-3 w-3" /> {offer.cliente.telefone}
+                    </a>
+                  )}
+                </p>
+                <p className="text-sm font-semibold">{offer?.dropoff.endereco}</p>
                 {offer?.dropoff.bairro && (
-                  <p className="truncate text-xs text-muted-foreground">{offer.dropoff.bairro}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {offer.dropoff.bairro}
+                    {offer.dropoff.complemento ? ` · ${offer.dropoff.complemento}` : ""}
+                  </p>
+                )}
+                {offer?.dropoff.referencia && (
+                  <p className="mt-1 truncate text-xs italic text-muted-foreground">
+                    Ref.: {offer.dropoff.referencia}
+                  </p>
                 )}
               </div>
             </div>
