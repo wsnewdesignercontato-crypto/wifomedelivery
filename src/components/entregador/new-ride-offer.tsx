@@ -297,7 +297,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
       myMarkerRef.current.setVisible(true);
     }
     if (routeLineRef.current) {
-      routeLineRef.current.setPath([myPos, offer.pickup, offer.dropoff]);
+      routeLineRef.current.setPath([myPos, offer.pickup]);
     }
   }, [myPos, offer?.deliveryId]);
 
