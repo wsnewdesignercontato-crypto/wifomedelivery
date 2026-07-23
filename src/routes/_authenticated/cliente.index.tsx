@@ -88,6 +88,7 @@ function ClienteHome() {
   const [threshold, setThreshold] = useState<number>(15);
   const [hoursById, setHoursById] = useState<Record<string, { abre: string; fecha: string }>>({});
   const [reviewCountById, setReviewCountById] = useState<Record<string, number>>({});
+  const [sortBy, setSortBy] = useState<"recomendados" | "rating" | "reviews">("recomendados");
   const catsScrollRef = useRef<HTMLDivElement | null>(null);
   const catsPausedRef = useRef(false);
 
@@ -225,10 +226,17 @@ function ClienteHome() {
     })();
   }, []);
 
-  const filtered = useMemo(
-    () => (catSel ? estabs.filter((e) => e.categoria_id === catSel) : estabs),
-    [estabs, catSel],
-  );
+  const filtered = useMemo(() => {
+    const base = catSel ? estabs.filter((e) => e.categoria_id === catSel) : estabs;
+    if (sortBy === "recomendados") return base;
+    const arr = [...base];
+    if (sortBy === "rating") {
+      arr.sort((a, b) => (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)) || ((reviewCountById[b.id] ?? 0) - (reviewCountById[a.id] ?? 0)));
+    } else {
+      arr.sort((a, b) => ((reviewCountById[b.id] ?? 0) - (reviewCountById[a.id] ?? 0)) || (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)));
+    }
+    return arr;
+  }, [estabs, catSel, sortBy, reviewCountById]);
 
   const visibleCats = showAllCats ? cats : cats.slice(0, 4);
 
@@ -352,6 +360,25 @@ function ClienteHome() {
               Ver todos
             </Link>
           )}
+        </div>
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+          {([
+            ["recomendados", "Recomendados"],
+            ["rating", "Melhor avaliados"],
+            ["reviews", "Mais avaliados"],
+          ] as const).map(([k, label]) => (
+            <button
+              key={k}
+              onClick={() => setSortBy(k)}
+              className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                sortBy === k
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         {loading ? (

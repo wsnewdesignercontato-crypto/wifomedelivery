@@ -29,6 +29,7 @@ function BuscarPage() {
   const [estabs, setEstabs] = useState<Estab[]>([]);
   const [prods, setProds] = useState<Prod[]>([]);
   const [reviewCounts, setReviewCounts] = useState<Record<string, number>>({});
+  const [sortBy, setSortBy] = useState<"relevancia" | "rating" | "reviews">("relevancia");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -71,6 +72,17 @@ function BuscarPage() {
     setLoading(false);
   }
 
+  const sortedEstabs = useMemo(() => {
+    if (sortBy === "relevancia") return estabs;
+    const arr = [...estabs];
+    if (sortBy === "rating") {
+      arr.sort((a, b) => (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)) || ((reviewCounts[b.id] ?? 0) - (reviewCounts[a.id] ?? 0)));
+    } else {
+      arr.sort((a, b) => ((reviewCounts[b.id] ?? 0) - (reviewCounts[a.id] ?? 0)) || (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)));
+    }
+    return arr;
+  }, [estabs, sortBy, reviewCounts]);
+
   const hasResult = estabs.length + prods.length > 0;
 
   return (
@@ -88,9 +100,30 @@ function BuscarPage() {
 
       {estabs.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-sm font-bold">Restaurantes</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-bold">Restaurantes</h2>
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+              {([
+                ["relevancia", "Relevância"],
+                ["rating", "Melhor avaliados"],
+                ["reviews", "Mais avaliados"],
+              ] as const).map(([k, label]) => (
+                <button
+                  key={k}
+                  onClick={() => setSortBy(k)}
+                  className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                    sortBy === k
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="grid gap-2 sm:grid-cols-2">
-            {estabs.map((e) => (
+            {sortedEstabs.map((e) => (
               <Link key={e.id} to="/cliente/estabelecimento/$id" params={{ id: e.id }} className="flex gap-3 rounded-2xl border border-border bg-card p-3">
                 <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-primary/20 to-primary/5">
                   {e.capa_url && <img src={e.capa_url} alt="" className="h-full w-full object-cover" loading="lazy" />}
