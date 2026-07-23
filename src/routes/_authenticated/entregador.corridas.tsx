@@ -509,14 +509,14 @@ function Corridas() {
             </div>
           )}
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
             {currentStage && (
-              <Button size="lg" className="flex-1 min-w-[220px]" onClick={() => avancar(currentStage.next)} disabled={advancing}>
+              <Button size="lg" className="w-full" onClick={() => avancar(currentStage.next)} disabled={advancing}>
                 {advancing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : currentStage.key === "at_customer" ? <ShieldCheck className="mr-2 h-4 w-4" /> : <Navigation className="mr-2 h-4 w-4" />}
                 {currentStage.cta}
               </Button>
             )}
-            <Button size="lg" variant="outline" onClick={() => setIncidentOpen(true)}>
+            <Button size="lg" variant="outline" className="w-full sm:w-auto" onClick={() => setIncidentOpen(true)}>
               <AlertTriangle className="mr-2 h-4 w-4" /> Reportar problema
             </Button>
           </div>
