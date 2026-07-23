@@ -42,15 +42,18 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
   const [myPos, setMyPos] = useState<{ lat: number; lng: number } | null>(null);
   const mapDivRef = useRef<HTMLDivElement | null>(null);
   const mapObjRef = useRef<google.maps.Map | null>(null);
+  const myMarkerRef = useRef<google.maps.Marker | null>(null);
+  const routeLineRef = useRef<google.maps.Polyline | null>(null);
 
-  // Captura localização do entregador
+  // Captura localização do entregador em tempo real
   useEffect(() => {
     if (!enabled || typeof navigator === "undefined" || !navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
+    const id = navigator.geolocation.watchPosition(
       (p) => setMyPos({ lat: p.coords.latitude, lng: p.coords.longitude }),
       () => {},
-      { enableHighAccuracy: true, maximumAge: 60000, timeout: 8000 },
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
     );
+    return () => navigator.geolocation.clearWatch(id);
   }, [enabled]);
 
   // Busca corrida disponível
