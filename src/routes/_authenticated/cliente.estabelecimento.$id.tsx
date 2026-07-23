@@ -306,7 +306,11 @@ function EstabelecimentoPage() {
         {estab.descricao && <p className="mt-1 text-sm text-muted-foreground">{estab.descricao}</p>}
         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           {estab.avaliacao != null && (
-            <span className="flex items-center gap-1"><Star className="h-3 w-3 fill-primary text-primary" />{Number(estab.avaliacao).toFixed(1)}</span>
+            <span className="flex items-center gap-1">
+              <Star className="h-3 w-3 fill-primary text-primary" />
+              <span className="font-semibold text-foreground">{Number(estab.avaliacao).toFixed(1)}</span>
+              <span className="text-muted-foreground">({reviewCount})</span>
+            </span>
           )}
           {estab.tempo_medio_min && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{estab.tempo_medio_min} min</span>}
           <span>Entrega {estab.taxa_entrega_cents === 0 ? "grátis" : fmt(estab.taxa_entrega_cents)}</span>
