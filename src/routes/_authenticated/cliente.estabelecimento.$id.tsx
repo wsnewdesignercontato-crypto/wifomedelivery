@@ -77,6 +77,7 @@ function EstabelecimentoPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const [estab, setEstab] = useState<Estab | null>(null);
+  const [reviewCount, setReviewCount] = useState<number>(0);
   const [cats, setCats] = useState<MenuCat[]>([]);
   const [prods, setProds] = useState<Produto[]>([]);
   const [busca, setBusca] = useState("");
