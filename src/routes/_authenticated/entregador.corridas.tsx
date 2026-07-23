@@ -364,40 +364,54 @@ function Corridas() {
 
           {order && estab && (
             <div className="mt-4 grid gap-3 text-sm md:grid-cols-2">
-              <div className="rounded-xl border border-border bg-background p-3">
+              <div className="min-w-0 rounded-xl border border-border bg-background p-3">
                 <p className="mb-1 flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
-                  <Package className="h-3.5 w-3.5" /> Loja
+                  <Package className="h-3.5 w-3.5 shrink-0" /> Loja
                 </p>
-                <p className="font-semibold">{estab.nome}</p>
-                <p className="text-xs text-muted-foreground">{estab.endereco ?? "—"} {estab.cidade && `· ${estab.cidade}`}</p>
-                <div className="mt-2 flex gap-2">
-                  {estab.telefone && (
-                    <a href={`tel:${estab.telefone}`}>
-                      <Button size="sm" variant="outline"><Phone className="mr-2 h-3 w-3" />Ligar</Button>
+                <p className="truncate font-semibold">{estab.nome}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {estab.endereco ?? "—"}{estab.cidade ? ` · ${estab.cidade}` : ""}
+                </p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {estab.telefone ? (
+                    <a href={`tel:${estab.telefone}`} className="w-full">
+                      <Button size="sm" variant="outline" className="w-full">
+                        <Phone className="mr-1.5 h-3 w-3" />Ligar
+                      </Button>
                     </a>
+                  ) : (
+                    <Button size="sm" variant="outline" className="w-full" disabled>
+                      <Phone className="mr-1.5 h-3 w-3" />Ligar
+                    </Button>
                   )}
-                  <Button size="sm" variant="outline" onClick={() => setChatOpen("store_courier")}>
-                    <MessageSquare className="mr-2 h-3 w-3" />Chat loja
+                  <Button size="sm" variant="outline" className="w-full" onClick={() => setChatOpen("store_courier")}>
+                    <MessageSquare className="mr-1.5 h-3 w-3" />Chat loja
                   </Button>
                 </div>
               </div>
-              <div className="rounded-xl border border-border bg-background p-3">
+              <div className="min-w-0 rounded-xl border border-border bg-background p-3">
                 <p className="mb-1 flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
-                  <MapPin className="h-3.5 w-3.5" /> Cliente
+                  <MapPin className="h-3.5 w-3.5 shrink-0" /> Cliente
                 </p>
-                <p className="font-semibold">{cliente?.nome ?? "Cliente"}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="truncate font-semibold">{cliente?.nome ?? "Cliente"}</p>
+                <p className="truncate text-xs text-muted-foreground">
                   {order.endereco_entrega?.endereco ?? "—"}
-                  {order.endereco_entrega?.complemento && ` · ${order.endereco_entrega.complemento}`}
+                  {order.endereco_entrega?.complemento ? ` · ${order.endereco_entrega.complemento}` : ""}
                 </p>
-                <div className="mt-2 flex gap-2">
-                  {cliente?.telefone && (
-                    <a href={`tel:${cliente.telefone}`}>
-                      <Button size="sm" variant="outline"><Phone className="mr-2 h-3 w-3" />Ligar</Button>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {cliente?.telefone ? (
+                    <a href={`tel:${cliente.telefone}`} className="w-full">
+                      <Button size="sm" variant="outline" className="w-full">
+                        <Phone className="mr-1.5 h-3 w-3" />Ligar
+                      </Button>
                     </a>
+                  ) : (
+                    <Button size="sm" variant="outline" className="w-full" disabled>
+                      <Phone className="mr-1.5 h-3 w-3" />Ligar
+                    </Button>
                   )}
-                  <Button size="sm" variant="outline" onClick={() => setChatOpen("client_courier")}>
-                    <MessageSquare className="mr-2 h-3 w-3" />Chat cliente
+                  <Button size="sm" variant="outline" className="w-full" onClick={() => setChatOpen("client_courier")}>
+                    <MessageSquare className="mr-1.5 h-3 w-3" />Chat cliente
                   </Button>
                 </div>
               </div>
@@ -409,7 +423,7 @@ function Corridas() {
               {order.forma_pagamento === "dinheiro" && (
                 <div className="md:col-span-2 rounded-xl border-2 border-emerald-500/50 bg-emerald-500/10 p-3 text-sm">
                   <p className="flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400">
-                    <Banknote className="h-4 w-4" /> Pagamento em dinheiro
+                    <Banknote className="h-4 w-4 shrink-0" /> Pagamento em dinheiro
                   </p>
                   <p className="mt-1 text-xs">
                     Total a receber: <strong>{fmt(order.total_cents)}</strong>
@@ -417,8 +431,11 @@ function Corridas() {
                   </p>
                 </div>
               )}
-              <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-background p-3 text-xs">
-                <span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 shrink-0" /> Pagamento: <strong className="text-foreground">{order.forma_pagamento}</strong></span>
+              <div className="md:col-span-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-border bg-background px-3 py-2 text-xs">
+                <span className="flex min-w-0 items-center gap-2 truncate">
+                  <Clock className="h-3.5 w-3.5 shrink-0" />
+                  Pagamento: <strong className="text-foreground uppercase">{order.forma_pagamento}</strong>
+                </span>
                 <span className="shrink-0">Total pedido: <strong className="text-foreground">{fmt(order.total_cents)}</strong></span>
               </div>
 
@@ -437,7 +454,7 @@ function Corridas() {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                  <div className="mt-4 space-y-3">
                     <div>
                       <label className="mb-1 block text-xs font-bold uppercase text-muted-foreground">Digite o código do cliente</label>
                       <Input
@@ -455,11 +472,11 @@ function Corridas() {
                       />
                       {codeError && (
                         <p id="codigo-erro-inline" role="alert" className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-destructive">
-                          <AlertTriangle className="h-3.5 w-3.5" /> {codeError}
+                          <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> {codeError}
                         </p>
                       )}
                     </div>
-                    <Button size="lg" onClick={confirmarEntrega} disabled={advancing || codeInput.length !== 4}>
+                    <Button size="lg" className="w-full" onClick={confirmarEntrega} disabled={advancing || codeInput.length !== 4}>
                       {advancing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
                       Finalizar entrega
                     </Button>
@@ -492,14 +509,14 @@ function Corridas() {
             </div>
           )}
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
             {currentStage && (
-              <Button size="lg" className="flex-1 min-w-[220px]" onClick={() => avancar(currentStage.next)} disabled={advancing}>
+              <Button size="lg" className="w-full" onClick={() => avancar(currentStage.next)} disabled={advancing}>
                 {advancing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : currentStage.key === "at_customer" ? <ShieldCheck className="mr-2 h-4 w-4" /> : <Navigation className="mr-2 h-4 w-4" />}
                 {currentStage.cta}
               </Button>
             )}
-            <Button size="lg" variant="outline" onClick={() => setIncidentOpen(true)}>
+            <Button size="lg" variant="outline" className="w-full sm:w-auto" onClick={() => setIncidentOpen(true)}>
               <AlertTriangle className="mr-2 h-4 w-4" /> Reportar problema
             </Button>
           </div>
