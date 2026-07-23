@@ -23,9 +23,11 @@ export const listAvailableCouriers = createServerFn({ method: "POST" })
     if (!allowed) throw new Error("Forbidden");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await (supabaseAdmin as any)
-      .schema("private")
-      .rpc("list_available_couriers");
+    const { data, error } = await supabaseAdmin
+      .from("courier_profiles")
+      .select("user_id, veiculo, avaliacao, lat, lng, last_seen")
+      .eq("status", "online")
+      .eq("aprovacao", "approved");
     if (error) throw new Error(error.message);
     return (data ?? []) as AvailableCourier[];
   });
