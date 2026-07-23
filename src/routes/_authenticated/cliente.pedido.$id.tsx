@@ -106,20 +106,6 @@ function PedidoPage() {
     else toast.success("Pedido cancelado");
   }
 
-  async function avaliar() {
-    if (!order) return;
-    const { error } = await supabase.from("reviews").insert({
-      order_id: order.id,
-      cliente_id: user.id,
-      establishment_id: order.establishment_id,
-      entregador_id: delivery?.entregador_id ?? null,
-      rating_loja: rating,
-      rating_entregador: delivery?.entregador_id ? rating : null,
-      comentario: comment || null,
-    });
-    if (error) toast.error(error.message);
-    else { toast.success("Obrigado pela avaliação!"); setReviewed(true); }
-  }
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   if (!order) return <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">Pedido não encontrado.</div>;
