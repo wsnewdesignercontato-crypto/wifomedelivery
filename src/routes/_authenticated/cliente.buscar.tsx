@@ -28,6 +28,7 @@ function BuscarPage() {
   const [q, setQ] = useState("");
   const [estabs, setEstabs] = useState<Estab[]>([]);
   const [prods, setProds] = useState<Prod[]>([]);
+  const [reviewCounts, setReviewCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -37,7 +38,7 @@ function BuscarPage() {
   }, [q]);
 
   async function run(term: string) {
-    if (term.length < 2) { setEstabs([]); setProds([]); return; }
+    if (term.length < 2) { setEstabs([]); setProds([]); setReviewCounts({}); return; }
     setLoading(true);
     const [e, p] = await Promise.all([
       supabase
@@ -53,8 +54,20 @@ function BuscarPage() {
         .ilike("nome", `%${term}%`)
         .limit(30),
     ]);
-    setEstabs((e.data ?? []) as Estab[]);
+    const estabList = (e.data ?? []) as Estab[];
+    setEstabs(estabList);
     setProds((p.data ?? []) as Prod[]);
+    const ids = estabList.map((x) => x.id);
+    if (ids.length) {
+      const { data: revs } = await supabase.from("reviews").select("establishment_id").in("establishment_id", ids);
+      const rc: Record<string, number> = {};
+      (revs ?? []).forEach((r: any) => {
+        if (r.establishment_id) rc[r.establishment_id] = (rc[r.establishment_id] ?? 0) + 1;
+      });
+      setReviewCounts(rc);
+    } else {
+      setReviewCounts({});
+    }
     setLoading(false);
   }
 
