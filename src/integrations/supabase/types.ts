@@ -2880,26 +2880,24 @@ export type Database = {
           },
         ]
       }
+      public_platform_settings: {
+        Row: {
+          ad_default_seconds: number | null
+          bestseller_threshold: number | null
+        }
+        Insert: {
+          ad_default_seconds?: number | null
+          bestseller_threshold?: number | null
+        }
+        Update: {
+          ad_default_seconds?: number | null
+          bestseller_threshold?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      get_public_platform_settings: {
-        Args: never
-        Returns: {
-          ad_default_seconds: number
-          bestseller_threshold: number
-        }[]
-      }
-      list_available_couriers: {
-        Args: never
-        Returns: {
-          avaliacao: number
-          last_seen: string
-          lat: number
-          lng: number
-          user_id: string
-          veiculo: string
-        }[]
-      }
+      [_ in never]: never
     }
     Enums: {
       app_role: "cliente" | "estabelecimento" | "entregador" | "admin"

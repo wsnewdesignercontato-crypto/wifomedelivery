@@ -64,7 +64,7 @@ export function AdRotator({
   const { data: seconds = 6 } = useQuery({
     queryKey: ["ad_default_seconds"],
     queryFn: async () => {
-      const { data } = await supabase.rpc("get_public_platform_settings").maybeSingle();
+      const { data } = await (supabase as any).from("public_platform_settings").select("ad_default_seconds").maybeSingle();
       return (data as { ad_default_seconds?: number } | null)?.ad_default_seconds ?? 6;
     },
     refetchOnWindowFocus: false,

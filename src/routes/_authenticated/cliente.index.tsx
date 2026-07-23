@@ -176,7 +176,7 @@ function ClienteHome() {
           .from("orders")
           .select("establishment_id")
           .eq("status", "delivered"),
-        supabase.rpc("get_public_platform_settings").maybeSingle(),
+        (supabase as any).from("public_platform_settings").select("bestseller_threshold, ad_default_seconds").maybeSingle(),
       ]);
       setCats((c.data ?? []) as Categoria[]);
       setEstabs((e.data ?? []) as Estab[]);
@@ -190,7 +190,7 @@ function ClienteHome() {
         if (r.establishment_id) counts[r.establishment_id] = (counts[r.establishment_id] ?? 0) + 1;
       });
       setSalesCount(counts);
-      if (ps.data?.bestseller_threshold) setThreshold(ps.data.bestseller_threshold);
+      if ((ps as any).data?.bestseller_threshold) setThreshold((ps as any).data.bestseller_threshold);
 
       // Horário de hoje para as lojas listadas
       const ids = (e.data ?? []).map((x: any) => x.id);

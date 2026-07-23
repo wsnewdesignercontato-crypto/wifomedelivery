@@ -29,10 +29,9 @@ async function fetchLatestPoints(): Promise<Point[]> {
     if (!map.has(p.courier_id)) map.set(p.courier_id, p);
   }
 
-  // 2) Couriers online (mesmo sem entrega em andamento) via RPC
-  const { data: online } = await (supabase as unknown as {
-    rpc: (n: string) => Promise<{ data: Array<{ user_id: string; lat: number | null; lng: number | null; last_seen: string | null }> | null }>;
-  }).rpc("list_available_couriers");
+  // 2) Couriers online (mesmo sem entrega em andamento) via server fn
+  const { listAvailableCouriers } = await import("@/lib/couriers.functions");
+  const online = await listAvailableCouriers().catch(() => []);
   for (const c of online ?? []) {
     if (c.lat == null || c.lng == null) continue;
     if (map.has(c.user_id)) continue;

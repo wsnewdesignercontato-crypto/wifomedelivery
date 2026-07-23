@@ -57,7 +57,8 @@ function EntregaPage() {
 
   async function loadCouriers() {
     setLoading(true);
-    const { data } = await supabase.rpc("list_available_couriers");
+    const { listAvailableCouriers } = await import("@/lib/couriers.functions");
+    const data = await listAvailableCouriers();
     const list = (data ?? []) as Omit<Courier, "nome">[];
     let nomes: Record<string, string> = {};
     if (list.length) {
