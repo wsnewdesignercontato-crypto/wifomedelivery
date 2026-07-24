@@ -94,6 +94,40 @@ function EstabelecimentoPage() {
   // seleção: groupId -> lista de addonIds
   const [sel, setSel] = useState<Record<string, string[]>>({});
 
+  const [openReview, setOpenReview] = useState(false);
+  const [pendingReview, setPendingReview] = useState<{ order_id: string; entregador_id: string | null } | null>(null);
+  const [reviewsBump, setReviewsBump] = useState(0);
+
+  useEffect(() => {
+    if (!user?.id || !id) return;
+    (async () => {
+      const { data: orders } = await supabase
+        .from("orders")
+        .select("id")
+        .eq("cliente_id", user.id)
+        .eq("establishment_id", id)
+        .eq("status", "delivered")
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (!orders?.length) { setPendingReview(null); return; }
+      const ids = orders.map((o) => o.id);
+      const { data: revs } = await supabase
+        .from("reviews")
+        .select("order_id")
+        .in("order_id", ids);
+      const reviewed = new Set((revs ?? []).map((r) => r.order_id));
+      const pending = orders.find((o) => !reviewed.has(o.id));
+      if (!pending) { setPendingReview(null); return; }
+      const { data: del } = await supabase
+        .from("deliveries")
+        .select("entregador_id")
+        .eq("order_id", pending.id)
+        .maybeSingle();
+      setPendingReview({ order_id: pending.id, entregador_id: del?.entregador_id ?? null });
+    })();
+  }, [user?.id, id, reviewsBump]);
+
+
   useEffect(() => {
     (async () => {
       setLoading(true);
