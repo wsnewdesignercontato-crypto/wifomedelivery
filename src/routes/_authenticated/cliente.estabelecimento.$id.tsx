@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Star, Clock, Heart, Plus, Minus, Loader2, Check } from "lucide-react";
+import { ArrowLeft, Star, Clock, Heart, Plus, Minus, Loader2, Check, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { EstabReviewsPanel, ReviewForm } from "@/components/reviews";
 
 export const Route = createFileRoute("/_authenticated/cliente/estabelecimento/$id")({
   component: EstabelecimentoPage,
@@ -92,6 +93,40 @@ function EstabelecimentoPage() {
   const [loadingGroups, setLoadingGroups] = useState(false);
   // seleção: groupId -> lista de addonIds
   const [sel, setSel] = useState<Record<string, string[]>>({});
+
+  const [openReview, setOpenReview] = useState(false);
+  const [pendingReview, setPendingReview] = useState<{ order_id: string; entregador_id: string | null } | null>(null);
+  const [reviewsBump, setReviewsBump] = useState(0);
+
+  useEffect(() => {
+    if (!user?.id || !id) return;
+    (async () => {
+      const { data: orders } = await supabase
+        .from("orders")
+        .select("id")
+        .eq("cliente_id", user.id)
+        .eq("establishment_id", id)
+        .eq("status", "delivered")
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (!orders?.length) { setPendingReview(null); return; }
+      const ids = orders.map((o) => o.id);
+      const { data: revs } = await supabase
+        .from("reviews")
+        .select("order_id")
+        .in("order_id", ids);
+      const reviewed = new Set((revs ?? []).map((r) => r.order_id));
+      const pending = orders.find((o) => !reviewed.has(o.id));
+      if (!pending) { setPendingReview(null); return; }
+      const { data: del } = await supabase
+        .from("deliveries")
+        .select("entregador_id")
+        .eq("order_id", pending.id)
+        .maybeSingle();
+      setPendingReview({ order_id: pending.id, entregador_id: del?.entregador_id ?? null });
+    })();
+  }, [user?.id, id, reviewsBump]);
+
 
   useEffect(() => {
     (async () => {
@@ -378,6 +413,49 @@ function EstabelecimentoPage() {
           Nenhum item disponível.
         </div>
       )}
+
+      {/* Avaliações da loja */}
+      <section className="space-y-3 pt-4">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-black">Avaliações da loja</h2>
+          <Button
+            size="sm"
+            variant={pendingReview ? "default" : "outline"}
+            onClick={() => {
+              if (!pendingReview) {
+                toast.info("Você precisa ter um pedido entregue nesta loja para avaliar.");
+                return;
+              }
+              setOpenReview(true);
+            }}
+          >
+            <MessageSquare className="mr-1 h-4 w-4" />
+            Avaliar loja
+          </Button>
+        </div>
+        <EstabReviewsPanel key={reviewsBump} establishmentId={id} />
+      </section>
+
+      <Dialog open={openReview} onOpenChange={setOpenReview}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Avaliar {estab.nome}</DialogTitle>
+          </DialogHeader>
+          {pendingReview && (
+            <ReviewForm
+              orderId={pendingReview.order_id}
+              clienteId={user.id}
+              establishmentId={id}
+              entregadorId={pendingReview.entregador_id}
+              onSubmitted={() => {
+                setOpenReview(false);
+                setReviewsBump((n) => n + 1);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
 
       <Dialog open={!!openProd} onOpenChange={(o) => !o && setOpenProd(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0">
