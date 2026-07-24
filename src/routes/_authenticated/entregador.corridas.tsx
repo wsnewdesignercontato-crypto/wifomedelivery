@@ -441,9 +441,9 @@ function Corridas() {
 
 
               {currentStage?.key === "at_customer" && (
-                <div className="md:col-span-2 rounded-2xl border-2 border-primary bg-primary/5 p-4">
+                <div className="md:col-span-2 min-w-0 overflow-hidden rounded-2xl border-2 border-primary bg-primary/5 p-3 sm:p-4">
                   <div className="flex items-start gap-3">
-                    <div className="rounded-full bg-primary/15 p-2 text-primary">
+                    <div className="shrink-0 rounded-full bg-primary/15 p-2 text-primary">
                       <ShieldCheck className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -455,7 +455,7 @@ function Corridas() {
                   </div>
 
                   <div className="mt-4 space-y-3">
-                    <div>
+                    <div className="min-w-0">
                       <label className="mb-1 block text-xs font-bold uppercase text-muted-foreground">Digite o código do cliente</label>
                       <Input
                         inputMode="numeric"
@@ -468,11 +468,12 @@ function Corridas() {
                         }}
                         aria-invalid={!!codeError}
                         aria-describedby="codigo-erro-inline"
-                        className={`h-14 text-center text-3xl font-black tracking-[0.45em] ${codeError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                        className={`h-14 w-full text-center text-2xl font-black tracking-[0.35em] sm:text-3xl sm:tracking-[0.45em] ${codeError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                       />
                       {codeError && (
-                        <p id="codigo-erro-inline" role="alert" className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-destructive">
-                          <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> {codeError}
+                        <p id="codigo-erro-inline" role="alert" className="mt-2 flex items-start gap-1.5 break-words text-xs font-semibold text-destructive">
+                          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                          <span className="min-w-0 flex-1">{codeError}</span>
                         </p>
                       )}
                     </div>
@@ -482,7 +483,7 @@ function Corridas() {
                     </Button>
                   </div>
 
-                  <div className="mt-3">
+                  <div className="mt-3 min-w-0">
                     <input
                       ref={proofInputRef}
                       type="file"
@@ -492,7 +493,7 @@ function Corridas() {
                       onChange={(e) => e.target.files?.[0] && pickProof(e.target.files[0])}
                     />
                     {proofPreview ? (
-                      <div className="rounded-xl border border-border bg-background p-2">
+                      <div className="min-w-0 rounded-xl border border-border bg-background p-2">
                         <img src={proofPreview} alt="Prova de entrega" className="max-h-52 w-full rounded-lg object-cover" />
                         <Button size="sm" variant="outline" className="mt-2 w-full" onClick={() => { setProofFile(null); setProofPreview(null); }}>
                           Trocar foto da prova
@@ -500,7 +501,8 @@ function Corridas() {
                       </div>
                     ) : (
                       <Button variant="outline" className="w-full" onClick={() => proofInputRef.current?.click()}>
-                        <Camera className="mr-2 h-4 w-4" /> Adicionar foto da entrega (opcional)
+                        <Camera className="mr-2 h-4 w-4 shrink-0" />
+                        <span className="truncate">Adicionar foto da entrega (opcional)</span>
                       </Button>
                     )}
                   </div>
