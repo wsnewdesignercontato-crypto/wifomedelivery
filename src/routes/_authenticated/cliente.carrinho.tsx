@@ -22,6 +22,17 @@ type Item = {
   addons: CartAddon[];
 };
 type Estab = { id: string; nome: string; taxa_entrega_cents: number; pedido_minimo_cents: number };
+type CouponRow = {
+  id: string;
+  code: string;
+  type: "percent" | "fixed" | "free_delivery";
+  value_cents: number;
+  percent: number;
+  min_order_cents: number;
+  descricao: string | null;
+  establishment_id: string | null;
+  expires_at: string | null;
+};
 
 const fmt = (c: number) =>
   (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -36,8 +47,17 @@ function CarrinhoPage() {
 
   useEffect(() => {
     load();
+    const ch = supabase
+      .channel("coupons-cliente")
+      .on("postgres_changes", { event: "*", schema: "public", table: "coupons" }, () => load())
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const [coupons, setCoupons] = useState<CouponRow[]>([]);
 
   async function load() {
     setLoading(true);
@@ -51,16 +71,27 @@ function CarrinhoPage() {
       addons: Array.isArray(i.addons) ? i.addons : [],
     }));
     setItems(arr);
+    let estabId: string | null = null;
     if (arr[0]) {
+      estabId = arr[0].establishment_id;
       const { data: e } = await supabase
         .from("establishments")
         .select("id,nome,taxa_entrega_cents,pedido_minimo_cents")
-        .eq("id", arr[0].establishment_id)
+        .eq("id", estabId)
         .maybeSingle();
       setEstab(e as Estab | null);
     } else {
       setEstab(null);
     }
+    const nowIso = new Date().toISOString();
+    const { data: cps } = await supabase
+      .from("coupons")
+      .select("id,code,type,value_cents,percent,min_order_cents,descricao,establishment_id,expires_at,starts_at,ativo")
+      .eq("ativo", true)
+      .or(`establishment_id.is.null${estabId ? `,establishment_id.eq.${estabId}` : ""}`)
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+      .order("created_at", { ascending: false });
+    setCoupons((cps ?? []) as unknown as CouponRow[]);
     setLoading(false);
   }
 
@@ -141,9 +172,52 @@ function CarrinhoPage() {
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs font-medium">Cupom (opcional)</label>
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-medium">Cupom (opcional)</label>
+          {cupom && (
+            <button onClick={() => setCupom("")} className="text-[11px] text-muted-foreground underline">
+              limpar
+            </button>
+          )}
+        </div>
         <Input value={cupom} onChange={(e) => setCupom(e.target.value.toUpperCase())} placeholder="Ex: BEMVINDO10" className="mt-1" />
-        <p className="mt-1 text-[11px] text-muted-foreground">Validaremos o cupom no checkout.</p>
+        {coupons.length > 0 ? (
+          <div className="mt-3 space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Cupons disponíveis</p>
+            <div className="flex flex-wrap gap-2">
+              {coupons.map((c) => {
+                const active = cupom === c.code;
+                const label =
+                  c.type === "percent"
+                    ? `${c.percent}% OFF`
+                    : c.type === "fixed"
+                    ? `${fmt(c.value_cents)} OFF`
+                    : "Frete grátis";
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCupom(active ? "" : c.code)}
+                    className={`group flex flex-col items-start rounded-xl border px-3 py-2 text-left transition ${
+                      active
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-dashed border-primary/40 bg-primary/5 hover:border-primary"
+                    }`}
+                  >
+                    <span className="font-mono text-xs font-bold">{c.code}</span>
+                    <span className="text-[11px] font-semibold">{label}</span>
+                    {c.min_order_cents > 0 && (
+                      <span className="text-[10px] text-muted-foreground">mín. {fmt(c.min_order_cents)}</span>
+                    )}
+                    {c.descricao && <span className="text-[10px] text-muted-foreground">{c.descricao}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <p className="mt-1 text-[11px] text-muted-foreground">Nenhum cupom ativo no momento.</p>
+        )}
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-4 space-y-1.5 text-sm">
