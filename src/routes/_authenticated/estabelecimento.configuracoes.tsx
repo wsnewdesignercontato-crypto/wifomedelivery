@@ -222,10 +222,10 @@ function ConfigPage() {
           />
         </div>
 
-        <div className="flex flex-col gap-4 px-6 pb-6 sm:flex-row sm:items-end">
-          <div className="-mt-12 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-card bg-primary/10 text-2xl font-black text-primary shadow-lg">
+        <div className="flex flex-col items-center gap-4 px-6 pb-6 text-center sm:flex-row sm:items-end sm:text-left">
+          <div className="-mt-12 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-card bg-background text-2xl font-black text-primary shadow-lg">
             {form.logo_url ? (
-              <img src={form.logo_url} alt="Logo" className="h-full w-full object-cover" />
+              <img src={form.logo_url} alt="Logo" className="h-full w-full object-contain p-1" />
             ) : (
               initials
             )}
