@@ -235,7 +235,7 @@ function ConfigPage() {
               {form.nome || "Sua loja"}
             </h1>
             {form.slogan && <p className="truncate text-sm text-muted-foreground">{form.slogan}</p>}
-            <div className="mt-2 flex flex-wrap items-center gap-2">
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
               <input
                 ref={logoRef}
                 type="file"
