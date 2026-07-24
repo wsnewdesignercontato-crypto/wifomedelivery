@@ -29,18 +29,29 @@ type Offer = {
   observacoes: string | null;
 };
 
-function fmtEndereco(e: any): string {
+function fmtEndereco(e: any, fallback?: { cidade?: string | null; estado?: string | null }): string {
   if (!e) return "Endereço do cliente";
   const rua = e.endereco || e.logradouro || e.rua || "";
   const num = e.numero ? `, ${e.numero}` : "";
-  const cidade = e.cidade ? ` — ${e.cidade}${e.uf ? `/${e.uf}` : ""}` : "";
-  return `${rua}${num}${cidade}`.trim() || "Endereço do cliente";
+  const cidade = e.cidade || fallback?.cidade || "";
+  const uf = e.uf || e.estado || fallback?.estado || "";
+  const local = cidade ? ` — ${cidade}${uf ? `/${uf}` : ""}` : uf ? ` — ${uf}` : "";
+  const base = `${rua}${num}${local}`.trim();
+  return (base ? `${base}, Brasil` : "Endereço do cliente").trim();
+}
+
+function inBrazilBounds(lat: number, lng: number): boolean {
+  return lat >= -34 && lat <= 6 && lng >= -74 && lng <= -34;
 }
 
 async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
   try {
     const geocoder = new google.maps.Geocoder();
-    const res = await geocoder.geocode({ address });
+    const res = await geocoder.geocode({
+      address,
+      region: "br",
+      componentRestrictions: { country: "BR" },
+    });
     const loc = res.results?.[0]?.geometry?.location;
     return loc ? { lat: loc.lat(), lng: loc.lng() } : null;
   } catch { return null; }
@@ -124,10 +135,17 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
 
       const { data: estab } = await supabase
         .from("establishments")
-        .select("id, nome, endereco, lat, lng")
+        .select("id, nome, endereco, lat, lng, cidade, estado")
         .eq("id", order.establishment_id)
         .maybeSingle();
       if (!estab || estab.lat == null || estab.lng == null) { setOffer(null); return; }
+      const pickupLat = Number(estab.lat);
+      const pickupLng = Number(estab.lng);
+      if (!inBrazilBounds(pickupLat, pickupLng)) {
+        console.warn("[NewRideOffer] Estabelecimento com coordenadas fora do Brasil, ignorando oferta", estab.id);
+        setOffer(null);
+        return;
+      }
 
       const { data: cli } = await supabase
         .from("profiles")
@@ -136,16 +154,16 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         .maybeSingle();
 
       const endereco = (order as any).endereco_entrega ?? {};
-      const pickup = { lat: Number(estab.lat), lng: Number(estab.lng), nome: estab.nome, endereco: estab.endereco ?? null };
-      const enderecoFmt = fmtEndereco(endereco);
+      const pickup = { lat: pickupLat, lng: pickupLng, nome: estab.nome, endereco: estab.endereco ?? null };
+      const enderecoFmt = fmtEndereco(endereco, { cidade: (estab as any).cidade, estado: (estab as any).estado });
 
       let dropLat = Number(endereco.lat);
       let dropLng = Number(endereco.lng);
-      if (!Number.isFinite(dropLat) || !Number.isFinite(dropLng)) {
-        // Sem lat/lng salvos: geocodifica o endereço real do cliente
+      if (!Number.isFinite(dropLat) || !Number.isFinite(dropLng) || !inBrazilBounds(dropLat, dropLng)) {
+        // Sem lat/lng válidos: geocodifica o endereço real do cliente com bias BR
         try { await loadGoogleMaps(); } catch {}
         const geo = await geocode(enderecoFmt);
-        if (!geo) { setOffer(null); return; } // sem endereço real, não simula
+        if (!geo || !inBrazilBounds(geo.lat, geo.lng)) { setOffer(null); return; }
         dropLat = geo.lat; dropLng = geo.lng;
       }
 
@@ -160,6 +178,13 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
 
       const distanciaColeta = myPos ? Math.round(haversineKm(myPos, pickup) * 10) / 10 : null;
       const distanciaEntrega = Math.round(haversineKm(pickup, dropoff) * 10) / 10;
+
+      // Sanity: nenhuma entrega real ultrapassa 150 km entre loja e cliente.
+      if (distanciaEntrega > 150) {
+        console.warn("[NewRideOffer] Distância entrega irreal, provavelmente geocode incorreto", { estab: estab.id, distanciaEntrega });
+        setOffer(null);
+        return;
+      }
 
       if (cancelled) return;
       setOffer({
