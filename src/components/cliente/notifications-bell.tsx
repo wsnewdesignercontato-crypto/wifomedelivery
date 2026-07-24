@@ -48,7 +48,26 @@ export function NotificationsBell({ userId }: { userId: string }) {
           const n = p.new as Notif & { audience?: string | null };
           if (!audienceOk(n.audience)) return;
           setItems((prev) => [n, ...prev].slice(0, 20));
-          toast(n.titulo, { description: n.mensagem });
+          const isDelivered = /entregue/i.test(n.mensagem);
+          if (isDelivered) {
+            if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+              try { navigator.vibrate?.([120, 60, 120]); } catch { /* ignore */ }
+            }
+            toast.success("🎉 " + n.titulo, {
+              description: n.mensagem,
+              duration: 8000,
+              action: n.link_url
+                ? { label: "Avaliar", onClick: () => navigate({ to: n.link_url! }) }
+                : undefined,
+            });
+          } else {
+            toast(n.titulo, {
+              description: n.mensagem,
+              action: n.link_url
+                ? { label: "Ver", onClick: () => navigate({ to: n.link_url! }) }
+                : undefined,
+            });
+          }
         },
       )
       .subscribe();
