@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { InstallAppPrompt } from "@/components/install-app-prompt";
 
 const perfilSchema = z.enum(["cliente", "estabelecimento", "entregador"]).catch("cliente");
 const searchSchema = z.object({
