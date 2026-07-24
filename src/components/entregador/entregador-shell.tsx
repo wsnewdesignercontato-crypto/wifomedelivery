@@ -42,14 +42,26 @@ export function EntregadorShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!courier) return;
-    supabase
-      .from("notifications")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", courier.user_id)
-      .in("audience", ["entregador", "all"])
-      .eq("lida", false)
-      .then(({ count }) => setUnread(count ?? 0));
+    const uid = courier.user_id;
+    async function refresh() {
+      const { count } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", uid)
+        .in("audience", ["entregador", "all"])
+        .eq("lida", false);
+      setUnread(count ?? 0);
+    }
+    refresh();
+    const ch = supabase
+      .channel(`notif-count-entregador-${uid}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${uid}` }, refresh)
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, [courier]);
+
 
   useNewRideAlert(courier as any, true);
 
