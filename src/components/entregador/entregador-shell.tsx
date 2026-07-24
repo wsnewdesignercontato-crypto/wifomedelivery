@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { useMyCourier } from "@/hooks/use-courier";
 import { useNewRideAlert } from "@/hooks/use-new-ride-alert";
 import { NewRideOffer } from "@/components/entregador/new-ride-offer";
+import { toast } from "sonner";
+import { playBellChime } from "@/lib/notification-sound";
 
 const NAV = [
   { to: "/entregador", label: "Início", icon: Home, exact: true },
