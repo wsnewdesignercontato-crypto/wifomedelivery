@@ -2086,6 +2086,14 @@ export type Database = {
           id: number
           maintenance_mode: boolean
           platform_name: string
+          score_delay_severe_penalty: number
+          score_delay_severe_ratio: number
+          score_delay_warn_penalty: number
+          score_delay_warn_ratio: number
+          score_review_bad_max: number
+          score_review_bad_penalty: number
+          score_review_regular_penalty: number
+          score_review_regular_rating: number
           updated_at: string
           updated_by: string | null
         }
@@ -2098,6 +2106,14 @@ export type Database = {
           id?: number
           maintenance_mode?: boolean
           platform_name?: string
+          score_delay_severe_penalty?: number
+          score_delay_severe_ratio?: number
+          score_delay_warn_penalty?: number
+          score_delay_warn_ratio?: number
+          score_review_bad_max?: number
+          score_review_bad_penalty?: number
+          score_review_regular_penalty?: number
+          score_review_regular_rating?: number
           updated_at?: string
           updated_by?: string | null
         }
@@ -2110,6 +2126,14 @@ export type Database = {
           id?: number
           maintenance_mode?: boolean
           platform_name?: string
+          score_delay_severe_penalty?: number
+          score_delay_severe_ratio?: number
+          score_delay_warn_penalty?: number
+          score_delay_warn_ratio?: number
+          score_review_bad_max?: number
+          score_review_bad_penalty?: number
+          score_review_regular_penalty?: number
+          score_review_regular_rating?: number
           updated_at?: string
           updated_by?: string | null
         }
