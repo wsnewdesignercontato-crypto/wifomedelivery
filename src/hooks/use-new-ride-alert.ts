@@ -145,7 +145,7 @@ export function useNewRideAlert(courier: Courier, soundEnabled = true) {
           });
           intervalRef.current = setInterval(() => {
             if (soundEnabled) playSiren();
-          }, 2500);
+          }, 1600);
         }
       } else {
         if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
