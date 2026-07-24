@@ -729,6 +729,51 @@ function Corridas() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={navPickerOpen} onOpenChange={(o) => { if (!o) { setNavPickerOpen(false); setNavTarget(null); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Abrir navegação</DialogTitle>
+            <DialogDescription>
+              Escolha o app de GPS para traçar a rota até {navTarget?.label || "o destino"}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2 py-2">
+            {navTarget && (() => {
+              const q = encodeURIComponent(navTarget.address);
+              const isIOS = typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
+              const openAndAdvance = (url: string) => {
+                window.open(url, "_blank");
+                const next = navTarget.next;
+                setNavPickerOpen(false);
+                setNavTarget(null);
+                setTimeout(() => avancar(next), 300);
+              };
+              return (
+                <>
+                  <Button size="lg" className="w-full justify-start" onClick={() => openAndAdvance(`https://www.google.com/maps/dir/?api=1&destination=${q}&travelmode=driving`)}>
+                    <Navigation className="mr-2 h-4 w-4" /> Google Maps
+                  </Button>
+                  <Button size="lg" variant="outline" className="w-full justify-start" onClick={() => openAndAdvance(`https://waze.com/ul?q=${q}&navigate=yes`)}>
+                    <Navigation className="mr-2 h-4 w-4" /> Waze
+                  </Button>
+                  {isIOS && (
+                    <Button size="lg" variant="outline" className="w-full justify-start" onClick={() => openAndAdvance(`https://maps.apple.com/?daddr=${q}&dirflg=d`)}>
+                      <Navigation className="mr-2 h-4 w-4" /> Apple Maps
+                    </Button>
+                  )}
+                  <p className="mt-1 text-center text-xs text-muted-foreground truncate">{navTarget.address}</p>
+                </>
+              );
+            })()}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" className="w-full" onClick={() => { setNavPickerOpen(false); setNavTarget(null); }}>
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
