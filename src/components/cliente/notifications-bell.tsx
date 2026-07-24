@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
+import { playBellChime } from "@/lib/notification-sound";
 
 type Notif = {
   id: string;
