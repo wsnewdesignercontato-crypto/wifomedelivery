@@ -108,6 +108,7 @@ function DashboardPage() {
           </Card>
         ))}
       </div>
+      <ScoreCard entityType="establishment" entityId={estab.id} />
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="shadow-card">
           <CardHeader><CardTitle className="text-sm">Status da loja</CardTitle></CardHeader>
