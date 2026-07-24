@@ -30,18 +30,30 @@ export function ScoreCard({ entityType, entityId }: Props) {
   const [ym, setYm] = useState<string>(() => new Date().toISOString().slice(0, 7));
   const [events, setEvents] = useState<Evt[]>([]);
   const [expanded, setExpanded] = useState(false);
+  const [bands, setBands] = useState({ start: 100, warn: 85, crit: 60 });
 
   useEffect(() => {
     if (!entityId) return;
     (async () => {
       const cur = new Date().toISOString().slice(0, 7);
+      const { data: cfg } = await supabase
+        .from("platform_settings")
+        .select("score_start,score_band_warn,score_band_critical")
+        .eq("id", 1)
+        .maybeSingle();
+      const b = {
+        start: Number(cfg?.score_start ?? 100),
+        warn: Number(cfg?.score_band_warn ?? 85),
+        crit: Number(cfg?.score_band_critical ?? 60),
+      };
+      setBands(b);
       if (entityType === "establishment") {
         const { data } = await supabase
           .from("establishments")
           .select("score_mensal,score_ym")
           .eq("id", entityId)
           .maybeSingle();
-        const s = data?.score_ym === cur ? Number(data?.score_mensal ?? 100) : 100;
+        const s = data?.score_ym === cur ? Number(data?.score_mensal ?? b.start) : b.start;
         setScore(s);
         setYm(cur);
       } else {
@@ -50,7 +62,7 @@ export function ScoreCard({ entityType, entityId }: Props) {
           .select("score_mensal,score_ym")
           .eq("user_id", entityId)
           .maybeSingle();
-        const s = data?.score_ym === cur ? Number(data?.score_mensal ?? 100) : 100;
+        const s = data?.score_ym === cur ? Number(data?.score_mensal ?? b.start) : b.start;
         setScore(s);
         setYm(cur);
       }
@@ -66,10 +78,10 @@ export function ScoreCard({ entityType, entityId }: Props) {
   }, [entityType, entityId]);
 
   const color =
-    score >= 85 ? "text-emerald-500" : score >= 60 ? "text-amber-500" : "text-destructive";
+    score >= bands.warn ? "text-emerald-500" : score >= bands.crit ? "text-amber-500" : "text-destructive";
   const bar =
-    score >= 85 ? "bg-emerald-500" : score >= 60 ? "bg-amber-500" : "bg-destructive";
-  const label = score >= 85 ? "Excelente" : score >= 60 ? "Atenção" : "Crítico";
+    score >= bands.warn ? "bg-emerald-500" : score >= bands.crit ? "bg-amber-500" : "bg-destructive";
+  const label = score >= bands.warn ? "Excelente" : score >= bands.crit ? "Atenção" : "Crítico";
 
   const [y, m] = ym.split("-");
   const mesNome = new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("pt-BR", {
