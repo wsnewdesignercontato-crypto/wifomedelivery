@@ -285,7 +285,8 @@ function Corridas() {
       status: "delivered", entregue_em: new Date().toISOString(),
     }).eq("id", ativa.id);
     if (error) { setAdvancing(false); return toast.error("Falha ao finalizar"); }
-    await supabase.from("orders").update(orderPatch as never).eq("id", ativa.order_id);
+    const { error: ordErr } = await supabase.from("orders").update(orderPatch as never).eq("id", ativa.order_id);
+    if (ordErr) { setAdvancing(false); return toast.error("Falha ao atualizar pedido", { description: ordErr.message }); }
     await supabase.from("courier_profiles").update({ status: "online" }).eq("user_id", courier.user_id);
 
     // Atualização imediata do estado local + confirmação visual
