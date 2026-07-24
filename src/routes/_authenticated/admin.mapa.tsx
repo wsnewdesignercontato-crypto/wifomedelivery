@@ -157,11 +157,11 @@ function MapaPage() {
       <div className="flex flex-wrap gap-2 text-xs">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1">
           <Store className="h-3.5 w-3.5 text-emerald-600" />
-          {estabs.length} estabelecimento{estabs.length === 1 ? "" : "s"} no mapa
+          {estabs.length} de {estabs.length + semGeo.length} estabelecimento{estabs.length + semGeo.length === 1 ? "" : "s"} com posição real
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1">
           <Bike className="h-3.5 w-3.5 text-primary" />
-          {points.length} entregador{points.length === 1 ? "" : "es"} online
+          {points.length} entregador{points.length === 1 ? "" : "es"} online agora
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1">
           <MapPin className="h-3.5 w-3.5 text-blue-500" />
