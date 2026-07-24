@@ -30,6 +30,9 @@ type Config = {
   score_review_bad_penalty: number;
   score_review_regular_rating: number;
   score_review_regular_penalty: number;
+  score_start: number;
+  score_band_warn: number;
+  score_band_critical: number;
 };
 
 async function fetchConfig() {
