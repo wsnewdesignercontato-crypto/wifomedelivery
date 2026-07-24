@@ -47,7 +47,17 @@ function Home() {
     const { data: ledger } = await supabase
       .from("platform_ledger").select("courier_payout_cents,status").eq("courier_id", courier.user_id);
     const saldo = (ledger ?? []).filter((l: { status: string }) => l.status === "pending").reduce((s, l: { courier_payout_cents: number }) => s + (l.courier_payout_cents ?? 0), 0);
-    setStats({ hoje: soma, entregas: (hoje ?? []).length, saldo, nota: Number(courier.avaliacao ?? 0) });
+    const { data: myDeliv } = await supabase
+      .from("deliveries").select("order_id").eq("entregador_id", courier.user_id).eq("status", "delivered");
+    const orderIds = (myDeliv ?? []).map((d: { order_id: string }) => d.order_id);
+    let nota = Number(courier.avaliacao ?? 0);
+    if (orderIds.length) {
+      const { data: revs } = await supabase
+        .from("reviews").select("rating_entregador").in("order_id", orderIds).not("rating_entregador", "is", null);
+      const arr = (revs ?? []).map((r: { rating_entregador: number | null }) => r.rating_entregador ?? 0).filter((n: number) => n > 0);
+      if (arr.length) nota = arr.reduce((s: number, n: number) => s + n, 0) / arr.length;
+    }
+    setStats({ hoje: soma, entregas: (hoje ?? []).length, saldo, nota });
   }
 
   async function loadAtiva() {
