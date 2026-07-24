@@ -127,9 +127,8 @@ export function EstabShell({ estab }: { estab: Estab }) {
             </div>
             <div className="flex items-center gap-2">
               <Switch checked={estab.is_open} onCheckedChange={toggleOpen} />
-              <Button variant="ghost" size="icon" aria-label="Notificações">
-                <Bell className="h-4 w-4" />
-              </Button>
+              <NotificationsBell userId={estab.owner_id} audience="estabelecimento" />
+
               <Button
                 variant="ghost"
                 size="icon"
