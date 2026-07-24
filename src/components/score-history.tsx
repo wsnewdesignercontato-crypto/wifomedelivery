@@ -118,11 +118,11 @@ export function ScoreHistory({ entityType, entityId }: Props) {
           .filter((e) => e.ym === closest!.ym)
           .filter((e) => new Date(e.created_at).getTime() <= ts + 500)
           .reduce((s, e) => s + e.penalty, 0);
-        novoScore = Math.max(0, START - monthEvents);
+        novoScore = Math.max(0, bands.start - monthEvents);
       }
       return { notif: n, evt: closest, novoScore };
     });
-  }, [notifs, events]);
+  }, [notifs, events, bands.start]);
 
   return (
     <div className="space-y-5">
