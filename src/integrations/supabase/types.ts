@@ -2985,6 +2985,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      courier_confirm_delivery: {
+        Args: {
+          _codigo: string
+          _metodo?: string
+          _order_id: string
+          _prova_url?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "cliente" | "estabelecimento" | "entregador" | "admin"
