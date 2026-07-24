@@ -20,11 +20,18 @@ function Avaliacoes() {
 
   useEffect(() => {
     if (!courier) return;
-    supabase.from("reviews").select("id,rating_entregador,comentario,created_at")
-      .eq("entregador_id", courier.user_id)
-      .not("rating_entregador", "is", null)
-      .order("created_at", { ascending: false }).limit(100)
-      .then(({ data }) => setReviews((data ?? []) as Review[]));
+    (async () => {
+      const { data: dels } = await supabase
+        .from("deliveries").select("order_id").eq("entregador_id", courier.user_id).eq("status", "delivered");
+      const orderIds = (dels ?? []).map((d: { order_id: string }) => d.order_id);
+      if (!orderIds.length) { setReviews([]); return; }
+      const { data } = await supabase.from("reviews")
+        .select("id,rating_entregador,comentario,created_at")
+        .in("order_id", orderIds)
+        .not("rating_entregador", "is", null)
+        .order("created_at", { ascending: false }).limit(100);
+      setReviews((data ?? []) as Review[]);
+    })();
   }, [courier]);
 
   return (
