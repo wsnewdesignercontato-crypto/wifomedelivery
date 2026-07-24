@@ -19,37 +19,46 @@ type Notif = {
   created_at: string;
 };
 
-export function NotificationsBell({ userId }: { userId: string }) {
+type Audience = "cliente" | "estabelecimento" | "entregador";
+
+export function NotificationsBell({
+  userId,
+  audience = "cliente",
+}: {
+  userId: string;
+  audience?: Audience;
+}) {
   const [items, setItems] = useState<Notif[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     let alive = true;
-    // Only notifications destinadas a clientes (ou gerais)
     const audienceOk = (a: string | null | undefined) =>
-      !a || a === "cliente" || a === "all";
+      !a || a === audience || a === "all";
     async function load() {
       const { data } = await supabase
         .from("notifications")
         .select("id,titulo,mensagem,link_url,lida,created_at,audience")
         .eq("user_id", userId)
-        .or("audience.is.null,audience.eq.cliente,audience.eq.all")
+        .eq("lida", false)
+        .or(`audience.is.null,audience.eq.${audience},audience.eq.all`)
         .order("created_at", { ascending: false })
         .limit(20);
       if (alive) setItems((data ?? []) as Notif[]);
     }
     load();
     const ch = supabase
-      .channel(`notif-${userId}`)
+      .channel(`notif-${audience}-${userId}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
         (p) => {
           const n = p.new as Notif & { audience?: string | null };
           if (!audienceOk(n.audience)) return;
+          if (n.lida) return;
           setItems((prev) => [n, ...prev].slice(0, 20));
           const isDelivered = /entregue/i.test(n.mensagem);
-          if (isDelivered) {
+          if (isDelivered && audience === "cliente") {
             if (typeof navigator !== "undefined" && "vibrate" in navigator) {
               try { navigator.vibrate?.([120, 60, 120]); } catch { /* ignore */ }
             }
@@ -57,14 +66,14 @@ export function NotificationsBell({ userId }: { userId: string }) {
               description: n.mensagem,
               duration: 8000,
               action: n.link_url
-                ? { label: "Avaliar", onClick: () => navigate({ to: n.link_url! }) }
+                ? { label: "Avaliar", onClick: () => handleClick(n) }
                 : undefined,
             });
           } else {
             toast(n.titulo, {
               description: n.mensagem,
               action: n.link_url
-                ? { label: "Ver", onClick: () => navigate({ to: n.link_url! }) }
+                ? { label: "Ver", onClick: () => handleClick(n) }
                 : undefined,
             });
           }
@@ -75,18 +84,22 @@ export function NotificationsBell({ userId }: { userId: string }) {
       alive = false;
       supabase.removeChannel(ch);
     };
-  }, [userId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, audience]);
 
-  const unread = items.filter((i) => !i.lida).length;
+  const unread = items.length;
+
+  async function handleClick(n: Notif) {
+    setItems((prev) => prev.filter((i) => i.id !== n.id));
+    await supabase.from("notifications").update({ lida: true }).eq("id", n.id);
+    if (n.link_url) navigate({ to: n.link_url });
+  }
 
   async function markAllRead() {
     if (unread === 0) return;
-    await supabase
-      .from("notifications")
-      .update({ lida: true })
-      .eq("user_id", userId)
-      .eq("lida", false);
-    setItems((prev) => prev.map((i) => ({ ...i, lida: true })));
+    const ids = items.map((i) => i.id);
+    setItems([]);
+    await supabase.from("notifications").update({ lida: true }).in("id", ids);
   }
 
   function timeAgo(iso: string) {
@@ -101,7 +114,7 @@ export function NotificationsBell({ userId }: { userId: string }) {
   }
 
   return (
-    <Popover onOpenChange={(o) => o && markAllRead()}>
+    <Popover>
       <PopoverTrigger asChild>
         <Button size="sm" variant="ghost" className="relative" aria-label="Notificações">
           <Bell className="h-4 w-4" />
@@ -118,7 +131,6 @@ export function NotificationsBell({ userId }: { userId: string }) {
         collisionPadding={16}
         className="w-[min(92vw,22rem)] overflow-hidden rounded-2xl border border-border/60 bg-card/95 p-0 shadow-2xl backdrop-blur-xl"
       >
-        {/* Premium header with gradient */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-primary/80 px-4 py-3.5 text-primary-foreground">
           <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
           <div className="relative flex items-center justify-between gap-3">
@@ -145,7 +157,6 @@ export function NotificationsBell({ userId }: { userId: string }) {
           </div>
         </div>
 
-        {/* List */}
         <div className="max-h-[65vh] overflow-y-auto">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center">
@@ -154,7 +165,7 @@ export function NotificationsBell({ userId }: { userId: string }) {
               </div>
               <p className="text-sm font-medium">Sem notificações</p>
               <p className="text-xs text-muted-foreground">
-                Você verá aqui atualizações dos seus pedidos.
+                Você verá aqui novas atualizações.
               </p>
             </div>
           ) : (
@@ -162,28 +173,16 @@ export function NotificationsBell({ userId }: { userId: string }) {
               {items.map((n) => (
                 <li key={n.id}>
                   <button
-                    onClick={() => {
-                      if (n.link_url) navigate({ to: n.link_url });
-                    }}
-                    className={`group flex w-full items-start gap-3 px-3 py-3 text-left transition hover:bg-muted/60 ${
-                      !n.lida ? "bg-primary/5" : ""
-                    }`}
+                    onClick={() => handleClick(n)}
+                    className="group flex w-full items-start gap-3 bg-primary/5 px-3 py-3 text-left transition hover:bg-muted/60"
                   >
-                    <div
-                      className={`mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl ${
-                        !n.lida
-                          ? "bg-primary/15 text-primary"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
+                    <div className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">
                       <Package className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <p className="truncate text-sm font-semibold">{n.titulo}</p>
-                        {!n.lida && (
-                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
-                        )}
+                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
                       </div>
                       <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
                         {n.mensagem}
