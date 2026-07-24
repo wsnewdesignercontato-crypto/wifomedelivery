@@ -414,6 +414,49 @@ function EstabelecimentoPage() {
         </div>
       )}
 
+      {/* Avaliações da loja */}
+      <section className="space-y-3 pt-4">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-black">Avaliações da loja</h2>
+          <Button
+            size="sm"
+            variant={pendingReview ? "default" : "outline"}
+            onClick={() => {
+              if (!pendingReview) {
+                toast.info("Você precisa ter um pedido entregue nesta loja para avaliar.");
+                return;
+              }
+              setOpenReview(true);
+            }}
+          >
+            <MessageSquare className="mr-1 h-4 w-4" />
+            Avaliar loja
+          </Button>
+        </div>
+        <EstabReviewsPanel key={reviewsBump} establishmentId={id} />
+      </section>
+
+      <Dialog open={openReview} onOpenChange={setOpenReview}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Avaliar {estab.nome}</DialogTitle>
+          </DialogHeader>
+          {pendingReview && (
+            <ReviewForm
+              orderId={pendingReview.order_id}
+              clienteId={user.id}
+              establishmentId={id}
+              entregadorId={pendingReview.entregador_id}
+              onSubmitted={() => {
+                setOpenReview(false);
+                setReviewsBump((n) => n + 1);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+
       <Dialog open={!!openProd} onOpenChange={(o) => !o && setOpenProd(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0">
           {openProd && (
