@@ -8,6 +8,7 @@ import {
   User,
   ShoppingCart,
   MapPin,
+  Heart,
   ChevronDown,
 } from "lucide-react";
 
