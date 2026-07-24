@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyEstab } from "@/hooks/use-my-estab";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Upload, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/banners")({
   component: BannersPage,
@@ -67,6 +67,30 @@ function BannersPage() {
 function BannerForm({ onSaved }: { onSaved: () => void }) {
   const { estab } = useMyEstab();
   const [f, setF] = useState({ titulo: "", subtitulo: "", imagem_url: "", cta_texto: "", cta_link: "" });
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function onPickFile(file: File) {
+    if (!estab) return toast.error("Estabelecimento não carregado");
+    if (!file.type.startsWith("image/")) return toast.error("Selecione uma imagem");
+    if (file.size > 5 * 1024 * 1024) return toast.error("Máximo 5MB");
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `estab/${estab.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("ad-banners").upload(path, file, { upsert: false, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data, error } = await supabase.storage.from("ad-banners").createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (error || !data) throw error ?? new Error("URL falhou");
+      setF((prev) => ({ ...prev, imagem_url: data.signedUrl }));
+      toast.success("Imagem enviada");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha no upload");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function salvar() {
     if (!estab || !f.titulo.trim()) return toast.error("Título obrigatório");
     const { error } = await supabase.from("estab_banners").insert({
@@ -82,13 +106,30 @@ function BannerForm({ onSaved }: { onSaved: () => void }) {
       <div className="grid gap-3">
         <div><Label>Título</Label><Input value={f.titulo} onChange={(e) => setF({ ...f, titulo: e.target.value })} /></div>
         <div><Label>Subtítulo</Label><Input value={f.subtitulo} onChange={(e) => setF({ ...f, subtitulo: e.target.value })} /></div>
-        <div><Label>URL da imagem</Label><Input value={f.imagem_url} onChange={(e) => setF({ ...f, imagem_url: e.target.value })} /></div>
+        <div>
+          <Label>Imagem do banner</Label>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) onPickFile(file); e.target.value = ""; }} />
+          {f.imagem_url ? (
+            <div className="mt-2 space-y-2">
+              <img src={f.imagem_url} alt="preview" className="h-32 w-full rounded-lg border border-border object-cover" />
+              <div className="flex gap-2">
+                <Button type="button" size="sm" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading}>Trocar</Button>
+                <Button type="button" size="sm" variant="ghost" onClick={() => setF({ ...f, imagem_url: "" })}>Remover</Button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="mt-2 flex h-32 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border text-sm text-muted-foreground hover:border-primary hover:text-primary">
+              {uploading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Upload className="h-6 w-6" />}
+              {uploading ? "Enviando…" : "Clique para enviar imagem (até 5MB)"}
+            </button>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div><Label>CTA texto</Label><Input value={f.cta_texto} onChange={(e) => setF({ ...f, cta_texto: e.target.value })} /></div>
           <div><Label>CTA link</Label><Input value={f.cta_link} onChange={(e) => setF({ ...f, cta_link: e.target.value })} /></div>
         </div>
       </div>
-      <DialogFooter><Button onClick={salvar}>Criar</Button></DialogFooter>
+      <DialogFooter><Button onClick={salvar} disabled={uploading}>Criar</Button></DialogFooter>
     </>
   );
 }

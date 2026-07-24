@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Plus, Trash2, Upload, Loader2 } from "lucide-react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/banners")({ component: BannersPage });
@@ -24,6 +24,28 @@ function BannersPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [f, setF] = useState({ titulo:"", image_url:"", link_url:"", posicao:0 });
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function onPickFile(file: File) {
+    if (!file.type.startsWith("image/")) return toast.error("Selecione uma imagem");
+    if (file.size > 5 * 1024 * 1024) return toast.error("Máximo 5MB");
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `admin/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("ad-banners").upload(path, file, { upsert: false, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data, error } = await supabase.storage.from("ad-banners").createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (error || !data) throw error ?? new Error("URL falhou");
+      setF((prev) => ({ ...prev, image_url: data.signedUrl }));
+      toast.success("Imagem enviada");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha no upload");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function create() {
     if (!f.titulo || !f.image_url) return toast.error("Título e imagem obrigatórios");
@@ -56,8 +78,24 @@ function BannersPage() {
             <DialogHeader><DialogTitle>Novo banner</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div><Label>Título</Label><Input value={f.titulo} onChange={(e)=>setF({...f,titulo:e.target.value})}/></div>
-              <div><Label>URL da imagem</Label><Input value={f.image_url} onChange={(e)=>setF({...f,image_url:e.target.value})} placeholder="https://…"/></div>
-              <div><Label>Link (opcional)</Label><Input value={f.link_url} onChange={(e)=>setF({...f,link_url:e.target.value})}/></div>
+              <div>
+                <Label>Imagem do banner</Label>
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e)=>{const file=e.target.files?.[0]; if(file) onPickFile(file); e.target.value="";}}/>
+                {f.image_url ? (
+                  <div className="mt-2 space-y-2">
+                    <img src={f.image_url} alt="preview" className="h-32 w-full rounded-lg border border-border object-cover"/>
+                    <div className="flex gap-2">
+                      <Button type="button" size="sm" variant="outline" onClick={()=>fileRef.current?.click()} disabled={uploading}>Trocar</Button>
+                      <Button type="button" size="sm" variant="ghost" onClick={()=>setF({...f,image_url:""})}>Remover</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <button type="button" onClick={()=>fileRef.current?.click()} disabled={uploading} className="mt-2 flex h-32 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border text-sm text-muted-foreground hover:border-primary hover:text-primary">
+                    {uploading ? <Loader2 className="h-6 w-6 animate-spin"/> : <Upload className="h-6 w-6"/>}
+                    {uploading ? "Enviando…" : "Clique para enviar imagem (até 5MB)"}
+                  </button>
+                )}
+              </div>
               <div><Label>Posição</Label><Input type="number" value={f.posicao} onChange={(e)=>setF({...f,posicao:Number(e.target.value)})}/></div>
               <Button onClick={create} className="w-full">Criar</Button>
             </div>
