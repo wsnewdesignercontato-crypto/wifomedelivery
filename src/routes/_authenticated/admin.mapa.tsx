@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, lazy, Suspense } from "react";
-import { MapPin, Store, Bike, Loader2, AlertTriangle, Wand2 } from "lucide-react";
+import { MapPin, Store, Bike, Loader2, AlertTriangle, Wand2, Eye, EyeOff } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { geocodeMissingEstablishments } from "@/lib/admin-map.functions";
 import { toast } from "sonner";
