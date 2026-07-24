@@ -22,6 +22,17 @@ type Item = {
   addons: CartAddon[];
 };
 type Estab = { id: string; nome: string; taxa_entrega_cents: number; pedido_minimo_cents: number };
+type CouponRow = {
+  id: string;
+  code: string;
+  type: "percent" | "fixed" | "free_delivery";
+  value_cents: number;
+  percent: number;
+  min_order_cents: number;
+  descricao: string | null;
+  establishment_id: string | null;
+  expires_at: string | null;
+};
 
 const fmt = (c: number) =>
   (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
