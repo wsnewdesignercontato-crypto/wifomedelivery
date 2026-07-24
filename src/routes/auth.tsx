@@ -306,6 +306,8 @@ function AuthPage() {
             </TabsContent>
           </Tabs>
         </div>
+
+        <InstallAppPrompt />
       </div>
     </div>
   );
