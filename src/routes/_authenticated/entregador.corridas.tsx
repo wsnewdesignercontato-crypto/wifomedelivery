@@ -277,7 +277,7 @@ function Corridas() {
     const { error: rpcErr } = await supabase.rpc("courier_confirm_delivery", {
       _order_id: ativa.order_id,
       _codigo: parsed.data,
-      _prova_url: prova_url,
+      _prova_url: prova_url ?? undefined,
       _metodo: metodo,
     });
     if (rpcErr) {
