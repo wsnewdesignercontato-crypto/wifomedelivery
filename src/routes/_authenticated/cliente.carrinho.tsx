@@ -50,6 +50,8 @@ function CarrinhoPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [coupons, setCoupons] = useState<CouponRow[]>([]);
+
   async function load() {
     setLoading(true);
     const { data } = await supabase
@@ -62,16 +64,27 @@ function CarrinhoPage() {
       addons: Array.isArray(i.addons) ? i.addons : [],
     }));
     setItems(arr);
+    let estabId: string | null = null;
     if (arr[0]) {
+      estabId = arr[0].establishment_id;
       const { data: e } = await supabase
         .from("establishments")
         .select("id,nome,taxa_entrega_cents,pedido_minimo_cents")
-        .eq("id", arr[0].establishment_id)
+        .eq("id", estabId)
         .maybeSingle();
       setEstab(e as Estab | null);
     } else {
       setEstab(null);
     }
+    const nowIso = new Date().toISOString();
+    const { data: cps } = await supabase
+      .from("coupons")
+      .select("id,code,type,value_cents,percent,min_order_cents,descricao,establishment_id,expires_at,starts_at,ativo")
+      .eq("ativo", true)
+      .or(`establishment_id.is.null${estabId ? `,establishment_id.eq.${estabId}` : ""}`)
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+      .order("created_at", { ascending: false });
+    setCoupons(((cps ?? []) as unknown as CouponRow[]).filter((c) => !estabId ? c.establishment_id === null : true));
     setLoading(false);
   }
 
