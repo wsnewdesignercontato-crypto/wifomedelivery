@@ -40,6 +40,16 @@ export function ScoreHistory({ entityType, entityId }: Props) {
   useEffect(() => {
     if (!entityId) return;
     (async () => {
+      const { data: cfg } = await supabase
+        .from("platform_settings")
+        .select("score_start,score_band_warn,score_band_critical")
+        .eq("id", 1)
+        .maybeSingle();
+      setBands({
+        start: Number(cfg?.score_start ?? 100),
+        warn: Number(cfg?.score_band_warn ?? 85),
+        crit: Number(cfg?.score_band_critical ?? 60),
+      });
       const { data: evs } = await supabase
         .from("score_events")
         .select("id,ym,penalty,motivo,created_at,order_id")
