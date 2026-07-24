@@ -157,7 +157,7 @@ export function ScoreHistory({ entityType, entityId }: Props) {
                 hour: "2-digit",
                 minute: "2-digit",
               });
-              const band = novoScore != null ? bandFromScore(novoScore) : null;
+              const band = novoScore != null ? bandFromScore(novoScore, bands.warn, bands.crit) : null;
               return (
                 <li key={notif.id} className="py-3">
                   <div className="flex items-start justify-between gap-3">
