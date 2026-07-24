@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useMyCourier, fmt } from "@/hooks/use-courier";
+import { ScoreCard } from "@/components/score-card";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/entregador/")({
@@ -139,6 +140,8 @@ function Home() {
         <StatCard icon={Wallet} label="Saldo pendente" value={fmt(stats.saldo)} />
         <StatCard icon={Star} label="Nota" value={stats.nota ? stats.nota.toFixed(2) : "—"} />
       </div>
+
+      <ScoreCard entityType="courier" entityId={courier?.user_id ?? ""} />
 
       {ativa && (
         <div className="rounded-2xl border-2 border-primary bg-card p-4 shadow-brand">

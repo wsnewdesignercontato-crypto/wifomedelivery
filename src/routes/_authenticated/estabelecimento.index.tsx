@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMyEstab, fmt } from "@/hooks/use-my-estab";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ScoreCard } from "@/components/score-card";
 import {
   ShoppingBag, DollarSign, Clock, TrendingUp, AlertTriangle, Star,
 } from "lucide-react";
@@ -107,6 +108,7 @@ function DashboardPage() {
           </Card>
         ))}
       </div>
+      <ScoreCard entityType="establishment" entityId={estab.id} />
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="shadow-card">
           <CardHeader><CardTitle className="text-sm">Status da loja</CardTitle></CardHeader>

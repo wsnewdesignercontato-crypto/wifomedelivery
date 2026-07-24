@@ -655,6 +655,8 @@ export type Database = {
           pix_tipo: string | null
           placa: string | null
           rg: string | null
+          score_mensal: number
+          score_ym: string
           selfie_url: string | null
           status: Database["public"]["Enums"]["courier_status"]
           telefone: string | null
@@ -701,6 +703,8 @@ export type Database = {
           pix_tipo?: string | null
           placa?: string | null
           rg?: string | null
+          score_mensal?: number
+          score_ym?: string
           selfie_url?: string | null
           status?: Database["public"]["Enums"]["courier_status"]
           telefone?: string | null
@@ -747,6 +751,8 @@ export type Database = {
           pix_tipo?: string | null
           placa?: string | null
           rg?: string | null
+          score_mensal?: number
+          score_ym?: string
           selfie_url?: string | null
           status?: Database["public"]["Enums"]["courier_status"]
           telefone?: string | null
@@ -1370,6 +1376,8 @@ export type Database = {
           pix_key: string | null
           raio_entrega_km: number
           razao_social: string | null
+          score_mensal: number
+          score_ym: string
           site: string | null
           slogan: string | null
           status: Database["public"]["Enums"]["establishment_status"]
@@ -1411,6 +1419,8 @@ export type Database = {
           pix_key?: string | null
           raio_entrega_km?: number
           razao_social?: string | null
+          score_mensal?: number
+          score_ym?: string
           site?: string | null
           slogan?: string | null
           status?: Database["public"]["Enums"]["establishment_status"]
@@ -1452,6 +1462,8 @@ export type Database = {
           pix_key?: string | null
           raio_entrega_km?: number
           razao_social?: string | null
+          score_mensal?: number
+          score_ym?: string
           site?: string | null
           slogan?: string | null
           status?: Database["public"]["Enums"]["establishment_status"]
@@ -2376,6 +2388,39 @@ export type Database = {
           },
         ]
       }
+      score_events: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          motivo: string
+          order_id: string | null
+          penalty: number
+          ym: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          motivo: string
+          order_id?: string | null
+          penalty: number
+          ym: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          motivo?: string
+          order_id?: string | null
+          penalty?: number
+          ym?: string
+        }
+        Relationships: []
+      }
       sos_events: {
         Row: {
           courier_id: string
@@ -2897,7 +2942,16 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      apply_score_penalty: {
+        Args: {
+          _entity_id: string
+          _entity_type: string
+          _motivo: string
+          _order_id?: string
+          _penalty: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "cliente" | "estabelecimento" | "entregador" | "admin"
