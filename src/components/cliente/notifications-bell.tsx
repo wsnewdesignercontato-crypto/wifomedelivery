@@ -58,6 +58,7 @@ export function NotificationsBell({
           if (!audienceOk(n.audience)) return;
           if (n.lida) return;
           setItems((prev) => [n, ...prev].slice(0, 20));
+          playBellChime();
           const isDelivered = /entregue/i.test(n.mensagem);
           if (isDelivered && audience === "cliente") {
             if (typeof navigator !== "undefined" && "vibrate" in navigator) {
