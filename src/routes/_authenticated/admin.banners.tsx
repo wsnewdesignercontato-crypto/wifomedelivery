@@ -78,8 +78,24 @@ function BannersPage() {
             <DialogHeader><DialogTitle>Novo banner</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div><Label>Título</Label><Input value={f.titulo} onChange={(e)=>setF({...f,titulo:e.target.value})}/></div>
-              <div><Label>URL da imagem</Label><Input value={f.image_url} onChange={(e)=>setF({...f,image_url:e.target.value})} placeholder="https://…"/></div>
-              <div><Label>Link (opcional)</Label><Input value={f.link_url} onChange={(e)=>setF({...f,link_url:e.target.value})}/></div>
+              <div>
+                <Label>Imagem do banner</Label>
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e)=>{const file=e.target.files?.[0]; if(file) onPickFile(file); e.target.value="";}}/>
+                {f.image_url ? (
+                  <div className="mt-2 space-y-2">
+                    <img src={f.image_url} alt="preview" className="h-32 w-full rounded-lg border border-border object-cover"/>
+                    <div className="flex gap-2">
+                      <Button type="button" size="sm" variant="outline" onClick={()=>fileRef.current?.click()} disabled={uploading}>Trocar</Button>
+                      <Button type="button" size="sm" variant="ghost" onClick={()=>setF({...f,image_url:""})}>Remover</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <button type="button" onClick={()=>fileRef.current?.click()} disabled={uploading} className="mt-2 flex h-32 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border text-sm text-muted-foreground hover:border-primary hover:text-primary">
+                    {uploading ? <Loader2 className="h-6 w-6 animate-spin"/> : <Upload className="h-6 w-6"/>}
+                    {uploading ? "Enviando…" : "Clique para enviar imagem (até 5MB)"}
+                  </button>
+                )}
+              </div>
               <div><Label>Posição</Label><Input type="number" value={f.posicao} onChange={(e)=>setF({...f,posicao:Number(e.target.value)})}/></div>
               <Button onClick={create} className="w-full">Criar</Button>
             </div>
