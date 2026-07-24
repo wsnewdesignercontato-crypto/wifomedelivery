@@ -22,6 +22,14 @@ type Config = {
   maintenance_mode: boolean;
   bestseller_threshold: number;
   ad_default_seconds: number;
+  score_delay_warn_ratio: number;
+  score_delay_warn_penalty: number;
+  score_delay_severe_ratio: number;
+  score_delay_severe_penalty: number;
+  score_review_bad_max: number;
+  score_review_bad_penalty: number;
+  score_review_regular_rating: number;
+  score_review_regular_penalty: number;
 };
 
 async function fetchConfig() {
@@ -54,6 +62,14 @@ function ConfigPage() {
         maintenance_mode: form.maintenance_mode,
         bestseller_threshold: form.bestseller_threshold,
         ad_default_seconds: form.ad_default_seconds,
+        score_delay_warn_ratio: form.score_delay_warn_ratio,
+        score_delay_warn_penalty: form.score_delay_warn_penalty,
+        score_delay_severe_ratio: form.score_delay_severe_ratio,
+        score_delay_severe_penalty: form.score_delay_severe_penalty,
+        score_review_bad_max: form.score_review_bad_max,
+        score_review_bad_penalty: form.score_review_bad_penalty,
+        score_review_regular_rating: form.score_review_regular_rating,
+        score_review_regular_penalty: form.score_review_regular_penalty,
         updated_by: uid,
         updated_at: new Date().toISOString(),
       })
@@ -158,6 +174,86 @@ function ConfigPage() {
           <p className="mt-1 text-xs text-muted-foreground">
             Tempo padrão de exibição de cada anúncio antes de girar para o próximo. Sugerido: 5 a 10 segundos.
           </p>
+        </div>
+
+        <div className="space-y-4 rounded-xl border border-border bg-background/50 p-4">
+          <div>
+            <p className="font-semibold">Score mensal de qualidade</p>
+            <p className="text-xs text-muted-foreground">
+              Regras de perda de pontos para estabelecimentos e entregadores. Cada mês começa em 100.
+            </p>
+          </div>
+
+          <div>
+            <p className="mb-2 text-sm font-medium">Atrasos na entrega</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="dwr">Atenção: proporção de atraso &gt;</Label>
+                <Input id="dwr" type="number" step="0.05" min={1}
+                  value={form.score_delay_warn_ratio}
+                  onChange={(e) => setForm({ ...form, score_delay_warn_ratio: Number(e.target.value) })}
+                  className="mt-1.5" />
+                <p className="mt-1 text-[11px] text-muted-foreground">Ex: 1.25 = 25% além do tempo estimado.</p>
+              </div>
+              <div>
+                <Label htmlFor="dwp">Pontos perdidos (atenção)</Label>
+                <Input id="dwp" type="number" min={0}
+                  value={form.score_delay_warn_penalty}
+                  onChange={(e) => setForm({ ...form, score_delay_warn_penalty: Number(e.target.value) })}
+                  className="mt-1.5" />
+              </div>
+              <div>
+                <Label htmlFor="dsr">Severo: proporção de atraso &gt;</Label>
+                <Input id="dsr" type="number" step="0.05" min={1}
+                  value={form.score_delay_severe_ratio}
+                  onChange={(e) => setForm({ ...form, score_delay_severe_ratio: Number(e.target.value) })}
+                  className="mt-1.5" />
+                <p className="mt-1 text-[11px] text-muted-foreground">Ex: 1.5 = 50% além do tempo estimado.</p>
+              </div>
+              <div>
+                <Label htmlFor="dsp">Pontos perdidos (severo)</Label>
+                <Input id="dsp" type="number" min={0}
+                  value={form.score_delay_severe_penalty}
+                  onChange={(e) => setForm({ ...form, score_delay_severe_penalty: Number(e.target.value) })}
+                  className="mt-1.5" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-sm font-medium">Avaliações baixas</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="rbm">Nota máxima considerada "ruim" (★)</Label>
+                <Input id="rbm" type="number" min={1} max={5}
+                  value={form.score_review_bad_max}
+                  onChange={(e) => setForm({ ...form, score_review_bad_max: Number(e.target.value) })}
+                  className="mt-1.5" />
+                <p className="mt-1 text-[11px] text-muted-foreground">Notas ≤ este valor perdem os pontos abaixo.</p>
+              </div>
+              <div>
+                <Label htmlFor="rbp">Pontos perdidos (ruim)</Label>
+                <Input id="rbp" type="number" min={0}
+                  value={form.score_review_bad_penalty}
+                  onChange={(e) => setForm({ ...form, score_review_bad_penalty: Number(e.target.value) })}
+                  className="mt-1.5" />
+              </div>
+              <div>
+                <Label htmlFor="rrr">Nota "regular" (★)</Label>
+                <Input id="rrr" type="number" min={1} max={5}
+                  value={form.score_review_regular_rating}
+                  onChange={(e) => setForm({ ...form, score_review_regular_rating: Number(e.target.value) })}
+                  className="mt-1.5" />
+              </div>
+              <div>
+                <Label htmlFor="rrp">Pontos perdidos (regular)</Label>
+                <Input id="rrp" type="number" min={0}
+                  value={form.score_review_regular_penalty}
+                  onChange={(e) => setForm({ ...form, score_review_regular_penalty: Number(e.target.value) })}
+                  className="mt-1.5" />
+              </div>
+            </div>
+          </div>
         </div>
         <div className="flex items-center justify-between rounded-xl border border-border bg-background/50 p-4">
           <div>
