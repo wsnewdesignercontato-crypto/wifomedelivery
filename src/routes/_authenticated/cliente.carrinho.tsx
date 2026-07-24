@@ -172,9 +172,52 @@ function CarrinhoPage() {
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-4">
-        <label className="text-xs font-medium">Cupom (opcional)</label>
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-medium">Cupom (opcional)</label>
+          {cupom && (
+            <button onClick={() => setCupom("")} className="text-[11px] text-muted-foreground underline">
+              limpar
+            </button>
+          )}
+        </div>
         <Input value={cupom} onChange={(e) => setCupom(e.target.value.toUpperCase())} placeholder="Ex: BEMVINDO10" className="mt-1" />
-        <p className="mt-1 text-[11px] text-muted-foreground">Validaremos o cupom no checkout.</p>
+        {coupons.length > 0 ? (
+          <div className="mt-3 space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Cupons disponíveis</p>
+            <div className="flex flex-wrap gap-2">
+              {coupons.map((c) => {
+                const active = cupom === c.code;
+                const label =
+                  c.type === "percent"
+                    ? `${c.percent}% OFF`
+                    : c.type === "fixed"
+                    ? `${fmt(c.value_cents)} OFF`
+                    : "Frete grátis";
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCupom(active ? "" : c.code)}
+                    className={`group flex flex-col items-start rounded-xl border px-3 py-2 text-left transition ${
+                      active
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-dashed border-primary/40 bg-primary/5 hover:border-primary"
+                    }`}
+                  >
+                    <span className="font-mono text-xs font-bold">{c.code}</span>
+                    <span className="text-[11px] font-semibold">{label}</span>
+                    {c.min_order_cents > 0 && (
+                      <span className="text-[10px] text-muted-foreground">mín. {fmt(c.min_order_cents)}</span>
+                    )}
+                    {c.descricao && <span className="text-[10px] text-muted-foreground">{c.descricao}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <p className="mt-1 text-[11px] text-muted-foreground">Nenhum cupom ativo no momento.</p>
+        )}
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-4 space-y-1.5 text-sm">
