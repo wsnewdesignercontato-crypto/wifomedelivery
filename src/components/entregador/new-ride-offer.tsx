@@ -29,31 +29,64 @@ type Offer = {
   observacoes: string | null;
 };
 
+const MAX_DELIVERY_DISTANCE_KM = 150;
+
+function cleanPart(value: unknown): string {
+  return String(value ?? "").trim().replace(/\s+/g, " ");
+}
+
 function fmtEndereco(e: any, fallback?: { cidade?: string | null; estado?: string | null }): string {
   if (!e) return "Endereço do cliente";
-  const rua = e.endereco || e.logradouro || e.rua || "";
-  const num = e.numero ? `, ${e.numero}` : "";
-  const cidade = e.cidade || fallback?.cidade || "";
-  const uf = e.uf || e.estado || fallback?.estado || "";
-  const local = cidade ? ` — ${cidade}${uf ? `/${uf}` : ""}` : uf ? ` — ${uf}` : "";
-  const base = `${rua}${num}${local}`.trim();
-  return (base ? `${base}, Brasil` : "Endereço do cliente").trim();
+  const rua = cleanPart(e.endereco || e.logradouro || e.rua);
+  const numero = cleanPart(e.numero);
+  const bairro = cleanPart(e.bairro);
+  const cidade = cleanPart(e.cidade || fallback?.cidade);
+  const estado = cleanPart(e.uf || e.estado || fallback?.estado);
+  const cep = cleanPart(e.cep);
+  const parts = [rua, numero, bairro, cidade, estado, cep, "Brasil"].filter(Boolean);
+  return parts.length > 1 ? parts.join(", ") : "Endereço do cliente";
 }
 
 function inBrazilBounds(lat: number, lng: number): boolean {
   return lat >= -34 && lat <= 6 && lng >= -74 && lng <= -34;
 }
 
-async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
+function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
+  return Math.round(haversineKm(a, b) * 10) / 10;
+}
+
+async function geocode(
+  address: string,
+  nearPickup?: { lat: number; lng: number },
+): Promise<{ lat: number; lng: number } | null> {
   try {
     const geocoder = new google.maps.Geocoder();
+    const bounds = nearPickup
+      ? new google.maps.LatLngBounds(
+          { lat: nearPickup.lat - 0.35, lng: nearPickup.lng - 0.35 },
+          { lat: nearPickup.lat + 0.35, lng: nearPickup.lng + 0.35 },
+        )
+      : undefined;
     const res = await geocoder.geocode({
       address,
       region: "br",
+      bounds,
       componentRestrictions: { country: "BR" },
     });
-    const loc = res.results?.[0]?.geometry?.location;
-    return loc ? { lat: loc.lat(), lng: loc.lng() } : null;
+    const candidates = (res.results ?? [])
+      .map((r) => r.geometry?.location)
+      .filter(Boolean)
+      .map((loc) => ({ lat: loc!.lat(), lng: loc!.lng() }))
+      .filter((p) => inBrazilBounds(p.lat, p.lng));
+
+    if (!candidates.length) return null;
+    if (!nearPickup) return candidates[0];
+
+    const closest = candidates
+      .map((p) => ({ ...p, km: distanceKm(nearPickup, p) }))
+      .sort((a, b) => a.km - b.km)[0];
+
+    return closest && closest.km <= MAX_DELIVERY_DISTANCE_KM ? closest : null;
   } catch { return null; }
 }
 
@@ -159,12 +192,20 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
 
       let dropLat = Number(endereco.lat);
       let dropLng = Number(endereco.lng);
-      if (!Number.isFinite(dropLat) || !Number.isFinite(dropLng) || !inBrazilBounds(dropLat, dropLng)) {
-        // Sem lat/lng válidos: geocodifica o endereço real do cliente com bias BR
+      const hasTrustedDropoff = Number.isFinite(dropLat) && Number.isFinite(dropLng) && inBrazilBounds(dropLat, dropLng);
+      const storedDropoffKm = hasTrustedDropoff ? distanceKm(pickup, { lat: dropLat, lng: dropLng }) : Infinity;
+
+      if (!hasTrustedDropoff || storedDropoffKm > MAX_DELIVERY_DISTANCE_KM) {
+        // Sem lat/lng confiáveis: geocodifica o endereço real do cliente com bias BR e perto da loja.
         try { await loadGoogleMaps(); } catch {}
-        const geo = await geocode(enderecoFmt);
-        if (!geo || !inBrazilBounds(geo.lat, geo.lng)) { setOffer(null); return; }
-        dropLat = geo.lat; dropLng = geo.lng;
+        const geo = await geocode(enderecoFmt, pickup);
+        if (!geo) {
+          console.warn("[NewRideOffer] Não foi possível localizar endereço de entrega com segurança", { order: order.id });
+          setOffer(null);
+          return;
+        }
+        dropLat = geo.lat;
+        dropLng = geo.lng;
       }
 
       const dropoff = {
@@ -176,11 +217,11 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         referencia: endereco.referencia ?? endereco.ponto_referencia ?? null,
       };
 
-      const distanciaColeta = myPos ? Math.round(haversineKm(myPos, pickup) * 10) / 10 : null;
-      const distanciaEntrega = Math.round(haversineKm(pickup, dropoff) * 10) / 10;
+      const distanciaColeta = myPos ? distanceKm(myPos, pickup) : null;
+      const distanciaEntrega = distanceKm(pickup, dropoff);
 
-      // Sanity: nenhuma entrega real ultrapassa 150 km entre loja e cliente.
-      if (distanciaEntrega > 150) {
+      // Sanity: nenhuma entrega real ultrapassa o limite entre loja e cliente.
+      if (distanciaEntrega > MAX_DELIVERY_DISTANCE_KM) {
         console.warn("[NewRideOffer] Distância entrega irreal, provavelmente geocode incorreto", { estab: estab.id, distanciaEntrega });
         setOffer(null);
         return;
@@ -359,7 +400,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
   const distanciaColetaLive = useMemo(() => {
     if (!offer) return null;
     if (!myPos) return offer.distanciaColeta;
-    return Math.round(haversineKm(myPos, offer.pickup) * 10) / 10;
+    return distanceKm(myPos, offer.pickup);
   }, [myPos, offer?.deliveryId, offer?.distanciaColeta]);
 
   const totalKm = offer ? (distanciaColetaLive ?? 0) + offer.distanciaEntrega : 0;
