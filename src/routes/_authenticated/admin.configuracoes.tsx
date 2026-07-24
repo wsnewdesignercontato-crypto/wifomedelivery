@@ -73,6 +73,9 @@ function ConfigPage() {
         score_review_bad_penalty: form.score_review_bad_penalty,
         score_review_regular_rating: form.score_review_regular_rating,
         score_review_regular_penalty: form.score_review_regular_penalty,
+        score_start: form.score_start,
+        score_band_warn: form.score_band_warn,
+        score_band_critical: form.score_band_critical,
         updated_by: uid,
         updated_at: new Date().toISOString(),
       })
