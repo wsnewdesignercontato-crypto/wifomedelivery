@@ -24,6 +24,28 @@ function BannersPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [f, setF] = useState({ titulo:"", image_url:"", link_url:"", posicao:0 });
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function onPickFile(file: File) {
+    if (!file.type.startsWith("image/")) return toast.error("Selecione uma imagem");
+    if (file.size > 5 * 1024 * 1024) return toast.error("Máximo 5MB");
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `admin/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("ad-banners").upload(path, file, { upsert: false, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data, error } = await supabase.storage.from("ad-banners").createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (error || !data) throw error ?? new Error("URL falhou");
+      setF((prev) => ({ ...prev, image_url: data.signedUrl }));
+      toast.success("Imagem enviada");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha no upload");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function create() {
     if (!f.titulo || !f.image_url) return toast.error("Título e imagem obrigatórios");
