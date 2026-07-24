@@ -228,15 +228,32 @@ function ClienteHome() {
 
   const filtered = useMemo(() => {
     const base = catSel ? estabs.filter((e) => e.categoria_id === catSel) : estabs;
-    if (sortBy === "recomendados") return base;
     const arr = [...base];
     if (sortBy === "reviews") {
-      arr.sort((a, b) => ((reviewCountById[b.id] ?? 0) - (reviewCountById[a.id] ?? 0)) || (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)));
+      arr.sort((a, b) =>
+        ((reviewCountById[b.id] ?? 0) - (reviewCountById[a.id] ?? 0)) ||
+        (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)) ||
+        ((salesCount[b.id] ?? 0) - (salesCount[a.id] ?? 0))
+      );
+    } else if (sortBy === "vendas") {
+      arr.sort((a, b) =>
+        ((salesCount[b.id] ?? 0) - (salesCount[a.id] ?? 0)) ||
+        (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)) ||
+        ((reviewCountById[b.id] ?? 0) - (reviewCountById[a.id] ?? 0))
+      );
     } else {
-      arr.sort((a, b) => ((salesCount[b.id] ?? 0) - (salesCount[a.id] ?? 0)) || (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)));
+      // Recomendados: score ponderado (nota + volume avaliações + vendas + promo)
+      const score = (e: Estab) => {
+        const rating = Number(e.avaliacao ?? 0);
+        const revs = reviewCountById[e.id] ?? 0;
+        const sales = salesCount[e.id] ?? 0;
+        const promo = promoIds.has(e.id) ? 1 : 0;
+        return rating * 2 + Math.log10(revs + 1) * 3 + Math.log10(sales + 1) * 2 + promo * 0.5;
+      };
+      arr.sort((a, b) => score(b) - score(a));
     }
     return arr;
-  }, [estabs, catSel, sortBy, reviewCountById, salesCount]);
+  }, [estabs, catSel, sortBy, reviewCountById, salesCount, promoIds]);
 
   const visibleCats = showAllCats ? cats : cats.slice(0, 4);
 
