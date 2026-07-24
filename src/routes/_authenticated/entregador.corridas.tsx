@@ -511,7 +511,22 @@ function Corridas() {
 
           <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
             {currentStage && (
-              <Button size="lg" className="w-full" onClick={() => avancar(currentStage.next)} disabled={advancing}>
+              <Button size="lg" className="w-full" onClick={() => {
+                if (currentStage.key === "accepted") {
+                  const addr = [estab?.endereco, estab?.cidade, "Brasil"].filter(Boolean).join(", ");
+                  if (!addr) { avancar(currentStage.next); return; }
+                  setNavTarget({ next: currentStage.next, address: addr, label: `Loja: ${estab?.nome ?? ""}` });
+                  setNavPickerOpen(true);
+                } else if (currentStage.key === "picked_up") {
+                  const e = order?.endereco_entrega;
+                  const addr = [e?.endereco, e?.bairro, "Brasil"].filter(Boolean).join(", ");
+                  if (!addr) { avancar(currentStage.next); return; }
+                  setNavTarget({ next: currentStage.next, address: addr, label: `Cliente: ${cliente?.nome ?? ""}` });
+                  setNavPickerOpen(true);
+                } else {
+                  avancar(currentStage.next);
+                }
+              }} disabled={advancing}>
                 {advancing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : currentStage.key === "at_customer" ? <ShieldCheck className="mr-2 h-4 w-4" /> : <Navigation className="mr-2 h-4 w-4" />}
                 {currentStage.cta}
               </Button>
@@ -520,6 +535,7 @@ function Corridas() {
               <AlertTriangle className="mr-2 h-4 w-4" /> Reportar problema
             </Button>
           </div>
+
         </section>
       )}
 
