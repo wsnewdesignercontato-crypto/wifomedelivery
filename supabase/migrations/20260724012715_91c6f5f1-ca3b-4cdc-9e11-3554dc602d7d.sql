@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "platform_settings_public_fields_read" ON public.platform_settings;
