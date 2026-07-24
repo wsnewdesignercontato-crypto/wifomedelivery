@@ -83,6 +83,8 @@ function Corridas() {
   const proofInputRef = useRef<HTMLInputElement>(null);
   const [myPos, setMyPos] = useState<{ lat: number; lng: number } | null>(null);
   const [availMeta, setAvailMeta] = useState<Record<string, { nome: string; distKm: number | null }>>({});
+  const [navPickerOpen, setNavPickerOpen] = useState(false);
+  const [navTarget, setNavTarget] = useState<{ next: string; address: string; label: string } | null>(null);
 
   useEffect(() => {
     if (!("geolocation" in navigator)) return;
@@ -509,7 +511,22 @@ function Corridas() {
 
           <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
             {currentStage && (
-              <Button size="lg" className="w-full" onClick={() => avancar(currentStage.next)} disabled={advancing}>
+              <Button size="lg" className="w-full" onClick={() => {
+                if (currentStage.key === "accepted") {
+                  const addr = [estab?.endereco, estab?.cidade, "Brasil"].filter(Boolean).join(", ");
+                  if (!addr) { avancar(currentStage.next); return; }
+                  setNavTarget({ next: currentStage.next, address: addr, label: `Loja: ${estab?.nome ?? ""}` });
+                  setNavPickerOpen(true);
+                } else if (currentStage.key === "picked_up") {
+                  const e = order?.endereco_entrega;
+                  const addr = [e?.endereco, e?.bairro, "Brasil"].filter(Boolean).join(", ");
+                  if (!addr) { avancar(currentStage.next); return; }
+                  setNavTarget({ next: currentStage.next, address: addr, label: `Cliente: ${cliente?.nome ?? ""}` });
+                  setNavPickerOpen(true);
+                } else {
+                  avancar(currentStage.next);
+                }
+              }} disabled={advancing}>
                 {advancing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : currentStage.key === "at_customer" ? <ShieldCheck className="mr-2 h-4 w-4" /> : <Navigation className="mr-2 h-4 w-4" />}
                 {currentStage.cta}
               </Button>
@@ -518,6 +535,7 @@ function Corridas() {
               <AlertTriangle className="mr-2 h-4 w-4" /> Reportar problema
             </Button>
           </div>
+
         </section>
       )}
 
@@ -708,6 +726,51 @@ function Corridas() {
             >
               Fechar
             </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={navPickerOpen} onOpenChange={(o) => { if (!o) { setNavPickerOpen(false); setNavTarget(null); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Abrir navegação</DialogTitle>
+            <DialogDescription>
+              Escolha o app de GPS para traçar a rota até {navTarget?.label || "o destino"}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2 py-2">
+            {navTarget && (() => {
+              const q = encodeURIComponent(navTarget.address);
+              const isIOS = typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
+              const openAndAdvance = (url: string) => {
+                window.open(url, "_blank");
+                const next = navTarget.next;
+                setNavPickerOpen(false);
+                setNavTarget(null);
+                setTimeout(() => avancar(next), 300);
+              };
+              return (
+                <>
+                  <Button size="lg" className="w-full justify-start" onClick={() => openAndAdvance(`https://www.google.com/maps/dir/?api=1&destination=${q}&travelmode=driving`)}>
+                    <Navigation className="mr-2 h-4 w-4" /> Google Maps
+                  </Button>
+                  <Button size="lg" variant="outline" className="w-full justify-start" onClick={() => openAndAdvance(`https://waze.com/ul?q=${q}&navigate=yes`)}>
+                    <Navigation className="mr-2 h-4 w-4" /> Waze
+                  </Button>
+                  {isIOS && (
+                    <Button size="lg" variant="outline" className="w-full justify-start" onClick={() => openAndAdvance(`https://maps.apple.com/?daddr=${q}&dirflg=d`)}>
+                      <Navigation className="mr-2 h-4 w-4" /> Apple Maps
+                    </Button>
+                  )}
+                  <p className="mt-1 text-center text-xs text-muted-foreground truncate">{navTarget.address}</p>
+                </>
+              );
+            })()}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" className="w-full" onClick={() => { setNavPickerOpen(false); setNavTarget(null); }}>
+              Cancelar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
