@@ -364,7 +364,6 @@ function ClienteHome() {
         <div className="flex flex-wrap items-center gap-1.5">
           {([
             ["recomendados", "Recomendados"],
-            ["rating", "Melhor avaliados"],
             ["reviews", "Mais avaliados"],
             ["vendas", "Mais vendidos"],
           ] as const).map(([k, label]) => (
