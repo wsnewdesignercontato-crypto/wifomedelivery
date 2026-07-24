@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronDown, ChevronUp, Shield, TrendingDown } from "lucide-react";
+import { ChevronDown, ChevronUp, History, Shield, TrendingDown } from "lucide-react";
 
 type Props = {
   entityType: "establishment" | "courier";
@@ -184,6 +185,13 @@ export function ScoreCard({ entityType, entityId }: Props) {
           <p className="text-[11px] text-muted-foreground">Continue entregando com qualidade!</p>
         </div>
       )}
+
+      <Link
+        to={entityType === "establishment" ? "/estabelecimento/score" : "/entregador/score"}
+        className="mt-3 flex items-center justify-center gap-1.5 rounded-lg border border-border bg-muted/40 py-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
+      >
+        <History className="h-3.5 w-3.5" /> Ver histórico completo e notificações
+      </Link>
     </div>
   );
 }
