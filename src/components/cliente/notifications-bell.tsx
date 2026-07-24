@@ -89,43 +89,113 @@ export function NotificationsBell({ userId }: { userId: string }) {
     setItems((prev) => prev.map((i) => ({ ...i, lida: true })));
   }
 
+  function timeAgo(iso: string) {
+    const diff = Math.max(0, Date.now() - new Date(iso).getTime());
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return "agora";
+    if (m < 60) return `${m} min`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h`;
+    const d = Math.floor(h / 24);
+    return `${d}d`;
+  }
+
   return (
     <Popover onOpenChange={(o) => o && markAllRead()}>
       <PopoverTrigger asChild>
         <Button size="sm" variant="ghost" className="relative" aria-label="Notificações">
           <Bell className="h-4 w-4" />
           {unread > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground shadow-[0_0_0_2px_hsl(var(--background))]">
               {unread}
             </span>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0">
-        <div className="border-b border-border px-3 py-2 text-sm font-semibold">
-          Notificações
-        </div>
-        <div className="max-h-96 overflow-y-auto">
-          {items.length === 0 ? (
-            <p className="p-6 text-center text-xs text-muted-foreground">
-              Nenhuma notificação por enquanto.
-            </p>
-          ) : (
-            items.map((n) => (
-              <button
-                key={n.id}
-                onClick={() => {
-                  if (n.link_url) navigate({ to: n.link_url });
-                }}
-                className="block w-full border-b border-border px-3 py-2.5 text-left hover:bg-muted/50"
-              >
-                <p className="text-sm font-medium">{n.titulo}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{n.mensagem}</p>
-                <p className="mt-1 text-[10px] text-muted-foreground">
-                  {new Date(n.created_at).toLocaleString("pt-BR")}
+      <PopoverContent
+        align="center"
+        sideOffset={12}
+        collisionPadding={16}
+        className="w-[min(92vw,22rem)] overflow-hidden rounded-2xl border border-border/60 bg-card/95 p-0 shadow-2xl backdrop-blur-xl"
+      >
+        {/* Premium header with gradient */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-primary/80 px-4 py-3.5 text-primary-foreground">
+          <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
+          <div className="relative flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <div className="grid h-8 w-8 place-items-center rounded-xl bg-white/15 backdrop-blur-sm">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold leading-tight">Notificações</p>
+                <p className="text-[11px] leading-tight text-primary-foreground/80">
+                  {unread > 0 ? `${unread} nova${unread > 1 ? "s" : ""}` : "Tudo em dia"}
                 </p>
+              </div>
+            </div>
+            {unread > 0 && (
+              <button
+                onClick={markAllRead}
+                className="flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold transition hover:bg-white/25"
+              >
+                <CheckCheck className="h-3 w-3" />
+                Marcar lidas
               </button>
-            ))
+            )}
+          </div>
+        </div>
+
+        {/* List */}
+        <div className="max-h-[65vh] overflow-y-auto">
+          {items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center">
+              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-muted">
+                <Bell className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium">Sem notificações</p>
+              <p className="text-xs text-muted-foreground">
+                Você verá aqui atualizações dos seus pedidos.
+              </p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-border/60">
+              {items.map((n) => (
+                <li key={n.id}>
+                  <button
+                    onClick={() => {
+                      if (n.link_url) navigate({ to: n.link_url });
+                    }}
+                    className={`group flex w-full items-start gap-3 px-3 py-3 text-left transition hover:bg-muted/60 ${
+                      !n.lida ? "bg-primary/5" : ""
+                    }`}
+                  >
+                    <div
+                      className={`mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl ${
+                        !n.lida
+                          ? "bg-primary/15 text-primary"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      <Package className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="truncate text-sm font-semibold">{n.titulo}</p>
+                        {!n.lida && (
+                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
+                        )}
+                      </div>
+                      <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                        {n.mensagem}
+                      </p>
+                      <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">
+                        {timeAgo(n.created_at)}
+                      </p>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       </PopoverContent>
