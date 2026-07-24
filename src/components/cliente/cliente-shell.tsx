@@ -22,6 +22,7 @@ const NAV = [
   { to: "/cliente" as const, label: "Início", icon: Home, exact: true },
   { to: "/cliente/novidades" as const, label: "Novidades", icon: ShoppingBag, exact: false },
   { to: "/cliente/pedidos" as const, label: "Pedidos", icon: ReceiptText, exact: false },
+  { to: "/cliente/favoritos" as const, label: "Favoritos", icon: Heart, exact: false },
   { to: "/cliente/perfil" as const, label: "Perfil", icon: User, exact: false },
 ];
 
