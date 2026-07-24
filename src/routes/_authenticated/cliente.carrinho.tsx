@@ -47,6 +47,13 @@ function CarrinhoPage() {
 
   useEffect(() => {
     load();
+    const ch = supabase
+      .channel("coupons-cliente")
+      .on("postgres_changes", { event: "*", schema: "public", table: "coupons" }, () => load())
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
