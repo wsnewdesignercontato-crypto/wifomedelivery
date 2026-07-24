@@ -273,20 +273,17 @@ function Corridas() {
       prova_url = signed?.signedUrl ?? path;
       metodo = "code+photo";
     }
-    const orderPatch: Record<string, unknown> = {
-      status: "delivered",
-      entrega_metodo_prova: metodo,
-      dinheiro_recebido: order.forma_pagamento === "dinheiro",
-    };
-    if (prova_url) orderPatch.prova_url = prova_url;
-
-
-    const { error } = await supabase.from("deliveries").update({
-      status: "delivered", entregue_em: new Date().toISOString(),
-    }).eq("id", ativa.id);
-    if (error) { setAdvancing(false); return toast.error("Falha ao finalizar"); }
-    const { error: ordErr } = await supabase.from("orders").update(orderPatch as never).eq("id", ativa.order_id);
-    if (ordErr) { setAdvancing(false); return toast.error("Falha ao atualizar pedido", { description: ordErr.message }); }
+    // Confirma entrega atomicamente via RPC (atualiza deliveries + orders + libera repasse)
+    const { error: rpcErr } = await supabase.rpc("courier_confirm_delivery", {
+      _order_id: ativa.order_id,
+      _codigo: parsed.data,
+      _prova_url: prova_url ?? undefined,
+      _metodo: metodo,
+    });
+    if (rpcErr) {
+      setAdvancing(false);
+      return toast.error("Falha ao finalizar", { description: rpcErr.message });
+    }
     await supabase.from("courier_profiles").update({ status: "online" }).eq("user_id", courier.user_id);
 
     // Atualização imediata do estado local + confirmação visual
