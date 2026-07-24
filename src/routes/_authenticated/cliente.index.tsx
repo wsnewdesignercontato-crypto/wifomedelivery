@@ -230,9 +230,7 @@ function ClienteHome() {
     const base = catSel ? estabs.filter((e) => e.categoria_id === catSel) : estabs;
     if (sortBy === "recomendados") return base;
     const arr = [...base];
-    if (sortBy === "rating") {
-      arr.sort((a, b) => (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)) || ((reviewCountById[b.id] ?? 0) - (reviewCountById[a.id] ?? 0)));
-    } else if (sortBy === "reviews") {
+    if (sortBy === "reviews") {
       arr.sort((a, b) => ((reviewCountById[b.id] ?? 0) - (reviewCountById[a.id] ?? 0)) || (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)));
     } else {
       arr.sort((a, b) => ((salesCount[b.id] ?? 0) - (salesCount[a.id] ?? 0)) || (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)));
