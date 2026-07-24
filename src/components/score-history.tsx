@@ -93,10 +93,10 @@ export function ScoreHistory({ entityType, entityId }: Props) {
       .sort((a, b) => (a[0] < b[0] ? 1 : -1))
       .map(([ym, list]) => {
         const total = list.reduce((s, e) => s + e.penalty, 0);
-        const finalScore = Math.max(0, START - total);
+        const finalScore = Math.max(0, bands.start - total);
         return { ym, events: list, total, finalScore };
       });
-  }, [events]);
+  }, [events, bands.start]);
 
   // Cruzar notificação com o evento mais próximo (mesmo timestamp aproximado)
   const notifRows = useMemo(() => {
