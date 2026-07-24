@@ -192,12 +192,20 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
 
       let dropLat = Number(endereco.lat);
       let dropLng = Number(endereco.lng);
-      if (!Number.isFinite(dropLat) || !Number.isFinite(dropLng) || !inBrazilBounds(dropLat, dropLng)) {
-        // Sem lat/lng válidos: geocodifica o endereço real do cliente com bias BR
+      const hasTrustedDropoff = Number.isFinite(dropLat) && Number.isFinite(dropLng) && inBrazilBounds(dropLat, dropLng);
+      const storedDropoffKm = hasTrustedDropoff ? distanceKm(pickup, { lat: dropLat, lng: dropLng }) : Infinity;
+
+      if (!hasTrustedDropoff || storedDropoffKm > MAX_DELIVERY_DISTANCE_KM) {
+        // Sem lat/lng confiáveis: geocodifica o endereço real do cliente com bias BR e perto da loja.
         try { await loadGoogleMaps(); } catch {}
-        const geo = await geocode(enderecoFmt);
-        if (!geo || !inBrazilBounds(geo.lat, geo.lng)) { setOffer(null); return; }
-        dropLat = geo.lat; dropLng = geo.lng;
+        const geo = await geocode(enderecoFmt, pickup);
+        if (!geo) {
+          console.warn("[NewRideOffer] Não foi possível localizar endereço de entrega com segurança", { order: order.id });
+          setOffer(null);
+          return;
+        }
+        dropLat = geo.lat;
+        dropLng = geo.lng;
       }
 
       const dropoff = {
@@ -209,11 +217,11 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         referencia: endereco.referencia ?? endereco.ponto_referencia ?? null,
       };
 
-      const distanciaColeta = myPos ? Math.round(haversineKm(myPos, pickup) * 10) / 10 : null;
-      const distanciaEntrega = Math.round(haversineKm(pickup, dropoff) * 10) / 10;
+      const distanciaColeta = myPos ? distanceKm(myPos, pickup) : null;
+      const distanciaEntrega = distanceKm(pickup, dropoff);
 
-      // Sanity: nenhuma entrega real ultrapassa 150 km entre loja e cliente.
-      if (distanciaEntrega > 150) {
+      // Sanity: nenhuma entrega real ultrapassa o limite entre loja e cliente.
+      if (distanciaEntrega > MAX_DELIVERY_DISTANCE_KM) {
         console.warn("[NewRideOffer] Distância entrega irreal, provavelmente geocode incorreto", { estab: estab.id, distanciaEntrega });
         setOffer(null);
         return;
@@ -392,7 +400,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
   const distanciaColetaLive = useMemo(() => {
     if (!offer) return null;
     if (!myPos) return offer.distanciaColeta;
-    return Math.round(haversineKm(myPos, offer.pickup) * 10) / 10;
+    return distanceKm(myPos, offer.pickup);
   }, [myPos, offer?.deliveryId, offer?.distanciaColeta]);
 
   const totalKm = offer ? (distanciaColetaLive ?? 0) + offer.distanciaEntrega : 0;
