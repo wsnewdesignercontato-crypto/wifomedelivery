@@ -29,12 +29,19 @@ type Offer = {
   observacoes: string | null;
 };
 
-function fmtEndereco(e: any): string {
+function fmtEndereco(e: any, fallback?: { cidade?: string | null; estado?: string | null }): string {
   if (!e) return "Endereço do cliente";
   const rua = e.endereco || e.logradouro || e.rua || "";
   const num = e.numero ? `, ${e.numero}` : "";
-  const cidade = e.cidade ? ` — ${e.cidade}${e.uf ? `/${e.uf}` : ""}` : "";
-  return `${rua}${num}${cidade}`.trim() || "Endereço do cliente";
+  const cidade = e.cidade || fallback?.cidade || "";
+  const uf = e.uf || e.estado || fallback?.estado || "";
+  const local = cidade ? ` — ${cidade}${uf ? `/${uf}` : ""}` : uf ? ` — ${uf}` : "";
+  const base = `${rua}${num}${local}`.trim();
+  return (base ? `${base}, Brasil` : "Endereço do cliente").trim();
+}
+
+function inBrazilBounds(lat: number, lng: number): boolean {
+  return lat >= -34 && lat <= 6 && lng >= -74 && lng <= -34;
 }
 
 async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
