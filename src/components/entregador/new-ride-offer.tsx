@@ -40,7 +40,11 @@ function fmtEndereco(e: any): string {
 async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
   try {
     const geocoder = new google.maps.Geocoder();
-    const res = await geocoder.geocode({ address });
+    const res = await geocoder.geocode({
+      address,
+      region: "br",
+      componentRestrictions: { country: "BR" },
+    });
     const loc = res.results?.[0]?.geometry?.location;
     return loc ? { lat: loc.lat(), lng: loc.lng() } : null;
   } catch { return null; }
