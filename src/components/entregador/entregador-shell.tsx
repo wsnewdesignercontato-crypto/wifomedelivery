@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { useMyCourier } from "@/hooks/use-courier";
 import { useNewRideAlert } from "@/hooks/use-new-ride-alert";
 import { NewRideOffer } from "@/components/entregador/new-ride-offer";
+import { toast } from "sonner";
+import { playBellChime } from "@/lib/notification-sound";
 
 const NAV = [
   { to: "/entregador", label: "Início", icon: Home, exact: true },
@@ -55,7 +57,17 @@ export function EntregadorShell({ children }: { children: React.ReactNode }) {
     refresh();
     const ch = supabase
       .channel(`notif-count-entregador-${uid}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${uid}` }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${uid}` }, (p) => {
+        refresh();
+        if (p.eventType === "INSERT") {
+          const n = p.new as { titulo?: string; mensagem?: string; lida?: boolean; audience?: string | null };
+          const aud = n.audience ?? null;
+          if (aud && aud !== "entregador" && aud !== "all") return;
+          if (n.lida) return;
+          playBellChime();
+          toast(n.titulo ?? "Nova notificação", { description: n.mensagem });
+        }
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
