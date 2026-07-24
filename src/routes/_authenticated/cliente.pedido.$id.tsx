@@ -83,7 +83,18 @@ function PedidoPage() {
 
     const ch = supabase
       .channel(`pedido-${id}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${id}` }, (p) => setOrder((prev) => prev ? { ...prev, ...(p.new as Order) } : prev))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${id}` }, (p) => {
+        const next = p.new as Order;
+        setOrder((prev) => {
+          if (prev && prev.status !== "delivered" && next.status === "delivered") {
+            toast.success("Pedido entregue! 🎉", { description: "Aproveite! Que tal avaliar sua experiência?" });
+            if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+              try { navigator.vibrate?.([120, 60, 120]); } catch { /* ignore */ }
+            }
+          }
+          return prev ? { ...prev, ...next } : next;
+        });
+      })
       .on("postgres_changes", { event: "*", schema: "public", table: "deliveries", filter: `order_id=eq.${id}` }, (p) => setDelivery(p.new as Delivery))
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "tracking_points", filter: `order_id=eq.${id}` }, (p) => {
         const t = p.new as { lat: number; lng: number };
