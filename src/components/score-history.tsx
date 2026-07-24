@@ -25,9 +25,9 @@ type Notif = {
 
 const START = 100;
 
-function bandFromScore(s: number) {
-  if (s >= 85) return { label: "Excelente", tone: "text-emerald-500", bar: "bg-emerald-500" };
-  if (s >= 60) return { label: "Atenção", tone: "text-amber-500", bar: "bg-amber-500" };
+function bandFromScore(s: number, warn: number, crit: number) {
+  if (s >= warn) return { label: "Excelente", tone: "text-emerald-500", bar: "bg-emerald-500" };
+  if (s >= crit) return { label: "Atenção", tone: "text-amber-500", bar: "bg-amber-500" };
   return { label: "Crítico", tone: "text-destructive", bar: "bg-destructive" };
 }
 
@@ -35,6 +35,7 @@ export function ScoreHistory({ entityType, entityId }: Props) {
   const [events, setEvents] = useState<Evt[]>([]);
   const [notifs, setNotifs] = useState<Notif[]>([]);
   const [ownerId, setOwnerId] = useState<string | null>(null);
+  const [bands, setBands] = useState({ start: 100, warn: 85, crit: 60 });
 
   useEffect(() => {
     if (!entityId) return;
