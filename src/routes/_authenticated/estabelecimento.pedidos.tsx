@@ -142,23 +142,30 @@ function PedidosPage() {
         <div className="space-y-3">
           {lista.map((o) => {
             const step = proxima(o.status);
+            const isDelivered = o.status === "delivered";
+            const isProblem = o.status === "cancelled" || o.status === "refunded" || o.refund_status === "completed";
+            const tone = isProblem
+              ? { card: "border-red-500/60 bg-red-500/5", badge: "bg-red-500 text-white hover:bg-red-500/90", value: "text-red-600 dark:text-red-400", accent: "before:bg-red-500" }
+              : isDelivered
+              ? { card: "border-emerald-500/60 bg-emerald-500/5", badge: "bg-emerald-500 text-white hover:bg-emerald-500/90", value: "text-emerald-600 dark:text-emerald-400", accent: "before:bg-emerald-500" }
+              : { card: "border-primary/50 bg-primary/5", badge: "bg-primary text-primary-foreground hover:bg-primary/90", value: "text-primary", accent: "before:bg-primary" };
             return (
-              <div key={o.id} className="rounded-2xl border border-border bg-card p-4 shadow-card">
+              <div key={o.id} className={cn("relative overflow-hidden rounded-2xl border bg-card p-4 shadow-card transition", tone.card, "before:absolute before:left-0 before:top-0 before:h-full before:w-1.5", tone.accent)}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant={o.status === "delivered" ? "success" : "default"} className={o.status === "delivered" ? "" : "bg-primary/15 text-primary hover:bg-primary/20"}>{STATUS_LABEL[o.status] ?? o.status}</Badge>
+                      <Badge className={tone.badge}>{STATUS_LABEL[o.status] ?? o.status}</Badge>
                       <Badge variant="outline" className={o.tipo_entrega === "pickup" ? "border-amber-500/50 text-amber-600" : "border-primary/40 text-primary"}>
                         {o.tipo_entrega === "pickup" ? "🏪 Retirada" : "🛵 Entrega"}
                       </Badge>
-                      {o.refund_status === "completed" && (<Badge variant="secondary">Reembolso {fmt(o.refund_amount_cents ?? 0)}</Badge>)}
+                      {o.refund_status === "completed" && (<Badge className="bg-red-500/15 text-red-600 hover:bg-red-500/20 dark:text-red-400">Reembolso {fmt(o.refund_amount_cents ?? 0)}</Badge>)}
                       <span className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleTimeString("pt-BR")}</span>
                     </div>
                     <p className="mt-2 truncate text-sm text-muted-foreground">
                       {o.tipo_entrega === "pickup" ? "Cliente retira no local" : `Entregar em: ${o.endereco_entrega?.endereco ?? "—"}`}
                     </p>
                   </div>
-                  <span className={cn("shrink-0 whitespace-nowrap font-bold", o.status === "delivered" ? "text-success" : "text-primary")}>{fmt(o.total_cents)}</span>
+                  <span className={cn("shrink-0 whitespace-nowrap font-bold", tone.value)}>{fmt(o.total_cents)}</span>
                 </div>
                 <ul className="mt-3 space-y-1 text-sm">
                   {(items[o.id] ?? []).map((it) => (
