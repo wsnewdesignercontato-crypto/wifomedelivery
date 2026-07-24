@@ -83,6 +83,8 @@ function Corridas() {
   const proofInputRef = useRef<HTMLInputElement>(null);
   const [myPos, setMyPos] = useState<{ lat: number; lng: number } | null>(null);
   const [availMeta, setAvailMeta] = useState<Record<string, { nome: string; distKm: number | null }>>({});
+  const [navPickerOpen, setNavPickerOpen] = useState(false);
+  const [navTarget, setNavTarget] = useState<{ next: string; address: string; label: string } | null>(null);
 
   useEffect(() => {
     if (!("geolocation" in navigator)) return;
