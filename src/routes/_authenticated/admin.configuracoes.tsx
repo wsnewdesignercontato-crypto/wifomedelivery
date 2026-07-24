@@ -30,6 +30,9 @@ type Config = {
   score_review_bad_penalty: number;
   score_review_regular_rating: number;
   score_review_regular_penalty: number;
+  score_start: number;
+  score_band_warn: number;
+  score_band_critical: number;
 };
 
 async function fetchConfig() {
@@ -70,6 +73,9 @@ function ConfigPage() {
         score_review_bad_penalty: form.score_review_bad_penalty,
         score_review_regular_rating: form.score_review_regular_rating,
         score_review_regular_penalty: form.score_review_regular_penalty,
+        score_start: form.score_start,
+        score_band_warn: form.score_band_warn,
+        score_band_critical: form.score_band_critical,
         updated_by: uid,
         updated_at: new Date().toISOString(),
       })
@@ -180,9 +186,40 @@ function ConfigPage() {
           <div>
             <p className="font-semibold">Score mensal de qualidade</p>
             <p className="text-xs text-muted-foreground">
-              Regras de perda de pontos para estabelecimentos e entregadores. Cada mês começa em 100.
+              Regras de perda de pontos para estabelecimentos e entregadores. Cada mês começa no valor inicial abaixo.
             </p>
           </div>
+
+          <div>
+            <p className="mb-2 text-sm font-medium">Faixas e valor inicial</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div>
+                <Label htmlFor="ss">Valor inicial mensal</Label>
+                <Input id="ss" type="number" min={1} max={1000}
+                  value={form.score_start}
+                  onChange={(e) => setForm({ ...form, score_start: Number(e.target.value) })}
+                  className="mt-1.5" />
+                <p className="mt-1 text-[11px] text-muted-foreground">Padrão: 100. Todo mês recomeça neste valor.</p>
+              </div>
+              <div>
+                <Label htmlFor="sbw">Faixa "Atenção" abaixo de</Label>
+                <Input id="sbw" type="number" min={1} max={1000}
+                  value={form.score_band_warn}
+                  onChange={(e) => setForm({ ...form, score_band_warn: Number(e.target.value) })}
+                  className="mt-1.5" />
+                <p className="mt-1 text-[11px] text-muted-foreground">Notifica em amarelo ao cair abaixo. Padrão: 85.</p>
+              </div>
+              <div>
+                <Label htmlFor="sbc">Faixa "Crítico" abaixo de</Label>
+                <Input id="sbc" type="number" min={1} max={1000}
+                  value={form.score_band_critical}
+                  onChange={(e) => setForm({ ...form, score_band_critical: Number(e.target.value) })}
+                  className="mt-1.5" />
+                <p className="mt-1 text-[11px] text-muted-foreground">Notifica em vermelho ao cair abaixo. Padrão: 60.</p>
+              </div>
+            </div>
+          </div>
+
 
           <div>
             <p className="mb-2 text-sm font-medium">Atrasos na entrega</p>

@@ -25,9 +25,9 @@ type Notif = {
 
 const START = 100;
 
-function bandFromScore(s: number) {
-  if (s >= 85) return { label: "Excelente", tone: "text-emerald-500", bar: "bg-emerald-500" };
-  if (s >= 60) return { label: "Atenção", tone: "text-amber-500", bar: "bg-amber-500" };
+function bandFromScore(s: number, warn: number, crit: number) {
+  if (s >= warn) return { label: "Excelente", tone: "text-emerald-500", bar: "bg-emerald-500" };
+  if (s >= crit) return { label: "Atenção", tone: "text-amber-500", bar: "bg-amber-500" };
   return { label: "Crítico", tone: "text-destructive", bar: "bg-destructive" };
 }
 
@@ -35,10 +35,21 @@ export function ScoreHistory({ entityType, entityId }: Props) {
   const [events, setEvents] = useState<Evt[]>([]);
   const [notifs, setNotifs] = useState<Notif[]>([]);
   const [ownerId, setOwnerId] = useState<string | null>(null);
+  const [bands, setBands] = useState({ start: 100, warn: 85, crit: 60 });
 
   useEffect(() => {
     if (!entityId) return;
     (async () => {
+      const { data: cfg } = await supabase
+        .from("platform_settings")
+        .select("score_start,score_band_warn,score_band_critical")
+        .eq("id", 1)
+        .maybeSingle();
+      setBands({
+        start: Number(cfg?.score_start ?? 100),
+        warn: Number(cfg?.score_band_warn ?? 85),
+        crit: Number(cfg?.score_band_critical ?? 60),
+      });
       const { data: evs } = await supabase
         .from("score_events")
         .select("id,ym,penalty,motivo,created_at,order_id")
@@ -82,10 +93,10 @@ export function ScoreHistory({ entityType, entityId }: Props) {
       .sort((a, b) => (a[0] < b[0] ? 1 : -1))
       .map(([ym, list]) => {
         const total = list.reduce((s, e) => s + e.penalty, 0);
-        const finalScore = Math.max(0, START - total);
+        const finalScore = Math.max(0, bands.start - total);
         return { ym, events: list, total, finalScore };
       });
-  }, [events]);
+  }, [events, bands.start]);
 
   // Cruzar notificação com o evento mais próximo (mesmo timestamp aproximado)
   const notifRows = useMemo(() => {
@@ -107,11 +118,11 @@ export function ScoreHistory({ entityType, entityId }: Props) {
           .filter((e) => e.ym === closest!.ym)
           .filter((e) => new Date(e.created_at).getTime() <= ts + 500)
           .reduce((s, e) => s + e.penalty, 0);
-        novoScore = Math.max(0, START - monthEvents);
+        novoScore = Math.max(0, bands.start - monthEvents);
       }
       return { notif: n, evt: closest, novoScore };
     });
-  }, [notifs, events]);
+  }, [notifs, events, bands.start]);
 
   return (
     <div className="space-y-5">
@@ -146,7 +157,7 @@ export function ScoreHistory({ entityType, entityId }: Props) {
                 hour: "2-digit",
                 minute: "2-digit",
               });
-              const band = novoScore != null ? bandFromScore(novoScore) : null;
+              const band = novoScore != null ? bandFromScore(novoScore, bands.warn, bands.crit) : null;
               return (
                 <li key={notif.id} className="py-3">
                   <div className="flex items-start justify-between gap-3">
@@ -192,7 +203,7 @@ export function ScoreHistory({ entityType, entityId }: Props) {
               month: "long",
               year: "numeric",
             });
-            const band = bandFromScore(finalScore);
+            const band = bandFromScore(finalScore, bands.warn, bands.crit);
             return (
               <div key={ym} className="rounded-2xl border border-border bg-card p-4 shadow-card">
                 <div className="flex items-center justify-between">
