@@ -84,7 +84,7 @@ function CarrinhoPage() {
       .or(`establishment_id.is.null${estabId ? `,establishment_id.eq.${estabId}` : ""}`)
       .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
       .order("created_at", { ascending: false });
-    setCoupons(((cps ?? []) as unknown as CouponRow[]).filter((c) => !estabId ? c.establishment_id === null : true));
+    setCoupons((cps ?? []) as unknown as CouponRow[]);
     setLoading(false);
   }
 
