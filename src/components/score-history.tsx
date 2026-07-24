@@ -203,7 +203,7 @@ export function ScoreHistory({ entityType, entityId }: Props) {
               month: "long",
               year: "numeric",
             });
-            const band = bandFromScore(finalScore);
+            const band = bandFromScore(finalScore, bands.warn, bands.crit);
             return (
               <div key={ym} className="rounded-2xl border border-border bg-card p-4 shadow-card">
                 <div className="flex items-center justify-between">
