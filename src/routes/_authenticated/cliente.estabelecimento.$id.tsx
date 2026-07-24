@@ -291,14 +291,47 @@ function EstabelecimentoPage() {
 
   return (
     <div className="space-y-4">
-      <div className="relative -mx-4 h-40 overflow-hidden bg-gradient-to-br from-primary/25 to-primary/5 sm:mx-0 sm:rounded-2xl">
-        {estab.capa_url && <img src={estab.capa_url} alt={estab.nome} className="h-full w-full object-cover" />}
-        <Button size="icon" variant="secondary" className="absolute left-3 top-3" onClick={() => navigate({ to: "/cliente" })} aria-label="Voltar">
+      {/* COVER (capa) — vitrine premium */}
+      <div className="relative -mx-4 h-48 overflow-hidden bg-gradient-to-br from-primary/25 to-primary/5 sm:mx-0 sm:h-56 sm:rounded-2xl">
+        {estab.capa_url ? (
+          <img src={estab.capa_url} alt={estab.nome} className="h-full w-full object-cover" />
+        ) : (
+          <div className="h-full w-full bg-gradient-to-br from-primary/30 via-primary/10 to-transparent" />
+        )}
+        {/* Gradient overlay to make logo readable */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        <Button size="icon" variant="secondary" className="absolute left-3 top-3 rounded-full shadow-lg backdrop-blur" onClick={() => navigate({ to: "/cliente" })} aria-label="Voltar">
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <Button size="icon" variant="secondary" className="absolute right-3 top-3" onClick={toggleFav} aria-label="Favoritar">
+        <Button size="icon" variant="secondary" className="absolute right-3 top-3 rounded-full shadow-lg backdrop-blur" onClick={toggleFav} aria-label="Favoritar">
           <Heart className={`h-4 w-4 ${fav ? "fill-primary text-primary" : ""}`} />
         </Button>
+      </div>
+
+      {/* LOGO (vitrine) — círculo sobreposto à capa */}
+      <div className="-mt-14 flex items-end gap-4 sm:-mt-16">
+        <div className="relative shrink-0">
+          <div className="absolute inset-0 rounded-2xl bg-primary/30 blur-xl" aria-hidden />
+          <div className="relative h-24 w-24 overflow-hidden rounded-2xl border-4 border-background bg-card shadow-xl sm:h-28 sm:w-28">
+            {estab.logo_url ? (
+              <img src={estab.logo_url} alt={estab.nome} className="h-full w-full object-cover" />
+            ) : (
+              <div className="grid h-full w-full place-items-center bg-gradient-to-br from-primary to-primary/70 text-2xl font-black text-primary-foreground">
+                {estab.nome.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="min-w-0 flex-1 pb-1">
+          {estab.is_open ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_theme(colors.emerald.500)]" />
+              Aberto agora
+            </span>
+          ) : (
+            <Badge variant="secondary" className="text-[11px]">Fechado agora</Badge>
+          )}
+        </div>
       </div>
 
       <div>
@@ -315,7 +348,6 @@ function EstabelecimentoPage() {
           {estab.tempo_medio_min && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{estab.tempo_medio_min} min</span>}
           <span>Entrega {estab.taxa_entrega_cents === 0 ? "grátis" : fmt(estab.taxa_entrega_cents)}</span>
           {estab.pedido_minimo_cents > 0 && <span>Mín. {fmt(estab.pedido_minimo_cents)}</span>}
-          {!estab.is_open && <Badge variant="secondary">Fechado agora</Badge>}
         </div>
       </div>
 
