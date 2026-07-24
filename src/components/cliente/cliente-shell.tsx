@@ -8,6 +8,7 @@ import {
   User,
   ShoppingCart,
   MapPin,
+  Heart,
   ChevronDown,
 } from "lucide-react";
 
@@ -21,6 +22,7 @@ const NAV = [
   { to: "/cliente" as const, label: "Início", icon: Home, exact: true },
   { to: "/cliente/novidades" as const, label: "Novidades", icon: ShoppingBag, exact: false },
   { to: "/cliente/pedidos" as const, label: "Pedidos", icon: ReceiptText, exact: false },
+  { to: "/cliente/favoritos" as const, label: "Favoritos", icon: Heart, exact: false },
   { to: "/cliente/perfil" as const, label: "Perfil", icon: User, exact: false },
 ];
 
@@ -174,7 +176,7 @@ export function ClienteShell({ user }: Ctx) {
         className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/98 backdrop-blur lg:hidden"
         aria-label="Navegação principal"
       >
-        <div className="mx-auto grid max-w-4xl grid-cols-4">
+        <div className="mx-auto grid max-w-4xl grid-cols-5">
           {NAV.map(({ to, label, icon: Icon, exact }) => {
             const active = exact
               ? location.pathname === to
