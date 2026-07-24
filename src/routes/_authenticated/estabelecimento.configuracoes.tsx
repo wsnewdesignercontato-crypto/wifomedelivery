@@ -190,9 +190,9 @@ function ConfigPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 pb-32">
       {/* Header premium com preview de capa e logo */}
-      <section className="relative overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+      <section className="relative rounded-3xl border border-border bg-card shadow-sm">
         <div
-          className="relative h-40 w-full"
+          className="relative h-40 w-full overflow-hidden rounded-t-3xl"
           style={{
             background: form.capa_url
               ? `url(${form.capa_url}) center/cover`
@@ -222,10 +222,10 @@ function ConfigPage() {
           />
         </div>
 
-        <div className="flex flex-col items-center gap-4 px-6 pb-6 text-center sm:flex-row sm:items-end sm:text-left">
-          <div className="-mt-12 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-card bg-background text-2xl font-black text-primary shadow-lg">
+        <div className="relative flex flex-col items-center gap-4 px-6 pb-6 text-center sm:flex-row sm:items-end sm:text-left">
+          <div className="relative z-10 -mt-16 flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-card bg-background text-2xl font-black text-primary shadow-xl ring-1 ring-border">
             {form.logo_url ? (
-              <img src={form.logo_url} alt="Logo" className="h-full w-full object-contain p-1" />
+              <img src={form.logo_url} alt="Logo" className="h-full w-full object-contain p-1.5" />
             ) : (
               initials
             )}
