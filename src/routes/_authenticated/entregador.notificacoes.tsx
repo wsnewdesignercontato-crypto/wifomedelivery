@@ -19,13 +19,14 @@ function Notif() {
     if (!courier) return;
     supabase.from("notifications").select("*").eq("user_id", courier.user_id)
       .in("audience", ["entregador", "all"])
+      .eq("lida", false)
       .order("created_at", { ascending: false }).limit(100)
       .then(({ data }) => setList((data ?? []) as N[]));
   }, [courier]);
 
   async function marcar(id: string) {
+    setList((l) => l.filter((n) => n.id !== id));
     await supabase.from("notifications").update({ lida: true }).eq("id", id);
-    setList((l) => l.map((n) => n.id === id ? { ...n, lida: true } : n));
   }
 
   return (
@@ -40,10 +41,10 @@ function Notif() {
         <div className="space-y-2">
           {list.map((n) => (
             <button key={n.id} onClick={() => marcar(n.id)}
-              className={`w-full rounded-2xl border p-4 text-left shadow-card transition ${n.lida ? "border-border bg-card" : "border-primary/40 bg-primary/5"}`}>
+              className="w-full rounded-2xl border border-primary/40 bg-primary/5 p-4 text-left shadow-card transition hover:bg-primary/10">
               <div className="flex items-center justify-between">
                 <p className="font-semibold">{n.titulo}</p>
-                {!n.lida && <Badge>Nova</Badge>}
+                <Badge>Nova</Badge>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">{n.mensagem}</p>
               <p className="mt-2 text-[11px] text-muted-foreground">{new Date(n.created_at).toLocaleString("pt-BR")}</p>
@@ -54,3 +55,4 @@ function Notif() {
     </div>
   );
 }
+
