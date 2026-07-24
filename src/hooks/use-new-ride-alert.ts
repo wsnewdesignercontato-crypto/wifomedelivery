@@ -40,24 +40,25 @@ function playSiren() {
   const ctx = getCtx();
   if (!ctx) return;
   const now = ctx.currentTime;
-  // Sirene tipo "urgente": 5 bipes ascendentes bem audíveis
-  [0, 0.15, 0.30, 0.45, 0.60].forEach((t, i) => {
+  // Sirene "urgente" estilo Uber/99: 7 bipes alternados, bem audíveis
+  const pattern = [0, 0.14, 0.28, 0.42, 0.56, 0.72, 0.88];
+  pattern.forEach((t, i) => {
     try {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "square";
-      const base = 900 + i * 60;
+      const base = i % 2 === 0 ? 980 : 1320;
       osc.frequency.setValueAtTime(base, now + t);
-      osc.frequency.linearRampToValueAtTime(base + 500, now + t + 0.12);
+      osc.frequency.linearRampToValueAtTime(base + 420, now + t + 0.11);
       gain.gain.setValueAtTime(0.0001, now + t);
-      gain.gain.exponentialRampToValueAtTime(0.8, now + t + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.14);
+      gain.gain.exponentialRampToValueAtTime(0.95, now + t + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.13);
       osc.connect(gain).connect(ctx.destination);
       osc.start(now + t);
-      osc.stop(now + t + 0.16);
+      osc.stop(now + t + 0.15);
     } catch {}
   });
-  try { navigator.vibrate?.([200, 80, 200, 80, 200, 80, 300]); } catch {}
+  try { navigator.vibrate?.([250, 90, 250, 90, 250, 90, 400]); } catch {}
 }
 
 function nativeNotify() {
@@ -144,7 +145,7 @@ export function useNewRideAlert(courier: Courier, soundEnabled = true) {
           });
           intervalRef.current = setInterval(() => {
             if (soundEnabled) playSiren();
-          }, 2500);
+          }, 1600);
         }
       } else {
         if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
