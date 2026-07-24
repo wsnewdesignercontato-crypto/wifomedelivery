@@ -457,10 +457,10 @@ function EstabRow({
         </span>
       )}
 
-      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted">
-        {estab.capa_url || estab.logo_url ? (
+      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted ring-1 ring-border/60">
+        {estab.logo_url || estab.capa_url ? (
           <img
-            src={estab.capa_url ?? estab.logo_url ?? ""}
+            src={estab.logo_url ?? estab.capa_url ?? ""}
             alt={estab.nome}
             width={160}
             height={160}
@@ -468,8 +468,8 @@ function EstabRow({
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="grid h-full w-full place-items-center bg-gradient-to-br from-primary/15 to-primary/5 text-2xl opacity-60">
-            🍽️
+          <div className="grid h-full w-full place-items-center bg-gradient-to-br from-primary to-primary/70 text-xl font-black text-primary-foreground">
+            {estab.nome.charAt(0).toUpperCase()}
           </div>
         )}
         {!estab.is_open && (
