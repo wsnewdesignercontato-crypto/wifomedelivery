@@ -47,15 +47,35 @@ export function AdRotator({
   const { data: ads = [] } = useQuery({
     queryKey: ["ad_rotator"],
     queryFn: async (): Promise<Ad[]> => {
-      const { data, error } = await supabase
-        .from("sponsored_ads")
-        .select("id, establishment_id, titulo, subtitulo, imagem_url, banner_path, video_url, destino_url, cta_texto, patrocinado")
-        .eq("ativo", true)
-        .eq("status", "approved")
-        .order("prioridade", { ascending: false })
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as Ad[];
+      const [sponsored, banners] = await Promise.all([
+        supabase
+          .from("sponsored_ads")
+          .select("id, establishment_id, titulo, subtitulo, imagem_url, banner_path, video_url, destino_url, cta_texto, patrocinado")
+          .eq("ativo", true)
+          .eq("status", "approved")
+          .order("prioridade", { ascending: false })
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("banners")
+          .select("id, titulo, image_url, link_url, posicao")
+          .eq("ativo", true)
+          .order("posicao", { ascending: true }),
+      ]);
+      if (sponsored.error) throw sponsored.error;
+      const sponsoredAds = (sponsored.data ?? []) as Ad[];
+      const bannerAds: Ad[] = ((banners.data ?? []) as Array<{ id: string; titulo: string; image_url: string; link_url: string | null }>).map((b) => ({
+        id: `banner-${b.id}`,
+        establishment_id: null,
+        titulo: b.titulo,
+        subtitulo: null,
+        imagem_url: b.image_url,
+        banner_path: null,
+        video_url: null,
+        destino_url: b.link_url,
+        cta_texto: null,
+        patrocinado: false,
+      }));
+      return [...sponsoredAds, ...bannerAds];
     },
     refetchOnWindowFocus: false,
     staleTime: 60_000,
