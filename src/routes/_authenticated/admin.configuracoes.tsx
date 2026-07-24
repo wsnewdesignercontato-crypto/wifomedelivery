@@ -22,6 +22,14 @@ type Config = {
   maintenance_mode: boolean;
   bestseller_threshold: number;
   ad_default_seconds: number;
+  score_delay_warn_ratio: number;
+  score_delay_warn_penalty: number;
+  score_delay_severe_ratio: number;
+  score_delay_severe_penalty: number;
+  score_review_bad_max: number;
+  score_review_bad_penalty: number;
+  score_review_regular_rating: number;
+  score_review_regular_penalty: number;
 };
 
 async function fetchConfig() {
