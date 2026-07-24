@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMyEstab, fmt } from "@/hooks/use-my-estab";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ScoreCard } from "@/components/score-card";
 import {
   ShoppingBag, DollarSign, Clock, TrendingUp, AlertTriangle, Star,
 } from "lucide-react";
