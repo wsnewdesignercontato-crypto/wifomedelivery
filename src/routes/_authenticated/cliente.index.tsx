@@ -361,7 +361,7 @@ function ClienteHome() {
             </Link>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="grid w-full grid-cols-3 gap-2">
           {([
             ["recomendados", "Recomendados"],
             ["reviews", "Mais avaliados"],
@@ -370,7 +370,7 @@ function ClienteHome() {
             <button
               key={k}
               onClick={() => setSortBy(k)}
-              className={`shrink-0 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors sm:px-3 sm:text-xs ${
+              className={`rounded-full border px-2 py-1.5 text-[11px] font-semibold transition-colors sm:text-xs ${
                 sortBy === k
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card text-muted-foreground hover:text-foreground"
