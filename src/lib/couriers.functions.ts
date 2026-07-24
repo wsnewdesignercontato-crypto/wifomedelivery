@@ -47,7 +47,8 @@ export const listAvailableCouriers = createServerFn({ method: "POST" }).handler(
       .from("courier_profiles")
       .select("user_id, veiculo, avaliacao, lat, lng, last_seen")
       .eq("status", "online")
-      .eq("aprovacao", "approved");
+      .not("lat", "is", null)
+      .not("lng", "is", null);
     if (error) throw new Error(error.message);
     return (data ?? []) as AvailableCourier[];
   },
