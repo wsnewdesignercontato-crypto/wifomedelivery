@@ -197,7 +197,46 @@ function MapaPage() {
         </div>
       )}
 
-      <div className="h-[calc(100vh-260px)] overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-2">
+        <span className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Camadas</span>
+        <button
+          onClick={() => setShowEstabs((v) => !v)}
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+            showEstabs ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "border-border bg-muted/40 text-muted-foreground"
+          }`}
+        >
+          {showEstabs ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+          Estabelecimentos ({filteredEstabs.length})
+        </button>
+        <button
+          onClick={() => setShowCouriers((v) => !v)}
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+            showCouriers ? "border-primary/50 bg-primary/10 text-primary" : "border-border bg-muted/40 text-muted-foreground"
+          }`}
+        >
+          {showCouriers ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+          <span className="h-2 w-2 rounded-full bg-primary" />
+          Entregadores online ({filteredPoints.length})
+        </button>
+        <button
+          onClick={() => setOnlyOpen((v) => !v)}
+          disabled={!showEstabs}
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition disabled:opacity-40 ${
+            onlyOpen ? "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-400" : "border-border bg-muted/40 text-muted-foreground"
+          }`}
+        >
+          Apenas abertos
+        </button>
+        {userLoc && (
+          <span className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+            <span className="h-2 w-2 rounded-full bg-blue-500" />
+            Você
+          </span>
+        )}
+      </div>
+
+      <div className="h-[calc(100vh-320px)] overflow-hidden rounded-xl border border-border bg-card">
         <Suspense
           fallback={
             <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -205,7 +244,7 @@ function MapaPage() {
             </div>
           }
         >
-          <LiveMap points={points} establishments={estabs} userLocation={userLoc} />
+          <LiveMap points={filteredPoints} establishments={filteredEstabs} userLocation={userLoc} />
         </Suspense>
       </div>
     </div>
