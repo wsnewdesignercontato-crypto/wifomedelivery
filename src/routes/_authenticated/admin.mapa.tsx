@@ -79,7 +79,13 @@ function MapaPage() {
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [geocoding, setGeocoding] = useState(false);
+  const [showEstabs, setShowEstabs] = useState(true);
+  const [showCouriers, setShowCouriers] = useState(true);
+  const [onlyOpen, setOnlyOpen] = useState(false);
   const geocodeFn = useServerFn(geocodeMissingEstablishments);
+
+  const filteredEstabs = showEstabs ? (onlyOpen ? estabs.filter((e) => e.is_open) : estabs) : [];
+  const filteredPoints = showCouriers ? points : [];
 
   useEffect(() => {
     if (!navigator.geolocation) {
