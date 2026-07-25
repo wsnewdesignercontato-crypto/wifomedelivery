@@ -58,14 +58,18 @@ function CategoriasPage() {
         <Button onClick={adicionar}><Plus className="mr-2 h-4 w-4" /> Adicionar</Button>
       </div>
       <div className="space-y-2">
-        {cats.map((c) => (
+        {cats.map((c) => {
+          const kind = getCategoryKind(c.nome);
+          return (
           <div key={c.id} className="flex items-center gap-2 rounded-2xl border border-border bg-card p-3">
             <span className="flex-1 font-medium">{c.nome}</span>
+            <Badge variant="secondary" className="text-[10px]">{KIND_LABEL[kind]}</Badge>
             <Button size="icon" variant="ghost" onClick={() => mover(c, -1)}><ArrowUp className="h-4 w-4" /></Button>
             <Button size="icon" variant="ghost" onClick={() => mover(c, 1)}><ArrowDown className="h-4 w-4" /></Button>
             <Button size="icon" variant="ghost" onClick={() => remover(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
           </div>
-        ))}
+          );
+        })}
         {cats.length === 0 && (
           <p className="text-sm text-muted-foreground">Nenhuma categoria criada.</p>
         )}
