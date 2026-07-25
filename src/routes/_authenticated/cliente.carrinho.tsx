@@ -97,20 +97,21 @@ function CarrinhoPage() {
 
   async function alterar(id: string, qty: number) {
     if (qty <= 0) {
+      setItems((prev) => prev.filter((i) => i.id !== id));
       await supabase.from("cart_items").delete().eq("id", id);
     } else {
+      setItems((prev) => prev.map((i) => (i.id === id ? { ...i, quantidade: qty } : i)));
       await supabase.from("cart_items").update({ quantidade: qty }).eq("id", id);
     }
-    load();
   }
   async function remover(id: string) {
+    setItems((prev) => prev.filter((i) => i.id !== id));
     await supabase.from("cart_items").delete().eq("id", id);
-    load();
   }
   async function limpar() {
     if (!confirm("Esvaziar carrinho?")) return;
+    setItems([]);
     await supabase.from("cart_items").delete().eq("user_id", user.id);
-    load();
   }
 
   const subtotal = items.reduce((s, i) => s + i.preco_unit_cents * i.quantidade, 0);
