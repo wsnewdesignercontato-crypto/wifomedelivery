@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { PartyPopper, ArrowRight, Loader2, CheckCircle2, Circle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,7 @@ export function OnboardingGate({
   children: ReactNode;
 }) {
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [state, setState] = useState<{
     loading: boolean;
     complete: boolean;
@@ -91,7 +92,17 @@ export function OnboardingGate({
     );
   }
 
-  if (state.complete) return <>{children}</>;
+  // Libera navegação para a própria página de completar dados e sub-rotas relacionadas
+  const ONBOARDING_ALLOWED: Record<Role, string[]> = {
+    cliente: ["/cliente/perfil/enderecos", "/cliente/perfil/conta", "/cliente/perfil"],
+    estabelecimento: ["/estabelecimento/configuracoes"],
+    entregador: ["/entregador/perfil", "/entregador/perfil/dados", "/entregador/perfil/pagamento"],
+  };
+  const isOnAllowedPath =
+    pathname === state.redirect ||
+    ONBOARDING_ALLOWED[role].some((p) => pathname === p || pathname.startsWith(p + "/"));
+
+  if (state.complete || isOnAllowedPath) return <>{children}</>;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-gradient-to-br from-background via-background to-primary/10 p-4">
@@ -134,7 +145,7 @@ export function OnboardingGate({
         <Button
           size="lg"
           className="w-full gap-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 hover:from-primary hover:to-primary"
-          onClick={() => navigate({ to: state.redirect })}
+          onClick={() => navigate({ to: state.redirect as any })}
         >
           {ROLE_CTAS[role]} <ArrowRight className="h-4 w-4" />
         </Button>
