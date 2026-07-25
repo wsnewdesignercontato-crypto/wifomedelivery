@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMyEstab } from "@/hooks/use-my-estab";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import { getCategoryKind, KIND_LABEL } from "@/lib/category-templates";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/categorias")({
   component: CategoriasPage,
