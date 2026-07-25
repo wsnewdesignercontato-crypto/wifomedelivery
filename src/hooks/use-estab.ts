@@ -10,6 +10,7 @@ export type Estab = {
   categoria_id: string | null;
   endereco: string | null;
   cidade: string | null;
+  estado: string | null;
   taxa_entrega_cents: number;
   tempo_medio_min: number | null;
   pedido_minimo_cents: number;
