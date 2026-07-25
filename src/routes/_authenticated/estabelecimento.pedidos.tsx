@@ -153,7 +153,7 @@ function PedidosPage() {
       const { data: o } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
       const { data: it } = await supabase.from("order_items").select("*").eq("order_id", orderId);
       if (!o || !it) return toast.error("Pedido não encontrado");
-      its = (it as OrderItem[]).map((r) => ({ ...r, addons: Array.isArray(r.addons) ? r.addons : [] }));
+      its = (it as unknown as OrderItem[]).map((r) => ({ ...r, addons: Array.isArray(r.addons) ? r.addons : [] }));
     }
     const contact = await loadContact(orderId);
     const ok = printOrderReceipt(
