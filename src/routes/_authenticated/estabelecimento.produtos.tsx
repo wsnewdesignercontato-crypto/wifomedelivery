@@ -89,7 +89,7 @@ function ProdutosPage() {
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader><DialogTitle>Novo produto</DialogTitle></DialogHeader>
-            <ProdutoForm cats={cats} onSaved={() => { setOpenNew(false); reload(); }} />
+            <ProdutoForm cats={cats} addonGroups={addonGroups} onSaved={() => { setOpenNew(false); reload(); }} />
           </DialogContent>
         </Dialog>
       </div>
