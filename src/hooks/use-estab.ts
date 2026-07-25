@@ -32,6 +32,9 @@ export type Estab = {
   banco_tipo?: string | null;
   banco_titular?: string | null;
   banco_documento?: string | null;
+  printer_enabled?: boolean | null;
+  printer_auto?: boolean | null;
+  printer_width_mm?: number | null;
 };
 
 export function myEstabQueryOptions(userId: string) {
