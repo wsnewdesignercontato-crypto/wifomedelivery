@@ -649,6 +649,7 @@ export type Database = {
           lat: number | null
           lng: number | null
           nascimento: string | null
+          onboarding_completed: boolean
           pin_atualizado_em: string | null
           pin_saque_hash: string | null
           pix_key: string | null
@@ -697,6 +698,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           nascimento?: string | null
+          onboarding_completed?: boolean
           pin_atualizado_em?: string | null
           pin_saque_hash?: string | null
           pix_key?: string | null
@@ -745,6 +747,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           nascimento?: string | null
+          onboarding_completed?: boolean
           pin_atualizado_em?: string | null
           pin_saque_hash?: string | null
           pix_key?: string | null
@@ -1371,6 +1374,7 @@ export type Database = {
           lng: number | null
           logo_url: string | null
           nome: string
+          onboarding_completed: boolean
           owner_id: string
           pedido_minimo_cents: number
           pix_key: string | null
@@ -1414,6 +1418,7 @@ export type Database = {
           lng?: number | null
           logo_url?: string | null
           nome: string
+          onboarding_completed?: boolean
           owner_id: string
           pedido_minimo_cents?: number
           pix_key?: string | null
@@ -1457,6 +1462,7 @@ export type Database = {
           lng?: number | null
           logo_url?: string | null
           nome?: string
+          onboarding_completed?: boolean
           owner_id?: string
           pedido_minimo_cents?: number
           pix_key?: string | null
@@ -2319,29 +2325,38 @@ export type Database = {
       }
       profiles: {
         Row: {
+          cidade_ativa: string | null
           cpf: string | null
           created_at: string
+          estado_ativo: string | null
           foto_url: string | null
           id: string
           nome: string
+          onboarding_completed: boolean
           telefone: string | null
           updated_at: string
         }
         Insert: {
+          cidade_ativa?: string | null
           cpf?: string | null
           created_at?: string
+          estado_ativo?: string | null
           foto_url?: string | null
           id: string
           nome?: string
+          onboarding_completed?: boolean
           telefone?: string | null
           updated_at?: string
         }
         Update: {
+          cidade_ativa?: string | null
           cpf?: string | null
           created_at?: string
+          estado_ativo?: string | null
           foto_url?: string | null
           id?: string
           nome?: string
+          onboarding_completed?: boolean
           telefone?: string | null
           updated_at?: string
         }
@@ -2988,6 +3003,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      check_profile_complete: {
+        Args: { _role: string; _user_id: string }
+        Returns: Json
+      }
       courier_confirm_delivery:
         | {
             Args: {
@@ -3002,6 +3021,10 @@ export type Database = {
       regenerate_delivery_code: {
         Args: { p_order_id: string }
         Returns: string
+      }
+      set_active_city: {
+        Args: { _cidade: string; _estado: string }
+        Returns: undefined
       }
     }
     Enums: {
