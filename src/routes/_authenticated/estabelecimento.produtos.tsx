@@ -146,7 +146,7 @@ function ProdutosPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>Editar produto</DialogTitle></DialogHeader>
           {editing && (
-            <ProdutoForm cats={cats} produto={editing} onSaved={() => { setEditing(null); reload(); }} />
+            <ProdutoForm cats={cats} addonGroups={addonGroups} produto={editing} onSaved={() => { setEditing(null); reload(); }} />
           )}
         </DialogContent>
       </Dialog>
