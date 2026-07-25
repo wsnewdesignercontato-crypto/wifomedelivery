@@ -104,7 +104,7 @@ function ConfigPage() {
       banco_titular: estab.banco_titular ?? "",
       banco_documento: estab.banco_documento ?? "",
     });
-  }, [estab?.id]);
+  }, [estab?.id, estab?.estado, estab?.cidade, estab?.endereco]);
 
   async function uploadImage(file: File, kind: "logo" | "capa") {
     if (!file.type.startsWith("image/")) {
