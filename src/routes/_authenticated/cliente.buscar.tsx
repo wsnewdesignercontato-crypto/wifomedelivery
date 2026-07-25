@@ -31,23 +31,39 @@ function BuscarPage() {
   const [reviewCounts, setReviewCounts] = useState<Record<string, number>>({});
   const [sortBy, setSortBy] = useState<"relevancia" | "rating" | "reviews">("relevancia");
   const [loading, setLoading] = useState(false);
+  const [activeCidade, setActiveCidade] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth?.user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("cidade_ativa")
+        .eq("id", auth.user.id)
+        .maybeSingle();
+      setActiveCidade((data as any)?.cidade_ativa ?? null);
+    })();
+  }, []);
 
   useEffect(() => {
     const t = setTimeout(() => run(q.trim()), 250);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q]);
+  }, [q, activeCidade]);
 
   async function run(term: string) {
     if (term.length < 2) { setEstabs([]); setProds([]); setReviewCounts({}); return; }
     setLoading(true);
+    let eq = supabase
+      .from("establishments")
+      .select("id,nome,descricao,capa_url,taxa_entrega_cents,tempo_medio_min,avaliacao,is_open,cidade")
+      .eq("status", "aprovado")
+      .ilike("nome", `%${term}%`)
+      .limit(20);
+    if (activeCidade) eq = eq.ilike("cidade", activeCidade);
     const [e, p] = await Promise.all([
-      supabase
-        .from("establishments")
-        .select("id,nome,descricao,capa_url,taxa_entrega_cents,tempo_medio_min,avaliacao,is_open")
-        .eq("status", "aprovado")
-        .ilike("nome", `%${term}%`)
-        .limit(20),
+      eq,
       supabase
         .from("products")
         .select("id,nome,descricao,foto_url,preco_cents,establishment_id")
