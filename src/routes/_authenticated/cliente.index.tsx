@@ -182,14 +182,15 @@ function ClienteHome() {
   useEffect(() => {
     (async () => {
       const nowIso = new Date().toISOString();
+      let estabQ = supabase
+        .from("establishments")
+        .select("id,nome,descricao,categoria_id,logo_url,capa_url,taxa_entrega_cents,tempo_medio_min,avaliacao,is_open,cidade")
+        .eq("status", "aprovado")
+        .eq("is_open", true);
+      if (activeCidade) estabQ = estabQ.ilike("cidade", activeCidade);
       const [c, e, cp, od, ps] = await Promise.all([
         supabase.from("global_categories").select("id,nome,slug,icone").eq("ativo", true).order("ordem"),
-        supabase
-          .from("establishments")
-          .select("id,nome,descricao,categoria_id,logo_url,capa_url,taxa_entrega_cents,tempo_medio_min,avaliacao,is_open,cidade")
-          .eq("status", "aprovado")
-          .eq("is_open", true)
-          .order("avaliacao", { ascending: false, nullsFirst: false }),
+        estabQ.order("avaliacao", { ascending: false, nullsFirst: false }),
         supabase
           .from("coupons")
           .select("establishment_id,expires_at,ativo")
