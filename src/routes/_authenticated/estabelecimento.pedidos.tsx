@@ -74,7 +74,7 @@ function PedidosPage() {
       const { data: it } = await supabase.from("order_items").select("*").in("order_id", ids);
       const g: Record<string, OrderItem[]> = {};
       (it ?? []).forEach((r) => {
-        const row = r as OrderItem;
+        const row = r as unknown as OrderItem;
         row.addons = Array.isArray(row.addons) ? row.addons : [];
         (g[row.order_id] ??= []).push(row);
       });
