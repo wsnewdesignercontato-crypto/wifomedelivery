@@ -37,6 +37,7 @@ type FormState = {
   whatsapp: string;
   endereco: string;
   cidade: string;
+  estado: string;
   cnpj: string;
   instagram: string;
   site: string;
