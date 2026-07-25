@@ -188,8 +188,10 @@ function ConfigPage() {
       .single();
     setSaving(false);
     if (error) return toast.error("Falha ao salvar");
-    toast.success("Configurações salvas ✨");
     if (data) qc.setQueryData(["myEstab", userId], data as unknown as Estab);
+    qc.invalidateQueries({ queryKey: ["myEstab", userId] });
+    window.dispatchEvent(new Event("wifome:profile-updated"));
+    toast.success("Configurações salvas ✨");
   }
 
   if (!estab) return null;
