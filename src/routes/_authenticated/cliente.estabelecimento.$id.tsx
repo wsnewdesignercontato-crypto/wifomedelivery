@@ -416,7 +416,7 @@ function EstabelecimentoPage() {
                   </button>
                   {isOpen && (
                     <div className="grid gap-2 border-t border-border/60 bg-background/40 p-3">
-                      {g.itens.map((p) => <ProdRow key={p.id} p={p} onClick={() => abrirProd(p)} />)}
+                      {g.itens.map((p) => <ProdRow key={p.id} p={p} q={q} onClick={() => abrirProd(p)} />)}
                     </div>
                   )}
                 </section>
