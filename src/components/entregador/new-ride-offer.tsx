@@ -244,14 +244,29 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
     }
 
     evaluate();
-    const ch = supabase
-      .channel("courier-offer-" + courier.user_id)
-      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, () => evaluate())
+    // Debounce para agrupar rajadas de eventos realtime
+    let debounceT: ReturnType<typeof setTimeout> | null = null;
+    const scheduleEvaluate = () => {
+      if (debounceT) clearTimeout(debounceT);
+      debounceT = setTimeout(() => { debounceT = null; evaluate(); }, 400);
+    };
+    // Filtra por broadcasting para não receber updates irrelevantes do sistema todo
+    const chBroadcast = supabase
+      .channel("courier-offer-bcast-" + courier.user_id)
+      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries", filter: "status=eq.broadcasting" }, scheduleEvaluate)
       .subscribe();
-    const t = setInterval(evaluate, 8000);
+    // Também precisamos reagir quando uma entrega do próprio entregador muda (aceita/finaliza)
+    const chMine = supabase
+      .channel("courier-offer-mine-" + courier.user_id)
+      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries", filter: `entregador_id=eq.${courier.user_id}` }, scheduleEvaluate)
+      .subscribe();
+    // Fallback lento (60s) caso realtime caia
+    const t = setInterval(evaluate, 60000);
     return () => {
       cancelled = true;
-      supabase.removeChannel(ch);
+      if (debounceT) clearTimeout(debounceT);
+      supabase.removeChannel(chBroadcast);
+      supabase.removeChannel(chMine);
       clearInterval(t);
     };
   }, [enabled, courier?.user_id, courier?.status, dismissedIds]);
