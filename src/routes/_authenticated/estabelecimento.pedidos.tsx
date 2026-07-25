@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { OrderHistory } from "@/components/order-history";
 import { Bike, ReceiptText, Printer, Phone, User, MapPin, Settings as SettingsIcon } from "lucide-react";
-import { printOrderReceipt } from "@/lib/print-receipt";
+import { printOrderReceipt, buildReceiptHtml } from "@/lib/print-receipt";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/pedidos")({
   component: PedidosPage,
