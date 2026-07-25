@@ -1892,6 +1892,7 @@ export type Database = {
           cancelled_role: string | null
           cliente_id: string
           codigo_entrega: string | null
+          codigo_expira_em: string | null
           created_at: string
           desconto_cents: number
           dinheiro_recebido: boolean
@@ -1923,6 +1924,7 @@ export type Database = {
           cancelled_role?: string | null
           cliente_id: string
           codigo_entrega?: string | null
+          codigo_expira_em?: string | null
           created_at?: string
           desconto_cents?: number
           dinheiro_recebido?: boolean
@@ -1954,6 +1956,7 @@ export type Database = {
           cancelled_role?: string | null
           cliente_id?: string
           codigo_entrega?: string | null
+          codigo_expira_em?: string | null
           created_at?: string
           desconto_cents?: number
           dinheiro_recebido?: boolean
@@ -2985,14 +2988,20 @@ export type Database = {
         }
         Returns: undefined
       }
-      courier_confirm_delivery: {
-        Args: {
-          _codigo: string
-          _metodo?: string
-          _order_id: string
-          _prova_url?: string
-        }
-        Returns: undefined
+      courier_confirm_delivery:
+        | {
+            Args: {
+              _codigo: string
+              _metodo?: string
+              _order_id: string
+              _prova_url?: string
+            }
+            Returns: undefined
+          }
+        | { Args: { p_codigo: string; p_order_id: string }; Returns: Json }
+      regenerate_delivery_code: {
+        Args: { p_order_id: string }
+        Returns: string
       }
     }
     Enums: {
