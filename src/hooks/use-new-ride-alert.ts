@@ -154,14 +154,25 @@ export function useNewRideAlert(courier: Courier, soundEnabled = true) {
     }
 
     evaluate();
-    const ch = supabase
-      .channel("courier-ride-alert-" + courier.user_id)
-      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, () => evaluate())
+    let debounceT: ReturnType<typeof setTimeout> | null = null;
+    const schedule = () => {
+      if (debounceT) clearTimeout(debounceT);
+      debounceT = setTimeout(() => { debounceT = null; evaluate(); }, 500);
+    };
+    const chBcast = supabase
+      .channel("ride-alert-bcast-" + courier.user_id)
+      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries", filter: "status=eq.broadcasting" }, schedule)
+      .subscribe();
+    const chMine = supabase
+      .channel("ride-alert-mine-" + courier.user_id)
+      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries", filter: `entregador_id=eq.${courier.user_id}` }, schedule)
       .subscribe();
 
     return () => {
       cancelled = true;
-      supabase.removeChannel(ch);
+      if (debounceT) clearTimeout(debounceT);
+      supabase.removeChannel(chBcast);
+      supabase.removeChannel(chMine);
       if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
       if (toastIdRef.current != null) { toast.dismiss(toastIdRef.current); toastIdRef.current = null; }
     };
