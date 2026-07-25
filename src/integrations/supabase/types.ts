@@ -1378,6 +1378,9 @@ export type Database = {
           owner_id: string
           pedido_minimo_cents: number
           pix_key: string | null
+          printer_auto: boolean
+          printer_enabled: boolean
+          printer_width_mm: number
           raio_entrega_km: number
           razao_social: string | null
           score_mensal: number
@@ -1422,6 +1425,9 @@ export type Database = {
           owner_id: string
           pedido_minimo_cents?: number
           pix_key?: string | null
+          printer_auto?: boolean
+          printer_enabled?: boolean
+          printer_width_mm?: number
           raio_entrega_km?: number
           razao_social?: string | null
           score_mensal?: number
@@ -1466,6 +1472,9 @@ export type Database = {
           owner_id?: string
           pedido_minimo_cents?: number
           pix_key?: string | null
+          printer_auto?: boolean
+          printer_enabled?: boolean
+          printer_width_mm?: number
           raio_entrega_km?: number
           razao_social?: string | null
           score_mensal?: number
@@ -3018,6 +3027,13 @@ export type Database = {
             Returns: undefined
           }
         | { Args: { p_codigo: string; p_order_id: string }; Returns: Json }
+      get_order_client_contact: {
+        Args: { _order_id: string }
+        Returns: {
+          nome: string
+          telefone: string
+        }[]
+      }
       regenerate_delivery_code: {
         Args: { p_order_id: string }
         Returns: string
