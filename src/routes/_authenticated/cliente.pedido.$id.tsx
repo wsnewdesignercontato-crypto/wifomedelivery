@@ -25,6 +25,7 @@ type Order = {
   establishment_id: string;
   forma_pagamento: string;
   codigo_entrega: string | null;
+  codigo_expira_em: string | null;
   tipo_entrega: "delivery" | "pickup" | null;
   created_at: string;
 };
@@ -62,7 +63,7 @@ function PedidoPage() {
     async function load() {
       const { data: o } = await supabase
         .from("orders")
-        .select("id,status,subtotal_cents,frete_cents,desconto_cents,total_cents,observacoes,cancellation_reason,refund_status,refund_amount_cents,establishment_id,forma_pagamento,codigo_entrega,tipo_entrega,created_at")
+        .select("id,status,subtotal_cents,frete_cents,desconto_cents,total_cents,observacoes,cancellation_reason,refund_status,refund_amount_cents,establishment_id,forma_pagamento,codigo_entrega,codigo_expira_em,tipo_entrega,created_at")
         .eq("id", id)
         .maybeSingle();
       setOrder(o as Order | null);
@@ -136,19 +137,38 @@ function PedidoPage() {
         </div>
       </div>
 
-      {order.codigo_entrega && !["delivered","cancelled","refunded"].includes(order.status) && (
-        <div className="rounded-2xl border-2 border-primary bg-gradient-to-br from-primary/10 to-primary/5 p-5 text-center shadow-lg">
-          <p className="text-xs font-bold uppercase tracking-wider text-primary">
-            {order.tipo_entrega === "pickup" ? "Código de retirada" : "Código de entrega"}
-          </p>
-          <p className="mt-2 text-5xl font-black tracking-[0.5em] text-primary">{order.codigo_entrega}</p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {order.tipo_entrega === "pickup"
-              ? "Informe este código na loja ao retirar o pedido."
-              : "Informe este código ao entregador para confirmar o recebimento."}
-          </p>
-        </div>
-      )}
+      {order.codigo_entrega && !["delivered","cancelled","refunded"].includes(order.status) && (() => {
+        const expired = order.codigo_expira_em ? new Date(order.codigo_expira_em) < new Date() : false;
+        return (
+          <div className={`rounded-2xl border-2 p-5 text-center shadow-lg ${expired ? "border-destructive bg-destructive/5" : "border-primary bg-gradient-to-br from-primary/10 to-primary/5"}`}>
+            <p className={`text-xs font-bold uppercase tracking-wider ${expired ? "text-destructive" : "text-primary"}`}>
+              {expired ? "Código expirado" : (order.tipo_entrega === "pickup" ? "Código de retirada" : "Código de entrega")}
+            </p>
+            <p className={`mt-2 text-5xl font-black tracking-[0.5em] ${expired ? "text-destructive/60 line-through" : "text-primary"}`}>{order.codigo_entrega}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {expired
+                ? "Este código venceu por segurança. Gere um novo para continuar."
+                : (order.tipo_entrega === "pickup"
+                    ? "Informe este código na loja ao retirar o pedido."
+                    : "Informe este código ao entregador para confirmar o recebimento.")}
+            </p>
+            {expired && (
+              <Button
+                size="sm"
+                className="mt-3"
+                onClick={async () => {
+                  const { data, error } = await supabase.rpc("regenerate_delivery_code", { p_order_id: order.id });
+                  if (error) { toast.error("Não foi possível gerar novo código"); return; }
+                  setOrder((o) => o ? { ...o, codigo_entrega: data as string, codigo_expira_em: new Date(Date.now() + 30*60*1000).toISOString() } : o);
+                  toast.success("Novo código gerado");
+                }}
+              >
+                Gerar novo código
+              </Button>
+            )}
+          </div>
+        );
+      })()}
 
       {order.status === "cancelled" ? (
         <div className="rounded-2xl border border-destructive/50 bg-destructive/5 p-4">
