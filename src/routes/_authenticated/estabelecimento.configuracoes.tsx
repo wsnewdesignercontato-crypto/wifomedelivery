@@ -106,6 +106,17 @@ function ConfigPage() {
     });
   }, [estab?.id]);
 
+  // Sync UF/cidade/endereço vindos do banco sem sobrescrever edições em andamento
+  useEffect(() => {
+    if (!estab) return;
+    setForm((prev) => ({
+      ...prev,
+      estado: prev.estado || (estab.estado ?? ""),
+      cidade: prev.cidade || (estab.cidade ?? ""),
+      endereco: prev.endereco || (estab.endereco ?? ""),
+    }));
+  }, [estab?.estado, estab?.cidade, estab?.endereco]);
+
   async function uploadImage(file: File, kind: "logo" | "capa") {
     if (!file.type.startsWith("image/")) {
       toast.error("Selecione uma imagem válida");
