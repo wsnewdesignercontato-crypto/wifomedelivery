@@ -554,13 +554,30 @@ function EstabelecimentoPage() {
   );
 }
 
-function ProdRow({ p, onClick }: { p: Produto; onClick: () => void }) {
+function Highlight({ text, q }: { text: string; q: string }) {
+  if (!q) return <>{text}</>;
+  const esc = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const parts = text.split(new RegExp(`(${esc})`, "ig"));
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === q.toLowerCase() ? (
+          <mark key={i} className="rounded bg-primary/25 px-0.5 text-foreground">{part}</mark>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
+function ProdRow({ p, onClick, q = "" }: { p: Produto; onClick: () => void; q?: string }) {
   const fmt2 = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   return (
     <button onClick={onClick} className="flex gap-3 rounded-2xl border border-border bg-card p-3 text-left transition hover:border-primary/40">
       <div className="flex-1">
-        <p className="font-semibold text-foreground">{p.nome}</p>
-        {p.descricao && <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{p.descricao}</p>}
+        <p className="font-semibold text-foreground"><Highlight text={p.nome} q={q} /></p>
+        {p.descricao && <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground"><Highlight text={p.descricao} q={q} /></p>}
         <p className="mt-1 text-sm font-bold text-primary">
           {fmt2(p.preco_promo_cents ?? p.preco_cents)}
           {p.preco_promo_cents != null && (
