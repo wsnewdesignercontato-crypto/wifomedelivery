@@ -82,6 +82,7 @@ function EstabelecimentoPage() {
   const [cats, setCats] = useState<MenuCat[]>([]);
   const [prods, setProds] = useState<Produto[]>([]);
   const [busca, setBusca] = useState("");
+  const [openCats, setOpenCats] = useState<Record<string, boolean>>({});
   const [fav, setFav] = useState(false);
   const [loading, setLoading] = useState(true);
 
