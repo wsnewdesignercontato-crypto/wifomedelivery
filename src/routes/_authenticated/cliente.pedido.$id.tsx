@@ -25,6 +25,7 @@ type Order = {
   establishment_id: string;
   forma_pagamento: string;
   codigo_entrega: string | null;
+  codigo_expira_em: string | null;
   tipo_entrega: "delivery" | "pickup" | null;
   created_at: string;
 };
