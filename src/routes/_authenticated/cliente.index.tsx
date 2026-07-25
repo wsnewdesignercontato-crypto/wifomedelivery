@@ -245,7 +245,7 @@ function ClienteHome() {
 
       setLoading(false);
     })();
-  }, []);
+  }, [activeCidade]);
 
   const filtered = useMemo(() => {
     const base = catSel ? estabs.filter((e) => e.categoria_id === catSel) : estabs;
