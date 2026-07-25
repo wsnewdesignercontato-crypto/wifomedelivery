@@ -26,6 +26,8 @@ import catMercado from "@/assets/cat-mercado.jpg";
 import catFarmacia from "@/assets/cat-farmacia.jpg";
 import bannerFreteGratis from "@/assets/banner-frete-gratis-premium.png.asset.json";
 import { AdRotator } from "@/components/cliente/ad-rotator";
+import { useCityDetection } from "@/hooks/use-city-detection";
+import { CitySwitchCard } from "@/components/cliente/city-switch-card";
 
 export const Route = createFileRoute("/_authenticated/cliente/")({
   component: ClienteHome,
@@ -89,8 +91,26 @@ function ClienteHome() {
   const [hoursById, setHoursById] = useState<Record<string, { abre: string; fecha: string }>>({});
   const [reviewCountById, setReviewCountById] = useState<Record<string, number>>({});
   const [sortBy, setSortBy] = useState<"recomendados" | "reviews" | "vendas">("recomendados");
+  const [activeCidade, setActiveCidade] = useState<string | null>(null);
+  const [activeEstado, setActiveEstado] = useState<string | null>(null);
   const catsScrollRef = useRef<HTMLDivElement | null>(null);
   const catsPausedRef = useRef(false);
+  const { detected, dismiss } = useCityDetection(activeCidade, activeEstado);
+
+  // Carrega cidade ativa do perfil
+  useEffect(() => {
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth?.user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("cidade_ativa,estado_ativo")
+        .eq("id", auth.user.id)
+        .maybeSingle();
+      setActiveCidade((data as any)?.cidade_ativa ?? null);
+      setActiveEstado((data as any)?.estado_ativo ?? null);
+    })();
+  }, []);
 
   // Auto-scroll lento das categorias — pausa ao interagir, ao selecionar,
   // ao expandir em grade, ao trocar de aba e para reduced-motion.
