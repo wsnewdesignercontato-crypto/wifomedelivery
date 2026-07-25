@@ -388,26 +388,42 @@ function EstabelecimentoPage() {
 
       <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar no cardápio" />
 
-      {cats.map((c) => {
-        const itens = visiveis.filter((p) => p.menu_category_id === c.id);
-        if (itens.length === 0) return null;
+      {(() => {
+        const grupos = cats
+          .map((c) => ({ id: c.id, nome: c.nome, itens: visiveis.filter((p) => p.menu_category_id === c.id) }))
+          .filter((g) => g.itens.length > 0);
+        if (semCat.length > 0) grupos.push({ id: "__outros__", nome: "Outros", itens: semCat });
+        const forceOpen = q.length > 0;
         return (
-          <section key={c.id} className="space-y-2">
-            <h2 className="text-base font-bold">{c.nome}</h2>
-            <div className="grid gap-2">
-              {itens.map((p) => <ProdRow key={p.id} p={p} onClick={() => abrirProd(p)} />)}
-            </div>
-          </section>
-        );
-      })}
-      {semCat.length > 0 && (
-        <section className="space-y-2">
-          <h2 className="text-base font-bold">Outros</h2>
-          <div className="grid gap-2">
-            {semCat.map((p) => <ProdRow key={p.id} p={p} onClick={() => abrirProd(p)} />)}
+          <div className="space-y-2">
+            {grupos.map((g, idx) => {
+              const manual = openCats[g.id];
+              const isOpen = forceOpen || (manual === undefined ? idx === 0 : manual);
+              return (
+                <section key={g.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+                  <button
+                    type="button"
+                    onClick={() => setOpenCats((prev) => ({ ...prev, [g.id]: !isOpen }))}
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-muted/40"
+                    aria-expanded={isOpen}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <h2 className="truncate text-base font-bold">{g.nome}</h2>
+                      <Badge variant="secondary" className="shrink-0 text-[10px]">{g.itens.length}</Badge>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {isOpen && (
+                    <div className="grid gap-2 border-t border-border/60 bg-background/40 p-3">
+                      {g.itens.map((p) => <ProdRow key={p.id} p={p} onClick={() => abrirProd(p)} />)}
+                    </div>
+                  )}
+                </section>
+              );
+            })}
           </div>
-        </section>
-      )}
+        );
+      })()}
       {visiveis.length === 0 && (
         <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
           Nenhum item disponível.
