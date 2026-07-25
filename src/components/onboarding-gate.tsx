@@ -145,7 +145,7 @@ export function OnboardingGate({
         <Button
           size="lg"
           className="w-full gap-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 hover:from-primary hover:to-primary"
-          onClick={() => navigate({ to: state.redirect })}
+          onClick={() => navigate({ to: state.redirect as any })}
         >
           {ROLE_CTAS[role]} <ArrowRight className="h-4 w-4" />
         </Button>
