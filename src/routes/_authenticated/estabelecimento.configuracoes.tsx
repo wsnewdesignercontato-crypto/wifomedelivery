@@ -151,6 +151,7 @@ function ConfigPage() {
       whatsapp: form.whatsapp || null,
       endereco: form.endereco || null,
       cidade: form.cidade || null,
+      estado: form.estado ? form.estado.trim().toUpperCase().slice(0, 2) : null,
       cnpj: form.cnpj || null,
       instagram: form.instagram || null,
       site: form.site || null,
