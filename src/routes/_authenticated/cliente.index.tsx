@@ -280,6 +280,23 @@ function ClienteHome() {
 
   return (
     <div className="space-y-6">
+      {detected && detected.differsFromActive && (
+        <CitySwitchCard
+          cidade={detected.cidade}
+          estado={detected.estado}
+          hasEstabs={detected.hasEstabsHere}
+          onAccept={async () => {
+            await supabase.rpc("set_active_city", {
+              _cidade: detected.cidade,
+              _estado: detected.estado,
+            });
+            setActiveCidade(detected.cidade);
+            setActiveEstado(detected.estado);
+            dismiss();
+          }}
+          onDismiss={dismiss}
+        />
+      )}
       {/* Banner único: anúncios patrocinados (rotativo) com fallback de frete grátis */}
       <AdRotator
         fallback={
