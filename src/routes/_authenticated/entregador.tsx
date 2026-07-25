@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EntregadorShell } from "@/components/entregador/entregador-shell";
 import { IFomeLogo } from "@/components/ifome-logo";
+import { OnboardingGate } from "@/components/onboarding-gate";
 import { useMyCourier } from "@/hooks/use-courier";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -108,8 +109,10 @@ function EntregadorLayout() {
   }
 
   return (
-    <EntregadorShell>
-      <Outlet />
-    </EntregadorShell>
+    <OnboardingGate role="entregador" userId={userId}>
+      <EntregadorShell>
+        <Outlet />
+      </EntregadorShell>
+    </OnboardingGate>
   );
 }
