@@ -242,11 +242,9 @@ function PedidosPage() {
                 <div className="mt-3 rounded-xl bg-muted/60 p-3 text-sm">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                     <span className="inline-flex items-center gap-1.5"><User className="h-3.5 w-3.5" /><span className="font-semibold">{contact?.nome ?? "Carregando..."}</span></span>
-                    {contact?.telefone && (
-                      <a href={`tel:${contact.telefone}`} className="inline-flex items-center gap-1.5 text-primary hover:underline">
-                        <Phone className="h-3.5 w-3.5" />{contact.telefone}
-                      </a>
-                    )}
+                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground" title="Por privacidade, o WhatsApp do cliente fica visível apenas para o entregador designado.">
+                      <Phone className="h-3.5 w-3.5" />Contato via entregador
+                    </span>
                   </div>
                   <div className="mt-1 flex items-start gap-1.5 text-muted-foreground">
                     <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
@@ -254,6 +252,7 @@ function PedidosPage() {
                   </div>
                   {o.troco_para_cents ? <div className="mt-1 text-xs">💵 Troco para <strong>{fmt(o.troco_para_cents)}</strong></div> : null}
                 </div>
+
 
                 {/* Itens com opcionais */}
                 <ul className="mt-3 space-y-2 text-sm">
