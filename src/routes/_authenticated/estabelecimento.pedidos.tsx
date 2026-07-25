@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { OrderHistory } from "@/components/order-history";
 import { Bike, ReceiptText, Printer, Phone, User, MapPin, Settings as SettingsIcon } from "lucide-react";
-import { printOrderReceipt } from "@/lib/print-receipt";
+import { printOrderReceipt, buildReceiptHtml } from "@/lib/print-receipt";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/pedidos")({
   component: PedidosPage,
@@ -319,6 +319,7 @@ function PrinterSettingsDialog() {
   const [auto, setAuto] = useState(false);
   const [width, setWidth] = useState("80");
   const [saving, setSaving] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState<string>("");
 
   useEffect(() => {
     if (!estab) return;
@@ -326,6 +327,51 @@ function PrinterSettingsDialog() {
     setAuto(!!estab.printer_auto);
     setWidth(String(estab.printer_width_mm ?? 80));
   }, [estab?.id, estab?.printer_enabled, estab?.printer_auto, estab?.printer_width_mm]);
+
+  function buildSample() {
+    const w = parseInt(width) === 58 ? 58 : 80;
+    const sampleOrder = {
+      id: "TESTE0001-0000-0000-0000-000000000000",
+      created_at: new Date().toISOString(),
+      status: "placed",
+      subtotal_cents: 4990,
+      frete_cents: 700,
+      desconto_cents: 500,
+      total_cents: 5190,
+      forma_pagamento: "dinheiro",
+      tipo_entrega: "delivery" as const,
+      observacoes: "Sem cebola no lanche, por favor.",
+      endereco_entrega: {
+        rua: "Rua das Flores", numero: "123", complemento: "Apto 42",
+        bairro: "Centro", cidade: "São Paulo", estado: "SP", cep: "01000-000",
+      },
+      troco_para_cents: 10000,
+      codigo_entrega: "1234",
+    };
+    const sampleItems = [
+      { quantidade: 1, nome_snapshot: "X-Burger Duplo", preco_unit_cents: 2990,
+        observacoes: "Ponto da carne: bem passado",
+        addons: [
+          { nome: "Bacon extra", preco_extra_cents: 400, group_nome: "Adicionais" },
+          { nome: "Queijo cheddar", preco_extra_cents: 300, group_nome: "Adicionais" },
+          { nome: "Sem picles", group_nome: "Retirar" },
+        ] },
+      { quantidade: 2, nome_snapshot: "Coca-Cola 350ml", preco_unit_cents: 700 },
+      { quantidade: 1, nome_snapshot: "Batata frita M", preco_unit_cents: 600 },
+    ];
+    const sampleEstab = {
+      nome: estab?.nome || "Meu Estabelecimento",
+      telefone: (estab as any)?.telefone || null,
+      endereco: null, cnpj: null,
+    };
+    const sampleContact = { nome: "Cliente Teste", telefone: "(11) 99999-9999" };
+    return buildReceiptHtml(sampleOrder, sampleItems, sampleEstab, sampleContact, w);
+  }
+
+  useEffect(() => {
+    if (open) setPreviewHtml(buildSample());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, width, estab?.nome]);
 
   async function salvar() {
     if (!estab) return;
@@ -340,43 +386,72 @@ function PrinterSettingsDialog() {
     setOpen(false);
   }
 
+  function testarImpressao() {
+    const html = buildSample();
+    const w = window.open("", "_blank", "width=420,height=640");
+    if (!w) return toast.error("Bloqueado pelo navegador. Permita pop-ups.");
+    w.document.open(); w.document.write(html); w.document.close();
+    toast.success("Cupom de teste enviado para impressão");
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline"><Printer className="mr-2 h-4 w-4" />Impressora</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle className="flex items-center gap-2"><SettingsIcon className="h-4 w-4" /> Impressão de pedidos</DialogTitle></DialogHeader>
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            O WiFome imprime em <strong>qualquer impressora instalada no seu computador ou celular</strong> (USB, rede ou Bluetooth). Basta que ela apareça na lista de impressoras do sistema. Para impressoras térmicas de 58/80mm, selecione a largura correta.
-          </p>
-          <div className="flex items-center justify-between rounded-xl border border-border p-3">
-            <div>
-              <p className="font-semibold text-sm">Ativar botão de impressão</p>
-              <p className="text-xs text-muted-foreground">Habilita "Imprimir" em cada pedido.</p>
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              O WiFome imprime em <strong>qualquer impressora instalada no seu computador ou celular</strong> (USB, rede ou Bluetooth). Basta que ela apareça na lista de impressoras do sistema. Para impressoras térmicas de 58/80mm, selecione a largura correta.
+            </p>
+            <div className="flex items-center justify-between rounded-xl border border-border p-3">
+              <div>
+                <p className="font-semibold text-sm">Ativar botão de impressão</p>
+                <p className="text-xs text-muted-foreground">Habilita "Imprimir" em cada pedido.</p>
+              </div>
+              <Switch checked={enabled} onCheckedChange={setEnabled} />
             </div>
-            <Switch checked={enabled} onCheckedChange={setEnabled} />
-          </div>
-          <div className="flex items-center justify-between rounded-xl border border-border p-3">
-            <div>
-              <p className="font-semibold text-sm">Impressão automática</p>
-              <p className="text-xs text-muted-foreground">Abre o cupom automaticamente quando entra um pedido novo.</p>
+            <div className="flex items-center justify-between rounded-xl border border-border p-3">
+              <div>
+                <p className="font-semibold text-sm">Impressão automática</p>
+                <p className="text-xs text-muted-foreground">Abre o cupom automaticamente quando entra um pedido novo.</p>
+              </div>
+              <Switch checked={auto} onCheckedChange={setAuto} disabled={!enabled} />
             </div>
-            <Switch checked={auto} onCheckedChange={setAuto} disabled={!enabled} />
+            <div>
+              <Label>Largura do papel</Label>
+              <div className="mt-1 flex gap-2">
+                {["58", "80"].map((v) => (
+                  <Button key={v} type="button" variant={width === v ? "default" : "outline"} size="sm" onClick={() => setWidth(v)}>
+                    {v}mm
+                  </Button>
+                ))}
+                <Input value={width} onChange={(e) => setWidth(e.target.value)} className="w-20" />
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button type="button" variant="outline" onClick={testarImpressao}>
+                <Printer className="mr-2 h-4 w-4" /> Testar impressão
+              </Button>
+              <Button className="w-full" onClick={salvar} disabled={saving}>Salvar configurações</Button>
+            </div>
           </div>
           <div>
-            <Label>Largura do papel</Label>
-            <div className="mt-1 flex gap-2">
-              {["58", "80"].map((v) => (
-                <Button key={v} type="button" variant={width === v ? "default" : "outline"} size="sm" onClick={() => setWidth(v)}>
-                  {v}mm
-                </Button>
-              ))}
-              <Input value={width} onChange={(e) => setWidth(e.target.value)} className="w-20" />
+            <Label className="mb-2 block">Pré-visualização do cupom</Label>
+            <div className="rounded-xl border border-border bg-muted/30 p-2">
+              <iframe
+                title="Pré-visualização do cupom"
+                srcDoc={previewHtml}
+                className="h-[520px] w-full rounded-lg bg-white"
+                sandbox="allow-same-origin"
+              />
             </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Exibindo um pedido de exemplo na largura de {parseInt(width) === 58 ? "58" : "80"}mm.
+            </p>
           </div>
-          <Button className="w-full" onClick={salvar} disabled={saving}>Salvar configurações</Button>
         </div>
       </DialogContent>
     </Dialog>
