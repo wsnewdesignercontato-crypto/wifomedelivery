@@ -86,6 +86,7 @@ function ConfigPage() {
       whatsapp: estab.whatsapp ?? "",
       endereco: estab.endereco ?? "",
       cidade: estab.cidade ?? "",
+      estado: estab.estado ?? "",
       cnpj: estab.cnpj ?? "",
       instagram: estab.instagram ?? "",
       site: estab.site ?? "",
