@@ -92,7 +92,17 @@ export function OnboardingGate({
     );
   }
 
-  if (state.complete) return <>{children}</>;
+  // Libera navegação para a própria página de completar dados e sub-rotas relacionadas
+  const ONBOARDING_ALLOWED: Record<Role, string[]> = {
+    cliente: ["/cliente/perfil/enderecos", "/cliente/perfil/conta", "/cliente/perfil"],
+    estabelecimento: ["/estabelecimento/configuracoes"],
+    entregador: ["/entregador/perfil", "/entregador/perfil/dados", "/entregador/perfil/pagamento"],
+  };
+  const isOnAllowedPath =
+    pathname === state.redirect ||
+    ONBOARDING_ALLOWED[role].some((p) => pathname === p || pathname.startsWith(p + "/"));
+
+  if (state.complete || isOnAllowedPath) return <>{children}</>;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-gradient-to-br from-background via-background to-primary/10 p-4">
