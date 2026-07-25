@@ -58,7 +58,7 @@ type FormState = {
 
 const EMPTY: FormState = {
   nome: "", razao_social: "", descricao: "", slogan: "", telefone: "", whatsapp: "",
-  endereco: "", cidade: "", cnpj: "", instagram: "", site: "",
+  endereco: "", cidade: "", estado: "", cnpj: "", instagram: "", site: "",
   logo_url: "", capa_url: "", cor_destaque: "#FF6B00",
   taxa: "0.00", tempo: "30", minimo: "0.00",
   pix_key: "", banco_nome: "", banco_agencia: "", banco_conta: "", banco_tipo: "corrente",
