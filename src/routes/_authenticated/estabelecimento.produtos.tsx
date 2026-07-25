@@ -29,6 +29,7 @@ function ProdutosPage() {
   const { estab } = useMyEstab();
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [cats, setCats] = useState<Categoria[]>([]);
+  const [addonGroups, setAddonGroups] = useState<{ id: string; nome: string }[]>([]);
   const [busca, setBusca] = useState("");
   const [filterCat, setFilterCat] = useState<string>("todas");
   const [editing, setEditing] = useState<Produto | null>(null);
@@ -43,6 +44,9 @@ function ProdutosPage() {
     const { data: c } = await supabase.from("menu_categories")
       .select("id,nome").eq("establishment_id", estab.id).order("ordem");
     setCats((c ?? []) as Categoria[]);
+    const { data: ag } = await supabase.from("addon_groups")
+      .select("id,nome").eq("establishment_id", estab.id).order("nome");
+    setAddonGroups((ag ?? []) as { id: string; nome: string }[]);
   }
   useEffect(() => { reload(); }, [estab?.id]);
 
@@ -85,7 +89,7 @@ function ProdutosPage() {
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader><DialogTitle>Novo produto</DialogTitle></DialogHeader>
-            <ProdutoForm cats={cats} onSaved={() => { setOpenNew(false); reload(); }} />
+            <ProdutoForm cats={cats} addonGroups={addonGroups} onSaved={() => { setOpenNew(false); reload(); }} />
           </DialogContent>
         </Dialog>
       </div>
@@ -142,7 +146,7 @@ function ProdutosPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>Editar produto</DialogTitle></DialogHeader>
           {editing && (
-            <ProdutoForm cats={cats} produto={editing} onSaved={() => { setEditing(null); reload(); }} />
+            <ProdutoForm cats={cats} addonGroups={addonGroups} produto={editing} onSaved={() => { setEditing(null); reload(); }} />
           )}
         </DialogContent>
       </Dialog>
@@ -150,7 +154,7 @@ function ProdutosPage() {
   );
 }
 
-function ProdutoForm({ cats, produto, onSaved }: { cats: Categoria[]; produto?: Produto; onSaved: () => void }) {
+function ProdutoForm({ cats, addonGroups, produto, onSaved }: { cats: Categoria[]; addonGroups: { id: string; nome: string }[]; produto?: Produto; onSaved: () => void }) {
   const { estab } = useMyEstab();
   const [form, setForm] = useState({
     nome: produto?.nome ?? "",
@@ -163,7 +167,24 @@ function ProdutoForm({ cats, produto, onSaved }: { cats: Categoria[]; produto?: 
     tempo: produto?.tempo_preparo_min?.toString() ?? "",
     disponivel: produto?.disponivel ?? true,
   });
+  const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!produto?.id) return;
+    supabase.from("product_addon_groups").select("addon_group_id").eq("product_id", produto.id)
+      .then(({ data }) => {
+        setSelectedGroups(new Set((data ?? []).map((r) => (r as { addon_group_id: string }).addon_group_id)));
+      });
+  }, [produto?.id]);
+
+  function toggleGroup(id: string) {
+    setSelectedGroups((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  }
 
   async function salvar() {
     if (!estab || !form.nome.trim() || !form.preco) return toast.error("Nome e preço obrigatórios");
@@ -180,17 +201,27 @@ function ProdutoForm({ cats, produto, onSaved }: { cats: Categoria[]; produto?: 
       tempo_preparo_min: form.tempo ? parseInt(form.tempo) : null,
       disponivel: form.disponivel,
     };
-    const { error } = produto
-      ? await supabase.from("products").update(payload).eq("id", produto.id)
-      : await supabase.from("products").insert(payload);
+    let productId = produto?.id;
+    if (produto) {
+      const { error } = await supabase.from("products").update(payload).eq("id", produto.id);
+      if (error) { setSaving(false); return toast.error("Falha ao salvar"); }
+    } else {
+      const { data, error } = await supabase.from("products").insert(payload).select("id").single();
+      if (error || !data) { setSaving(false); return toast.error("Falha ao salvar"); }
+      productId = data.id;
+    }
+    if (productId) {
+      await supabase.from("product_addon_groups").delete().eq("product_id", productId);
+      const rows = Array.from(selectedGroups).map((gid) => ({ product_id: productId!, addon_group_id: gid }));
+      if (rows.length) await supabase.from("product_addon_groups").insert(rows);
+    }
     setSaving(false);
-    if (error) return toast.error("Falha ao salvar");
     toast.success("Produto salvo");
     onSaved();
   }
 
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-3 max-h-[75vh] overflow-y-auto pr-1">
       <div><Label>Nome</Label><Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></div>
       <div><Label>Descrição</Label><Textarea value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} /></div>
       <div className="grid grid-cols-2 gap-3">
@@ -217,6 +248,31 @@ function ProdutoForm({ cats, produto, onSaved }: { cats: Categoria[]; produto?: 
         </div>
       </div>
       <div><Label>URL da foto</Label><Input value={form.foto_url} onChange={(e) => setForm({ ...form, foto_url: e.target.value })} /></div>
+      <div>
+        <Label>Grupos de opcionais/adicionais</Label>
+        <p className="text-xs text-muted-foreground mb-2">Marque os grupos (ex.: "Tamanho", "Bebida", "Tempero") que o cliente poderá escolher neste produto. Crie novos em <strong>Complementos</strong>.</p>
+        {addonGroups.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+            Nenhum grupo cadastrado. Vá em Complementos e crie o primeiro.
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {addonGroups.map((g) => {
+              const on = selectedGroups.has(g.id);
+              return (
+                <button
+                  type="button"
+                  key={g.id}
+                  onClick={() => toggleGroup(g.id)}
+                  className={`rounded-full border px-3 py-1.5 text-xs transition ${on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-muted"}`}
+                >
+                  {on ? "✓ " : ""}{g.nome}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
       <DialogFooter>
         <Button onClick={salvar} disabled={saving}>
           {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Salvar
@@ -225,3 +281,4 @@ function ProdutoForm({ cats, produto, onSaved }: { cats: Categoria[]; produto?: 
     </div>
   );
 }
+
