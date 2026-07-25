@@ -320,8 +320,10 @@ function ConfigPage() {
       <Section icon={MapPin} title="Endereço" subtitle="Onde sua loja está localizada">
         <Field label="Endereço" value={form.endereco} onChange={(v) => setForm({ ...form, endereco: v })} full />
         <Field label="Cidade" value={form.cidade} onChange={(v) => setForm({ ...form, cidade: v })} />
-        <Field label="CNPJ" value={form.cnpj} onChange={(v) => setForm({ ...form, cnpj: v })} />
+        <Field label="Estado (UF)" value={form.estado} onChange={(v) => setForm({ ...form, estado: v.toUpperCase().slice(0, 2) })} />
+        <Field label="CNPJ" value={form.cnpj} onChange={(v) => setForm({ ...form, cnpj: v })} full />
       </Section>
+
 
       <Section icon={Truck} title="Operação" subtitle="Taxas e prazos padrão">
         <Field
