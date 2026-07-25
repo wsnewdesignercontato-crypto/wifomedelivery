@@ -26,6 +26,8 @@ import catMercado from "@/assets/cat-mercado.jpg";
 import catFarmacia from "@/assets/cat-farmacia.jpg";
 import bannerFreteGratis from "@/assets/banner-frete-gratis-premium.png.asset.json";
 import { AdRotator } from "@/components/cliente/ad-rotator";
+import { useCityDetection } from "@/hooks/use-city-detection";
+import { CitySwitchCard } from "@/components/cliente/city-switch-card";
 
 export const Route = createFileRoute("/_authenticated/cliente/")({
   component: ClienteHome,
@@ -89,8 +91,26 @@ function ClienteHome() {
   const [hoursById, setHoursById] = useState<Record<string, { abre: string; fecha: string }>>({});
   const [reviewCountById, setReviewCountById] = useState<Record<string, number>>({});
   const [sortBy, setSortBy] = useState<"recomendados" | "reviews" | "vendas">("recomendados");
+  const [activeCidade, setActiveCidade] = useState<string | null>(null);
+  const [activeEstado, setActiveEstado] = useState<string | null>(null);
   const catsScrollRef = useRef<HTMLDivElement | null>(null);
   const catsPausedRef = useRef(false);
+  const { detected, dismiss } = useCityDetection(activeCidade, activeEstado);
+
+  // Carrega cidade ativa do perfil
+  useEffect(() => {
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth?.user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("cidade_ativa,estado_ativo")
+        .eq("id", auth.user.id)
+        .maybeSingle();
+      setActiveCidade((data as any)?.cidade_ativa ?? null);
+      setActiveEstado((data as any)?.estado_ativo ?? null);
+    })();
+  }, []);
 
   // Auto-scroll lento das categorias — pausa ao interagir, ao selecionar,
   // ao expandir em grade, ao trocar de aba e para reduced-motion.
@@ -162,14 +182,15 @@ function ClienteHome() {
   useEffect(() => {
     (async () => {
       const nowIso = new Date().toISOString();
+      let estabQ = supabase
+        .from("establishments")
+        .select("id,nome,descricao,categoria_id,logo_url,capa_url,taxa_entrega_cents,tempo_medio_min,avaliacao,is_open,cidade")
+        .eq("status", "aprovado")
+        .eq("is_open", true);
+      if (activeCidade) estabQ = estabQ.ilike("cidade", activeCidade);
       const [c, e, cp, od, ps] = await Promise.all([
         supabase.from("global_categories").select("id,nome,slug,icone").eq("ativo", true).order("ordem"),
-        supabase
-          .from("establishments")
-          .select("id,nome,descricao,categoria_id,logo_url,capa_url,taxa_entrega_cents,tempo_medio_min,avaliacao,is_open,cidade")
-          .eq("status", "aprovado")
-          .eq("is_open", true)
-          .order("avaliacao", { ascending: false, nullsFirst: false }),
+        estabQ.order("avaliacao", { ascending: false, nullsFirst: false }),
         supabase
           .from("coupons")
           .select("establishment_id,expires_at,ativo")
@@ -224,7 +245,7 @@ function ClienteHome() {
 
       setLoading(false);
     })();
-  }, []);
+  }, [activeCidade]);
 
   const filtered = useMemo(() => {
     const base = catSel ? estabs.filter((e) => e.categoria_id === catSel) : estabs;
@@ -259,6 +280,23 @@ function ClienteHome() {
 
   return (
     <div className="space-y-6">
+      {detected && detected.differsFromActive && (
+        <CitySwitchCard
+          cidade={detected.cidade}
+          estado={detected.estado}
+          hasEstabs={detected.hasEstabsHere}
+          onAccept={async () => {
+            await supabase.rpc("set_active_city", {
+              _cidade: detected.cidade,
+              _estado: detected.estado,
+            });
+            setActiveCidade(detected.cidade);
+            setActiveEstado(detected.estado);
+            dismiss();
+          }}
+          onDismiss={dismiss}
+        />
+      )}
       {/* Banner único: anúncios patrocinados (rotativo) com fallback de frete grátis */}
       <AdRotator
         fallback={
