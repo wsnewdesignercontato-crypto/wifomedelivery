@@ -11,7 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Loader2, Plus, Trash2, Copy, Pencil } from "lucide-react";
+import { Loader2, Plus, Trash2, Copy, Pencil, Sparkles, Wand2 } from "lucide-react";
+import { getCategoryKind, KIND_LABEL, KIND_HINT, ADDON_TEMPLATES, VARIANT_TEMPLATES, EXTRA_FIELDS } from "@/lib/category-templates";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/produtos")({
   component: ProdutosPage,
