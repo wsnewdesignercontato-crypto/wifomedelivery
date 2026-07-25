@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EstabShell } from "@/components/estabelecimento/estab-shell";
+import { OnboardingGate } from "@/components/onboarding-gate";
 import { useEstab, type Estab } from "@/hooks/use-estab";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento")({
@@ -53,7 +54,11 @@ function EstabLayout() {
     );
   }
 
-  return <EstabShell estab={estab} />;
+  return (
+    <OnboardingGate role="estabelecimento" userId={user.id}>
+      <EstabShell estab={estab} />
+    </OnboardingGate>
+  );
 }
 
 function SetupForm({ userId }: { userId: string }) {
