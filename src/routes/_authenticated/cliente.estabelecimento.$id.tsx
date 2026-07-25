@@ -410,7 +410,7 @@ function EstabelecimentoPage() {
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <h2 className="truncate text-base font-bold">{g.nome}</h2>
-                      <Badge variant="secondary" className="shrink-0 text-[10px]">{g.itens.length}</Badge>
+                      <Badge variant={q ? "default" : "secondary"} className="shrink-0 text-[10px]">{q ? `${g.itens.length} encontrado${g.itens.length > 1 ? "s" : ""}` : g.itens.length}</Badge>
                     </div>
                     <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
                   </button>
