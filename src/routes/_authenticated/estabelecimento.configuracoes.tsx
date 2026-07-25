@@ -37,6 +37,7 @@ type FormState = {
   whatsapp: string;
   endereco: string;
   cidade: string;
+  estado: string;
   cnpj: string;
   instagram: string;
   site: string;
@@ -57,7 +58,7 @@ type FormState = {
 
 const EMPTY: FormState = {
   nome: "", razao_social: "", descricao: "", slogan: "", telefone: "", whatsapp: "",
-  endereco: "", cidade: "", cnpj: "", instagram: "", site: "",
+  endereco: "", cidade: "", estado: "", cnpj: "", instagram: "", site: "",
   logo_url: "", capa_url: "", cor_destaque: "#FF6B00",
   taxa: "0.00", tempo: "30", minimo: "0.00",
   pix_key: "", banco_nome: "", banco_agencia: "", banco_conta: "", banco_tipo: "corrente",
@@ -85,6 +86,7 @@ function ConfigPage() {
       whatsapp: estab.whatsapp ?? "",
       endereco: estab.endereco ?? "",
       cidade: estab.cidade ?? "",
+      estado: estab.estado ?? "",
       cnpj: estab.cnpj ?? "",
       instagram: estab.instagram ?? "",
       site: estab.site ?? "",
@@ -149,6 +151,7 @@ function ConfigPage() {
       whatsapp: form.whatsapp || null,
       endereco: form.endereco || null,
       cidade: form.cidade || null,
+      estado: form.estado ? form.estado.trim().toUpperCase().slice(0, 2) : null,
       cnpj: form.cnpj || null,
       instagram: form.instagram || null,
       site: form.site || null,
@@ -317,8 +320,10 @@ function ConfigPage() {
       <Section icon={MapPin} title="Endereço" subtitle="Onde sua loja está localizada">
         <Field label="Endereço" value={form.endereco} onChange={(v) => setForm({ ...form, endereco: v })} full />
         <Field label="Cidade" value={form.cidade} onChange={(v) => setForm({ ...form, cidade: v })} />
-        <Field label="CNPJ" value={form.cnpj} onChange={(v) => setForm({ ...form, cnpj: v })} />
+        <Field label="Estado (UF)" value={form.estado} onChange={(v) => setForm({ ...form, estado: v.toUpperCase().slice(0, 2) })} />
+        <Field label="CNPJ" value={form.cnpj} onChange={(v) => setForm({ ...form, cnpj: v })} full />
       </Section>
+
 
       <Section icon={Truck} title="Operação" subtitle="Taxas e prazos padrão">
         <Field
