@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Star, Clock, Heart, Plus, Minus, Loader2, Check, MessageSquare } from "lucide-react";
+import { ArrowLeft, Star, Clock, Heart, Plus, Minus, Loader2, Check, MessageSquare, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
