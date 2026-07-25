@@ -77,10 +77,14 @@ export function OnboardingGate({
 
   useEffect(() => {
     check();
-    // Reavalia quando o usuário volta pra aba (pode ter salvo perfil em outra tela)
     const onFocus = () => check();
+    const onProfileUpdated = () => check();
     window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
+    window.addEventListener("wifome:profile-updated", onProfileUpdated);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("wifome:profile-updated", onProfileUpdated);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, role]);
 
