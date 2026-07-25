@@ -29,6 +29,7 @@ function ProdutosPage() {
   const { estab } = useMyEstab();
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [cats, setCats] = useState<Categoria[]>([]);
+  const [addonGroups, setAddonGroups] = useState<{ id: string; nome: string }[]>([]);
   const [busca, setBusca] = useState("");
   const [filterCat, setFilterCat] = useState<string>("todas");
   const [editing, setEditing] = useState<Produto | null>(null);
@@ -43,6 +44,9 @@ function ProdutosPage() {
     const { data: c } = await supabase.from("menu_categories")
       .select("id,nome").eq("establishment_id", estab.id).order("ordem");
     setCats((c ?? []) as Categoria[]);
+    const { data: ag } = await supabase.from("addon_groups")
+      .select("id,nome").eq("establishment_id", estab.id).order("nome");
+    setAddonGroups((ag ?? []) as { id: string; nome: string }[]);
   }
   useEffect(() => { reload(); }, [estab?.id]);
 
