@@ -397,34 +397,42 @@ function EstabelecimentoPage() {
         const forceOpen = q.length > 0;
         return (
           <div className="space-y-2">
-            {grupos.map((g, idx) => {
+            {grupos.map((g) => {
               const manual = openCats[g.id];
-              const isOpen = forceOpen || (manual === undefined ? idx === 0 : manual);
+              const isOpen = forceOpen || manual === true;
+              const first = g.itens[0];
+              const rest = g.itens.slice(1);
+              const hasMore = rest.length > 0;
               return (
                 <section key={g.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-                  <button
-                    type="button"
-                    onClick={() => setOpenCats((prev) => ({ ...prev, [g.id]: !isOpen }))}
-                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-muted/40"
-                    aria-expanded={isOpen}
-                  >
+                  <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
                     <div className="flex items-center gap-2 min-w-0">
                       <h2 className="truncate text-base font-bold">{g.nome}</h2>
                       <Badge variant={q ? "default" : "secondary"} className="shrink-0 text-[10px]">{q ? `${g.itens.length} encontrado${g.itens.length > 1 ? "s" : ""}` : g.itens.length}</Badge>
                     </div>
-                    <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {isOpen && (
-                    <div className="grid gap-2 border-t border-border/60 bg-background/40 p-3">
-                      {g.itens.map((p) => <ProdRow key={p.id} p={p} q={q} onClick={() => abrirProd(p)} />)}
-                    </div>
-                  )}
+                  </div>
+                  <div className="grid gap-2 border-t border-border/60 bg-background/40 p-3">
+                    {first && <ProdRow key={first.id} p={first} q={q} onClick={() => abrirProd(first)} />}
+                    {hasMore && isOpen && rest.map((p) => <ProdRow key={p.id} p={p} q={q} onClick={() => abrirProd(p)} />)}
+                    {hasMore && !forceOpen && (
+                      <button
+                        type="button"
+                        onClick={() => setOpenCats((prev) => ({ ...prev, [g.id]: !isOpen }))}
+                        className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-primary/40 bg-primary/5 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/10"
+                        aria-expanded={isOpen}
+                      >
+                        {isOpen ? "Recolher opções" : `Abrir mais opções (${rest.length})`}
+                        <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                      </button>
+                    )}
+                  </div>
                 </section>
               );
             })}
           </div>
         );
       })()}
+
       {visiveis.length === 0 && (
         <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
           Nenhum item disponível.
