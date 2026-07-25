@@ -48,6 +48,7 @@ export function OnboardingGate({
   children: ReactNode;
 }) {
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [state, setState] = useState<{
     loading: boolean;
     complete: boolean;
