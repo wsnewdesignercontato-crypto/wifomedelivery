@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Star, Clock, Heart, Plus, Minus, Loader2, Check, MessageSquare } from "lucide-react";
+import { ArrowLeft, Star, Clock, Heart, Plus, Minus, Loader2, Check, MessageSquare, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -487,69 +487,12 @@ function EstabelecimentoPage() {
                 {!loadingGroups && groups.map((g) => {
                   const cur = sel[g.id] ?? [];
                   return (
-                    <div key={g.id} className="rounded-xl border border-border">
-                      <div className="flex items-start justify-between gap-2 border-b border-border bg-muted/40 px-3 py-2">
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold">{g.nome}</p>
-                          <p className="text-[11px] text-muted-foreground">
-                            {g.obrigatorio && <span className="font-semibold text-primary">Obrigatório · </span>}
-                            {g.selecao_multipla
-                              ? g.maximo > 0
-                                ? `Escolha até ${g.maximo}`
-                                : "Escolha quantos quiser"
-                              : "Escolha 1"}
-                            {g.minimo > 0 && !g.obrigatorio && ` · Mín. ${g.minimo}`}
-                          </p>
-                        </div>
-                        {g.obrigatorio && (
-                          <Badge variant={cur.length >= Math.max(1, g.minimo) ? "default" : "secondary"} className="text-[10px]">
-                            {cur.length >= Math.max(1, g.minimo) ? "OK" : "Escolha"}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="divide-y divide-border">
-                        {g.addons.map((a) => {
-                          const active = cur.includes(a.id);
-                          const disabled =
-                            !active &&
-                            g.selecao_multipla &&
-                            g.maximo > 0 &&
-                            cur.length >= g.maximo;
-                          return (
-                            <button
-                              key={a.id}
-                              type="button"
-                              onClick={() => !disabled && toggleAddon(g, a.id)}
-                              disabled={disabled}
-                              className={`flex w-full items-center gap-3 px-3 py-3 text-left transition-colors ${
-                                active ? "bg-primary/5" : "hover:bg-muted/40"
-                              } ${disabled ? "opacity-40" : ""}`}
-                            >
-                              <div
-                                className={`flex h-5 w-5 shrink-0 items-center justify-center border-2 ${
-                                  g.selecao_multipla ? "rounded" : "rounded-full"
-                                } ${active ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
-                              >
-                                {active && <Check className="h-3 w-3" />}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-semibold">{a.nome}</p>
-                                {a.descricao && (
-                                  <p className="text-[11px] text-muted-foreground">{a.descricao}</p>
-                                )}
-                              </div>
-                              {a.preco_extra_cents > 0 ? (
-                                <span className="text-sm font-bold text-primary">
-                                  +{fmt(a.preco_extra_cents)}
-                                </span>
-                              ) : (
-                                <span className="text-xs font-medium text-muted-foreground">Grátis</span>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
+                    <AddonGroupBlock
+                      key={g.id}
+                      g={g}
+                      cur={cur}
+                      toggleAddon={toggleAddon}
+                    />
                   );
                 })}
 
@@ -614,5 +557,109 @@ function ProdRow({ p, onClick }: { p: Produto; onClick: () => void }) {
         <div className="h-20 w-20 shrink-0 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5" />
       )}
     </button>
+  );
+}
+
+function AddonGroupBlock({
+  g,
+  cur,
+  toggleAddon,
+}: {
+  g: AddonGroup;
+  cur: string[];
+  toggleAddon: (g: AddonGroup, addonId: string) => void;
+}) {
+  const many = g.addons.length > 4;
+  const [open, setOpen] = useState(!many || g.obrigatorio);
+  const selectedNames = cur
+    .map((id) => g.addons.find((a) => a.id === id)?.nome)
+    .filter(Boolean)
+    .join(", ");
+  const okState = g.obrigatorio
+    ? cur.length >= Math.max(1, g.minimo)
+    : cur.length > 0;
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-border">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-start justify-between gap-2 bg-muted/40 px-3 py-2 text-left transition hover:bg-muted/60"
+        aria-expanded={open}
+      >
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-bold">{g.nome}</p>
+            {g.obrigatorio && (
+              <Badge variant={okState ? "default" : "secondary"} className="text-[10px]">
+                {okState ? "OK" : "Obrigatório"}
+              </Badge>
+            )}
+            {cur.length > 0 && (
+              <Badge variant="outline" className="text-[10px]">
+                {cur.length} selecionado{cur.length > 1 ? "s" : ""}
+              </Badge>
+            )}
+          </div>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            {g.selecao_multipla
+              ? g.maximo > 0
+                ? `Escolha até ${g.maximo}`
+                : "Escolha quantos quiser"
+              : "Escolha 1"}
+            {g.minimo > 0 && !g.obrigatorio && ` · Mín. ${g.minimo}`}
+          </p>
+          {!open && selectedNames && (
+            <p className="mt-1 truncate text-[11px] text-primary">{selectedNames}</p>
+          )}
+        </div>
+        <ChevronDown
+          className={`mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      {open && (
+        <div className="divide-y divide-border">
+          {g.addons.map((a) => {
+            const active = cur.includes(a.id);
+            const disabled =
+              !active && g.selecao_multipla && g.maximo > 0 && cur.length >= g.maximo;
+            return (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => !disabled && toggleAddon(g, a.id)}
+                disabled={disabled}
+                className={`flex w-full items-center gap-3 px-3 py-3 text-left transition-colors ${
+                  active ? "bg-primary/5" : "hover:bg-muted/40"
+                } ${disabled ? "opacity-40" : ""}`}
+              >
+                <div
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center border-2 ${
+                    g.selecao_multipla ? "rounded" : "rounded-full"
+                  } ${active ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+                >
+                  {active && <Check className="h-3 w-3" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold">{a.nome}</p>
+                  {a.descricao && (
+                    <p className="text-[11px] text-muted-foreground">{a.descricao}</p>
+                  )}
+                </div>
+                {a.preco_extra_cents > 0 ? (
+                  <span className="text-sm font-bold text-primary">
+                    +{fmt(a.preco_extra_cents)}
+                  </span>
+                ) : (
+                  <span className="text-xs font-medium text-muted-foreground">Grátis</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
