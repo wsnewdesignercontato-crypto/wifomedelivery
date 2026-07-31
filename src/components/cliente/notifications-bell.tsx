@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, CheckCheck, Package, Sparkles } from "lucide-react";
+import { Bell, BellOff, BellRing, CheckCheck, Package, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,8 @@ import {
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { playBellChime } from "@/lib/notification-sound";
+import { setAppBadgeCount, usePushNotifications } from "@/hooks/use-push-notifications";
+
 
 type Notif = {
   id: string;
