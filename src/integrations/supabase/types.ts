@@ -3000,6 +3000,50 @@ export type Database = {
         }
         Relationships: []
       }
+      public_reviews: {
+        Row: {
+          comentario: string | null
+          created_at: string | null
+          establishment_id: string | null
+          id: string | null
+          order_id: string | null
+          problema_reportado: boolean | null
+          rating_entregador: number | null
+          rating_loja: number | null
+          respondido_em: string | null
+          resposta: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "demand_zones_view"
+            referencedColumns: ["establishment_id"]
+          },
+          {
+            foreignKeyName: "reviews_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       apply_score_penalty: {
@@ -3033,6 +3077,13 @@ export type Database = {
           nome: string
           telefone: string
         }[]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
       }
       regenerate_delivery_code: {
         Args: { p_order_id: string }
