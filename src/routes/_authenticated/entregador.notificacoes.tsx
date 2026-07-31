@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Bell } from "lucide-react";
 import { useMyCourier } from "@/hooks/use-courier";
 import { Badge } from "@/components/ui/badge";
+import { PushToggleCard } from "@/components/push-toggle-card";
+
 
 export const Route = createFileRoute("/_authenticated/entregador/notificacoes")({
   component: Notif,
