@@ -186,7 +186,7 @@ type Review = {
   rating_entregador: number | null;
   comentario: string | null;
   problema_reportado: boolean;
-  problema_descricao: string | null;
+  problema_descricao?: string | null;
   created_at: string;
 };
 
