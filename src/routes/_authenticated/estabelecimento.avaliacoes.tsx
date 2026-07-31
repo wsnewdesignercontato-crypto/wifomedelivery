@@ -12,7 +12,7 @@ function AvaliacoesPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-black tracking-tight">Avaliações</h1>
-      <EstabReviewsPanel establishmentId={estab.id} />
+      <EstabReviewsPanel establishmentId={estab.id} owner />
     </div>
   );
 }

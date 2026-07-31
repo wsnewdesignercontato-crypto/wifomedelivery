@@ -9,6 +9,7 @@ const codigoEntregaSchema = z
   .regex(/^\d{4}$/, { message: "O código deve ter exatamente 4 dígitos numéricos." });
 import { Bike, MapPin, Package, CheckCircle2, Phone, MessageSquare, Navigation, Clock, ShieldCheck, Loader2, Camera, Banknote, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { validateImageFile } from "@/lib/upload-validation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -268,6 +269,8 @@ function Corridas() {
     let prova_url: string | null = null;
     let metodo: string = "code";
     if (proofFile) {
+      const invalidProof = validateImageFile(proofFile);
+      if (invalidProof) { setAdvancing(false); return toast.error(invalidProof); }
       const path = `${courier.user_id}/${order.id}/${Date.now()}-${proofFile.name}`;
       const up = await supabase.storage.from("delivery-proofs").upload(path, proofFile);
       if (up.error) { setAdvancing(false); return toast.error("Falha ao enviar foto"); }

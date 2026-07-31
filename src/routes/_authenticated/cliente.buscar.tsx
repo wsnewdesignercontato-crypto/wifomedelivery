@@ -76,7 +76,7 @@ function BuscarPage() {
     setProds((p.data ?? []) as Prod[]);
     const ids = estabList.map((x) => x.id);
     if (ids.length) {
-      const { data: revs } = await supabase.from("reviews").select("establishment_id").in("establishment_id", ids);
+      const { data: revs } = await supabase.from("public_reviews").select("establishment_id").in("establishment_id", ids);
       const rc: Record<string, number> = {};
       (revs ?? []).forEach((r: any) => {
         if (r.establishment_id) rc[r.establishment_id] = (rc[r.establishment_id] ?? 0) + 1;
