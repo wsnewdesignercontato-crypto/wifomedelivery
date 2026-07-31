@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { validateImageFile } from "@/lib/upload-validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Send, Image as ImageIcon, MapPin, Phone } from "lucide-react";
@@ -153,7 +154,8 @@ export function OrderChat({
 
   async function sendImage(file: File) {
     if (!uid) return;
-    if (file.size > 5 * 1024 * 1024) return toast.error("Imagem muito grande (máx 5MB)");
+    const invalid = validateImageFile(file);
+    if (invalid) return toast.error(invalid);
     const path = `${uid}/${orderId}/${Date.now()}-${file.name}`;
     setSending(true);
     const { error: upErr } = await supabase.storage.from("chat-attachments").upload(path, file);

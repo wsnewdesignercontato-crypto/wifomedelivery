@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Megaphone, Sparkles, Check, Clock, ShieldAlert, XCircle, Upload, Play, Image as ImageIcon, Link2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { validateImageFile } from "@/lib/upload-validation";
 import { useMyEstab } from "@/hooks/use-my-estab";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -432,6 +433,8 @@ function SubirCampanhaModal({
     setSaving(true);
     try {
       if (tipo === "banner" && file) {
+        const invalidBanner = validateImageFile(file);
+        if (invalidBanner) { setSaving(false); return toast.error(invalidBanner); }
         const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
         const path = `${estabId}/${crypto.randomUUID()}.${ext}`;
         const { error: upErr } = await supabase.storage.from("ad-banners").upload(path, file, {
