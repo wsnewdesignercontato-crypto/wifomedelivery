@@ -26,6 +26,7 @@ import { Route as AuthenticatedEstabelecimentoIndexRouteImport } from './routes/
 import { Route as AuthenticatedEntregadorIndexRouteImport } from './routes/_authenticated/entregador.index'
 import { Route as AuthenticatedClienteIndexRouteImport } from './routes/_authenticated/cliente.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push-dispatch'
 import { Route as AuthenticatedEstabelecimentoScoreRouteImport } from './routes/_authenticated/estabelecimento.score'
 import { Route as AuthenticatedEstabelecimentoSaquesRouteImport } from './routes/_authenticated/estabelecimento.saques'
 import { Route as AuthenticatedEstabelecimentoRelatoriosRouteImport } from './routes/_authenticated/estabelecimento.relatorios'
@@ -186,6 +187,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const ApiPublicPushDispatchRoute = ApiPublicPushDispatchRouteImport.update({
+  id: '/api/public/push-dispatch',
+  path: '/api/public/push-dispatch',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedEstabelecimentoScoreRoute =
   AuthenticatedEstabelecimentoScoreRouteImport.update({
@@ -689,6 +695,7 @@ export interface FileRoutesByFullPath {
   '/estabelecimento/relatorios': typeof AuthenticatedEstabelecimentoRelatoriosRoute
   '/estabelecimento/saques': typeof AuthenticatedEstabelecimentoSaquesRoute
   '/estabelecimento/score': typeof AuthenticatedEstabelecimentoScoreRoute
+  '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/cliente/': typeof AuthenticatedClienteIndexRoute
   '/entregador/': typeof AuthenticatedEntregadorIndexRoute
@@ -775,6 +782,7 @@ export interface FileRoutesByTo {
   '/estabelecimento/relatorios': typeof AuthenticatedEstabelecimentoRelatoriosRoute
   '/estabelecimento/saques': typeof AuthenticatedEstabelecimentoSaquesRoute
   '/estabelecimento/score': typeof AuthenticatedEstabelecimentoScoreRoute
+  '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/cliente': typeof AuthenticatedClienteIndexRoute
   '/entregador': typeof AuthenticatedEntregadorIndexRoute
@@ -867,6 +875,7 @@ export interface FileRoutesById {
   '/_authenticated/estabelecimento/relatorios': typeof AuthenticatedEstabelecimentoRelatoriosRoute
   '/_authenticated/estabelecimento/saques': typeof AuthenticatedEstabelecimentoSaquesRoute
   '/_authenticated/estabelecimento/score': typeof AuthenticatedEstabelecimentoScoreRoute
+  '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/cliente/': typeof AuthenticatedClienteIndexRoute
   '/_authenticated/entregador/': typeof AuthenticatedEntregadorIndexRoute
@@ -959,6 +968,7 @@ export interface FileRouteTypes {
     | '/estabelecimento/relatorios'
     | '/estabelecimento/saques'
     | '/estabelecimento/score'
+    | '/api/public/push-dispatch'
     | '/admin/'
     | '/cliente/'
     | '/entregador/'
@@ -1045,6 +1055,7 @@ export interface FileRouteTypes {
     | '/estabelecimento/relatorios'
     | '/estabelecimento/saques'
     | '/estabelecimento/score'
+    | '/api/public/push-dispatch'
     | '/admin'
     | '/cliente'
     | '/entregador'
@@ -1136,6 +1147,7 @@ export interface FileRouteTypes {
     | '/_authenticated/estabelecimento/relatorios'
     | '/_authenticated/estabelecimento/saques'
     | '/_authenticated/estabelecimento/score'
+    | '/api/public/push-dispatch'
     | '/_authenticated/admin/'
     | '/_authenticated/cliente/'
     | '/_authenticated/entregador/'
@@ -1164,6 +1176,7 @@ export interface RootRouteChildren {
   EntrarRoute: typeof EntrarRoute
   LoginRoute: typeof LoginRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1286,6 +1299,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/api/public/push-dispatch': {
+      id: '/api/public/push-dispatch'
+      path: '/api/public/push-dispatch'
+      fullPath: '/api/public/push-dispatch'
+      preLoaderRoute: typeof ApiPublicPushDispatchRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/estabelecimento/score': {
       id: '/_authenticated/estabelecimento/score'
@@ -2063,17 +2083,8 @@ const rootRouteChildren: RootRouteChildren = {
   EntrarRoute: EntrarRoute,
   LoginRoute: LoginRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

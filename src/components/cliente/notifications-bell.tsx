@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, CheckCheck, Package, Sparkles } from "lucide-react";
+import { Bell, BellOff, BellRing, CheckCheck, Package, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,8 @@ import {
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { playBellChime } from "@/lib/notification-sound";
+import { setAppBadgeCount, usePushNotifications } from "@/hooks/use-push-notifications";
+
 
 type Notif = {
   id: string;
@@ -31,6 +33,8 @@ export function NotificationsBell({
 }) {
   const [items, setItems] = useState<Notif[]>([]);
   const navigate = useNavigate();
+  const push = usePushNotifications();
+
 
   useEffect(() => {
     let alive = true;
@@ -90,6 +94,11 @@ export function NotificationsBell({
   }, [userId, audience]);
 
   const unread = items.length;
+
+  useEffect(() => {
+    setAppBadgeCount(unread);
+  }, [unread]);
+
 
   async function handleClick(n: Notif) {
     setItems((prev) => prev.filter((i) => i.id !== n.id));
@@ -199,6 +208,36 @@ export function NotificationsBell({
             </ul>
           )}
         </div>
+
+        {push.supported && (
+          <div className="flex items-center justify-between gap-3 border-t border-border/60 bg-muted/30 px-3 py-2.5">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                {push.subscribed ? <BellRing className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold">
+                  {push.subscribed ? "Alertas no celular ativos" : "Receber alertas no celular"}
+                </p>
+                <p className="truncate text-[10px] text-muted-foreground">
+                  {push.subscribed
+                    ? "Você é avisado mesmo com o app fechado"
+                    : "Avisos na tela mesmo com o app fechado"}
+                </p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant={push.subscribed ? "outline" : "default"}
+              disabled={push.busy}
+              onClick={() => (push.subscribed ? push.disable() : push.enable())}
+              className="h-8 shrink-0 rounded-full px-3 text-xs"
+            >
+              {push.subscribed ? "Desativar" : "Ativar"}
+            </Button>
+          </div>
+        )}
+
       </PopoverContent>
     </Popover>
   );

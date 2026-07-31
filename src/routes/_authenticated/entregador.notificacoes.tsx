@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Bell } from "lucide-react";
 import { useMyCourier } from "@/hooks/use-courier";
 import { Badge } from "@/components/ui/badge";
+import { PushToggleCard } from "@/components/push-toggle-card";
+
 
 export const Route = createFileRoute("/_authenticated/entregador/notificacoes")({
   component: Notif,
@@ -32,7 +34,9 @@ function Notif() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-black">Notificações</h1>
+      <PushToggleCard />
       {list.length === 0 ? (
+
         <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
           <Bell className="mx-auto h-10 w-10 text-muted-foreground" />
           <p className="mt-3 text-sm text-muted-foreground">Sem notificações.</p>
