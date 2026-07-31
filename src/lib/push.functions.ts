@@ -34,3 +34,51 @@ export const removePushSubscription = createServerFn({ method: "POST" })
     await context.supabase.from("push_subscriptions").delete().eq("endpoint", data.endpoint);
     return { ok: true };
   });
+
+/** Envia uma notificação de teste para todos os aparelhos do próprio usuário. */
+export const sendTestPush = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { sendWebPush } = await import("@/lib/web-push.server");
+
+    const { data: subs } = await context.supabase
+      .from("push_subscriptions")
+      .select("id,endpoint,p256dh,auth")
+      .eq("user_id", context.userId);
+
+    if (!subs?.length) return { ok: false, sent: 0, reason: "sem-aparelhos" as const };
+
+    const { count } = await context.supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", context.userId)
+      .eq("lida", false);
+
+    let sent = 0;
+    const dead: string[] = [];
+    for (const s of subs) {
+      try {
+        const status = await sendWebPush(
+          { endpoint: s.endpoint, p256dh: s.p256dh, auth: s.auth },
+          {
+            title: "WiFome — notificação de teste",
+            body: "Se você está vendo isto, os alertas no celular estão funcionando! Toque para abrir o app.",
+            url: "/app",
+            tag: "wifome-teste",
+            unread: count ?? 0,
+          },
+        );
+        if (status === 404 || status === 410) dead.push(s.id);
+        else if (status >= 200 && status < 300) sent++;
+      } catch (err) {
+        console.error("teste push falhou", err);
+      }
+    }
+
+    if (dead.length) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.from("push_subscriptions").delete().in("id", dead);
+    }
+
+    return { ok: sent > 0, sent, badge: count ?? 0 };
+  });
