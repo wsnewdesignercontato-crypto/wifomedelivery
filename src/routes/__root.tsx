@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthSync } from "@/components/auth-sync";
+import { PromoAnnouncement } from "@/components/promo-announcement";
 
 import { IFomeLogo } from "@/components/ifome-logo";
 import logoAsset from "@/assets/wifome-logo.png.asset.json";
@@ -169,6 +170,7 @@ function RootComponent() {
       <ThemeProvider>
         <AuthSync />
         <Outlet />
+        <PromoAnnouncement />
         <Toaster richColors position="top-right" />
       </ThemeProvider>
     </QueryClientProvider>

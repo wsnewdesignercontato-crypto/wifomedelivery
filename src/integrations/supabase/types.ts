@@ -1654,37 +1654,88 @@ export type Database = {
           },
         ]
       }
+      notification_templates: {
+        Row: {
+          ativo: boolean
+          audience: string
+          banner: Json | null
+          categoria: string
+          created_at: string
+          id: string
+          link_url: string | null
+          mensagem: string
+          nome: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          audience: string
+          banner?: Json | null
+          categoria?: string
+          created_at?: string
+          id?: string
+          link_url?: string | null
+          mensagem: string
+          nome: string
+          tipo?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          audience?: string
+          banner?: Json | null
+          categoria?: string
+          created_at?: string
+          id?: string
+          link_url?: string | null
+          mensagem?: string
+          nome?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           audience: string | null
+          banner: Json | null
           created_at: string
           id: string
           lida: boolean
           link_url: string | null
           mensagem: string
           pushed_at: string | null
+          tipo: string
           titulo: string
           user_id: string | null
         }
         Insert: {
           audience?: string | null
+          banner?: Json | null
           created_at?: string
           id?: string
           lida?: boolean
           link_url?: string | null
           mensagem: string
           pushed_at?: string | null
+          tipo?: string
           titulo: string
           user_id?: string | null
         }
         Update: {
           audience?: string | null
+          banner?: Json | null
           created_at?: string
           id?: string
           lida?: boolean
           link_url?: string | null
           mensagem?: string
           pushed_at?: string | null
+          tipo?: string
           titulo?: string
           user_id?: string | null
         }
