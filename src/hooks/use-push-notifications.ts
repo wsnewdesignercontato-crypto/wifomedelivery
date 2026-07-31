@@ -117,7 +117,28 @@ export function usePushNotifications() {
     }
   }, []);
 
-  return { permission, subscribed, busy, enable, disable, supported: pushSupported() };
+  const test = useCallback(async () => {
+    setBusy(true);
+    try {
+      const res = (await sendTestPush()) as { ok: boolean; sent: number; reason?: string };
+      if (res.reason === "sem-aparelhos") {
+        toast.error("Nenhum aparelho ativo. Toque em Ativar primeiro.");
+      } else if (res.ok) {
+        toast.success(`Notificação de teste enviada para ${res.sent} aparelho(s). Confira a tela do celular.`);
+      } else {
+        toast.error("Não foi possível entregar o teste neste aparelho.");
+      }
+      return res;
+    } catch (err) {
+      console.error(err);
+      toast.error("Falha ao enviar a notificação de teste.");
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  return { permission, subscribed, busy, enable, disable, test, supported: pushSupported() };
 }
 
 /** Mantém o balãozinho do ícone sincronizado com as notificações não lidas. */
