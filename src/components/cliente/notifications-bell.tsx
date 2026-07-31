@@ -95,6 +95,11 @@ export function NotificationsBell({
 
   const unread = items.length;
 
+  useEffect(() => {
+    setAppBadgeCount(unread);
+  }, [unread]);
+
+
   async function handleClick(n: Notif) {
     setItems((prev) => prev.filter((i) => i.id !== n.id));
     await supabase.from("notifications").update({ lida: true }).eq("id", n.id);
