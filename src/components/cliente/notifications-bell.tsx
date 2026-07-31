@@ -33,6 +33,8 @@ export function NotificationsBell({
 }) {
   const [items, setItems] = useState<Notif[]>([]);
   const navigate = useNavigate();
+  const push = usePushNotifications();
+
 
   useEffect(() => {
     let alive = true;
