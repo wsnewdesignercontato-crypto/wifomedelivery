@@ -70,7 +70,7 @@ export function PromoAnnouncement() {
     await supabase.from("notifications").update({ lida: true }).eq("id", id);
     if (go) {
       if (go.startsWith("http")) window.location.href = go;
-      else navigate({ to: go }).catch(() => undefined);
+      else void navigate({ to: go } as never);
     }
   }
 
