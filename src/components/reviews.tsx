@@ -241,7 +241,7 @@ export function EstabReviewsPanel({
       active = false;
       supabase.removeChannel(ch);
     };
-  }, [establishmentId]);
+  }, [establishmentId, owner]);
 
   const media =
     reviews.length === 0
