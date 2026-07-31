@@ -1,4 +1,4 @@
-import { BellOff, BellRing } from "lucide-react";
+import { BellOff, BellRing, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 
