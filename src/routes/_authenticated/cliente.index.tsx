@@ -232,7 +232,7 @@ function ClienteHome() {
         setHoursById(map);
 
         const { data: revs } = await supabase
-          .from("reviews")
+          .from("public_reviews")
           .select("establishment_id")
           .in("establishment_id", ids);
         const rc: Record<string, number> = {};

@@ -137,7 +137,7 @@ function EstabelecimentoPage() {
         supabase.from("menu_categories").select("id,nome,ordem").eq("establishment_id", id).eq("ativo", true).order("ordem"),
         supabase.from("products").select("id,nome,descricao,foto_url,preco_cents,preco_promo_cents,disponivel,menu_category_id,destaque").eq("establishment_id", id).eq("disponivel", true).order("destaque", { ascending: false }).order("ordem"),
         supabase.from("favorites").select("id").eq("user_id", user.id).eq("establishment_id", id).maybeSingle(),
-        supabase.from("reviews").select("id", { count: "exact", head: true }).eq("establishment_id", id),
+        supabase.from("public_reviews").select("id", { count: "exact", head: true }).eq("establishment_id", id),
       ]);
       setEstab(e.data as Estab | null);
       setCats((c.data ?? []) as MenuCat[]);
