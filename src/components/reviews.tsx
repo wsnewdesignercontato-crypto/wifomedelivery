@@ -190,16 +190,28 @@ type Review = {
   created_at: string;
 };
 
-export function EstabReviewsPanel({ establishmentId }: { establishmentId: string }) {
+export function EstabReviewsPanel({
+  establishmentId,
+  owner = false,
+}: {
+  establishmentId: string;
+  /** Quando true, lê a tabela completa (somente a própria loja/admin tem acesso). */
+  owner?: boolean;
+}) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
     (async () => {
-      const { data } = await supabase
-        .from("reviews")
-        .select("id,order_id,rating_loja,rating_entregador,comentario,problema_reportado,problema_descricao,created_at")
+      const { data } = await (owner
+        ? supabase
+            .from("reviews")
+            .select("id,order_id,rating_loja,rating_entregador,comentario,problema_reportado,problema_descricao,created_at")
+        : supabase
+            .from("public_reviews")
+            .select("id,order_id,rating_loja,rating_entregador,comentario,problema_reportado,created_at")
+      )
         .eq("establishment_id", establishmentId)
         .order("created_at", { ascending: false })
         .limit(100);
