@@ -157,6 +157,11 @@ function AuthPage() {
         : error.message);
       return;
     }
+    try {
+      window.localStorage.setItem("wifome:last-email", parsed.data.email);
+    } catch {
+      /* ignore */
+    }
     toast.success("Bem-vindo de volta!");
     navigate({ to: "/app", search: { perfil }, replace: true });
   }
