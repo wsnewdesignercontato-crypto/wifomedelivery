@@ -5,12 +5,19 @@ interface Props {
   className?: string;
   size?: "sm" | "md" | "lg";
   showWord?: boolean;
+  perfil?: "cliente" | "estabelecimento" | "entregador";
 }
 
 const sizes = {
   sm: { box: "h-8 w-8", text: "text-lg" },
   md: { box: "h-10 w-10", text: "text-2xl" },
   lg: { box: "h-14 w-14", text: "text-3xl" },
+};
+
+const perfilFilter: Record<"cliente" | "estabelecimento" | "entregador", string> = {
+  cliente: "",
+  estabelecimento: "hue-rotate(-22deg) saturate(1.15) brightness(0.95)",
+  entregador: "hue-rotate(92deg) saturate(0.95) brightness(0.95)",
 };
 
 export function IFomeLogo({ className, size = "md", showWord = true }: Props) {
