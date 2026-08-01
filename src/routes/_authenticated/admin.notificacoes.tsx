@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PROMO_ART, PROMO_LABEL, type PromoAudience } from "@/components/promo-announcement";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";

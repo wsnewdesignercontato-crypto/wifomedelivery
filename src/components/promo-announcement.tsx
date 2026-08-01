@@ -12,13 +12,13 @@ import artEntregador from "@/assets/promo-entregador.jpg";
 
 export type PromoAudience = "cliente" | "estabelecimento" | "entregador";
 
-const DEFAULT_ART: Record<PromoAudience, string> = {
+export const PROMO_ART: Record<PromoAudience, string> = {
   cliente: artCliente,
   estabelecimento: artEstab,
   entregador: artEntregador,
 };
 
-const AUDIENCE_LABEL: Record<PromoAudience, string> = {
+export const PROMO_LABEL: Record<PromoAudience, string> = {
   cliente: "Oferta WiFome",
   estabelecimento: "Novidade para parceiros",
   entregador: "Aviso para entregadores",
@@ -80,7 +80,7 @@ export function PromoAnnouncement({ audience }: { audience: PromoAudience }) {
   const subtitulo = b.subtitulo || notif.mensagem;
   const ctaTexto = b.cta_texto || "Aproveitar agora";
   const ctaLink = b.cta_link || notif.link_url;
-  const arte = b.imagem_url || DEFAULT_ART[audience];
+  const arte = b.imagem_url || PROMO_ART[audience];
 
   async function dismiss(go?: string | null) {
     const id = notif!.id;
@@ -147,7 +147,7 @@ export function PromoAnnouncement({ audience }: { audience: PromoAudience }) {
               className="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white"
               style={{ backgroundColor: `${cor}2e`, border: `1px solid ${cor}` }}
             >
-              {AUDIENCE_LABEL[audience]}
+              {PROMO_LABEL[audience]}
             </span>
 
             <h2 className="mt-3 text-2xl font-black leading-tight text-white">{titulo}</h2>
