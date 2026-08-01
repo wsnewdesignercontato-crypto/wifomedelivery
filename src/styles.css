@@ -603,12 +603,31 @@ table {
   span a[href],
   label a[href],
   a[href].link-inline,
+  .tap-target,
   .no-touch-target,
   .no-touch-target * {
     min-height: 0;
     min-width: 0;
   }
 }
+
+/* Área de toque invisível de 44x44 sem alterar o layout visual */
+@utility tap-target {
+  position: relative;
+  touch-action: manipulation;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+    border-radius: inherit;
+  }
+}
+
 
 /* Safe areas (notch / barra inferior) */
 @utility safe-bottom {
