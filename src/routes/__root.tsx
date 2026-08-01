@@ -169,6 +169,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthSync />
+        <LiveRefresh />
         <Outlet />
         <Toaster richColors position="top-right" />
       </ThemeProvider>
