@@ -147,7 +147,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         .not("status", "in", "(delivered,cancelled)")
         .limit(1)
         .maybeSingle();
-      if (ativa) { setOffer(null); return; }
+      if (ativa) { stopRideRingtone(); setOffer(null); return; }
 
       const { data: disp } = await supabase
         .from("deliveries")
@@ -158,7 +158,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         .limit(5);
 
       const candidato = (disp ?? []).find((d) => !dismissedIds.has(d.id));
-      if (!candidato) { setOffer(null); return; }
+      if (!candidato) { stopRideRingtone(); setOffer(null); return; }
 
       const { data: order } = await supabase
         .from("orders")
@@ -401,6 +401,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
 
   async function aceitar() {
     if (!offer || !courier || accepting) return;
+    stopRideRingtone();
     setAccepting(true);
     const { data, error } = await supabase
       .from("deliveries")
@@ -424,6 +425,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
 
   function recusar() {
     if (!offer) return;
+    stopRideRingtone();
     setDismissedIds((s) => new Set(s).add(offer.deliveryId));
     setOffer(null);
   }

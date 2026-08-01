@@ -3,6 +3,7 @@
 let ctx: AudioContext | null = null;
 let loopTimer: ReturnType<typeof setInterval> | null = null;
 let unlocked = false;
+let activeNodes: { osc: OscillatorNode; gain: GainNode }[] = [];
 let listenersBound = false;
 
 function getCtx(): AudioContext | null {
@@ -67,6 +68,10 @@ function burst() {
       osc.connect(gain).connect(ac.destination);
       osc.start(now + t);
       osc.stop(now + t + 0.15);
+      activeNodes.push({ osc, gain });
+      osc.onended = () => {
+        activeNodes = activeNodes.filter((n) => n.osc !== osc);
+      };
     } catch {
       /* ignore */
     }
@@ -97,12 +102,32 @@ function resumeIfPlaying() {
   if (loopTimer && ctx?.state === "suspended") void ctx.resume();
 }
 
-/** Para o toque. */
+/** Para o toque imediatamente (corta inclusive bipes já agendados). */
 export function stopRideRingtone() {
   if (loopTimer) {
     clearInterval(loopTimer);
     loopTimer = null;
   }
+  // Corta na hora tudo que já foi agendado no grafo de áudio
+  const nodes = activeNodes;
+  activeNodes = [];
+  const t = ctx?.currentTime ?? 0;
+  nodes.forEach(({ osc, gain }) => {
+    try {
+      osc.onended = null;
+      gain.gain.cancelScheduledValues(t);
+      gain.gain.setValueAtTime(0, t);
+      osc.stop(t);
+    } catch {
+      /* ignore */
+    }
+    try {
+      osc.disconnect();
+      gain.disconnect();
+    } catch {
+      /* ignore */
+    }
+  });
   try {
     document.removeEventListener("visibilitychange", resumeIfPlaying);
     navigator.vibrate?.(0);
