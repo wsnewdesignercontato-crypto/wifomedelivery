@@ -175,7 +175,61 @@ function Veiculo() {
             <MiniStat label="Cadastrados" value={list.length} />
             <MiniStat label="Aprovados" value={aprovados} />
             <MiniStat label="Ativo" value={ativo ? ativo.tipo.replace(/_/g, " ") : "—"} isText />
+      </div>
+
+      {/* Passo a passo guiado */}
+      <section className="rounded-3xl border border-border bg-card p-6 shadow-card">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold tracking-tight">O que falta para liberar o app</h2>
+            <p className="text-xs text-muted-foreground">
+              {motorizado
+                ? "Você escolheu um veículo motorizado: precisa de placa e CNH."
+                : "Você escolheu um veículo sem motor: não precisa de placa nem CNH, só um documento com foto."}
+            </p>
           </div>
+          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+            {feitos}/{steps.length} concluídos
+          </span>
+        </div>
+
+        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-primary to-amber-400 transition-all"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+
+        <ol className="mt-5 space-y-3">
+          {steps.map((s, i) => (
+            <li
+              key={s.label}
+              className={`flex items-start gap-3 rounded-2xl border p-3 transition-colors ${
+                s.done ? "border-emerald-500/30 bg-emerald-500/5" : "border-border bg-background/60"
+              }`}
+            >
+              <div
+                className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold ${
+                  s.done ? "bg-emerald-500 text-white" : "bg-primary/10 text-primary"
+                }`}
+              >
+                {s.done ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className={`text-sm font-semibold ${s.done ? "text-emerald-600" : ""}`}>{s.label}</p>
+                <p className="text-xs text-muted-foreground">{s.hint}</p>
+              </div>
+              {!s.done && s.to && (
+                <Button asChild size="sm" variant="outline" className="rounded-lg">
+                  <Link to={s.to as any}>Completar</Link>
+                </Button>
+              )}
+            </li>
+          ))}
+        </ol>
+      </section>
+
+
         </div>
       </div>
 
