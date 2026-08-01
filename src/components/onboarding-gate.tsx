@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { PartyPopper, ArrowRight, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { PartyPopper, ArrowRight, CheckCircle2, AlertCircle } from "lucide-react";
 import { WifomeLoader } from "@/components/wifome-loader";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
