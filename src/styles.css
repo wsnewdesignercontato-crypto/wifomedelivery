@@ -178,6 +178,8 @@
 /* ============= Theme scopes ============= */
 /* Estabelecimento — vermelho */
 .theme-estab {
+  --gradient-brand: linear-gradient(135deg, var(--primary) 0%, var(--primary-glow) 100%);
+  --shadow-brand: 0 12px 32px -12px color-mix(in oklab, var(--primary) 45%, transparent);
   --primary: oklch(0.585 0.225 27);
   --primary-foreground: oklch(1 0 0);
   --primary-glow: oklch(0.68 0.20 32);
@@ -199,6 +201,8 @@
 
 /* Entregador — verde */
 .theme-entregador {
+  --gradient-brand: linear-gradient(135deg, var(--primary) 0%, var(--primary-glow) 100%);
+  --shadow-brand: 0 12px 32px -12px color-mix(in oklab, var(--primary) 45%, transparent);
   --primary: oklch(0.62 0.17 150);
   --primary-foreground: oklch(1 0 0);
   --primary-glow: oklch(0.74 0.17 155);
