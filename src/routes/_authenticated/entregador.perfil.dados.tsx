@@ -33,6 +33,13 @@ type FormState = {
   banco_titular: string;
   contato_emergencia_nome: string;
   contato_emergencia_tel: string;
+  cep: string;
+  rua: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
 };
 
 const EMPTY: FormState = {
@@ -41,7 +48,10 @@ const EMPTY: FormState = {
   pix_key: "", pix_tipo: "cpf",
   banco_nome: "", banco_agencia: "", banco_conta: "", banco_tipo: "corrente", banco_titular: "",
   contato_emergencia_nome: "", contato_emergencia_tel: "",
+  cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
 };
+
+const str = (v: unknown) => (typeof v === "string" ? v : "");
 
 function Perfil() {
   const { courier, userId, isLoading } = useMyCourier();
@@ -63,6 +73,7 @@ function Perfil() {
 
   useEffect(() => {
     if (!courier && !profileQ.data) return;
+    const end = (courier?.endereco ?? {}) as Record<string, unknown>;
     setF({
       nome: profileQ.data?.nome ?? "",
       foto_url: courier?.foto_url ?? profileQ.data?.foto_url ?? "",
@@ -83,6 +94,13 @@ function Perfil() {
       banco_titular: courier?.banco_titular ?? "",
       contato_emergencia_nome: courier?.contato_emergencia_nome ?? "",
       contato_emergencia_tel: courier?.contato_emergencia_tel ?? "",
+      cep: str(end.cep),
+      rua: str(end.rua),
+      numero: str(end.numero),
+      complemento: str(end.complemento),
+      bairro: str(end.bairro),
+      cidade: courier?.cidade_atuacao ?? str(end.cidade),
+      estado: str(end.estado),
     });
   }, [courier, profileQ.data]);
 
@@ -145,12 +163,23 @@ function Perfil() {
         banco_titular: f.banco_titular || null,
         contato_emergencia_nome: f.contato_emergencia_nome || null,
         contato_emergencia_tel: f.contato_emergencia_tel || null,
+        cidade_atuacao: f.cidade.trim() || null,
+        endereco: {
+          cep: f.cep || "",
+          rua: f.rua || "",
+          numero: f.numero || "",
+          complemento: f.complemento || "",
+          bairro: f.bairro || "",
+          cidade: f.cidade.trim() || "",
+          estado: f.estado.trim().toUpperCase() || "",
+        },
       }, { onConflict: "user_id" });
       if (c.error) throw c.error;
 
       toast.success("Perfil atualizado com sucesso!");
       qc.invalidateQueries({ queryKey: ["courier", userId] });
       qc.invalidateQueries({ queryKey: ["profile", userId] });
+      window.dispatchEvent(new CustomEvent("wifome:profile-updated"));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erro ao salvar";
       toast.error(msg);
@@ -205,6 +234,16 @@ function Perfil() {
         <Field label="CPF" value={f.cpf} onChange={(v) => setF({ ...f, cpf: v })} />
         <Field label="RG" value={f.rg} onChange={(v) => setF({ ...f, rg: v })} />
         <Field label="Data de nascimento" type="date" value={f.nascimento} onChange={(v) => setF({ ...f, nascimento: v })} />
+      </Section>
+
+      <Section title="Endereço e cidade de atuação">
+        <Field label="CEP" value={f.cep} onChange={(v) => setF({ ...f, cep: v })} />
+        <Field label="Rua" value={f.rua} onChange={(v) => setF({ ...f, rua: v })} />
+        <Field label="Número" value={f.numero} onChange={(v) => setF({ ...f, numero: v })} />
+        <Field label="Complemento" value={f.complemento} onChange={(v) => setF({ ...f, complemento: v })} />
+        <Field label="Bairro" value={f.bairro} onChange={(v) => setF({ ...f, bairro: v })} />
+        <Field label="Cidade (atuação)" value={f.cidade} onChange={(v) => setF({ ...f, cidade: v })} />
+        <Field label="Estado (UF)" value={f.estado} onChange={(v) => setF({ ...f, estado: v.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase() })} />
       </Section>
 
       <Section title="CNH">
