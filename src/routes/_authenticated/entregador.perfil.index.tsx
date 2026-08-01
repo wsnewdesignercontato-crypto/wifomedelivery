@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useMyCourier } from "@/hooks/use-courier";
 import { useQuery } from "@tanstack/react-query";
 
-export const Route = createFileRoute("/_authenticated/entregador/perfil")({
+export const Route = createFileRoute("/_authenticated/entregador/perfil/")({
   component: PerfilHub,
 });
 
