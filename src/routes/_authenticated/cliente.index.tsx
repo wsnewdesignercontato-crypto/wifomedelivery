@@ -276,7 +276,7 @@ function ClienteHome() {
     return arr;
   }, [estabs, catSel, sortBy, reviewCountById, salesCount, promoIds]);
 
-  const compactCount = 16;
+  const compactCount = 4;
   const visibleCats = showAllCats ? cats : cats.slice(0, compactCount);
 
   return (
@@ -323,23 +323,22 @@ function ClienteHome() {
         }
       />
 
-      {/* Categorias - grade uniforme sem lacunas */}
+      {/* Categorias — rail horizontal compacto, expande em grade ao ver todas */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-black text-foreground">Categorias</h2>
-          <button
-            onClick={() => setShowAllCats((v) => !v)}
-            className="text-xs font-bold text-primary"
-          >
-            {showAllCats ? "Ver menos" : "Ver todas"}
-          </button>
+          {!showAllCats && (
+            <button onClick={() => setShowAllCats(true)} className="text-xs font-bold text-primary">
+              Ver todas
+            </button>
+          )}
         </div>
         <div
           ref={catsScrollRef}
           className={
             showAllCats
               ? "grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8"
-              : "grid grid-cols-4 gap-3 md:grid-cols-8"
+              : "flex gap-3 overflow-x-auto scrollbar-hide pb-2"
           }
         >
           {visibleCats.map((c) => {
@@ -349,10 +348,12 @@ function ClienteHome() {
               <button
                 key={c.id}
                 onClick={() => setCatSel(active ? null : c.id)}
-                className="flex flex-col items-center gap-1.5"
+                className={`flex flex-col items-center gap-1.5 ${showAllCats ? "" : "shrink-0"}`}
               >
                 <div
-                  className={`aspect-square w-full overflow-hidden rounded-2xl bg-muted shadow-sm transition-all ${
+                  className={`aspect-square overflow-hidden rounded-2xl bg-muted shadow-sm transition-all ${
+                    showAllCats ? "w-full" : "h-16 w-16 sm:h-[72px] sm:w-[72px]"
+                  } ${
                     active ? "ring-2 ring-primary ring-offset-2 scale-[1.03]" : "hover:scale-[1.03]"
                   }`}
                 >
@@ -381,7 +382,28 @@ function ClienteHome() {
               </button>
             );
           })}
+          {!showAllCats && cats.length > compactCount && (
+            <button
+              onClick={() => setShowAllCats(true)}
+              className="flex shrink-0 flex-col items-center gap-1.5"
+            >
+              <div className="grid h-16 w-16 place-items-center rounded-2xl bg-muted text-lg font-bold text-primary shadow-sm transition-all hover:scale-[1.03] sm:h-[72px] sm:w-[72px]">
+                +{cats.length - compactCount}
+              </div>
+              <span className="text-center text-[11px] font-semibold leading-tight text-primary sm:text-xs">
+                Ver todas
+              </span>
+            </button>
+          )}
         </div>
+        {showAllCats && (
+          <button
+            onClick={() => setShowAllCats(false)}
+            className="w-full rounded-xl border border-border bg-card py-2 text-xs font-bold text-primary"
+          >
+            Ver menos
+          </button>
+        )}
       </section>
 
       {/* Restaurantes próximos */}
