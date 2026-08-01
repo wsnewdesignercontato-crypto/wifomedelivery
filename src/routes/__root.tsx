@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthSync } from "@/components/auth-sync";
+import { LiveRefresh } from "@/components/live-refresh";
 
 
 import { IFomeLogo } from "@/components/ifome-logo";
@@ -169,6 +170,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthSync />
+        <LiveRefresh />
         <Outlet />
         <Toaster richColors position="top-right" />
       </ThemeProvider>
