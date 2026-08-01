@@ -55,17 +55,22 @@ function Veiculo() {
 
   async function salvar() {
     if (!courier) return;
+    if (!form.placa || form.placa.replace(/[^A-Z0-9]/gi, "").length < 7) {
+      return toast.error("Informe a placa completa (ex.: ABC1D23)");
+    }
     setSaving(true);
     const { error } = await supabase.from("courier_vehicles").insert({
       courier_id: courier.user_id,
-      tipo: form.tipo!, marca: form.marca, modelo: form.modelo, ano: form.ano, cor: form.cor, placa: form.placa,
+      tipo: form.tipo!, marca: form.marca, modelo: form.modelo, ano: form.ano, cor: form.cor,
+      placa: form.placa.replace(/[^A-Z0-9]/gi, "").toUpperCase(),
       ativo: list.length === 0,
     });
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Veículo cadastrado — aguardando aprovação");
     setForm({ tipo: "moto", marca: "", modelo: "", ano: undefined, cor: "", placa: "" });
-    load();
+    await load();
+    notifyDataUpdated();
   }
 
   async function ativar(id: string) {
@@ -73,13 +78,15 @@ function Veiculo() {
     await supabase.from("courier_vehicles").update({ ativo: false }).eq("courier_id", courier.user_id);
     await supabase.from("courier_vehicles").update({ ativo: true }).eq("id", id);
     toast.success("Veículo ativo alterado");
-    load();
+    await load();
+    notifyDataUpdated();
   }
 
   async function remover(id: string) {
     if (!confirm("Remover este veículo?")) return;
     await supabase.from("courier_vehicles").delete().eq("id", id);
-    load();
+    await load();
+    notifyDataUpdated();
   }
 
   const aprovados = list.filter((v) => v.status === "aprovado").length;
