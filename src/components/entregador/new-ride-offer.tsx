@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { loadGoogleMaps, haversineKm } from "@/lib/google-maps-loader";
+import { ensureRingtoneUnlocked, startRideRingtone, stopRideRingtone } from "@/lib/ride-ringtone";
 import type { Courier } from "@/hooks/use-courier";
 
 type Offer = {
