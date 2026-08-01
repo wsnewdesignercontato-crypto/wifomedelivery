@@ -105,6 +105,8 @@ function Veiculo() {
 
   const aprovados = list.filter((v) => v.status === "aprovado").length;
   const ativo = list.find((v) => v.ativo);
+  const comPlaca = precisaPlaca(form.tipo);
+
 
   return (
     <div className="space-y-8">
