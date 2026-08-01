@@ -525,8 +525,9 @@ h3,
 h4,
 li,
 dd,
-dt,
-span,
+dt {
+  overflow-wrap: break-word;
+}
 td,
 th {
   overflow-wrap: anywhere;
