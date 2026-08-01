@@ -10,6 +10,12 @@ import promoFoodHero from "@/assets/promo-food-hero.jpg";
 
 export type PromoAudience = "cliente" | "estabelecimento" | "entregador";
 
+export const PROMO_ART: Record<PromoAudience, string> = {
+  cliente: promoFoodHero,
+  estabelecimento: promoFoodHero,
+  entregador: promoFoodHero,
+};
+
 export const PROMO_LABEL: Record<PromoAudience, string> = {
   cliente: "Oferta WiFome",
   estabelecimento: "Novidade para parceiros",
