@@ -893,7 +893,7 @@ function FooterCol({ title, items }: { title: string; items: string[] }) {
       <ul className="mt-4 space-y-2.5">
         {items.map((i) => (
           <li key={i}>
-            <a href="#" className="text-sm text-white/85 transition hover:text-white">
+            <a href="#" className="tap-target inline-block py-1 text-sm text-white/85 transition hover:text-white">
               {i}
             </a>
           </li>

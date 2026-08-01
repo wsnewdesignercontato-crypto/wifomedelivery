@@ -164,14 +164,14 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
                 <button
                   onClick={dismiss}
                   aria-label="Fechar"
-                  className="text-muted-foreground hover:text-foreground"
+                  className="tap-target -m-1 shrink-0 p-1 text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
               <button
                 onClick={install}
-                className="mt-3 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-brand transition-transform hover:scale-[1.02] active:scale-95"
+                className="tap-target mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground shadow-brand transition-transform hover:scale-[1.02] active:scale-95"
               >
                 <Download className="h-3.5 w-3.5" />
                 {isIOS() && !deferred ? "Como instalar no iPhone" : "Instalar agora"}

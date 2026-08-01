@@ -91,7 +91,7 @@ export function AdminShell() {
           </Link>
           <button
             onClick={() => setOpen(false)}
-            className="rounded p-1 text-muted-foreground hover:bg-accent lg:hidden"
+            className="tap-target rounded p-1 text-muted-foreground hover:bg-accent lg:hidden"
           >
             <X className="h-4 w-4" />
           </button>
@@ -147,7 +147,7 @@ export function AdminShell() {
             </div>
             <button
               onClick={signOut}
-              className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="tap-target rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
               title="Sair"
             >
               <LogOut className="h-4 w-4" />
@@ -181,7 +181,7 @@ export function AdminShell() {
             />
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <button className="relative rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground">
+            <button className="tap-target relative rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground">
               <Bell className="h-4 w-4" />
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
             </button>

@@ -146,7 +146,7 @@ export function ClienteShell({ user }: Ctx) {
         {/* Mobile: address row */}
         <button
           onClick={() => navigate({ to: "/cliente/perfil" })}
-          className="mx-auto mt-2 flex w-full max-w-4xl items-center gap-1.5 px-4 text-left lg:hidden"
+          className="mx-auto mt-2 flex min-h-[36px] w-full max-w-4xl items-center gap-1.5 py-1 px-4 text-left lg:hidden"
         >
           <MapPin className="h-4 w-4 shrink-0" />
           <span className="truncate text-sm font-bold">{endereco}</span>

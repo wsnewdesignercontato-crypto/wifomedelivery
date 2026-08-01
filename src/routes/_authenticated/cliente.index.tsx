@@ -328,7 +328,7 @@ function ClienteHome() {
         <div className="flex items-center justify-between">
           <h2 className="text-base font-black text-foreground">Categorias</h2>
           {!showAllCats && (
-            <button onClick={() => setShowAllCats(true)} className="text-xs font-bold text-primary">
+            <button onClick={() => setShowAllCats(true)} className="tap-target px-1 py-1 text-xs font-bold text-primary">
               Ver todas
             </button>
           )}
@@ -413,11 +413,11 @@ function ClienteHome() {
             {catSel ? cats.find((c) => c.id === catSel)?.nome : "Restaurantes próximos"}
           </h2>
           {catSel ? (
-            <button onClick={() => setCatSel(null)} className="text-xs font-bold text-primary">
+            <button onClick={() => setCatSel(null)} className="tap-target px-1 py-1 text-xs font-bold text-primary">
               Ver todos
             </button>
           ) : (
-            <Link to="/cliente/buscar" className="text-xs font-bold text-primary">
+            <Link to="/cliente/buscar" className="tap-target px-1 py-1 text-xs font-bold text-primary">
               Ver todos
             </Link>
           )}
