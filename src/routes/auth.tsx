@@ -178,7 +178,7 @@ function AuthPage() {
         className="pointer-events-none absolute inset-x-0 top-0 h-72 opacity-40"
         style={{
           background:
-            "radial-gradient(60% 60% at 50% 0%, oklch(0.85 0.15 60 / 0.4) 0%, transparent 70%)",
+            "radial-gradient(60% 60% at 50% 0%, color-mix(in oklab, var(--primary) 35%, transparent) 0%, transparent 70%)",
         }}
       />
       <div className="relative mx-auto flex min-h-screen max-w-md flex-col px-4 py-6">
