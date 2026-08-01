@@ -60,6 +60,36 @@ function Perfil() {
   const [f, setF] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
+  const lastCep = useRef("");
+
+  async function buscarCep(rawCep: string) {
+    const cep = rawCep.replace(/\D/g, "");
+    if (cep.length !== 8 || lastCep.current === cep) return;
+    lastCep.current = cep;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const d = await res.json();
+      if (d?.erro) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+      setF((s) => ({
+        ...s,
+        rua: d.logradouro || s.rua,
+        bairro: d.bairro || s.bairro,
+        cidade: d.localidade || s.cidade,
+        estado: (d.uf || s.estado || "").toUpperCase(),
+        complemento: s.complemento || d.complemento || "",
+      }));
+      toast.success("Endereço preenchido pelo CEP");
+    } catch {
+      toast.error("Não foi possível consultar o CEP");
+    } finally {
+      setCepLoading(false);
+    }
+  }
 
   // Nome fica na tabela profiles
   const profileQ = useQuery({
