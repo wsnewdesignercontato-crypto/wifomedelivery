@@ -236,6 +236,16 @@ function Perfil() {
         <Field label="Data de nascimento" type="date" value={f.nascimento} onChange={(v) => setF({ ...f, nascimento: v })} />
       </Section>
 
+      <Section title="Endereço e cidade de atuação">
+        <Field label="CEP" value={f.cep} onChange={(v) => setF({ ...f, cep: v })} />
+        <Field label="Rua" value={f.rua} onChange={(v) => setF({ ...f, rua: v })} />
+        <Field label="Número" value={f.numero} onChange={(v) => setF({ ...f, numero: v })} />
+        <Field label="Complemento" value={f.complemento} onChange={(v) => setF({ ...f, complemento: v })} />
+        <Field label="Bairro" value={f.bairro} onChange={(v) => setF({ ...f, bairro: v })} />
+        <Field label="Cidade (atuação)" value={f.cidade} onChange={(v) => setF({ ...f, cidade: v })} />
+        <Field label="Estado (UF)" value={f.estado} onChange={(v) => setF({ ...f, estado: v.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase() })} />
+      </Section>
+
       <Section title="CNH">
         <Field label="Número" value={f.cnh} onChange={(v) => setF({ ...f, cnh: v })} />
         <Field label="Categoria" value={f.cnh_categoria} onChange={(v) => setF({ ...f, cnh_categoria: v })} />
