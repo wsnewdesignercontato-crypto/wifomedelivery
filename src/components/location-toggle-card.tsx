@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { MapPin, MapPinOff } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
+import { PermissionHelpDialog } from "@/components/permission-help-dialog";
 
 const KEY = "wifome:location-enabled";
 
@@ -103,6 +104,8 @@ export function LocationToggleCard({ className = "" }: { className?: string }) {
           "Localização" e tente novamente.
         </p>
       )}
+
+      {(!enabled || permission === "denied") && <PermissionHelpDialog kind="location" />}
     </div>
   );
 }
