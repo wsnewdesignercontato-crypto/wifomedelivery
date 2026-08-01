@@ -27,6 +27,8 @@ export type Courier = {
   banco_tipo?: string | null;
   banco_titular?: string | null;
   cidades_atuacao?: string[] | null;
+  cidade_atuacao?: string | null;
+  bairros_atuacao?: string[] | null;
   avaliacao?: number;
   entregas_total?: number;
   aceitacao_pct?: number;
