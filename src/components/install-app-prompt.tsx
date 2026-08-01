@@ -6,6 +6,26 @@ type BIPEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
+type Perfil = "cliente" | "estabelecimento" | "entregador";
+
+const perfilApp: Record<Perfil, { nome: string; manifest: string; descricao: string }> = {
+  cliente: {
+    nome: "WiFome Cliente",
+    manifest: "/manifest-cliente.webmanifest",
+    descricao: "Peça e acompanhe suas entregas direto da tela inicial.",
+  },
+  estabelecimento: {
+    nome: "WiFome Estabelecimento",
+    manifest: "/manifest-estabelecimento.webmanifest",
+    descricao: "Receba pedidos com alerta sonoro e gerencie sua loja como um app.",
+  },
+  entregador: {
+    nome: "WiFome Entregador",
+    manifest: "/manifest-entregador.webmanifest",
+    descricao: "Receba corridas na tela e acompanhe seus ganhos como um app.",
+  },
+};
+
 const DISMISS_KEY = "wifome_install_dismissed_at";
 const DISMISS_DAYS = 7;
 
@@ -36,15 +56,29 @@ function recentlyDismissed() {
   }
 }
 
-export function InstallAppPrompt() {
+export function InstallAppPrompt({ perfil = "cliente" }: { perfil?: Perfil } = {}) {
+  const app = perfilApp[perfil];
   const [deferred, setDeferred] = useState<BIPEvent | null>(null);
   const [visible, setVisible] = useState(false);
   const [showIOSHelp, setShowIOSHelp] = useState(false);
+
+  // Aponta o manifest para o app do perfil atual
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+    if (!link) return;
+    const original = link.getAttribute("href");
+    link.setAttribute("href", app.manifest);
+    return () => {
+      if (original) link.setAttribute("href", original);
+    };
+  }, [app.manifest]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (isStandalone()) return;
     if (recentlyDismissed()) return;
+    setVisible(true);
 
     const onBIP = (e: Event) => {
       e.preventDefault();
@@ -90,9 +124,7 @@ export function InstallAppPrompt() {
       setDeferred(null);
       return;
     }
-    if (isIOS()) {
-      setShowIOSHelp(true);
-    }
+    setShowIOSHelp(true);
   }
 
   if (!visible) return null;
@@ -107,10 +139,8 @@ export function InstallAppPrompt() {
           <div className="flex-1">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="text-sm font-bold text-foreground">Instalar o app WiFome</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Adicione à tela inicial e abra com um toque, igual a um app nativo.
-                </p>
+                <p className="text-sm font-bold text-foreground">Instalar o app {app.nome}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{app.descricao}</p>
               </div>
               <button
                 onClick={dismiss}
@@ -142,7 +172,7 @@ export function InstallAppPrompt() {
           >
             <div className="flex items-center gap-2">
               <Smartphone className="h-5 w-5 text-primary" />
-              <h3 className="text-base font-bold text-foreground">Instalar no iPhone</h3>
+              <h3 className="text-base font-bold text-foreground">Instalar {app.nome}</h3>
             </div>
             <ol className="mt-4 space-y-3 text-sm text-foreground">
               <li className="flex items-start gap-3">
@@ -173,7 +203,7 @@ export function InstallAppPrompt() {
                   3
                 </span>
                 <span>
-                  Toque em <span className="font-medium">Adicionar</span> — o WiFome fica na sua tela como um app.
+                  Toque em <span className="font-medium">Adicionar</span> — o {app.nome} fica na sua tela como um app.
                 </span>
               </li>
             </ol>
