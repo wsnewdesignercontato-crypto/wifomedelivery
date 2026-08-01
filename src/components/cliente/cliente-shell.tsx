@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
+import { PromoAnnouncement } from "@/components/promo-announcement";
 import { useEffect, useState } from "react";
 import {
   Home,
@@ -170,6 +171,7 @@ export function ClienteShell({ user }: Ctx) {
       <main className="mx-auto max-w-4xl px-4 py-4 lg:max-w-6xl lg:px-6 lg:py-8">
         <Outlet />
       </main>
+      <PromoAnnouncement audience="cliente" />
 
       {/* Bottom nav — mobile/tablet only */}
       <nav
