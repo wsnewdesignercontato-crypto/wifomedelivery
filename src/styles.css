@@ -586,7 +586,8 @@ table {
   button,
   [role="button"],
   select,
-  [role="tab"] {
+  [role="tab"],
+  a[href][aria-label] {
     min-width: 44px;
   }
 
