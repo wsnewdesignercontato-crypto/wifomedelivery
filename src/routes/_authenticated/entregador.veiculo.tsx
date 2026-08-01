@@ -61,7 +61,24 @@ function Veiculo() {
     const { data: d } = await supabase.from("courier_documents").select("tipo,status").eq("courier_id", courier.user_id);
     setDocs((d ?? []) as { tipo: string; status: string }[]);
   }
-  useEffect(() => { load(); }, [courier]);
+  useEffect(() => {
+    load();
+    if (!courier) return;
+    const onUpdate = () => load();
+    window.addEventListener(DATA_UPDATED_EVENT, onUpdate);
+    window.addEventListener("focus", onUpdate);
+    const channel = supabase
+      .channel(`veiculo-live-${courier.user_id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "courier_vehicles", filter: `courier_id=eq.${courier.user_id}` }, onUpdate)
+      .on("postgres_changes", { event: "*", schema: "public", table: "courier_documents", filter: `courier_id=eq.${courier.user_id}` }, onUpdate)
+      .subscribe();
+    return () => {
+      window.removeEventListener(DATA_UPDATED_EVENT, onUpdate);
+      window.removeEventListener("focus", onUpdate);
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courier]);
 
   async function salvar() {
     if (!courier) return;
