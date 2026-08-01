@@ -96,15 +96,44 @@ function AuthPage() {
   );
 
   // Se já autenticado, encaminhar para /app
+  const confirmado = search.confirmado === "1";
+
+  // Email salvo do último cadastro/login
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    try {
+      const saved = window.localStorage.getItem("wifome:last-email");
+      if (saved) setEmailSalvo(saved);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // Se já autenticado, encaminhar para /app (exceto ao voltar da confirmação de email)
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session && confirmado) {
+        if (data.session.user.email) {
+          setEmailSalvo(data.session.user.email);
+          try {
+            window.localStorage.setItem("wifome:last-email", data.session.user.email);
+          } catch {
+            /* ignore */
+          }
+        }
+        await supabase.auth.signOut();
+        toast.success("Email confirmado! Agora entre com sua senha.");
+        setCheckingSession(false);
+        return;
+      }
       if (data.session) {
         navigate({ to: "/app", search: { perfil }, replace: true });
       } else {
+        if (confirmado) toast.success("Email confirmado! Agora entre com sua senha.");
         setCheckingSession(false);
       }
     });
-  }, [navigate, perfil]);
+  }, [navigate, perfil, confirmado]);
+
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
