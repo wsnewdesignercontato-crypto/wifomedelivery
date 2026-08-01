@@ -124,9 +124,7 @@ export function InstallAppPrompt({ perfil = "cliente" }: { perfil?: Perfil } = {
       setDeferred(null);
       return;
     }
-    if (isIOS()) {
-      setShowIOSHelp(true);
-    }
+    setShowIOSHelp(true);
   }
 
   if (!visible) return null;

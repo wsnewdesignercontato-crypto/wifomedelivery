@@ -80,6 +80,12 @@ function AuthPage() {
   const perfil: "cliente" | "estabelecimento" | "entregador" =
     search.perfil ?? "cliente";
   const info = perfilInfo[perfil];
+  const themeClass =
+    perfil === "estabelecimento"
+      ? "theme-estab"
+      : perfil === "entregador"
+        ? "theme-entregador"
+        : "";
   const [tab, setTab] = useState<"login" | "cadastro">("login");
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
@@ -167,7 +173,7 @@ function AuthPage() {
   const Icon = info.Icon;
 
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className={`relative min-h-screen bg-background ${themeClass}`}>
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-72 opacity-40"
         style={{
@@ -187,32 +193,22 @@ function AuthPage() {
           <ThemeToggle />
         </div>
 
-        <div className="mt-8 text-center">
+        <InstallAppPrompt perfil={perfil} />
+
+        <div className="mt-6 text-center">
           <IFomeLogo size="lg" showWord={false} className="mx-auto" />
           <h1 className="mt-4 text-2xl font-black tracking-tight text-foreground">
-            Acesse sua conta WiFome
+            {perfil === "cliente"
+              ? "Entrar como cliente"
+              : perfil === "estabelecimento"
+                ? "Entrar como estabelecimento"
+                : "Entrar como entregador"}
           </h1>
           <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1 text-xs font-medium text-foreground">
             <Icon className="h-3.5 w-3.5 text-primary" />
             {info.titulo}
           </div>
           <p className="mt-1 text-xs text-muted-foreground">{info.descricao}</p>
-        </div>
-
-        <div className="mt-6 flex justify-center gap-1.5 text-xs">
-          {(["cliente", "estabelecimento", "entregador"] as const).map((p) => (
-            <button
-              key={p}
-              onClick={() => navigate({ to: "/auth", search: { perfil: p }, replace: true })}
-              className={`rounded-full px-3 py-1 font-medium transition-colors ${
-                perfil === p
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-              }`}
-            >
-              {perfilInfo[p].titulo.replace("Área do ", "")}
-            </button>
-          ))}
         </div>
 
         <div className="mt-6 rounded-3xl border border-border bg-card p-6 shadow-card">
@@ -307,7 +303,6 @@ function AuthPage() {
           </Tabs>
         </div>
 
-        <InstallAppPrompt />
       </div>
     </div>
   );
