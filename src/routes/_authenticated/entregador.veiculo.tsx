@@ -276,14 +276,54 @@ function Veiculo() {
                 {s.done ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
               </div>
               <div className="min-w-0 flex-1">
-                <p
-                  className={`text-sm font-semibold ${
-                    s.done ? "text-emerald-600" : "text-destructive"
-                  }`}
-                >
-                  {s.label}
-                  {!s.done && <span className="ml-1 font-bold">*</span>}
-                </p>
+                <div className="flex items-center gap-1.5">
+                  <p
+                    className={`text-sm font-semibold ${
+                      s.done ? "text-emerald-600" : "text-destructive"
+                    }`}
+                  >
+                    {s.label}
+                    {!s.done && <span className="ml-1 font-bold">*</span>}
+                  </p>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label={`Ajuda sobre ${s.label}`}
+                        className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                      >
+                        <HelpCircle className="h-4 w-4" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-80 text-xs">
+                      <p className="mb-2 text-sm font-bold">{s.label}</p>
+                      <div className="space-y-2">
+                        <div
+                          className={`rounded-lg border p-2 ${
+                            motorizado ? "border-border bg-muted/40" : "border-primary/40 bg-primary/5"
+                          }`}
+                        >
+                          <p className="mb-1 flex items-center gap-1.5 font-semibold">
+                            <Bike className="h-3.5 w-3.5" /> Bicicleta / e-bike / patinete
+                            {!motorizado && <span className="text-primary">(seu caso)</span>}
+                          </p>
+                          <p className="text-muted-foreground">{s.help.semMotor}</p>
+                        </div>
+                        <div
+                          className={`rounded-lg border p-2 ${
+                            motorizado ? "border-primary/40 bg-primary/5" : "border-border bg-muted/40"
+                          }`}
+                        >
+                          <p className="mb-1 flex items-center gap-1.5 font-semibold">
+                            <Car className="h-3.5 w-3.5" /> Moto / carro / utilitário
+                            {motorizado && <span className="text-primary">(seu caso)</span>}
+                          </p>
+                          <p className="text-muted-foreground">{s.help.comMotor}</p>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 <p className="text-xs text-muted-foreground">{s.hint}</p>
               </div>
               {!s.done && s.to && (
