@@ -26,6 +26,20 @@ const perfilApp: Record<Perfil, { nome: string; manifest: string; descricao: str
   },
 };
 
+function detectPerfilFromUrl(): Perfil {
+  if (typeof window === "undefined") return "cliente";
+  const path = window.location.pathname.toLowerCase();
+  const search = window.location.search.toLowerCase();
+
+  if (path.startsWith("/estabelecimento") || search.includes("perfil=estabelecimento")) {
+    return "estabelecimento";
+  }
+  if (path.startsWith("/entregador") || search.includes("perfil=entregador")) {
+    return "entregador";
+  }
+  return "cliente";
+}
+
 const DISMISS_KEY = "wifome_install_dismissed_at";
 const DISMISS_DAYS = 7;
 
