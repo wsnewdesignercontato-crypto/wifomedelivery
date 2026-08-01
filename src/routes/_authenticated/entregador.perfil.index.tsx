@@ -122,6 +122,14 @@ function PerfilHub() {
         </div>
       )}
 
+      <section className="space-y-2">
+        <h2 className="px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          Permissões do aparelho
+        </h2>
+        <PushToggleCard />
+        <LocationToggleCard />
+      </section>
+
       {GROUPS.map((g) => (
         <section key={g.title} className="space-y-2">
           <h2 className="px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{g.title}</h2>
