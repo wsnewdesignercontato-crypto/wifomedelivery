@@ -1,4 +1,5 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { PromoAnnouncement } from "@/components/promo-announcement";
 import {
   Sidebar,
   SidebarContent,
@@ -145,6 +146,7 @@ export function EstabShell({ estab }: { estab: Estab }) {
           <main className="flex-1 p-4 md:p-6">
             <Outlet />
           </main>
+          <PromoAnnouncement audience="estabelecimento" />
         </div>
       </div>
     </SidebarProvider>

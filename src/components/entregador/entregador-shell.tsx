@@ -1,4 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { PromoAnnouncement } from "@/components/promo-announcement";
 import { useEffect, useState } from "react";
 import {
   Home, Bike, History, Wallet, Trophy, Star, FileText, Car,
@@ -145,6 +146,7 @@ export function EntregadorShell({ children }: { children: React.ReactNode }) {
           </nav>
         </aside>
         <main className="min-w-0 flex-1 pb-24 lg:pb-0">{children}</main>
+        <PromoAnnouncement audience="entregador" />
       </div>
 
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur lg:hidden">
