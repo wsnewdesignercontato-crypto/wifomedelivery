@@ -106,10 +106,12 @@ function ResetPasswordPage() {
     setLoading(false);
     setDone(true);
     toast.success("Parabéns! Sua senha foi alterada.");
-    setTimeout(() => {
-      navigate({ to: "/auth", search: { perfil }, replace: true });
-    }, 2200);
   }
+
+  function goToLogin() {
+    navigate({ to: "/auth", search: { perfil }, replace: true });
+  }
+
 
   return (
     <div className={`relative min-h-screen bg-background ${themeClass}`}>
@@ -146,15 +148,47 @@ function ResetPasswordPage() {
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
           ) : done ? (
-            <div className="space-y-3 py-4 text-center">
-              <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
-              <p className="text-lg font-bold text-foreground">
-                Parabéns, sua senha foi alterada!
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Redirecionando para o login...
-              </p>
+            <div className="space-y-5 py-4 text-center">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 ring-1 ring-emerald-500/30">
+                <CheckCircle2 className="h-10 w-10 text-emerald-500" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xl font-black tracking-tight text-foreground">
+                  Senha redefinida com sucesso!
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Sua nova senha já está ativa e você pode usá-la para fazer login agora mesmo.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-muted/40 p-4 text-left">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Resumo
+                </p>
+                <ul className="mt-3 space-y-2 text-sm text-foreground">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                    <span>Senha atualizada com segurança</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                    <span>Sessão de recuperação encerrada</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                    <span>Pronto para login com a nova senha</span>
+                  </li>
+                </ul>
+              </div>
+
+              <Button
+                onClick={goToLogin}
+                className="w-full bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95"
+              >
+                Fazer login com a nova senha
+              </Button>
             </div>
+
           ) : !valid ? (
             <div className="space-y-4 text-center">
               <p className="text-sm text-muted-foreground">
