@@ -67,11 +67,17 @@ export function OnboardingGate({
       return;
     }
     const d = (data ?? {}) as { complete?: boolean; missing?: string[]; redirect?: string };
-    setState({
-      loading: false,
-      complete: !!d.complete,
-      missing: Array.isArray(d.missing) ? d.missing : [],
-      redirect: d.redirect ?? "/",
+    setState((prev) => {
+      const nowComplete = !!d.complete;
+      if (nowComplete && !prev.complete && !prev.loading) {
+        toast.success("Cadastro completo! App liberado 🎉");
+      }
+      return {
+        loading: false,
+        complete: nowComplete,
+        missing: Array.isArray(d.missing) ? d.missing : [],
+        redirect: d.redirect ?? "/",
+      };
     });
   }
 
@@ -79,14 +85,42 @@ export function OnboardingGate({
     check();
     const onFocus = () => check();
     const onProfileUpdated = () => check();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") check();
+    };
     window.addEventListener("focus", onFocus);
-    window.addEventListener("wifome:profile-updated", onProfileUpdated);
+    window.addEventListener(PROFILE_UPDATED_EVENT, onProfileUpdated);
+    window.addEventListener(DATA_UPDATED_EVENT, onProfileUpdated);
+    document.addEventListener("visibilitychange", onVisible);
+
+    // Realtime: qualquer alteração nas tabelas de cadastro do usuário re-verifica na hora
+    const channel = supabase
+      .channel(`onboarding-${role}-${userId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `id=eq.${userId}` }, () => check())
+      .on("postgres_changes", { event: "*", schema: "public", table: "addresses", filter: `user_id=eq.${userId}` }, () => check())
+      .on("postgres_changes", { event: "*", schema: "public", table: "courier_profiles", filter: `user_id=eq.${userId}` }, () => check())
+      .on("postgres_changes", { event: "*", schema: "public", table: "courier_vehicles", filter: `courier_id=eq.${userId}` }, () => check())
+      .on("postgres_changes", { event: "*", schema: "public", table: "courier_documents", filter: `courier_id=eq.${userId}` }, () => check())
+      .on("postgres_changes", { event: "*", schema: "public", table: "establishments", filter: `owner_id=eq.${userId}` }, () => check())
+      .subscribe();
+
     return () => {
       window.removeEventListener("focus", onFocus);
-      window.removeEventListener("wifome:profile-updated", onProfileUpdated);
+      window.removeEventListener(PROFILE_UPDATED_EVENT, onProfileUpdated);
+      window.removeEventListener(DATA_UPDATED_EVENT, onProfileUpdated);
+      document.removeEventListener("visibilitychange", onVisible);
+      supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, role]);
+
+  // Enquanto estiver bloqueado, re-verifica periodicamente (fallback do realtime)
+  useEffect(() => {
+    if (state.loading || state.complete) return;
+    const id = window.setInterval(() => check(), 4000);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.loading, state.complete, userId, role]);
 
   if (state.loading) {
     return (
