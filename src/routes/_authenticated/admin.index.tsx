@@ -348,8 +348,8 @@ function AdminDashboard() {
             ];
             const pct = (v: number) => (total ? ((v / total) * 100).toFixed(1).replace(".", ",") : "0,0");
             return (
-              <div className="flex items-center gap-4">
-                <div className="relative h-56 w-56 shrink-0">
+              <div className="flex flex-col items-center gap-4 sm:flex-row">
+                <div className="relative h-44 w-44 shrink-0 sm:h-56 sm:w-56">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie data={grouped} dataKey="value" nameKey="status" cx="50%" cy="50%" innerRadius={58} outerRadius={88} paddingAngle={2}>
@@ -362,7 +362,7 @@ function AdminDashboard() {
                     <span className="text-[11px] text-muted-foreground">Total</span>
                   </div>
                 </div>
-                <div className="flex-1 space-y-3">
+                <div className="w-full min-w-0 flex-1 space-y-3">
                   {grouped.map((g) => (
                     <div key={g.status} className="flex items-center gap-2 text-sm">
                       <span className="h-2.5 w-2.5 rounded-full" style={{ background: g.color }} />

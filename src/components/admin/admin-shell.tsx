@@ -165,7 +165,7 @@ export function AdminShell() {
       )}
 
       {/* Main */}
-      <div className="flex flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-lg lg:px-8">
           <button
             onClick={() => setOpen(true)}
