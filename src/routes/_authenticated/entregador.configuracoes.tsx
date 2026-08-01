@@ -155,6 +155,7 @@ function Cfg() {
           <Bell className="h-3.5 w-3.5" /> Notificações
         </h2>
         <PushToggleCard />
+        <LocationToggleCard />
         <Button variant="outline" className="w-full rounded-2xl" onClick={() => playSiren()}>
           <Volume2 className="mr-2 h-4 w-4" /> Testar som de nova corrida
         </Button>
