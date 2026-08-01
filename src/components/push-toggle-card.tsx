@@ -1,6 +1,7 @@
 import { BellOff, BellRing } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { PermissionHelpDialog } from "@/components/permission-help-dialog";
 
 /** Cartão para ligar/desligar as notificações que aparecem na tela do celular. */
 export function PushToggleCard({ className = "" }: { className?: string }) {
@@ -42,6 +43,8 @@ export function PushToggleCard({ className = "" }: { className?: string }) {
           "Notificações" e tente novamente.
         </p>
       )}
+
+      {(!push.subscribed || push.permission === "denied") && <PermissionHelpDialog kind="push" />}
     </div>
   );
 }
