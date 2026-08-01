@@ -5,6 +5,7 @@ interface Props {
   className?: string;
   size?: "sm" | "md" | "lg";
   showWord?: boolean;
+  perfil?: "cliente" | "estabelecimento" | "entregador";
 }
 
 const sizes = {
@@ -13,13 +14,21 @@ const sizes = {
   lg: { box: "h-14 w-14", text: "text-3xl" },
 };
 
-export function IFomeLogo({ className, size = "md", showWord = true }: Props) {
+const perfilFilter: Record<"cliente" | "estabelecimento" | "entregador", string> = {
+  cliente: "",
+  estabelecimento: "hue-rotate(-22deg) saturate(1.15) brightness(0.95)",
+  entregador: "hue-rotate(92deg) saturate(0.95) brightness(0.95)",
+};
+
+export function IFomeLogo({ className, size = "md", showWord = true, perfil = "cliente" }: Props) {
   const s = sizes[size];
+  const filter = perfilFilter[perfil];
   return (
     <div className={cn("inline-flex shrink-0 items-center gap-2.5", className)}>
       <img
         src={logoAsset.url}
         alt="WiFome"
+        style={filter ? { filter } : undefined}
         className={cn("object-contain rounded-xl shadow-brand", s.box)}
       />
 
