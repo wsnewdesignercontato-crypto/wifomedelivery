@@ -853,7 +853,7 @@ function LandingPage() {
                 <a
                   key={i}
                   href="#"
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/40 text-white transition hover:bg-white/10"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/40 text-white transition hover:bg-white/10 sm:h-9 sm:w-9"
                   aria-label="Rede social"
                 >
                   <Icon className="h-4 w-4" />
