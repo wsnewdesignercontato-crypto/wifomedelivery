@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Bike, Car, Plus, Trash2, Truck, Zap, CheckCircle2, Clock, ShieldCheck, Sparkles } from "lucide-react";
 import { useMyCourier } from "@/hooks/use-courier";
-import { notifyDataUpdated } from "@/lib/app-refresh";
+import { notifyDataUpdated, DATA_UPDATED_EVENT } from "@/lib/app-refresh";
 
 
 export const Route = createFileRoute("/_authenticated/entregador/veiculo")({
