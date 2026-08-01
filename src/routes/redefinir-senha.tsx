@@ -106,10 +106,12 @@ function ResetPasswordPage() {
     setLoading(false);
     setDone(true);
     toast.success("Parabéns! Sua senha foi alterada.");
-    setTimeout(() => {
-      navigate({ to: "/auth", search: { perfil }, replace: true });
-    }, 2200);
   }
+
+  function goToLogin() {
+    navigate({ to: "/auth", search: { perfil }, replace: true });
+  }
+
 
   return (
     <div className={`relative min-h-screen bg-background ${themeClass}`}>
