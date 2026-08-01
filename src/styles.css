@@ -486,3 +486,147 @@
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 }
+
+/* ============================================================
+   RESPONSIVIDADE GLOBAL — mobile-first (320px → 1920px)
+   ============================================================ */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* Nada estoura a largura da tela */
+img,
+video,
+canvas,
+svg,
+iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Quebra de palavras longas (emails, URLs, IDs) em telas estreitas */
+p,
+h1,
+h2,
+h3,
+h4,
+li,
+dd,
+dt,
+span,
+td,
+th {
+  overflow-wrap: anywhere;
+}
+
+/* Tipografia fluida: escala suave de 320px até 1920px */
+h1 {
+  font-size: clamp(1.5rem, 1.05rem + 2.2vw, 3rem);
+  line-height: 1.1;
+}
+h2 {
+  font-size: clamp(1.25rem, 1rem + 1.3vw, 2.25rem);
+  line-height: 1.15;
+}
+h3 {
+  font-size: clamp(1.05rem, 0.95rem + 0.6vw, 1.5rem);
+  line-height: 1.25;
+}
+
+/* Tabelas: rolagem horizontal suave e células sem quebra agressiva */
+table {
+  width: 100%;
+}
+@media (max-width: 767px) {
+  table th,
+  table td {
+    white-space: nowrap;
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+  }
+}
+
+/* Formulários mobile-friendly: evita o zoom automático do iOS */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Touch targets mínimos de 44x44 em telas de toque */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  a[href],
+  input[type="checkbox"],
+  input[type="radio"],
+  select,
+  summary,
+  [role="tab"],
+  [role="menuitem"],
+  [role="switch"] {
+    min-height: 44px;
+  }
+
+  button,
+  [role="button"],
+  select,
+  [role="tab"] {
+    min-width: 44px;
+  }
+
+  /* Exceções: elementos inline dentro de texto e chips compactos */
+  p a[href],
+  li a[href],
+  span a[href],
+  label a[href],
+  a[href].link-inline,
+  .no-touch-target,
+  .no-touch-target * {
+    min-height: 0;
+    min-width: 0;
+  }
+}
+
+/* Safe areas (notch / barra inferior) */
+@utility safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+}
+@utility safe-top {
+  padding-top: max(env(safe-area-inset-top), 0rem);
+}
+@utility safe-x {
+  padding-left: max(env(safe-area-inset-left), 0px);
+  padding-right: max(env(safe-area-inset-right), 0px);
+}
+
+/* Rolagem horizontal com snap para carrosséis/abas em mobile */
+@utility scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+/* Landscape em telas baixas: compacta cabeçalhos fixos */
+@media (max-height: 480px) and (orientation: landscape) {
+  .landscape-compact {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+}
