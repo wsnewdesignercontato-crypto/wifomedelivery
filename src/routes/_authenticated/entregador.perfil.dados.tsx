@@ -103,7 +103,6 @@ function Perfil() {
       estado: str(end.estado),
     });
   }, [courier, profileQ.data]);
-  }, [courier, profileQ.data]);
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
