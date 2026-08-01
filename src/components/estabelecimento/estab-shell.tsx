@@ -41,6 +41,7 @@ import { NotificationsBell } from "@/components/cliente/notifications-bell";
 import { supabase } from "@/integrations/supabase/client";
 import type { Estab } from "@/hooks/use-estab";
 import { useQueryClient } from "@tanstack/react-query";
+import { useNewOrderAlert } from "@/hooks/use-new-order-alert";
 
 type NavItem = { label: string; to: string; icon: typeof LayoutDashboard; exact?: boolean };
 const NAV: NavItem[] = [
