@@ -15,7 +15,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthSync } from "@/components/auth-sync";
 import { LiveRefresh } from "@/components/live-refresh";
-
+import { InstallAppPrompt } from "@/components/install-app-prompt";
 
 import { IFomeLogo } from "@/components/ifome-logo";
 import logoAsset from "@/assets/wifome-logo.png.asset.json";
