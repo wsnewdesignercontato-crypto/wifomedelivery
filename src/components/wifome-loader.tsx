@@ -31,31 +31,31 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
 
   useEffect(() => {
     if (reduced) return;
-    const id = window.setInterval(() => setStep((s) => (s + 1) % STEPS.length), 900);
+    const id = window.setInterval(() => setStep((s) => (s + 1) % STEPS.length), 850);
     return () => window.clearInterval(id);
   }, [reduced]);
 
-  const size = compact ? "size-10" : "size-16";
-  const icon = compact ? 20 : 30;
+  const size = compact ? "size-7" : "size-9";
+  const icon = compact ? 14 : 18;
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="flex items-center gap-2 sm:gap-3">
+    <div className="flex flex-col items-center gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-2">
         {STEPS.map((s, i) => {
           const Icon = s.icon;
           const active = i === step;
           const done = i < step;
           return (
-            <div key={s.label} className="flex items-center gap-2 sm:gap-3">
+            <div key={s.label} className="flex items-center gap-1.5 sm:gap-2">
               <div
                 className={[
                   size,
-                  "grid place-items-center rounded-2xl border transition-all duration-500",
+                  "grid place-items-center rounded-xl border transition-all duration-500",
                   active
-                    ? "scale-110 border-primary-foreground/70 bg-primary-foreground/20 text-primary-foreground shadow-lg"
+                    ? "scale-110 border-primary-foreground/70 bg-primary-foreground/20 text-primary-foreground shadow-md"
                     : done
                       ? "border-primary-foreground/40 bg-primary-foreground/10 text-primary-foreground/80"
-                      : "border-primary-foreground/20 bg-primary-foreground/5 text-primary-foreground/50",
+                      : "border-primary-foreground/20 bg-primary-foreground/5 text-primary-foreground/45",
                 ].join(" ")}
               >
                 <Icon size={icon} strokeWidth={2.2} />
@@ -63,22 +63,27 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
               {i < STEPS.length - 1 && (
                 <span
                   className={[
-                    "h-0.5 rounded-full transition-all duration-500",
-                    compact ? "w-4" : "w-8 sm:w-12",
-                    i < step ? "bg-primary-foreground/80" : "bg-primary-foreground/25",
+                    "relative h-0.5 overflow-hidden rounded-full bg-primary-foreground/20",
+                    compact ? "w-4" : "w-7 sm:w-9",
                   ].join(" ")}
-                />
+                >
+                  <span
+                    className="absolute inset-y-0 left-0 rounded-full bg-primary-foreground/90 transition-all duration-700 ease-out"
+                    style={{ width: i < step ? "100%" : active && !reduced ? "100%" : "0%" }}
+                  />
+                </span>
               )}
             </div>
           );
         })}
       </div>
       {!compact && (
-        <p className="text-sm font-medium text-primary-foreground/85">{STEPS[step].label}…</p>
+        <p className="text-xs font-medium text-primary-foreground/80">{STEPS[step].label}…</p>
       )}
     </div>
   );
 }
+
 
 /** Tela cheia na cor do perfil (laranja/vermelho/verde) com a marca WiFome. */
 export function WifomeLoader({
