@@ -200,27 +200,47 @@ function Veiculo() {
           />
         </div>
 
+        {feitos < steps.length && (
+          <p className="mt-3 text-xs font-semibold text-destructive">
+            Os itens em vermelho são obrigatórios — preencha todos para liberar o app.
+          </p>
+        )}
+
         <ol className="mt-5 space-y-3">
           {steps.map((s, i) => (
             <li
               key={s.label}
               className={`flex items-start gap-3 rounded-2xl border p-3 transition-colors ${
-                s.done ? "border-emerald-500/30 bg-emerald-500/5" : "border-border bg-background/60"
+                s.done
+                  ? "border-emerald-500/30 bg-emerald-500/5"
+                  : "border-destructive/40 bg-destructive/5"
               }`}
             >
               <div
                 className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold ${
-                  s.done ? "bg-emerald-500 text-white" : "bg-primary/10 text-primary"
+                  s.done ? "bg-emerald-500 text-white" : "bg-destructive text-destructive-foreground"
                 }`}
               >
                 {s.done ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
               </div>
               <div className="min-w-0 flex-1">
-                <p className={`text-sm font-semibold ${s.done ? "text-emerald-600" : ""}`}>{s.label}</p>
+                <p
+                  className={`text-sm font-semibold ${
+                    s.done ? "text-emerald-600" : "text-destructive"
+                  }`}
+                >
+                  {s.label}
+                  {!s.done && <span className="ml-1 font-bold">*</span>}
+                </p>
                 <p className="text-xs text-muted-foreground">{s.hint}</p>
               </div>
               {!s.done && s.to && (
-                <Button asChild size="sm" variant="outline" className="rounded-lg">
+                <Button
+                  asChild
+                  size="sm"
+                  variant="outline"
+                  className="rounded-lg border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                >
                   <Link to={s.to as any}>Completar</Link>
                 </Button>
               )}
