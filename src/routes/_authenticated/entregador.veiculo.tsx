@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Bike, Car, Plus, Trash2, Truck, Zap, CheckCircle2, Clock, ShieldCheck, Sparkles } from "lucide-react";
 import { useMyCourier } from "@/hooks/use-courier";
 import { notifyDataUpdated } from "@/lib/app-refresh";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 export const Route = createFileRoute("/_authenticated/entregador/veiculo")({
   component: Veiculo,
@@ -18,17 +18,23 @@ export const Route = createFileRoute("/_authenticated/entregador/veiculo")({
 type V = { id: string; tipo: string; marca: string | null; modelo: string | null; ano: number | null; cor: string | null; placa: string | null; ativo: boolean; status: string };
 
 const TIPOS = [
-  { value: "bicicleta", label: "Bicicleta", icon: Bike },
-  { value: "bicicleta_eletrica", label: "Bicicleta elétrica", icon: Zap },
-  { value: "moto", label: "Moto", icon: Bike },
-  { value: "carro", label: "Carro", icon: Car },
-  { value: "utilitario", label: "Utilitário", icon: Truck },
+  { value: "bicicleta", label: "Bicicleta", icon: Bike, motorizado: false },
+  { value: "bicicleta_eletrica", label: "Bicicleta elétrica", icon: Zap, motorizado: false },
+  { value: "patinete_eletrico", label: "Patinete elétrico", icon: Zap, motorizado: false },
+  { value: "moto", label: "Moto", icon: Bike, motorizado: true },
+  { value: "carro", label: "Carro", icon: Car, motorizado: true },
+  { value: "utilitario", label: "Utilitário", icon: Truck, motorizado: true },
 ] as const;
+
+function precisaPlaca(tipo?: string) {
+  return TIPOS.find((t) => t.value === tipo)?.motorizado ?? true;
+}
 
 function iconFor(tipo: string) {
   const t = TIPOS.find((x) => x.value === tipo);
   return t?.icon ?? Car;
 }
+
 
 function statusMeta(status: string) {
   switch (status) {
@@ -56,23 +62,30 @@ function Veiculo() {
 
   async function salvar() {
     if (!courier) return;
-    if (!form.placa || form.placa.replace(/[^A-Z0-9]/gi, "").length < 7) {
+    const comPlaca = precisaPlaca(form.tipo);
+    const placaLimpa = (form.placa ?? "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
+    if (comPlaca && placaLimpa.length < 7) {
       return toast.error("Informe a placa completa (ex.: ABC1D23)");
     }
     setSaving(true);
     const { error } = await supabase.from("courier_vehicles").insert({
       courier_id: courier.user_id,
       tipo: form.tipo!, marca: form.marca, modelo: form.modelo, ano: form.ano, cor: form.cor,
-      placa: form.placa.replace(/[^A-Z0-9]/gi, "").toUpperCase(),
+      placa: comPlaca ? placaLimpa : null,
       ativo: list.length === 0,
     });
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success("Veículo cadastrado — aguardando aprovação");
-    setForm({ tipo: "moto", marca: "", modelo: "", ano: undefined, cor: "", placa: "" });
+    toast.success(
+      comPlaca
+        ? "Veículo cadastrado — aguardando aprovação"
+        : "Veículo cadastrado! Agora envie seu documento com foto em Documentos.",
+    );
+    setForm({ tipo: form.tipo, marca: "", modelo: "", ano: undefined, cor: "", placa: "" });
     await load();
     notifyDataUpdated();
   }
+
 
   async function ativar(id: string) {
     if (!courier) return;
@@ -92,6 +105,8 @@ function Veiculo() {
 
   const aprovados = list.filter((v) => v.status === "aprovado").length;
   const ativo = list.find((v) => v.ativo);
+  const comPlaca = precisaPlaca(form.tipo);
+
 
   return (
     <div className="space-y-8">
@@ -126,35 +141,70 @@ function Veiculo() {
           </div>
           <div>
             <h2 className="text-lg font-bold tracking-tight">Adicionar veículo</h2>
-            <p className="text-xs text-muted-foreground">Preencha os dados — a plataforma valida em até 24h.</p>
+            <p className="text-xs text-muted-foreground">
+              Passo 1: escolha o tipo. Os campos mudam conforme a sua escolha.
+            </p>
           </div>
+        </div>
+
+        {/* Passo 1 — tipo em cards */}
+        <div className="mb-5">
+          <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            1. Como você entrega?
+          </Label>
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            {TIPOS.map((t) => {
+              const Icon = t.icon;
+              const sel = form.tipo === t.value;
+              return (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => setForm({ ...form, tipo: t.value, placa: "" })}
+                  className={`flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-center transition-all ${
+                    sel
+                      ? "border-primary bg-primary/10 text-primary ring-2 ring-primary/25"
+                      : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-6 w-6" />
+                  <span className="text-xs font-semibold leading-tight">{t.label}</span>
+                  <span className="text-[10px] font-medium opacity-70">
+                    {t.motorizado ? "Com placa" : "Sem placa"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mb-5 rounded-2xl border border-primary/25 bg-primary/5 p-4 text-xs leading-relaxed text-muted-foreground">
+          {comPlaca ? (
+            <>
+              <span className="font-bold text-foreground">2. Veículo motorizado:</span> informe marca, modelo e a
+              <span className="font-semibold text-foreground"> placa</span>. Também é preciso enviar a
+              <span className="font-semibold text-foreground"> CNH</span> na aba Documentos.
+            </>
+          ) : (
+            <>
+              <span className="font-bold text-foreground">2. Veículo sem motor:</span> não precisa de placa nem CNH.
+              Basta enviar um <span className="font-semibold text-foreground">documento com foto (RG ou CNH)</span> na
+              aba Documentos para validarmos sua identidade.
+            </>
+          )}
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tipo</Label>
-            <Select value={form.tipo} onValueChange={(v) => setForm({ ...form, tipo: v })}>
-              <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {TIPOS.map((t) => {
-                  const Icon = t.icon;
-                  return (
-                    <SelectItem key={t.value} value={t.value}>
-                      <span className="flex items-center gap-2"><Icon className="h-4 w-4 text-primary" />{t.label}</span>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-          <FieldInput label="Marca" placeholder="Honda, Yamaha…" value={form.marca ?? ""} onChange={(v) => setForm({ ...form, marca: v })} />
-          <FieldInput label="Modelo" placeholder="CG 160, Factor…" value={form.modelo ?? ""} onChange={(v) => setForm({ ...form, modelo: v })} />
+          <FieldInput label="Marca" placeholder={comPlaca ? "Honda, Yamaha…" : "Caloi, Sense…"} value={form.marca ?? ""} onChange={(v) => setForm({ ...form, marca: v })} />
+          <FieldInput label="Modelo" placeholder={comPlaca ? "CG 160, Factor…" : "Aro 29, Urbana…"} value={form.modelo ?? ""} onChange={(v) => setForm({ ...form, modelo: v })} />
           <FieldInput label="Ano" placeholder="2022" type="number" value={form.ano?.toString() ?? ""} onChange={(v) => setForm({ ...form, ano: v ? Number(v) : undefined })} />
           <FieldInput label="Cor" placeholder="Preta, Vermelha…" value={form.cor ?? ""} onChange={(v) => setForm({ ...form, cor: v })} />
-          <FieldInput label="Placa" placeholder="ABC1D23" value={form.placa ?? ""} onChange={(v) => setForm({ ...form, placa: v.toUpperCase() })} />
+          {comPlaca && (
+            <FieldInput label="Placa (obrigatória)" placeholder="ABC1D23" value={form.placa ?? ""} onChange={(v) => setForm({ ...form, placa: v.toUpperCase() })} />
+          )}
         </div>
 
-        <div className="mt-6 flex items-center justify-between gap-3">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
             Ao cadastrar, você confirma que os dados são verdadeiros e o veículo está regularizado.
           </p>
@@ -164,6 +214,7 @@ function Veiculo() {
             size="lg"
             className="rounded-xl bg-primary shadow-[0_10px_30px_-10px_rgba(255,107,0,0.7)] transition-transform hover:scale-[1.02]"
           >
+
             <Plus className="mr-2 h-4 w-4" />
             {saving ? "Salvando…" : "Adicionar veículo"}
           </Button>
@@ -212,7 +263,12 @@ function Veiculo() {
                         {v.modelo && <span className="text-muted-foreground"> {v.modelo}</span>}
                       </p>
                       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                        {v.placa && <span className="rounded-md bg-muted px-2 py-0.5 font-mono font-semibold text-foreground">{v.placa}</span>}
+                        {v.placa ? (
+                          <span className="rounded-md bg-muted px-2 py-0.5 font-mono font-semibold text-foreground">{v.placa}</span>
+                        ) : (
+                          <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 font-semibold text-emerald-600">Sem placa</span>
+                        )}
+
                         {v.cor && <span>{v.cor}</span>}
                         {v.ano && <span>{v.ano}</span>}
                       </div>
