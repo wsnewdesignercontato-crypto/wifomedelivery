@@ -146,11 +146,11 @@ function AuthPage() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: parsed.data.email,
       password: parsed.data.senha,
       options: {
-        emailRedirectTo: `${window.location.origin}/app?perfil=${perfil}`,
+        emailRedirectTo: `${window.location.origin}/auth?perfil=${perfil}&confirmado=1`,
         data: {
           nome: parsed.data.nome,
           perfil_inicial: perfil,
@@ -162,8 +162,39 @@ function AuthPage() {
       toast.error(error.message);
       return;
     }
-    toast.success("Conta criada! Você já pode entrar.");
-    setTab("login");
+    try {
+      window.localStorage.setItem("wifome:last-email", parsed.data.email);
+    } catch {
+      /* ignore */
+    }
+    setEmailSalvo(parsed.data.email);
+    if (data.session) {
+      toast.success("Conta criada! Bem-vindo ao WiFome.");
+      navigate({ to: "/app", search: { perfil }, replace: true });
+      return;
+    }
+    setModo("confirmar-email");
+  }
+
+  async function handleRecuperar(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const parsed = emailSchema.safeParse(form.get("email"));
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Email inválido");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
+      redirectTo: `${window.location.origin}/redefinir-senha?perfil=${perfil}`,
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setEmailSalvo(parsed.data);
+    setModo("link-enviado");
   }
 
   if (checkingSession) {
