@@ -70,8 +70,9 @@ function recentlyDismissed() {
   }
 }
 
-export function InstallAppPrompt({ perfil = "cliente" }: { perfil?: Perfil } = {}) {
-  const app = perfilApp[perfil];
+export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
+  const perfilAtivo = perfil ?? detectPerfilFromUrl();
+  const app = perfilApp[perfilAtivo];
   const [deferred, setDeferred] = useState<BIPEvent | null>(null);
   const [visible, setVisible] = useState(false);
   const [showIOSHelp, setShowIOSHelp] = useState(false);
