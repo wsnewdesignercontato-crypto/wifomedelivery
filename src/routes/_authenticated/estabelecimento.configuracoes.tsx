@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PushToggleCard } from "@/components/push-toggle-card";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/configuracoes")({
   component: ConfigPage,
@@ -205,6 +206,7 @@ function ConfigPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 pb-32">
+      <PushToggleCard />
       {/* Header premium com preview de capa e logo */}
       <section className="relative rounded-3xl border border-border bg-card shadow-sm">
         <div

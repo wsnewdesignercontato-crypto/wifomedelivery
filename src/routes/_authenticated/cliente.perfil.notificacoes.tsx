@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ChevronLeft, Bell } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { PushToggleCard } from "@/components/push-toggle-card";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/notificacoes")({
   component: NotifPage,
@@ -65,6 +66,8 @@ function NotifPage() {
       <p className="text-sm text-muted-foreground">
         Escolha como o WiFome pode te avisar sobre pedidos, promoções e novidades.
       </p>
+
+      <PushToggleCard />
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
         {rows.map((r, i) => (
