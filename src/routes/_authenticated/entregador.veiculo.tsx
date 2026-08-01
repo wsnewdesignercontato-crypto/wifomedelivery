@@ -132,23 +132,46 @@ function Veiculo() {
   const motorizado = precisaPlaca(tipoRef);
   const docOk = (pref: string) => docs.some((d) => d.tipo.startsWith(pref) && d.status !== "rejeitado");
   const temDocIdentidade = docOk("cnh") || docOk("rg") || docOk("documento");
-  const steps: { label: string; hint: string; done: boolean; to?: string }[] = [
+  const steps: {
+    label: string;
+    hint: string;
+    done: boolean;
+    to?: string;
+    help: { semMotor: string; comMotor: string };
+  }[] = [
     {
       label: "Dados pessoais",
       hint: "Nome, telefone, CPF e cidade de atuação",
       done: !!(courier?.telefone && courier?.cpf && courier?.cidade_atuacao),
       to: "/entregador/perfil/dados",
+      help: {
+        semMotor:
+          "Bicicleta, bike elétrica ou patinete: preencha nome completo, CPF, telefone/WhatsApp e a cidade onde você vai rodar. É o mesmo para todos os tipos de veículo.",
+        comMotor:
+          "Moto, carro ou utilitário: preencha nome completo, CPF, telefone/WhatsApp e a cidade de atuação. Esses dados precisam bater com a sua CNH.",
+      },
     },
     {
       label: "Cadastrar o veículo",
       hint: motorizado ? "Marca, modelo e cor da moto/carro" : "Basta escolher o tipo (bike, e-bike ou patinete)",
       done: list.length > 0,
+      help: {
+        semMotor:
+          "Sem motor: escolha o card do seu veículo (bicicleta, bike elétrica ou patinete) e salve. Marca, modelo, ano e cor são opcionais — não pedimos placa nem documento do veículo.",
+        comMotor:
+          "Com motor: escolha moto, carro ou utilitário e informe marca, modelo, ano e cor. Depois marque este veículo como ativo — é ele que será usado nas corridas.",
+      },
     },
     ...(motorizado
       ? [{
           label: "Placa do veículo",
           hint: "Obrigatória para veículos motorizados (ex.: ABC1D23)",
           done: list.some((v) => !!v.placa),
+          help: {
+            semMotor: "Não se aplica a veículos sem motor.",
+            comMotor:
+              "Digite a placa com 7 caracteres, no padrão antigo (ABC1234) ou Mercosul (ABC1D23). Sem placa válida o app não libera as corridas para veículos motorizados.",
+          },
         }]
       : []),
     {
@@ -158,12 +181,24 @@ function Veiculo() {
         : "RG ou CNH só para validar sua identidade — sem placa e sem CNH obrigatória",
       done: motorizado ? docOk("cnh") : temDocIdentidade,
       to: "/entregador/documentos",
+      help: {
+        semMotor:
+          "Bike, e-bike ou patinete: envie apenas um documento com foto (RG, CNH ou documento oficial) para confirmarmos que você é você. CNH não é obrigatória.",
+        comMotor:
+          "Moto, carro ou utilitário: envie a CNH (frente e verso), legível e dentro da validade. A categoria precisa permitir o veículo cadastrado (ex.: categoria A para moto).",
+      },
     },
     {
       label: "Dados de pagamento",
       hint: "Chave PIX para receber seus ganhos",
       done: !!courier?.pix_key,
       to: "/entregador/perfil/pagamento",
+      help: {
+        semMotor:
+          "Cadastre uma chave PIX no seu nome (CPF, telefone, e-mail ou aleatória). É por ela que os saques da sua carteira são pagos.",
+        comMotor:
+          "Cadastre uma chave PIX no seu nome (CPF, telefone, e-mail ou aleatória). É por ela que os saques da sua carteira são pagos.",
+      },
     },
   ];
   const feitos = steps.filter((s) => s.done).length;
