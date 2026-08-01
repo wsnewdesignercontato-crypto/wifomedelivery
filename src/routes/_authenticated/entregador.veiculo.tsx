@@ -50,6 +50,7 @@ function statusMeta(status: string) {
 function Veiculo() {
   const { courier } = useMyCourier();
   const [list, setList] = useState<V[]>([]);
+  const [docs, setDocs] = useState<{ tipo: string; status: string }[]>([]);
   const [form, setForm] = useState<Partial<V>>({ tipo: "moto", marca: "", modelo: "", ano: undefined, cor: "", placa: "" });
   const [saving, setSaving] = useState(false);
 
@@ -57,6 +58,8 @@ function Veiculo() {
     if (!courier) return;
     const { data } = await supabase.from("courier_vehicles").select("*").eq("courier_id", courier.user_id).order("created_at", { ascending: false });
     setList((data ?? []) as V[]);
+    const { data: d } = await supabase.from("courier_documents").select("tipo,status").eq("courier_id", courier.user_id);
+    setDocs((d ?? []) as { tipo: string; status: string }[]);
   }
   useEffect(() => { load(); }, [courier]);
 
