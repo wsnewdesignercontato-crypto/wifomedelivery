@@ -137,12 +137,17 @@ export function PromoAnnouncement({ audience }: { audience: PromoAudience }) {
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(180deg, rgba(12,7,5,0) 35%, rgba(12,7,5,0.75) 78%, #1a0d05 100%)",
+                "linear-gradient(180deg, rgba(12,7,5,0) 25%, rgba(12,7,5,0.55) 65%, rgba(12,7,5,0.92) 88%, #1a0d05 100%)",
             }}
           />
           <div
-            className="absolute inset-x-0 bottom-0 h-px"
-            style={{ background: `linear-gradient(90deg, transparent, ${cor}, transparent)` }}
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-20"
+            style={{
+              background: `linear-gradient(180deg, transparent 0%, ${cor}33 55%, ${cor}66 100%)`,
+              filter: "blur(18px)",
+              opacity: 0.55,
+            }}
+            aria-hidden="true"
           />
         </div>
 
