@@ -5,6 +5,7 @@ import { Bell } from "lucide-react";
 import { useMyCourier } from "@/hooks/use-courier";
 import { Badge } from "@/components/ui/badge";
 import { PushToggleCard } from "@/components/push-toggle-card";
+import { LocationToggleCard } from "@/components/location-toggle-card";
 
 
 export const Route = createFileRoute("/_authenticated/entregador/notificacoes")({
