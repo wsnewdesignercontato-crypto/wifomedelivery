@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,6 +50,7 @@ function statusMeta(status: string) {
 function Veiculo() {
   const { courier } = useMyCourier();
   const [list, setList] = useState<V[]>([]);
+  const [docs, setDocs] = useState<{ tipo: string; status: string }[]>([]);
   const [form, setForm] = useState<Partial<V>>({ tipo: "moto", marca: "", modelo: "", ano: undefined, cor: "", placa: "" });
   const [saving, setSaving] = useState(false);
 
@@ -57,6 +58,8 @@ function Veiculo() {
     if (!courier) return;
     const { data } = await supabase.from("courier_vehicles").select("*").eq("courier_id", courier.user_id).order("created_at", { ascending: false });
     setList((data ?? []) as V[]);
+    const { data: d } = await supabase.from("courier_documents").select("tipo,status").eq("courier_id", courier.user_id);
+    setDocs((d ?? []) as { tipo: string; status: string }[]);
   }
   useEffect(() => { load(); }, [courier]);
 
@@ -107,6 +110,50 @@ function Veiculo() {
   const ativo = list.find((v) => v.ativo);
   const comPlaca = precisaPlaca(form.tipo);
 
+  // Passo a passo: baseado no veículo ativo (ou no tipo selecionado, se ainda não há veículo)
+  const tipoRef = ativo?.tipo ?? list[0]?.tipo ?? form.tipo;
+  const motorizado = precisaPlaca(tipoRef);
+  const docOk = (pref: string) => docs.some((d) => d.tipo.startsWith(pref) && d.status !== "rejeitado");
+  const temDocIdentidade = docOk("cnh") || docOk("rg") || docOk("documento");
+  const steps: { label: string; hint: string; done: boolean; to?: string }[] = [
+    {
+      label: "Dados pessoais",
+      hint: "Nome, telefone, CPF e cidade de atuação",
+      done: !!(courier?.telefone && courier?.cpf && courier?.cidade_atuacao),
+      to: "/entregador/perfil/dados",
+    },
+    {
+      label: "Cadastrar o veículo",
+      hint: motorizado ? "Marca, modelo e cor da moto/carro" : "Basta escolher o tipo (bike, e-bike ou patinete)",
+      done: list.length > 0,
+    },
+    ...(motorizado
+      ? [{
+          label: "Placa do veículo",
+          hint: "Obrigatória para veículos motorizados (ex.: ABC1D23)",
+          done: list.some((v) => !!v.placa),
+        }]
+      : []),
+    {
+      label: motorizado ? "Enviar a CNH" : "Enviar documento com foto",
+      hint: motorizado
+        ? "CNH frente e verso na aba Documentos"
+        : "RG ou CNH só para validar sua identidade — sem placa e sem CNH obrigatória",
+      done: motorizado ? docOk("cnh") : temDocIdentidade,
+      to: "/entregador/documentos",
+    },
+    {
+      label: "Dados de pagamento",
+      hint: "Chave PIX para receber seus ganhos",
+      done: !!courier?.pix_key,
+      to: "/entregador/perfil/pagamento",
+    },
+  ];
+  const feitos = steps.filter((s) => s.done).length;
+  const pct = Math.round((feitos / steps.length) * 100);
+
+
+
 
   return (
     <div className="space-y-8">
@@ -128,7 +175,61 @@ function Veiculo() {
             <MiniStat label="Cadastrados" value={list.length} />
             <MiniStat label="Aprovados" value={aprovados} />
             <MiniStat label="Ativo" value={ativo ? ativo.tipo.replace(/_/g, " ") : "—"} isText />
+      </div>
+
+      {/* Passo a passo guiado */}
+      <section className="rounded-3xl border border-border bg-card p-6 shadow-card">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold tracking-tight">O que falta para liberar o app</h2>
+            <p className="text-xs text-muted-foreground">
+              {motorizado
+                ? "Você escolheu um veículo motorizado: precisa de placa e CNH."
+                : "Você escolheu um veículo sem motor: não precisa de placa nem CNH, só um documento com foto."}
+            </p>
           </div>
+          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+            {feitos}/{steps.length} concluídos
+          </span>
+        </div>
+
+        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-primary to-amber-400 transition-all"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+
+        <ol className="mt-5 space-y-3">
+          {steps.map((s, i) => (
+            <li
+              key={s.label}
+              className={`flex items-start gap-3 rounded-2xl border p-3 transition-colors ${
+                s.done ? "border-emerald-500/30 bg-emerald-500/5" : "border-border bg-background/60"
+              }`}
+            >
+              <div
+                className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold ${
+                  s.done ? "bg-emerald-500 text-white" : "bg-primary/10 text-primary"
+                }`}
+              >
+                {s.done ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className={`text-sm font-semibold ${s.done ? "text-emerald-600" : ""}`}>{s.label}</p>
+                <p className="text-xs text-muted-foreground">{s.hint}</p>
+              </div>
+              {!s.done && s.to && (
+                <Button asChild size="sm" variant="outline" className="rounded-lg">
+                  <Link to={s.to as any}>Completar</Link>
+                </Button>
+              )}
+            </li>
+          ))}
+        </ol>
+      </section>
+
+
         </div>
       </div>
 
