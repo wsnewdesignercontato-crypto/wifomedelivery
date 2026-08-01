@@ -58,12 +58,26 @@ export function usePushNotifications() {
       toast.error("Seu navegador não suporta notificações. No iPhone, adicione o app à Tela de Início primeiro.");
       return false;
     }
+    // Dentro da pré-visualização (iframe) o navegador bloqueia o pedido automaticamente.
+    if (typeof window !== "undefined" && window.self !== window.top) {
+      toast.error(
+        "Abra o app em uma aba própria (ou pelo ícone instalado no celular) para ativar os alertas — a pré-visualização bloqueia o pedido de permissão.",
+      );
+      return false;
+    }
+    if (Notification.permission === "denied") {
+      toast.error(
+        "As notificações estão bloqueadas para este site. Toque no cadeado ao lado do endereço e permita Notificações, depois tente de novo.",
+      );
+      setPermission("denied");
+      return false;
+    }
     setBusy(true);
     try {
       const perm = await Notification.requestPermission();
       setPermission(perm as PermissionState);
       if (perm !== "granted") {
-        toast.error("Permissão de notificações negada.");
+        toast.error("Permissão de notificações negada. Libere nas configurações do navegador para receber os avisos.");
         return false;
       }
 
