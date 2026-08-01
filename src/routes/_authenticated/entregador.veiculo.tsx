@@ -224,7 +224,7 @@ function Veiculo() {
               Cadastre e gerencie os veículos usados nas suas entregas. O ativo é usado para todas as corridas.
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4">
             <MiniStat label="Cadastrados" value={list.length} />
             <MiniStat label="Aprovados" value={aprovados} />
             <MiniStat label="Ativo" value={ativo ? ativo.tipo.replace(/_/g, " ") : "—"} isText />
