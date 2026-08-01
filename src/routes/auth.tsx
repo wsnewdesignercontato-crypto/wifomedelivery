@@ -89,6 +89,10 @@ function AuthPage() {
   const [tab, setTab] = useState<"login" | "cadastro">("login");
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [emailSalvo, setEmailSalvo] = useState("");
+  const [modo, setModo] = useState<"form" | "confirmar-email" | "recuperar" | "link-enviado">(
+    "form",
+  );
 
   // Se já autenticado, encaminhar para /app
   useEffect(() => {
