@@ -43,7 +43,7 @@ function EstoquePage() {
     <div className="space-y-4">
       <h1 className="text-2xl font-black tracking-tight">Controle de estoque</h1>
       <p className="text-sm text-muted-foreground">Ajuste os níveis de cada produto. Produtos ficam indisponíveis automaticamente ao chegar em zero.</p>
-      <div className="rounded-2xl border border-border bg-card shadow-card">
+      <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-card">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-muted/30 text-left"><tr>
             <th className="p-3">Produto</th><th className="p-3">Status</th><th className="p-3">Estoque</th><th className="p-3">Ajustar</th>
