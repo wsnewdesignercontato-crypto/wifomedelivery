@@ -35,7 +35,14 @@ export function LocationToggleCard({ className = "" }: { className?: string }) {
         toast.success("Localização desativada no app");
         return;
       }
+      if (typeof window !== "undefined" && window.self !== window.top) {
+        toast.error(
+          "Abra o app em uma aba própria (ou pelo ícone instalado no celular) para liberar o GPS — a pré-visualização bloqueia o pedido.",
+        );
+        return;
+      }
       setBusy(true);
+      // Dispara o pedido de permissão do sistema imediatamente.
       navigator.geolocation.getCurrentPosition(
         () => {
           setBusy(false);
@@ -44,12 +51,16 @@ export function LocationToggleCard({ className = "" }: { className?: string }) {
           setPermission("granted");
           toast.success("Localização ativada");
         },
-        () => {
+        (err) => {
           setBusy(false);
           setEnabled(false);
           localStorage.setItem(KEY, "0");
-          setPermission("denied");
-          toast.error("Permissão de localização negada pelo aparelho");
+          if (err.code === err.PERMISSION_DENIED) {
+            setPermission("denied");
+            toast.error("Permissão de localização negada. Libere nas configurações do navegador.");
+          } else {
+            toast.error("Não foi possível obter sua localização agora. Tente de novo.");
+          }
         },
         { enableHighAccuracy: true, timeout: 10000 },
       );
