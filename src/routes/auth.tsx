@@ -10,6 +10,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
+import { PasswordStrength } from "@/components/ui/password-strength";
+import { senhaForteSchema } from "@/lib/password-strength";
+
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -88,6 +91,8 @@ function AuthPage() {
         ? "theme-entregador"
         : "";
   const [tab, setTab] = useState<"login" | "cadastro">("login");
+  const [senhaCad, setSenhaCad] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [emailSalvo, setEmailSalvo] = useState("");
@@ -170,7 +175,7 @@ function AuthPage() {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const parsed = z
-      .object({ nome: nomeSchema, email: emailSchema, senha: senhaSchema })
+      .object({ nome: nomeSchema, email: emailSchema, senha: senhaForteSchema })
       .safeParse({
         nome: form.get("nome"),
         email: form.get("email"),
@@ -440,9 +445,13 @@ function AuthPage() {
                       name="senha"
                       autoComplete="new-password"
                       required
-                      placeholder="Mínimo 6 caracteres"
+                      placeholder="Crie uma senha segura"
+                      value={senhaCad}
+                      onChange={(e) => setSenhaCad(e.target.value)}
                     />
+                    <PasswordStrength value={senhaCad} />
                   </div>
+
                   <Button
                     type="submit"
                     disabled={loading}

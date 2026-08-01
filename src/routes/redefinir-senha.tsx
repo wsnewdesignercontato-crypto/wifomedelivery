@@ -9,6 +9,9 @@ import { IFomeLogo } from "@/components/ifome-logo";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
+import { PasswordStrength } from "@/components/ui/password-strength";
+import { senhaForteSchema } from "@/lib/password-strength";
+
 
 const perfilSchema = z
   .enum(["cliente", "estabelecimento", "entregador"])
@@ -37,10 +40,8 @@ export const Route = createFileRoute("/redefinir-senha")({
   component: ResetPasswordPage,
 });
 
-const senhaSchema = z
-  .string()
-  .min(6, { message: "A senha deve ter pelo menos 6 caracteres" })
-  .max(72);
+const senhaSchema = senhaForteSchema;
+
 
 function ResetPasswordPage() {
   const search = Route.useSearch();
@@ -57,6 +58,8 @@ function ResetPasswordPage() {
   const [valid, setValid] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [novaSenha, setNovaSenha] = useState("");
+
 
   useEffect(() => {
     let mounted = true;
@@ -173,9 +176,13 @@ function ResetPasswordPage() {
                   name="senha"
                   autoComplete="new-password"
                   required
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Crie uma senha segura"
+                  value={novaSenha}
+                  onChange={(e) => setNovaSenha(e.target.value)}
                 />
+                <PasswordStrength value={novaSenha} />
               </div>
+
               <div className="space-y-1.5">
                 <Label htmlFor="confirmar">Confirmar nova senha</Label>
                 <PasswordInput
