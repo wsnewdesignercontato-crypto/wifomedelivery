@@ -86,7 +86,7 @@ function FinanceiroPage() {
           <CardContent><p className="text-2xl font-black">{c.value}</p></CardContent></Card>
         ))}
       </div>
-      <div className="rounded-2xl border border-border bg-card shadow-card">
+      <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-card">
         <table className="w-full text-sm">
           <thead className="border-b border-border bg-muted/30 text-left"><tr>
             <th className="p-3">Data</th><th className="p-3">Pedido</th><th className="p-3">Bruto</th>

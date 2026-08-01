@@ -113,11 +113,11 @@ function ProdutosPage() {
       ) : (
         <div className="grid gap-2 md:grid-cols-2">
           {filtrados.map((p) => (
-            <div key={p.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-card">
+            <div key={p.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-card">
               <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-muted">
                 {p.foto_url && <img src={p.foto_url} alt={p.nome} className="h-full w-full object-cover" />}
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 basis-40">
                 <div className="flex items-center gap-2">
                   <p className="truncate font-semibold">{p.nome}</p>
                   {!p.disponivel && <Badge variant="secondary" className="text-xs">Off</Badge>}
@@ -132,7 +132,7 @@ function ProdutosPage() {
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="ml-auto flex shrink-0 items-center gap-1">
                 <Switch checked={p.disponivel} onCheckedChange={() => toggle(p)} />
                 <Button size="icon" variant="ghost" onClick={() => setEditing(p)}><Pencil className="h-4 w-4" /></Button>
                 <Button size="icon" variant="ghost" onClick={() => duplicar(p)}><Copy className="h-4 w-4" /></Button>
