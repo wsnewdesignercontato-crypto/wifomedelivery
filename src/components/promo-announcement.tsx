@@ -6,17 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { IFomeLogo } from "@/components/ifome-logo";
 import { Button } from "@/components/ui/button";
 
-import artCliente from "@/assets/promo-cliente.jpg";
-import artEstab from "@/assets/promo-estabelecimento.jpg";
-import artEntregador from "@/assets/promo-entregador.jpg";
-import promoBgAsset from "@/assets/promo-bg-establishment-family.jpg.asset.json";
+import promoFoodHero from "@/assets/promo-food-hero.jpg";
 
 export type PromoAudience = "cliente" | "estabelecimento" | "entregador";
 
 export const PROMO_ART: Record<PromoAudience, string> = {
-  cliente: artCliente,
-  estabelecimento: artEstab,
-  entregador: artEntregador,
+  cliente: promoFoodHero,
+  estabelecimento: promoFoodHero,
+  entregador: promoFoodHero,
 };
 
 export const PROMO_LABEL: Record<PromoAudience, string> = {
@@ -79,9 +76,9 @@ export function PromoAnnouncement({ audience }: { audience: PromoAudience }) {
   const cor = b.cor || "#FF6B00";
   const titulo = b.titulo || notif.titulo;
   const subtitulo = b.subtitulo || notif.mensagem;
-  const ctaTexto = b.cta_texto || "Aproveitar agora";
+  const ctaTexto = b.cta_texto || "Aproveitar";
   const ctaLink = b.cta_link || notif.link_url;
-  const arte = b.imagem_url || PROMO_ART[audience];
+  const arte = b.imagem_url || promoFoodHero;
 
   async function dismiss(go?: string | null) {
     const id = notif!.id;
@@ -95,97 +92,72 @@ export function PromoAnnouncement({ audience }: { audience: PromoAudience }) {
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
       aria-label={titulo}
     >
       <div
-        className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-white/10 shadow-2xl animate-in zoom-in-95 duration-300"
-        style={{ background: "linear-gradient(180deg, #1a0d05 0%, #0c0705 100%)" }}
+        className="relative w-full max-w-sm overflow-hidden rounded-[2rem] border border-white/10 bg-[#0c0705] shadow-2xl animate-in zoom-in-95 duration-300"
       >
-        <img
-          src={promoBgAsset.url}
-          alt=""
-          aria-hidden="true"
-          loading="lazy"
-          width={1024}
-          height={1024}
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-60"
-          style={{ filter: "blur(2px)" }}
-        />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/85" aria-hidden="true" />
-
-        <button
-          onClick={() => dismiss()}
-          aria-label="Fechar aviso"
-          className="absolute right-3 top-3 z-10 rounded-full bg-black/50 p-2 text-white/80 transition hover:bg-black/70 hover:text-white"
-        >
-          <X className="h-4 w-4" />
-        </button>
-
-        <div className="relative">
+        {/* Hero de comida no topo */}
+        <div className="relative h-56 w-full sm:h-64">
           <img
             src={arte}
             alt={titulo}
             width={1152}
             height={576}
-            loading="lazy"
-            className="h-48 w-full object-cover"
+            loading="eager"
+            className="h-full w-full object-cover"
           />
           <div
-            className="absolute inset-0"
+            className="pointer-events-none absolute inset-0"
             style={{
               background:
-                "linear-gradient(180deg, rgba(12,7,5,0) 25%, rgba(12,7,5,0.55) 65%, rgba(12,7,5,0.92) 88%, #1a0d05 100%)",
+                "linear-gradient(180deg, rgba(12,7,5,0) 0%, rgba(12,7,5,0.35) 45%, rgba(12,7,5,0.85) 78%, #0c0705 100%)",
             }}
-          />
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-20"
-            style={{
-              background: `linear-gradient(180deg, transparent 0%, ${cor}33 55%, ${cor}66 100%)`,
-              filter: "blur(18px)",
-              opacity: 0.55,
-            }}
-            aria-hidden="true"
           />
         </div>
 
-        <div className="relative px-6 pb-6 pt-5 text-center">
-          <div
-            className="pointer-events-none absolute inset-x-0 -top-24 mx-auto h-40 w-40 rounded-full opacity-40 blur-3xl"
-            style={{ backgroundColor: cor }}
-          />
-          <div className="relative">
-            <div className="mb-3 flex justify-center">
-              <IFomeLogo size="md" showWord={false} />
-            </div>
+        {/* Botão fechar */}
+        <button
+          onClick={() => dismiss()}
+          aria-label="Fechar aviso"
+          className="absolute right-3 top-3 z-10 rounded-full bg-black/60 p-2 text-white/90 transition hover:bg-black/80 hover:text-white"
+        >
+          <X className="h-4 w-4" />
+        </button>
 
-            <span
-              className="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white"
-              style={{ backgroundColor: `${cor}2e`, border: `1px solid ${cor}` }}
-            >
-              {PROMO_LABEL[audience]}
-            </span>
-
-            <h2 className="mt-3 text-2xl font-black leading-tight text-white">{titulo}</h2>
-            <p className="mt-2 text-sm text-white/75">{subtitulo}</p>
-
-            <Button
-              onClick={() => dismiss(ctaLink)}
-              className="mt-6 h-12 w-full rounded-xl text-base font-bold"
-              style={{ backgroundColor: cor, color: "#fff" }}
-            >
-              {ctaTexto}
-            </Button>
-
-            <button
-              onClick={() => dismiss()}
-              className="mt-3 w-full text-xs font-medium text-white/55 transition hover:text-white"
-            >
-              Agora não
-            </button>
+        {/* Conteúdo centralizado */}
+        <div className="relative -mt-10 px-6 pb-7 pt-2 text-center">
+          <div className="mb-3 flex justify-center">
+            <IFomeLogo size="md" showWord={false} />
           </div>
+
+          <span
+            className="inline-flex items-center rounded-full px-3.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white"
+            style={{ backgroundColor: `${cor}25`, border: `1.5px solid ${cor}` }}
+          >
+            {PROMO_LABEL[audience]}
+          </span>
+
+          <h2 className="mt-3 text-3xl font-black leading-tight text-white">{titulo}</h2>
+          <p className="mt-1.5 text-sm font-medium text-white/70">{subtitulo}</p>
+
+          <Button
+            onClick={() => dismiss(ctaLink)}
+            className="mt-6 h-12 w-full rounded-xl text-base font-bold shadow-lg"
+            style={{ backgroundColor: cor, color: "#fff", boxShadow: `0 10px 25px -8px ${cor}66` }}
+          >
+            {ctaTexto}
+          </Button>
+
+          <button
+            onClick={() => dismiss()}
+            className="mt-3 w-full text-xs font-semibold text-white/50 transition hover:text-white/90"
+          >
+            Agora não
+          </button>
         </div>
       </div>
     </div>
