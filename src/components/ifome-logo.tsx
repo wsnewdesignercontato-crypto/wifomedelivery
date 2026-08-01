@@ -16,7 +16,7 @@ const sizes = {
 
 const perfilFilter: Record<"cliente" | "estabelecimento" | "entregador", string> = {
   cliente: "",
-  estabelecimento: "hue-rotate(-22deg) saturate(1.15) brightness(0.95)",
+  estabelecimento: "hue-rotate(-18deg) saturate(1.35) brightness(1)",
   entregador: "hue-rotate(92deg) saturate(0.95) brightness(0.95)",
 };
 
