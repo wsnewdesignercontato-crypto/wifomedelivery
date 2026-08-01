@@ -124,7 +124,7 @@ function ClienteHome() {
     let last = performance.now();
     let pos = el.scrollLeft;
     let resumeTimer: ReturnType<typeof setTimeout> | null = null;
-    const SPEED = 16; // px/s — lento e consistente em qualquer dpr
+    const SPEED = 84; // px/s — roda as categorias de forma visível e fluida
 
     const pause = (ms = 2500) => {
       catsPausedRef.current = true;
