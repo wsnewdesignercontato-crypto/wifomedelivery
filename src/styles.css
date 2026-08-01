@@ -176,27 +176,27 @@
 }
 
 /* ============= Theme scopes ============= */
-/* Estabelecimento — vermelho */
+/* Estabelecimento — vermelho bordô */
 .theme-estab {
   --gradient-brand: linear-gradient(135deg, var(--primary) 0%, var(--primary-glow) 100%);
   --shadow-brand: 0 12px 32px -12px color-mix(in oklab, var(--primary) 45%, transparent);
-  --primary: oklch(0.585 0.225 27);
+  --primary: oklch(0.50 0.20 18);
   --primary-foreground: oklch(1 0 0);
-  --primary-glow: oklch(0.68 0.20 32);
-  --ring: oklch(0.585 0.225 27);
-  --sidebar-primary: oklch(0.585 0.225 27);
+  --primary-glow: oklch(0.62 0.19 22);
+  --ring: oklch(0.50 0.20 18);
+  --sidebar-primary: oklch(0.50 0.20 18);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.95 0.05 27);
-  --sidebar-accent-foreground: oklch(0.35 0.15 27);
-  --sidebar-ring: oklch(0.585 0.225 27);
-  --accent: oklch(0.95 0.05 27);
-  --accent-foreground: oklch(0.35 0.15 27);
+  --sidebar-accent: oklch(0.95 0.05 18);
+  --sidebar-accent-foreground: oklch(0.35 0.15 18);
+  --sidebar-ring: oklch(0.50 0.20 18);
+  --accent: oklch(0.95 0.05 18);
+  --accent-foreground: oklch(0.35 0.15 18);
 }
 :is(.dark) .theme-estab {
-  --sidebar-accent: oklch(0.25 0.06 27);
-  --sidebar-accent-foreground: oklch(0.90 0.10 27);
-  --accent: oklch(0.25 0.06 27);
-  --accent-foreground: oklch(0.90 0.10 27);
+  --sidebar-accent: oklch(0.25 0.06 18);
+  --sidebar-accent-foreground: oklch(0.90 0.10 18);
+  --accent: oklch(0.25 0.06 18);
+  --accent-foreground: oklch(0.90 0.10 18);
 }
 
 /* Entregador — verde */
