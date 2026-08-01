@@ -347,7 +347,7 @@ function Corridas() {
           </div>
 
           <div className="mt-4">
-            <div className="grid grid-cols-6 gap-1">
+            <div className="grid grid-cols-3 gap-1 sm:grid-cols-6">
               {STAGES.map((s, i) => {
                 const done = i < currentStageIdx;
                 const active = i === currentStageIdx;

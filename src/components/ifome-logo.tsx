@@ -16,7 +16,7 @@ const sizes = {
 export function IFomeLogo({ className, size = "md", showWord = true }: Props) {
   const s = sizes[size];
   return (
-    <div className={cn("inline-flex items-center gap-2.5", className)}>
+    <div className={cn("inline-flex shrink-0 items-center gap-2.5", className)}>
       <img
         src={logoAsset.url}
         alt="WiFome"
@@ -24,7 +24,7 @@ export function IFomeLogo({ className, size = "md", showWord = true }: Props) {
       />
 
       {showWord && (
-        <span className={cn("font-black tracking-tight text-foreground", s.text)}>
+        <span className={cn("whitespace-nowrap font-black tracking-tight text-foreground", s.text)}>
           Wi<span className="text-primary">Fome</span>
         </span>
       )}

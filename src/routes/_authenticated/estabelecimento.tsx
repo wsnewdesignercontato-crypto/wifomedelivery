@@ -150,7 +150,7 @@ function SetupForm({ userId }: { userId: string }) {
           <Label>Endereço</Label>
           <Input value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} />
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div><Label>Cidade</Label><Input value={form.cidade} onChange={(e) => setForm({ ...form, cidade: e.target.value })} /></div>
           <div><Label>Taxa (R$)</Label><Input value={form.taxa} onChange={(e) => setForm({ ...form, taxa: e.target.value })} /></div>
           <div><Label>Mín. (R$)</Label><Input value={form.minimo} onChange={(e) => setForm({ ...form, minimo: e.target.value })} /></div>
