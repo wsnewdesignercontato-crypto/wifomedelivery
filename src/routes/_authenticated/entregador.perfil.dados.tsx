@@ -33,6 +33,13 @@ type FormState = {
   banco_titular: string;
   contato_emergencia_nome: string;
   contato_emergencia_tel: string;
+  cep: string;
+  rua: string;
+  numero: string;
+  complemento: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
 };
 
 const EMPTY: FormState = {
@@ -41,7 +48,10 @@ const EMPTY: FormState = {
   pix_key: "", pix_tipo: "cpf",
   banco_nome: "", banco_agencia: "", banco_conta: "", banco_tipo: "corrente", banco_titular: "",
   contato_emergencia_nome: "", contato_emergencia_tel: "",
+  cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
 };
+
+const str = (v: unknown) => (typeof v === "string" ? v : "");
 
 function Perfil() {
   const { courier, userId, isLoading } = useMyCourier();
