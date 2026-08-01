@@ -60,6 +60,36 @@ function Perfil() {
   const [f, setF] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
+  const lastCep = useRef("");
+
+  async function buscarCep(rawCep: string) {
+    const cep = rawCep.replace(/\D/g, "");
+    if (cep.length !== 8 || lastCep.current === cep) return;
+    lastCep.current = cep;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const d = await res.json();
+      if (d?.erro) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+      setF((s) => ({
+        ...s,
+        rua: d.logradouro || s.rua,
+        bairro: d.bairro || s.bairro,
+        cidade: d.localidade || s.cidade,
+        estado: (d.uf || s.estado || "").toUpperCase(),
+        complemento: s.complemento || d.complemento || "",
+      }));
+      toast.success("Endereço preenchido pelo CEP");
+    } catch {
+      toast.error("Não foi possível consultar o CEP");
+    } finally {
+      setCepLoading(false);
+    }
+  }
 
   // Nome fica na tabela profiles
   const profileQ = useQuery({
@@ -237,7 +267,29 @@ function Perfil() {
       </Section>
 
       <Section title="Endereço e cidade de atuação">
-        <Field label="CEP" value={f.cep} onChange={(v) => setF({ ...f, cep: v })} />
+        <div>
+          <Label className="mb-1 block text-xs">CEP</Label>
+          <div className="relative">
+            <Input
+              inputMode="numeric"
+              placeholder="00000-000"
+              value={f.cep}
+              onChange={(e) => {
+                const d = e.target.value.replace(/\D/g, "").slice(0, 8);
+                const masked = d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+                setF((s) => ({ ...s, cep: masked }));
+                if (d.length === 8) void buscarCep(d);
+              }}
+              onBlur={() => void buscarCep(f.cep)}
+            />
+            {cepLoading && (
+              <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+            )}
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Preenchemos rua, bairro, cidade e UF automaticamente — você pode editar.
+          </p>
+        </div>
         <Field label="Rua" value={f.rua} onChange={(v) => setF({ ...f, rua: v })} />
         <Field label="Número" value={f.numero} onChange={(v) => setF({ ...f, numero: v })} />
         <Field label="Complemento" value={f.complemento} onChange={(v) => setF({ ...f, complemento: v })} />
