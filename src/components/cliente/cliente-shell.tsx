@@ -175,7 +175,7 @@ export function ClienteShell({ user }: Ctx) {
 
       {/* Bottom nav — mobile/tablet only */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/98 backdrop-blur lg:hidden"
+        className="safe-bottom safe-x fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/98 backdrop-blur lg:hidden"
         aria-label="Navegação principal"
       >
         <div className="mx-auto grid max-w-4xl grid-cols-5">
