@@ -110,6 +110,50 @@ function Veiculo() {
   const ativo = list.find((v) => v.ativo);
   const comPlaca = precisaPlaca(form.tipo);
 
+  // Passo a passo: baseado no veículo ativo (ou no tipo selecionado, se ainda não há veículo)
+  const tipoRef = ativo?.tipo ?? list[0]?.tipo ?? form.tipo;
+  const motorizado = precisaPlaca(tipoRef);
+  const docOk = (pref: string) => docs.some((d) => d.tipo.startsWith(pref) && d.status !== "rejeitado");
+  const temDocIdentidade = docOk("cnh") || docOk("rg") || docOk("documento");
+  const steps: { label: string; hint: string; done: boolean; to?: string }[] = [
+    {
+      label: "Dados pessoais",
+      hint: "Nome, telefone, CPF e cidade de atuação",
+      done: !!(courier?.telefone && courier?.cpf && courier?.cidade_atuacao),
+      to: "/entregador/perfil/dados",
+    },
+    {
+      label: "Cadastrar o veículo",
+      hint: motorizado ? "Marca, modelo e cor da moto/carro" : "Basta escolher o tipo (bike, e-bike ou patinete)",
+      done: list.length > 0,
+    },
+    ...(motorizado
+      ? [{
+          label: "Placa do veículo",
+          hint: "Obrigatória para veículos motorizados (ex.: ABC1D23)",
+          done: list.some((v) => !!v.placa),
+        }]
+      : []),
+    {
+      label: motorizado ? "Enviar a CNH" : "Enviar documento com foto",
+      hint: motorizado
+        ? "CNH frente e verso na aba Documentos"
+        : "RG ou CNH só para validar sua identidade — sem placa e sem CNH obrigatória",
+      done: motorizado ? docOk("cnh") : temDocIdentidade,
+      to: "/entregador/documentos",
+    },
+    {
+      label: "Dados de pagamento",
+      hint: "Chave PIX para receber seus ganhos",
+      done: !!courier?.pix_key,
+      to: "/entregador/perfil/pagamento",
+    },
+  ];
+  const feitos = steps.filter((s) => s.done).length;
+  const pct = Math.round((feitos / steps.length) * 100);
+
+
+
 
   return (
     <div className="space-y-8">
