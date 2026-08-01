@@ -8,6 +8,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { PushToggleCard } from "@/components/push-toggle-card";
+import { playSiren } from "@/hooks/use-new-ride-alert";
 
 export const Route = createFileRoute("/_authenticated/entregador/configuracoes")({
   component: Cfg,
@@ -147,10 +149,14 @@ function Cfg() {
       </section>
 
       {/* Notificações */}
-      <section>
+      <section className="space-y-3">
         <h2 className="mb-2 flex items-center gap-2 px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
           <Bell className="h-3.5 w-3.5" /> Notificações
         </h2>
+        <PushToggleCard />
+        <Button variant="outline" className="w-full rounded-2xl" onClick={() => playSiren()}>
+          <Volume2 className="mr-2 h-4 w-4" /> Testar som de nova corrida
+        </Button>
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
           {notifRows.map((r, i) => (
             <div key={r.key} className={`flex items-center justify-between gap-4 px-4 py-3.5 ${i > 0 ? "border-t border-border" : ""}`}>
