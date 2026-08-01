@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { InstallAppPrompt } from "@/components/install-app-prompt";
 
 const perfilSchema = z.enum(["cliente", "estabelecimento", "entregador"]).catch("cliente");
 const searchSchema = z.object({
@@ -192,8 +191,6 @@ function AuthPage() {
           </Link>
           <ThemeToggle />
         </div>
-
-        <InstallAppPrompt perfil={perfil} />
 
         <div className="mt-6 text-center">
           <IFomeLogo size="lg" showWord={false} className="mx-auto" perfil={perfil} />

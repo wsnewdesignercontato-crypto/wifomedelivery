@@ -15,7 +15,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthSync } from "@/components/auth-sync";
 import { LiveRefresh } from "@/components/live-refresh";
-
+import { InstallAppPrompt } from "@/components/install-app-prompt";
 
 import { IFomeLogo } from "@/components/ifome-logo";
 import logoAsset from "@/assets/wifome-logo.png.asset.json";
@@ -171,7 +171,12 @@ function RootComponent() {
       <ThemeProvider>
         <AuthSync />
         <LiveRefresh />
-        <Outlet />
+        <div className="min-h-screen">
+          <div className="mx-auto w-full max-w-7xl px-4 pt-2 sm:px-6 lg:px-8">
+            <InstallAppPrompt />
+          </div>
+          <Outlet />
+        </div>
         <Toaster richColors position="top-right" />
       </ThemeProvider>
     </QueryClientProvider>

@@ -26,6 +26,20 @@ const perfilApp: Record<Perfil, { nome: string; manifest: string; descricao: str
   },
 };
 
+function detectPerfilFromUrl(): Perfil {
+  if (typeof window === "undefined") return "cliente";
+  const path = window.location.pathname.toLowerCase();
+  const search = window.location.search.toLowerCase();
+
+  if (path.startsWith("/estabelecimento") || search.includes("perfil=estabelecimento")) {
+    return "estabelecimento";
+  }
+  if (path.startsWith("/entregador") || search.includes("perfil=entregador")) {
+    return "entregador";
+  }
+  return "cliente";
+}
+
 const DISMISS_KEY = "wifome_install_dismissed_at";
 const DISMISS_DAYS = 7;
 
@@ -56,8 +70,9 @@ function recentlyDismissed() {
   }
 }
 
-export function InstallAppPrompt({ perfil = "cliente" }: { perfil?: Perfil } = {}) {
-  const app = perfilApp[perfil];
+export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
+  const perfilAtivo = perfil ?? detectPerfilFromUrl();
+  const app = perfilApp[perfilAtivo];
   const [deferred, setDeferred] = useState<BIPEvent | null>(null);
   const [visible, setVisible] = useState(false);
   const [showIOSHelp, setShowIOSHelp] = useState(false);
@@ -129,34 +144,39 @@ export function InstallAppPrompt({ perfil = "cliente" }: { perfil?: Perfil } = {
 
   if (!visible) return null;
 
+  const themeClass =
+    perfilAtivo === "estabelecimento" ? "theme-estab" : perfilAtivo === "entregador" ? "theme-entregador" : "";
+
   return (
     <>
-      <div className="mt-4 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 shadow-sm">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-brand">
-            <Smartphone className="h-5 w-5" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-sm font-bold text-foreground">Instalar o app {app.nome}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{app.descricao}</p>
+      <div className={themeClass}>
+        <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-brand">
+              <Smartphone className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-bold text-foreground">Instalar o app {app.nome}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{app.descricao}</p>
+                </div>
+                <button
+                  onClick={dismiss}
+                  aria-label="Fechar"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
               <button
-                onClick={dismiss}
-                aria-label="Fechar"
-                className="text-muted-foreground hover:text-foreground"
+                onClick={install}
+                className="mt-3 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-brand transition-transform hover:scale-[1.02] active:scale-95"
               >
-                <X className="h-4 w-4" />
+                <Download className="h-3.5 w-3.5" />
+                {isIOS() && !deferred ? "Como instalar no iPhone" : "Instalar agora"}
               </button>
             </div>
-            <button
-              onClick={install}
-              className="mt-3 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-brand transition-transform hover:scale-[1.02] active:scale-95"
-            >
-              <Download className="h-3.5 w-3.5" />
-              {isIOS() && !deferred ? "Como instalar no iPhone" : "Instalar agora"}
-            </button>
           </div>
         </div>
       </div>
@@ -167,52 +187,54 @@ export function InstallAppPrompt({ perfil = "cliente" }: { perfil?: Perfil } = {
           onClick={() => setShowIOSHelp(false)}
         >
           <div
-            className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-xl"
+            className={themeClass}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-2">
-              <Smartphone className="h-5 w-5 text-primary" />
-              <h3 className="text-base font-bold text-foreground">Instalar {app.nome}</h3>
-            </div>
-            <ol className="mt-4 space-y-3 text-sm text-foreground">
-              <li className="flex items-start gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
-                  1
-                </span>
-                <span>
-                  Toque no ícone{" "}
-                  <Share className="mx-1 inline h-4 w-4 align-text-bottom text-primary" />{" "}
-                  <span className="font-medium">Compartilhar</span> na barra do Safari.
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
-                  2
-                </span>
-                <span>
-                  Escolha{" "}
-                  <span className="font-medium">
-                    Adicionar à Tela de Início{" "}
-                    <Plus className="mx-1 inline h-4 w-4 align-text-bottom text-primary" />
+            <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-xl">
+              <div className="flex items-center gap-2">
+                <Smartphone className="h-5 w-5 text-primary" />
+                <h3 className="text-base font-bold text-foreground">Instalar {app.nome}</h3>
+              </div>
+              <ol className="mt-4 space-y-3 text-sm text-foreground">
+                <li className="flex items-start gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
+                    1
                   </span>
-                  .
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
-                  3
-                </span>
-                <span>
-                  Toque em <span className="font-medium">Adicionar</span> — o {app.nome} fica na sua tela como um app.
-                </span>
-              </li>
-            </ol>
-            <button
-              onClick={() => setShowIOSHelp(false)}
-              className="mt-6 w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground shadow-brand"
-            >
-              Entendi
-            </button>
+                  <span>
+                    Toque no ícone{" "}
+                    <Share className="mx-1 inline h-4 w-4 align-text-bottom text-primary" />{" "}
+                    <span className="font-medium">Compartilhar</span> na barra do Safari.
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
+                    2
+                  </span>
+                  <span>
+                    Escolha{" "}
+                    <span className="font-medium">
+                      Adicionar à Tela de Início{" "}
+                      <Plus className="mx-1 inline h-4 w-4 align-text-bottom text-primary" />
+                    </span>
+                    .
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
+                    3
+                  </span>
+                  <span>
+                    Toque em <span className="font-medium">Adicionar</span> — o {app.nome} fica na sua tela como um app.
+                  </span>
+                </li>
+              </ol>
+              <button
+                onClick={() => setShowIOSHelp(false)}
+                className="mt-6 w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground shadow-brand"
+              >
+                Entendi
+              </button>
+            </div>
           </div>
         </div>
       )}
