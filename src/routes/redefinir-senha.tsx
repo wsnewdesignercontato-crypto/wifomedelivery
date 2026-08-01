@@ -40,10 +40,8 @@ export const Route = createFileRoute("/redefinir-senha")({
   component: ResetPasswordPage,
 });
 
-const senhaSchema = z
-  .string()
-  .min(6, { message: "A senha deve ter pelo menos 6 caracteres" })
-  .max(72);
+const senhaSchema = senhaForteSchema;
+
 
 function ResetPasswordPage() {
   const search = Route.useSearch();
