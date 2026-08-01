@@ -3180,6 +3180,7 @@ export type Database = {
         Args: { _cidade: string; _estado: string }
         Returns: undefined
       }
+      vehicle_requires_plate: { Args: { _tipo: string }; Returns: boolean }
     }
     Enums: {
       app_role: "cliente" | "estabelecimento" | "entregador" | "admin"
