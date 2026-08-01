@@ -77,7 +77,7 @@ export function PermissionHelpDialog({ kind }: { kind: Kind }) {
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
             Por segurança, o navegador não deixa o app abrir os ajustes sozinho. Siga o passo a passo abaixo — leva
-            менos de um minuto.
+            menos de um minuto.
           </DialogDescription>
         </DialogHeader>
 
