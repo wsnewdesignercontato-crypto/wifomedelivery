@@ -196,7 +196,7 @@ function AuthPage() {
         <InstallAppPrompt perfil={perfil} />
 
         <div className="mt-6 text-center">
-          <IFomeLogo size="lg" showWord={false} className="mx-auto" />
+          <IFomeLogo size="lg" showWord={false} className="mx-auto" perfil={perfil} />
           <h1 className="mt-4 text-2xl font-black tracking-tight text-foreground">
             {perfil === "cliente"
               ? "Entrar como cliente"
