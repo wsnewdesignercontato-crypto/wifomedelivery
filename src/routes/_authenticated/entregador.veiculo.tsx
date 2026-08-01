@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Bike, Car, Plus, Trash2, Truck, Zap, CheckCircle2, Clock, ShieldCheck, Sparkles } from "lucide-react";
+import { Bike, Car, Plus, Trash2, Truck, Zap, CheckCircle2, Clock, ShieldCheck, Sparkles, HelpCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useMyCourier } from "@/hooks/use-courier";
 import { notifyDataUpdated, DATA_UPDATED_EVENT } from "@/lib/app-refresh";
 
