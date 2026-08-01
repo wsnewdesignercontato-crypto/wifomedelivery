@@ -35,6 +35,7 @@ function Notif() {
     <div className="space-y-4">
       <h1 className="text-2xl font-black">Notificações</h1>
       <PushToggleCard />
+      <LocationToggleCard />
       {list.length === 0 ? (
 
         <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
