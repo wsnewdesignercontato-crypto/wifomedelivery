@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Bike, Car, Plus, Trash2, Truck, Zap, CheckCircle2, Clock, ShieldCheck, Sparkles } from "lucide-react";
 import { useMyCourier } from "@/hooks/use-courier";
 import { notifyDataUpdated } from "@/lib/app-refresh";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 export const Route = createFileRoute("/_authenticated/entregador/veiculo")({
   component: Veiculo,
