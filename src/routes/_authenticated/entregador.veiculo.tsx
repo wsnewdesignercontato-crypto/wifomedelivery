@@ -18,17 +18,23 @@ export const Route = createFileRoute("/_authenticated/entregador/veiculo")({
 type V = { id: string; tipo: string; marca: string | null; modelo: string | null; ano: number | null; cor: string | null; placa: string | null; ativo: boolean; status: string };
 
 const TIPOS = [
-  { value: "bicicleta", label: "Bicicleta", icon: Bike },
-  { value: "bicicleta_eletrica", label: "Bicicleta elétrica", icon: Zap },
-  { value: "moto", label: "Moto", icon: Bike },
-  { value: "carro", label: "Carro", icon: Car },
-  { value: "utilitario", label: "Utilitário", icon: Truck },
+  { value: "bicicleta", label: "Bicicleta", icon: Bike, motorizado: false },
+  { value: "bicicleta_eletrica", label: "Bicicleta elétrica", icon: Zap, motorizado: false },
+  { value: "patinete_eletrico", label: "Patinete elétrico", icon: Zap, motorizado: false },
+  { value: "moto", label: "Moto", icon: Bike, motorizado: true },
+  { value: "carro", label: "Carro", icon: Car, motorizado: true },
+  { value: "utilitario", label: "Utilitário", icon: Truck, motorizado: true },
 ] as const;
+
+function precisaPlaca(tipo?: string) {
+  return TIPOS.find((t) => t.value === tipo)?.motorizado ?? true;
+}
 
 function iconFor(tipo: string) {
   const t = TIPOS.find((x) => x.value === tipo);
   return t?.icon ?? Car;
 }
+
 
 function statusMeta(status: string) {
   switch (status) {
