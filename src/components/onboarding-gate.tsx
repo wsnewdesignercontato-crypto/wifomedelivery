@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { PartyPopper, ArrowRight, Loader2, CheckCircle2, Circle } from "lucide-react";
+import { PartyPopper, ArrowRight, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { IFomeLogo } from "@/components/ifome-logo";
@@ -150,15 +150,19 @@ export function OnboardingGate({
           </p>
         </div>
 
-        <div className="mb-5 rounded-2xl border border-border/60 bg-background/60 p-4">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Dados que faltam
+        <div className="mb-5 rounded-2xl border border-destructive/40 bg-destructive/5 p-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-destructive">
+            Obrigatório · Dados que faltam
           </p>
           <ul className="space-y-2">
             {state.missing.map((m) => (
-              <li key={m} className="flex items-center gap-2 text-sm">
-                <Circle className="h-4 w-4 shrink-0 text-primary/60" />
+              <li
+                key={m}
+                className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive"
+              >
+                <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>{FIELD_LABELS[m] ?? m}</span>
+                <span className="ml-auto text-[11px] font-bold uppercase">Pendente</span>
               </li>
             ))}
             {state.missing.length === 0 && (
