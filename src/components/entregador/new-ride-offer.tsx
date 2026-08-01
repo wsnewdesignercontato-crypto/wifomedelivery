@@ -382,6 +382,22 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
     }
   }, [myPos, offer?.deliveryId]);
 
+  // Toque contínuo enquanto a oferta estiver na tela (para ao aceitar/recusar/ser pega)
+  useEffect(() => {
+    ensureRingtoneUnlocked();
+    if (offer) {
+      (window as unknown as { __wifomeRideOfferOpen?: boolean }).__wifomeRideOfferOpen = true;
+      startRideRingtone();
+    } else {
+      (window as unknown as { __wifomeRideOfferOpen?: boolean }).__wifomeRideOfferOpen = false;
+      stopRideRingtone();
+    }
+    return () => {
+      (window as unknown as { __wifomeRideOfferOpen?: boolean }).__wifomeRideOfferOpen = false;
+      stopRideRingtone();
+    };
+  }, [offer?.deliveryId]);
+
   async function aceitar() {
     if (!offer || !courier || accepting) return;
     setAccepting(true);
