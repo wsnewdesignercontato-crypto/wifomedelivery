@@ -366,8 +366,8 @@ function AdminDashboard() {
                   {grouped.map((g) => (
                     <div key={g.status} className="flex items-center gap-2 text-sm">
                       <span className="h-2.5 w-2.5 rounded-full" style={{ background: g.color }} />
-                      <span className="text-muted-foreground">{g.status}</span>
-                      <span className="ml-auto tabular-nums font-semibold text-foreground">
+                      <span className="min-w-0 truncate text-muted-foreground">{g.status}</span>
+                      <span className="ml-auto shrink-0 whitespace-nowrap tabular-nums font-semibold text-foreground">
                         {num(g.value)} <span className="text-xs font-normal text-muted-foreground">({pct(g.value)}%)</span>
                       </span>
                     </div>
