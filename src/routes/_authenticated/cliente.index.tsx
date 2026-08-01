@@ -276,7 +276,8 @@ function ClienteHome() {
     return arr;
   }, [estabs, catSel, sortBy, reviewCountById, salesCount, promoIds]);
 
-  const visibleCats = showAllCats ? cats : cats.slice(0, 4);
+  const compactCount = 8;
+  const visibleCats = showAllCats ? cats : cats.slice(0, compactCount);
 
   return (
     <div className="space-y-6">
@@ -322,7 +323,7 @@ function ClienteHome() {
         }
       />
 
-      {/* Categorias - uma única fileira horizontal */}
+      {/* Categorias - grade uniforme sem lacunas */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-black text-foreground">Categorias</h2>
@@ -338,7 +339,7 @@ function ClienteHome() {
           className={
             showAllCats
               ? "grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8"
-              : "-mx-1 flex gap-3 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory"
+              : "grid grid-cols-4 gap-3 sm:grid-cols-5 md:grid-cols-8"
           }
         >
           {visibleCats.map((c) => {
@@ -348,11 +349,7 @@ function ClienteHome() {
               <button
                 key={c.id}
                 onClick={() => setCatSel(active ? null : c.id)}
-                className={
-                  showAllCats
-                    ? "flex flex-col items-center gap-1.5"
-                    : "flex w-[72px] shrink-0 snap-start flex-col items-center gap-1.5 sm:w-[84px] md:w-[96px]"
-                }
+                className="flex flex-col items-center gap-1.5"
               >
                 <div
                   className={`aspect-square w-full overflow-hidden rounded-2xl bg-muted shadow-sm transition-all ${
@@ -384,10 +381,10 @@ function ClienteHome() {
               </button>
             );
           })}
-          {!showAllCats && cats.length > 4 && (
+          {!showAllCats && cats.length > compactCount && (
             <button
               onClick={() => setShowAllCats(true)}
-              className="flex w-[72px] shrink-0 snap-start flex-col items-center gap-1.5 sm:w-[84px] md:w-[96px]"
+              className="flex flex-col items-center gap-1.5"
             >
               <div className="grid aspect-square w-full place-items-center rounded-2xl bg-primary/10 text-primary shadow-sm transition-all hover:scale-[1.03]">
                 <span className="text-2xl font-black">+</span>
