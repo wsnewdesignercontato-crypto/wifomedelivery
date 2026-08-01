@@ -4,6 +4,8 @@ import { PartyPopper, ArrowRight, Loader2, CheckCircle2, AlertCircle } from "luc
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { IFomeLogo } from "@/components/ifome-logo";
+import { toast } from "sonner";
+import { DATA_UPDATED_EVENT, PROFILE_UPDATED_EVENT } from "@/lib/app-refresh";
 
 type Role = "cliente" | "estabelecimento" | "entregador";
 
