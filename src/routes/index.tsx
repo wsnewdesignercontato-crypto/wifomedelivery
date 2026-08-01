@@ -293,8 +293,8 @@ function LandingPage() {
         id="inicio"
         className="absolute inset-x-0 top-0 z-40 border-b border-white/10 bg-transparent"
       >
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
-          <IFomeLogo size="md" className="[&_span]:text-white" />
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:h-20 sm:px-6">
+          <IFomeLogo size="md" className="min-w-0 [&_span]:text-white [&_span]:text-base sm:[&_span]:text-xl" />
           <nav className="hidden items-center gap-8 lg:flex">
             {navLinks.map((l) => (
               <a
@@ -339,7 +339,7 @@ function LandingPage() {
             </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button className="bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95">
+                <Button className="shrink-0 whitespace-nowrap bg-gradient-brand px-3 text-primary-foreground shadow-brand hover:opacity-95 sm:px-4">
                   Cadastrar <ChevronDown className="ml-1 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
