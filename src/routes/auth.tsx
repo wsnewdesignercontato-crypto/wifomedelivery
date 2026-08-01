@@ -175,7 +175,7 @@ function AuthPage() {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const parsed = z
-      .object({ nome: nomeSchema, email: emailSchema, senha: senhaSchema })
+      .object({ nome: nomeSchema, email: emailSchema, senha: senhaForteSchema })
       .safeParse({
         nome: form.get("nome"),
         email: form.get("email"),

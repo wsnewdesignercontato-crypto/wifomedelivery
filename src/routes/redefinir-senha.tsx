@@ -9,6 +9,9 @@ import { IFomeLogo } from "@/components/ifome-logo";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
+import { PasswordStrength } from "@/components/ui/password-strength";
+import { senhaForteSchema } from "@/lib/password-strength";
+
 
 const perfilSchema = z
   .enum(["cliente", "estabelecimento", "entregador"])
