@@ -141,35 +141,70 @@ function Veiculo() {
           </div>
           <div>
             <h2 className="text-lg font-bold tracking-tight">Adicionar veículo</h2>
-            <p className="text-xs text-muted-foreground">Preencha os dados — a plataforma valida em até 24h.</p>
+            <p className="text-xs text-muted-foreground">
+              Passo 1: escolha o tipo. Os campos mudam conforme a sua escolha.
+            </p>
           </div>
+        </div>
+
+        {/* Passo 1 — tipo em cards */}
+        <div className="mb-5">
+          <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            1. Como você entrega?
+          </Label>
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            {TIPOS.map((t) => {
+              const Icon = t.icon;
+              const sel = form.tipo === t.value;
+              return (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => setForm({ ...form, tipo: t.value, placa: "" })}
+                  className={`flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-center transition-all ${
+                    sel
+                      ? "border-primary bg-primary/10 text-primary ring-2 ring-primary/25"
+                      : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-6 w-6" />
+                  <span className="text-xs font-semibold leading-tight">{t.label}</span>
+                  <span className="text-[10px] font-medium opacity-70">
+                    {t.motorizado ? "Com placa" : "Sem placa"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mb-5 rounded-2xl border border-primary/25 bg-primary/5 p-4 text-xs leading-relaxed text-muted-foreground">
+          {comPlaca ? (
+            <>
+              <span className="font-bold text-foreground">2. Veículo motorizado:</span> informe marca, modelo e a
+              <span className="font-semibold text-foreground"> placa</span>. Também é preciso enviar a
+              <span className="font-semibold text-foreground"> CNH</span> na aba Documentos.
+            </>
+          ) : (
+            <>
+              <span className="font-bold text-foreground">2. Veículo sem motor:</span> não precisa de placa nem CNH.
+              Basta enviar um <span className="font-semibold text-foreground">documento com foto (RG ou CNH)</span> na
+              aba Documentos para validarmos sua identidade.
+            </>
+          )}
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tipo</Label>
-            <Select value={form.tipo} onValueChange={(v) => setForm({ ...form, tipo: v })}>
-              <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {TIPOS.map((t) => {
-                  const Icon = t.icon;
-                  return (
-                    <SelectItem key={t.value} value={t.value}>
-                      <span className="flex items-center gap-2"><Icon className="h-4 w-4 text-primary" />{t.label}</span>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-          <FieldInput label="Marca" placeholder="Honda, Yamaha…" value={form.marca ?? ""} onChange={(v) => setForm({ ...form, marca: v })} />
-          <FieldInput label="Modelo" placeholder="CG 160, Factor…" value={form.modelo ?? ""} onChange={(v) => setForm({ ...form, modelo: v })} />
+          <FieldInput label="Marca" placeholder={comPlaca ? "Honda, Yamaha…" : "Caloi, Sense…"} value={form.marca ?? ""} onChange={(v) => setForm({ ...form, marca: v })} />
+          <FieldInput label="Modelo" placeholder={comPlaca ? "CG 160, Factor…" : "Aro 29, Urbana…"} value={form.modelo ?? ""} onChange={(v) => setForm({ ...form, modelo: v })} />
           <FieldInput label="Ano" placeholder="2022" type="number" value={form.ano?.toString() ?? ""} onChange={(v) => setForm({ ...form, ano: v ? Number(v) : undefined })} />
           <FieldInput label="Cor" placeholder="Preta, Vermelha…" value={form.cor ?? ""} onChange={(v) => setForm({ ...form, cor: v })} />
-          <FieldInput label="Placa" placeholder="ABC1D23" value={form.placa ?? ""} onChange={(v) => setForm({ ...form, placa: v.toUpperCase() })} />
+          {comPlaca && (
+            <FieldInput label="Placa (obrigatória)" placeholder="ABC1D23" value={form.placa ?? ""} onChange={(v) => setForm({ ...form, placa: v.toUpperCase() })} />
+          )}
         </div>
 
-        <div className="mt-6 flex items-center justify-between gap-3">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
             Ao cadastrar, você confirma que os dados são verdadeiros e o veículo está regularizado.
           </p>
@@ -179,6 +214,7 @@ function Veiculo() {
             size="lg"
             className="rounded-xl bg-primary shadow-[0_10px_30px_-10px_rgba(255,107,0,0.7)] transition-transform hover:scale-[1.02]"
           >
+
             <Plus className="mr-2 h-4 w-4" />
             {saving ? "Salvando…" : "Adicionar veículo"}
           </Button>
