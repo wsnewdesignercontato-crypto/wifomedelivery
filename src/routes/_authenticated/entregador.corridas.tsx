@@ -557,7 +557,7 @@ function Corridas() {
             {disponiveis.map((d) => {
               const m = availMeta[d.id];
               return (
-                <div key={d.id} className="rounded-2xl border border-border bg-card p-4 shadow-card">
+                <div key={d.id} className="rounded-2xl border-2 border-primary/60 bg-primary/5 p-4 shadow-card">
                   <div className="flex items-start justify-between">
                     <div className="min-w-0">
                       <p className="font-semibold truncate">
