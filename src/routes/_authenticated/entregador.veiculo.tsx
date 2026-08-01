@@ -62,23 +62,30 @@ function Veiculo() {
 
   async function salvar() {
     if (!courier) return;
-    if (!form.placa || form.placa.replace(/[^A-Z0-9]/gi, "").length < 7) {
+    const comPlaca = precisaPlaca(form.tipo);
+    const placaLimpa = (form.placa ?? "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
+    if (comPlaca && placaLimpa.length < 7) {
       return toast.error("Informe a placa completa (ex.: ABC1D23)");
     }
     setSaving(true);
     const { error } = await supabase.from("courier_vehicles").insert({
       courier_id: courier.user_id,
       tipo: form.tipo!, marca: form.marca, modelo: form.modelo, ano: form.ano, cor: form.cor,
-      placa: form.placa.replace(/[^A-Z0-9]/gi, "").toUpperCase(),
+      placa: comPlaca ? placaLimpa : null,
       ativo: list.length === 0,
     });
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success("Veículo cadastrado — aguardando aprovação");
-    setForm({ tipo: "moto", marca: "", modelo: "", ano: undefined, cor: "", placa: "" });
+    toast.success(
+      comPlaca
+        ? "Veículo cadastrado — aguardando aprovação"
+        : "Veículo cadastrado! Agora envie seu documento com foto em Documentos.",
+    );
+    setForm({ tipo: form.tipo, marca: "", modelo: "", ano: undefined, cor: "", placa: "" });
     await load();
     notifyDataUpdated();
   }
+
 
   async function ativar(id: string) {
     if (!courier) return;
