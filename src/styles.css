@@ -449,7 +449,7 @@
     100deg,
     currentColor 0%,
     currentColor 40%,
-    color-mix(in oklab, currentColor 30%, #ff6b00) 50%,
+    color-mix(in oklab, currentColor 30%, var(--color-primary)) 50%,
     currentColor 60%,
     currentColor 100%
   );
