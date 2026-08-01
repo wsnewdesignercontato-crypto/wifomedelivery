@@ -176,8 +176,29 @@
 }
 
 /* ============= Theme scopes ============= */
-/* Estabelecimento — verde */
+/* Estabelecimento — vermelho */
 .theme-estab {
+  --primary: oklch(0.585 0.225 27);
+  --primary-foreground: oklch(1 0 0);
+  --primary-glow: oklch(0.68 0.20 32);
+  --ring: oklch(0.585 0.225 27);
+  --sidebar-primary: oklch(0.585 0.225 27);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.95 0.05 27);
+  --sidebar-accent-foreground: oklch(0.35 0.15 27);
+  --sidebar-ring: oklch(0.585 0.225 27);
+  --accent: oklch(0.95 0.05 27);
+  --accent-foreground: oklch(0.35 0.15 27);
+}
+:is(.dark) .theme-estab {
+  --sidebar-accent: oklch(0.25 0.06 27);
+  --sidebar-accent-foreground: oklch(0.90 0.10 27);
+  --accent: oklch(0.25 0.06 27);
+  --accent-foreground: oklch(0.90 0.10 27);
+}
+
+/* Entregador — verde */
+.theme-entregador {
   --primary: oklch(0.62 0.17 150);
   --primary-foreground: oklch(1 0 0);
   --primary-glow: oklch(0.74 0.17 155);
@@ -190,33 +211,13 @@
   --accent: oklch(0.95 0.05 150);
   --accent-foreground: oklch(0.30 0.12 150);
 }
-:is(.dark) .theme-estab {
+:is(.dark) .theme-entregador {
   --sidebar-accent: oklch(0.25 0.05 150);
   --sidebar-accent-foreground: oklch(0.90 0.10 150);
   --accent: oklch(0.25 0.05 150);
   --accent-foreground: oklch(0.90 0.10 150);
 }
 
-/* Entregador — azul */
-.theme-entregador {
-  --primary: oklch(0.60 0.17 250);
-  --primary-foreground: oklch(1 0 0);
-  --primary-glow: oklch(0.72 0.15 245);
-  --ring: oklch(0.60 0.17 250);
-  --sidebar-primary: oklch(0.60 0.17 250);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.95 0.04 250);
-  --sidebar-accent-foreground: oklch(0.30 0.13 250);
-  --sidebar-ring: oklch(0.60 0.17 250);
-  --accent: oklch(0.95 0.04 250);
-  --accent-foreground: oklch(0.30 0.13 250);
-}
-:is(.dark) .theme-entregador {
-  --sidebar-accent: oklch(0.25 0.05 250);
-  --sidebar-accent-foreground: oklch(0.90 0.10 250);
-  --accent: oklch(0.25 0.05 250);
-  --accent-foreground: oklch(0.90 0.10 250);
-}
 
 @layer base {
   * {
