@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useMyCourier } from "@/hooks/use-courier";
 import { useQuery } from "@tanstack/react-query";
+import { PushToggleCard } from "@/components/push-toggle-card";
+import { LocationToggleCard } from "@/components/location-toggle-card";
 
 export const Route = createFileRoute("/_authenticated/entregador/perfil/")({
   component: PerfilHub,
