@@ -104,6 +104,7 @@ function AppSidebar() {
 export function EstabShell({ estab }: { estab: Estab }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  useNewOrderAlert(estab.id);
 
   async function toggleOpen(v: boolean) {
     qc.setQueryData(["myEstab", estab.owner_id], { ...estab, is_open: v });
