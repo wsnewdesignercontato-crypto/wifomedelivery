@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import artCliente from "@/assets/promo-cliente.jpg";
 import artEstab from "@/assets/promo-estabelecimento.jpg";
 import artEntregador from "@/assets/promo-entregador.jpg";
+import promoBgAsset from "@/assets/promo-bg-establishment-family.jpg.asset.json";
 
 export type PromoAudience = "cliente" | "estabelecimento" | "entregador";
 
@@ -103,6 +104,18 @@ export function PromoAnnouncement({ audience }: { audience: PromoAudience }) {
         className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-white/10 shadow-2xl animate-in zoom-in-95 duration-300"
         style={{ background: "linear-gradient(180deg, #1a0d05 0%, #0c0705 100%)" }}
       >
+        <img
+          src={promoBgAsset.url}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          width={1024}
+          height={1024}
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-60"
+          style={{ filter: "blur(2px)" }}
+        />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/85" aria-hidden="true" />
+
         <button
           onClick={() => dismiss()}
           aria-label="Fechar aviso"
