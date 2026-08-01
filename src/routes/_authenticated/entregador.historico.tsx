@@ -44,18 +44,27 @@ function Historico() {
         </div>
       ) : (
         <div className="space-y-2">
-          {rows.map((r) => (
-            <div key={r.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-card">
+          {rows.map((r) => {
+            const done = r.status === "delivered";
+            const bad = r.status === "cancelled";
+            const tone = done
+              ? "border-success/50 bg-success/10"
+              : bad
+                ? "border-destructive/50 bg-destructive/10"
+                : "border-primary/50 bg-primary/5";
+            return (
+            <div key={r.id} className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border-2 p-4 shadow-card ${tone}`}>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">#{r.order_id.slice(0, 8)}</p>
                 <p className="truncate text-xs text-muted-foreground">{r.entregue_em ? new Date(r.entregue_em).toLocaleString("pt-BR") : "—"}</p>
               </div>
               <div className="shrink-0 text-right">
-                <p className={`whitespace-nowrap font-bold ${r.status === "delivered" ? "text-success" : "text-primary"}`}>{fmt(r.valor_entrega_cents)}</p>
-                <Badge variant={r.status === "delivered" ? "success" : "destructive"} className="mt-1 whitespace-nowrap">{r.status === "delivered" ? "Entregue" : r.status}</Badge>
+                <p className={`whitespace-nowrap font-bold ${done ? "text-success" : bad ? "text-destructive" : "text-primary"}`}>{fmt(r.valor_entrega_cents)}</p>
+                <Badge variant={done ? "success" : bad ? "destructive" : "default"} className="mt-1 whitespace-nowrap">{done ? "Entregue" : bad ? "Cancelada" : "Em andamento"}</Badge>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
