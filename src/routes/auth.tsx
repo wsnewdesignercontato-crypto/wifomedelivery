@@ -17,6 +17,7 @@ const perfilSchema = z.enum(["cliente", "estabelecimento", "entregador"]).catch(
 const searchSchema = z.object({
   perfil: perfilSchema.optional(),
   redirect: z.string().optional(),
+  confirmado: z.string().optional(),
 });
 
 export const Route = createFileRoute("/auth")({
