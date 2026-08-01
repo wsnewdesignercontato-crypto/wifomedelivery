@@ -36,7 +36,7 @@ function unlockAudio() {
   } catch {}
 }
 
-function playSiren() {
+export function playSiren() {
   const ctx = getCtx();
   if (!ctx) return;
   const now = ctx.currentTime;
