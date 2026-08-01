@@ -73,6 +73,7 @@ function Perfil() {
 
   useEffect(() => {
     if (!courier && !profileQ.data) return;
+    const end = (courier?.endereco ?? {}) as Record<string, unknown>;
     setF({
       nome: profileQ.data?.nome ?? "",
       foto_url: courier?.foto_url ?? profileQ.data?.foto_url ?? "",
@@ -93,7 +94,15 @@ function Perfil() {
       banco_titular: courier?.banco_titular ?? "",
       contato_emergencia_nome: courier?.contato_emergencia_nome ?? "",
       contato_emergencia_tel: courier?.contato_emergencia_tel ?? "",
+      cep: str(end.cep),
+      rua: str(end.rua),
+      numero: str(end.numero),
+      complemento: str(end.complemento),
+      bairro: str(end.bairro),
+      cidade: courier?.cidade_atuacao ?? str(end.cidade),
+      estado: str(end.estado),
     });
+  }, [courier, profileQ.data]);
   }, [courier, profileQ.data]);
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
