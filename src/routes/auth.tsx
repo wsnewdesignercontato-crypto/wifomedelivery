@@ -275,96 +275,186 @@ function AuthPage() {
         </div>
 
         <div className="mt-6 rounded-3xl border border-border bg-card p-6 shadow-card">
-          <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "cadastro")}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Entrar</TabsTrigger>
-              <TabsTrigger value="cadastro">Criar conta</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login" className="mt-4">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    placeholder="voce@exemplo.com"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="senha">Senha</Label>
-                  <Input
-                    id="senha"
-                    name="senha"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    placeholder="••••••••"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95"
-                >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="cadastro" className="mt-4">
-              <form onSubmit={handleCadastro} className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="nome">Nome</Label>
-                  <Input
-                    id="nome"
-                    name="nome"
-                    type="text"
-                    autoComplete="name"
-                    required
-                    placeholder="Seu nome"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="email-cad">Email</Label>
-                  <Input
-                    id="email-cad"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    placeholder="voce@exemplo.com"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="senha-cad">Senha</Label>
-                  <Input
-                    id="senha-cad"
-                    name="senha"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    placeholder="Mínimo 6 caracteres"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95"
-                >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}
-                </Button>
-                <p className="text-center text-xs text-muted-foreground">
-                  Ao criar conta, você concorda com nossos termos e política de
-                  privacidade.
+          {modo === "confirmar-email" || modo === "link-enviado" ? (
+            <div className="space-y-4 py-2 text-center">
+              <MailCheck className="mx-auto h-12 w-12 text-primary" />
+              <h2 className="text-lg font-bold text-foreground">
+                {modo === "confirmar-email"
+                  ? "Bem-vindo ao WiFome! 🎉"
+                  : "Link enviado!"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {modo === "confirmar-email" ? (
+                  <>
+                    Enviamos um email de confirmação para{" "}
+                    <span className="font-semibold text-foreground">{emailSalvo}</span>.
+                    Confirme seu email para ativar a conta — depois você volta
+                    automaticamente para o login.
+                  </>
+                ) : (
+                  <>
+                    Enviamos um link de recuperação para{" "}
+                    <span className="font-semibold text-foreground">{emailSalvo}</span>.
+                    Abra o email e crie sua nova senha.
+                  </>
+                )}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Não recebeu? Verifique a caixa de spam.
+              </p>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setModo("form");
+                  setTab("login");
+                }}
+              >
+                Voltar ao login
+              </Button>
+            </div>
+          ) : modo === "recuperar" ? (
+            <form onSubmit={handleRecuperar} className="space-y-4">
+              <div className="text-center">
+                <h2 className="text-lg font-bold text-foreground">Esqueceu a senha?</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Informe seu email e enviaremos um link para criar uma nova senha.
                 </p>
-              </form>
-            </TabsContent>
-          </Tabs>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="email-rec">Email</Label>
+                <Input
+                  id="email-rec"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  defaultValue={emailSalvo}
+                  placeholder="voce@exemplo.com"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Enviar link de recuperação"
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() => setModo("form")}
+              >
+                Voltar ao login
+              </Button>
+            </form>
+          ) : (
+            <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "cadastro")}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Entrar</TabsTrigger>
+                <TabsTrigger value="cadastro">Criar conta</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="login" className="mt-4">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      defaultValue={emailSalvo}
+                      key={emailSalvo}
+                      placeholder="voce@exemplo.com"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="senha">Senha</Label>
+                    <PasswordInput
+                      id="senha"
+                      name="senha"
+                      autoComplete="current-password"
+                      required
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setModo("recuperar")}
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      Esqueci minha senha
+                    </button>
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95"
+                  >
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
+                  </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="cadastro" className="mt-4">
+                <form onSubmit={handleCadastro} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="nome">Nome</Label>
+                    <Input
+                      id="nome"
+                      name="nome"
+                      type="text"
+                      autoComplete="name"
+                      required
+                      placeholder="Seu nome"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email-cad">Email</Label>
+                    <Input
+                      id="email-cad"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      placeholder="voce@exemplo.com"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="senha-cad">Senha</Label>
+                    <PasswordInput
+                      id="senha-cad"
+                      name="senha"
+                      autoComplete="new-password"
+                      required
+                      placeholder="Mínimo 6 caracteres"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95"
+                  >
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}
+                  </Button>
+                  <p className="text-center text-xs text-muted-foreground">
+                    Ao criar conta, você concorda com nossos termos e política de
+                    privacidade.
+                  </p>
+                </form>
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
+
 
       </div>
     </div>
