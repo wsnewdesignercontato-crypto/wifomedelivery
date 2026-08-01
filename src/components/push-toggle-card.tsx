@@ -1,5 +1,5 @@
-import { BellOff, BellRing, Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { BellOff, BellRing } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 /** Cartão para ligar/desligar as notificações que aparecem na tela do celular. */
