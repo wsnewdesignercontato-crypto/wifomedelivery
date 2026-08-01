@@ -1,5 +1,5 @@
-import { BellOff, BellRing, Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { BellOff, BellRing } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 /** Cartão para ligar/desligar as notificações que aparecem na tela do celular. */
@@ -27,15 +27,13 @@ export function PushToggleCard({ className = "" }: { className?: string }) {
             </p>
           </div>
         </div>
-        <Button
-          size="sm"
-          variant={push.subscribed ? "outline" : "default"}
+        <Switch
+          checked={push.subscribed}
           disabled={push.busy}
-          onClick={() => (push.subscribed ? push.disable() : push.enable())}
-          className="shrink-0 rounded-full"
-        >
-          {push.subscribed ? "Desativar" : "Ativar"}
-        </Button>
+          aria-label={push.subscribed ? "Desativar notificações" : "Ativar notificações"}
+          onCheckedChange={(v) => (v ? push.enable() : push.disable())}
+          className="shrink-0"
+        />
       </div>
 
       {push.permission === "denied" && (
@@ -43,19 +41,6 @@ export function PushToggleCard({ className = "" }: { className?: string }) {
           As notificações estão bloqueadas para este site. Toque no cadeado ao lado do endereço, permita
           "Notificações" e tente novamente.
         </p>
-      )}
-
-      {push.subscribed && (
-        <Button
-          size="sm"
-          variant="secondary"
-          disabled={push.busy}
-          onClick={() => push.test()}
-          className="w-full rounded-full"
-        >
-          <Send className="mr-2 h-4 w-4" />
-          Enviar notificação de teste
-        </Button>
       )}
     </div>
   );

@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { PushToggleCard } from "@/components/push-toggle-card";
+import { LocationToggleCard } from "@/components/location-toggle-card";
 import { playSiren } from "@/hooks/use-new-ride-alert";
 
 export const Route = createFileRoute("/_authenticated/entregador/configuracoes")({
@@ -154,6 +155,7 @@ function Cfg() {
           <Bell className="h-3.5 w-3.5" /> Notificações
         </h2>
         <PushToggleCard />
+        <LocationToggleCard />
         <Button variant="outline" className="w-full rounded-2xl" onClick={() => playSiren()}>
           <Volume2 className="mr-2 h-4 w-4" /> Testar som de nova corrida
         </Button>

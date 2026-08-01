@@ -5,6 +5,7 @@ import { Bell } from "lucide-react";
 import { useMyCourier } from "@/hooks/use-courier";
 import { Badge } from "@/components/ui/badge";
 import { PushToggleCard } from "@/components/push-toggle-card";
+import { LocationToggleCard } from "@/components/location-toggle-card";
 
 
 export const Route = createFileRoute("/_authenticated/entregador/notificacoes")({
@@ -35,6 +36,7 @@ function Notif() {
     <div className="space-y-4">
       <h1 className="text-2xl font-black">Notificações</h1>
       <PushToggleCard />
+      <LocationToggleCard />
       {list.length === 0 ? (
 
         <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">

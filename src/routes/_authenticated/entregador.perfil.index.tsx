@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useMyCourier } from "@/hooks/use-courier";
 import { useQuery } from "@tanstack/react-query";
+import { PushToggleCard } from "@/components/push-toggle-card";
+import { LocationToggleCard } from "@/components/location-toggle-card";
 
 export const Route = createFileRoute("/_authenticated/entregador/perfil/")({
   component: PerfilHub,
@@ -121,6 +123,14 @@ function PerfilHub() {
           </p>
         </div>
       )}
+
+      <section className="space-y-2">
+        <h2 className="px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          Permissões do aparelho
+        </h2>
+        <PushToggleCard />
+        <LocationToggleCard />
+      </section>
 
       {GROUPS.map((g) => (
         <section key={g.title} className="space-y-2">
