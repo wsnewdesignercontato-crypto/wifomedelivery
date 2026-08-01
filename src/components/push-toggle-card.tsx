@@ -38,6 +38,13 @@ export function PushToggleCard({ className = "" }: { className?: string }) {
         </Button>
       </div>
 
+      {push.permission === "denied" && (
+        <p className="rounded-xl bg-destructive/10 p-3 text-xs text-destructive">
+          As notificações estão bloqueadas para este site. Toque no cadeado ao lado do endereço, permita
+          "Notificações" e tente novamente.
+        </p>
+      )}
+
       {push.subscribed && (
         <Button
           size="sm"
