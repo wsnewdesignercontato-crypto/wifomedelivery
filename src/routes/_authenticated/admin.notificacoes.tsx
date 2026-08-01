@@ -348,13 +348,15 @@ function AudiencePanel({
           titulo={titulo}
           mensagem={mensagem}
           banner={banner}
+          audience={audience as PromoAudience}
         />
+
       </div>
     </div>
   );
 }
 
-function BannerPreview({ promo, titulo, mensagem, banner }: { promo: boolean; titulo: string; mensagem: string; banner: Banner }) {
+function BannerPreview({ promo, titulo, mensagem, banner, audience }: { promo: boolean; titulo: string; mensagem: string; banner: Banner; audience: PromoAudience }) {
   if (!promo) {
     return (
       <div className="rounded-xl border border-border bg-card p-4">
@@ -365,29 +367,40 @@ function BannerPreview({ promo, titulo, mensagem, banner }: { promo: boolean; ti
     );
   }
   const cor = banner.cor || "#FF6B00";
+  const arte = banner.imagem_url || PROMO_ART[audience] || PROMO_ART.cliente;
   return (
     <div
       className="mx-auto w-full max-w-[320px] overflow-hidden rounded-3xl border border-white/10 shadow-2xl"
-      style={{ background: `radial-gradient(120% 90% at 50% 0%, ${cor} 0%, #1a0d05 65%, #0c0705 100%)` }}
+      style={{ background: "linear-gradient(180deg, #1a0d05 0%, #0c0705 100%)" }}
     >
-      {banner.imagem_url ? <img src={banner.imagem_url} alt="" className="h-32 w-full object-cover" /> : null}
-      <div className="px-6 pb-6 pt-7 text-center">
-        <div className="mb-4 flex justify-center">
+      <div className="relative">
+        <img src={arte} alt="" className="h-40 w-full object-cover" loading="lazy" />
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(180deg, rgba(12,7,5,0) 35%, rgba(12,7,5,0.75) 78%, #1a0d05 100%)" }}
+        />
+      </div>
+      <div className="px-6 pb-6 pt-5 text-center">
+        <div className="mb-3 flex justify-center">
           <IFomeLogo size="md" showWord={false} />
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
-          <Sparkles className="h-3 w-3" /> Oferta WiFome
+        <span
+          className="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white"
+          style={{ backgroundColor: `${cor}2e`, border: `1px solid ${cor}` }}
+        >
+          {PROMO_LABEL[audience] || PROMO_LABEL.cliente}
         </span>
         <h2 className="mt-3 text-2xl font-black leading-tight text-white">{banner.titulo || titulo || "Sua oferta aqui"}</h2>
-        <p className="mt-2 text-sm text-white/80">{banner.subtitulo || mensagem || "Descrição da promoção"}</p>
+        <p className="mt-2 text-sm text-white/75">{banner.subtitulo || mensagem || "Descrição da promoção"}</p>
         <div
           className="mt-6 flex h-12 w-full items-center justify-center rounded-xl text-base font-bold text-white"
           style={{ backgroundColor: cor }}
         >
           {banner.cta_texto || "Aproveitar agora"}
         </div>
-        <p className="mt-3 text-xs text-white/60">Agora não</p>
+        <p className="mt-3 text-xs text-white/55">Agora não</p>
       </div>
     </div>
   );
 }
+
