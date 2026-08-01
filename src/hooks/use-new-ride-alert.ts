@@ -134,9 +134,12 @@ export function useNewRideAlert(courier: Courier, soundEnabled = true) {
 
       const hasRide = !ativa && (disp?.length ?? 0) > 0;
 
+      const offerOpen = () =>
+        !!(window as unknown as { __wifomeRideOfferOpen?: boolean }).__wifomeRideOfferOpen;
+
       if (hasRide) {
         if (!intervalRef.current) {
-          if (soundEnabled) playSiren();
+          if (soundEnabled && !offerOpen()) playSiren();
           nativeNotify();
           toastIdRef.current = toast("🛵 Nova corrida disponível!", {
             description: "Aceite antes que outro entregador!",
@@ -144,7 +147,7 @@ export function useNewRideAlert(courier: Courier, soundEnabled = true) {
             action: { label: "Ver agora", onClick: () => navigate({ to: "/entregador/corridas" }) },
           });
           intervalRef.current = setInterval(() => {
-            if (soundEnabled) playSiren();
+            if (soundEnabled && !offerOpen()) playSiren();
           }, 1600);
         }
       } else {
