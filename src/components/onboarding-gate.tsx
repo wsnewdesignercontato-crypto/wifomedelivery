@@ -98,10 +98,33 @@ export function OnboardingGate({
 
   // Libera navegação para a própria página de completar dados e sub-rotas relacionadas
   const ONBOARDING_ALLOWED: Record<Role, string[]> = {
-    cliente: ["/cliente/perfil/enderecos", "/cliente/perfil/conta", "/cliente/perfil"],
-    estabelecimento: ["/estabelecimento/configuracoes"],
-    entregador: ["/entregador/perfil", "/entregador/perfil/dados", "/entregador/perfil/pagamento"],
+    cliente: [
+      "/cliente/perfil",
+      "/cliente/perfil/enderecos",
+      "/cliente/perfil/conta",
+      "/cliente/perfil/notificacoes",
+      "/cliente/perfil/dispositivo",
+      "/cliente/perfil/ajuda",
+      "/cliente/perfil/termos",
+    ],
+    estabelecimento: [
+      "/estabelecimento/configuracoes",
+      "/estabelecimento/carteira",
+      "/estabelecimento/equipe",
+    ],
+    entregador: [
+      "/entregador/perfil",
+      "/entregador/perfil/dados",
+      "/entregador/perfil/pagamento",
+      "/entregador/veiculo",
+      "/entregador/documentos",
+      "/entregador/notificacoes",
+      "/entregador/configuracoes",
+      "/entregador/suporte",
+      "/entregador/carteira",
+    ],
   };
+
   const isOnAllowedPath =
     pathname === state.redirect ||
     ONBOARDING_ALLOWED[role].some((p) => pathname === p || pathname.startsWith(p + "/"));
