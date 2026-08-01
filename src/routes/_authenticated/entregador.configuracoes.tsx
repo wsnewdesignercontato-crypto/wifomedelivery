@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { PushToggleCard } from "@/components/push-toggle-card";
+import { LocationToggleCard } from "@/components/location-toggle-card";
 import { playSiren } from "@/hooks/use-new-ride-alert";
 
 export const Route = createFileRoute("/_authenticated/entregador/configuracoes")({
