@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import artCliente from "@/assets/promo-cliente.jpg";
 import artEstab from "@/assets/promo-estabelecimento.jpg";
 import artEntregador from "@/assets/promo-entregador.jpg";
+import promoBgAsset from "@/assets/promo-bg-establishment-family.jpg.asset.json";
 
 export type PromoAudience = "cliente" | "estabelecimento" | "entregador";
 
