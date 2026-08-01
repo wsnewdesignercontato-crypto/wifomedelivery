@@ -163,12 +163,23 @@ function Perfil() {
         banco_titular: f.banco_titular || null,
         contato_emergencia_nome: f.contato_emergencia_nome || null,
         contato_emergencia_tel: f.contato_emergencia_tel || null,
+        cidade_atuacao: f.cidade.trim() || null,
+        endereco: {
+          cep: f.cep || "",
+          rua: f.rua || "",
+          numero: f.numero || "",
+          complemento: f.complemento || "",
+          bairro: f.bairro || "",
+          cidade: f.cidade.trim() || "",
+          estado: f.estado.trim().toUpperCase() || "",
+        },
       }, { onConflict: "user_id" });
       if (c.error) throw c.error;
 
       toast.success("Perfil atualizado com sucesso!");
       qc.invalidateQueries({ queryKey: ["courier", userId] });
       qc.invalidateQueries({ queryKey: ["profile", userId] });
+      window.dispatchEvent(new CustomEvent("wifome:profile-updated"));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erro ao salvar";
       toast.error(msg);
