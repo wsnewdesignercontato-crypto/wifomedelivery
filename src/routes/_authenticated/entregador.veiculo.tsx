@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Bike, Car, Plus, Trash2, Truck, Zap, CheckCircle2, Clock, ShieldCheck, Sparkles } from "lucide-react";
+import { Bike, Car, Plus, Trash2, Truck, Zap, CheckCircle2, Clock, ShieldCheck, Sparkles, HelpCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useMyCourier } from "@/hooks/use-courier";
 import { notifyDataUpdated, DATA_UPDATED_EVENT } from "@/lib/app-refresh";
 
@@ -132,23 +133,46 @@ function Veiculo() {
   const motorizado = precisaPlaca(tipoRef);
   const docOk = (pref: string) => docs.some((d) => d.tipo.startsWith(pref) && d.status !== "rejeitado");
   const temDocIdentidade = docOk("cnh") || docOk("rg") || docOk("documento");
-  const steps: { label: string; hint: string; done: boolean; to?: string }[] = [
+  const steps: {
+    label: string;
+    hint: string;
+    done: boolean;
+    to?: string;
+    help: { semMotor: string; comMotor: string };
+  }[] = [
     {
       label: "Dados pessoais",
       hint: "Nome, telefone, CPF e cidade de atuação",
       done: !!(courier?.telefone && courier?.cpf && courier?.cidade_atuacao),
       to: "/entregador/perfil/dados",
+      help: {
+        semMotor:
+          "Bicicleta, bike elétrica ou patinete: preencha nome completo, CPF, telefone/WhatsApp e a cidade onde você vai rodar. É o mesmo para todos os tipos de veículo.",
+        comMotor:
+          "Moto, carro ou utilitário: preencha nome completo, CPF, telefone/WhatsApp e a cidade de atuação. Esses dados precisam bater com a sua CNH.",
+      },
     },
     {
       label: "Cadastrar o veículo",
       hint: motorizado ? "Marca, modelo e cor da moto/carro" : "Basta escolher o tipo (bike, e-bike ou patinete)",
       done: list.length > 0,
+      help: {
+        semMotor:
+          "Sem motor: escolha o card do seu veículo (bicicleta, bike elétrica ou patinete) e salve. Marca, modelo, ano e cor são opcionais — não pedimos placa nem documento do veículo.",
+        comMotor:
+          "Com motor: escolha moto, carro ou utilitário e informe marca, modelo, ano e cor. Depois marque este veículo como ativo — é ele que será usado nas corridas.",
+      },
     },
     ...(motorizado
       ? [{
           label: "Placa do veículo",
           hint: "Obrigatória para veículos motorizados (ex.: ABC1D23)",
           done: list.some((v) => !!v.placa),
+          help: {
+            semMotor: "Não se aplica a veículos sem motor.",
+            comMotor:
+              "Digite a placa com 7 caracteres, no padrão antigo (ABC1234) ou Mercosul (ABC1D23). Sem placa válida o app não libera as corridas para veículos motorizados.",
+          },
         }]
       : []),
     {
@@ -158,12 +182,24 @@ function Veiculo() {
         : "RG ou CNH só para validar sua identidade — sem placa e sem CNH obrigatória",
       done: motorizado ? docOk("cnh") : temDocIdentidade,
       to: "/entregador/documentos",
+      help: {
+        semMotor:
+          "Bike, e-bike ou patinete: envie apenas um documento com foto (RG, CNH ou documento oficial) para confirmarmos que você é você. CNH não é obrigatória.",
+        comMotor:
+          "Moto, carro ou utilitário: envie a CNH (frente e verso), legível e dentro da validade. A categoria precisa permitir o veículo cadastrado (ex.: categoria A para moto).",
+      },
     },
     {
       label: "Dados de pagamento",
       hint: "Chave PIX para receber seus ganhos",
       done: !!courier?.pix_key,
       to: "/entregador/perfil/pagamento",
+      help: {
+        semMotor:
+          "Cadastre uma chave PIX no seu nome (CPF, telefone, e-mail ou aleatória). É por ela que os saques da sua carteira são pagos.",
+        comMotor:
+          "Cadastre uma chave PIX no seu nome (CPF, telefone, e-mail ou aleatória). É por ela que os saques da sua carteira são pagos.",
+      },
     },
   ];
   const feitos = steps.filter((s) => s.done).length;
@@ -241,14 +277,54 @@ function Veiculo() {
                 {s.done ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
               </div>
               <div className="min-w-0 flex-1">
-                <p
-                  className={`text-sm font-semibold ${
-                    s.done ? "text-emerald-600" : "text-destructive"
-                  }`}
-                >
-                  {s.label}
-                  {!s.done && <span className="ml-1 font-bold">*</span>}
-                </p>
+                <div className="flex items-center gap-1.5">
+                  <p
+                    className={`text-sm font-semibold ${
+                      s.done ? "text-emerald-600" : "text-destructive"
+                    }`}
+                  >
+                    {s.label}
+                    {!s.done && <span className="ml-1 font-bold">*</span>}
+                  </p>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label={`Ajuda sobre ${s.label}`}
+                        className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                      >
+                        <HelpCircle className="h-4 w-4" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-80 text-xs">
+                      <p className="mb-2 text-sm font-bold">{s.label}</p>
+                      <div className="space-y-2">
+                        <div
+                          className={`rounded-lg border p-2 ${
+                            motorizado ? "border-border bg-muted/40" : "border-primary/40 bg-primary/5"
+                          }`}
+                        >
+                          <p className="mb-1 flex items-center gap-1.5 font-semibold">
+                            <Bike className="h-3.5 w-3.5" /> Bicicleta / e-bike / patinete
+                            {!motorizado && <span className="text-primary">(seu caso)</span>}
+                          </p>
+                          <p className="text-muted-foreground">{s.help.semMotor}</p>
+                        </div>
+                        <div
+                          className={`rounded-lg border p-2 ${
+                            motorizado ? "border-primary/40 bg-primary/5" : "border-border bg-muted/40"
+                          }`}
+                        >
+                          <p className="mb-1 flex items-center gap-1.5 font-semibold">
+                            <Car className="h-3.5 w-3.5" /> Moto / carro / utilitário
+                            {motorizado && <span className="text-primary">(seu caso)</span>}
+                          </p>
+                          <p className="text-muted-foreground">{s.help.comMotor}</p>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 <p className="text-xs text-muted-foreground">{s.hint}</p>
               </div>
               {!s.done && s.to && (
