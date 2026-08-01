@@ -2,13 +2,14 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, ShoppingBag, Store, Bike } from "lucide-react";
+import { ArrowLeft, Loader2, ShoppingBag, Store, Bike, MailCheck } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { IFomeLogo } from "@/components/ifome-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -16,6 +17,7 @@ const perfilSchema = z.enum(["cliente", "estabelecimento", "entregador"]).catch(
 const searchSchema = z.object({
   perfil: perfilSchema.optional(),
   redirect: z.string().optional(),
+  confirmado: z.string().optional(),
 });
 
 export const Route = createFileRoute("/auth")({
@@ -88,17 +90,50 @@ function AuthPage() {
   const [tab, setTab] = useState<"login" | "cadastro">("login");
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [emailSalvo, setEmailSalvo] = useState("");
+  const [modo, setModo] = useState<"form" | "confirmar-email" | "recuperar" | "link-enviado">(
+    "form",
+  );
 
   // Se já autenticado, encaminhar para /app
+  const confirmado = search.confirmado === "1";
+
+  // Email salvo do último cadastro/login
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    try {
+      const saved = window.localStorage.getItem("wifome:last-email");
+      if (saved) setEmailSalvo(saved);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // Se já autenticado, encaminhar para /app (exceto ao voltar da confirmação de email)
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session && confirmado) {
+        if (data.session.user.email) {
+          setEmailSalvo(data.session.user.email);
+          try {
+            window.localStorage.setItem("wifome:last-email", data.session.user.email);
+          } catch {
+            /* ignore */
+          }
+        }
+        await supabase.auth.signOut();
+        toast.success("Email confirmado! Agora entre com sua senha.");
+        setCheckingSession(false);
+        return;
+      }
       if (data.session) {
         navigate({ to: "/app", search: { perfil }, replace: true });
       } else {
+        if (confirmado) toast.success("Email confirmado! Agora entre com sua senha.");
         setCheckingSession(false);
       }
     });
-  }, [navigate, perfil]);
+  }, [navigate, perfil, confirmado]);
+
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -122,6 +157,11 @@ function AuthPage() {
         : error.message);
       return;
     }
+    try {
+      window.localStorage.setItem("wifome:last-email", parsed.data.email);
+    } catch {
+      /* ignore */
+    }
     toast.success("Bem-vindo de volta!");
     navigate({ to: "/app", search: { perfil }, replace: true });
   }
@@ -141,11 +181,11 @@ function AuthPage() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: parsed.data.email,
       password: parsed.data.senha,
       options: {
-        emailRedirectTo: `${window.location.origin}/app?perfil=${perfil}`,
+        emailRedirectTo: `${window.location.origin}/auth?perfil=${perfil}&confirmado=1`,
         data: {
           nome: parsed.data.nome,
           perfil_inicial: perfil,
@@ -157,8 +197,39 @@ function AuthPage() {
       toast.error(error.message);
       return;
     }
-    toast.success("Conta criada! Você já pode entrar.");
-    setTab("login");
+    try {
+      window.localStorage.setItem("wifome:last-email", parsed.data.email);
+    } catch {
+      /* ignore */
+    }
+    setEmailSalvo(parsed.data.email);
+    if (data.session) {
+      toast.success("Conta criada! Bem-vindo ao WiFome.");
+      navigate({ to: "/app", search: { perfil }, replace: true });
+      return;
+    }
+    setModo("confirmar-email");
+  }
+
+  async function handleRecuperar(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const parsed = emailSchema.safeParse(form.get("email"));
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Email inválido");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
+      redirectTo: `${window.location.origin}/redefinir-senha?perfil=${perfil}`,
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setEmailSalvo(parsed.data);
+    setModo("link-enviado");
   }
 
   if (checkingSession) {
@@ -209,96 +280,186 @@ function AuthPage() {
         </div>
 
         <div className="mt-6 rounded-3xl border border-border bg-card p-6 shadow-card">
-          <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "cadastro")}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Entrar</TabsTrigger>
-              <TabsTrigger value="cadastro">Criar conta</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login" className="mt-4">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    placeholder="voce@exemplo.com"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="senha">Senha</Label>
-                  <Input
-                    id="senha"
-                    name="senha"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    placeholder="••••••••"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95"
-                >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="cadastro" className="mt-4">
-              <form onSubmit={handleCadastro} className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="nome">Nome</Label>
-                  <Input
-                    id="nome"
-                    name="nome"
-                    type="text"
-                    autoComplete="name"
-                    required
-                    placeholder="Seu nome"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="email-cad">Email</Label>
-                  <Input
-                    id="email-cad"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    placeholder="voce@exemplo.com"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="senha-cad">Senha</Label>
-                  <Input
-                    id="senha-cad"
-                    name="senha"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    placeholder="Mínimo 6 caracteres"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95"
-                >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}
-                </Button>
-                <p className="text-center text-xs text-muted-foreground">
-                  Ao criar conta, você concorda com nossos termos e política de
-                  privacidade.
+          {modo === "confirmar-email" || modo === "link-enviado" ? (
+            <div className="space-y-4 py-2 text-center">
+              <MailCheck className="mx-auto h-12 w-12 text-primary" />
+              <h2 className="text-lg font-bold text-foreground">
+                {modo === "confirmar-email"
+                  ? "Bem-vindo ao WiFome! 🎉"
+                  : "Link enviado!"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {modo === "confirmar-email" ? (
+                  <>
+                    Enviamos um email de confirmação para{" "}
+                    <span className="font-semibold text-foreground">{emailSalvo}</span>.
+                    Confirme seu email para ativar a conta — depois você volta
+                    automaticamente para o login.
+                  </>
+                ) : (
+                  <>
+                    Enviamos um link de recuperação para{" "}
+                    <span className="font-semibold text-foreground">{emailSalvo}</span>.
+                    Abra o email e crie sua nova senha.
+                  </>
+                )}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Não recebeu? Verifique a caixa de spam.
+              </p>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setModo("form");
+                  setTab("login");
+                }}
+              >
+                Voltar ao login
+              </Button>
+            </div>
+          ) : modo === "recuperar" ? (
+            <form onSubmit={handleRecuperar} className="space-y-4">
+              <div className="text-center">
+                <h2 className="text-lg font-bold text-foreground">Esqueceu a senha?</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Informe seu email e enviaremos um link para criar uma nova senha.
                 </p>
-              </form>
-            </TabsContent>
-          </Tabs>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="email-rec">Email</Label>
+                <Input
+                  id="email-rec"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  defaultValue={emailSalvo}
+                  placeholder="voce@exemplo.com"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Enviar link de recuperação"
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() => setModo("form")}
+              >
+                Voltar ao login
+              </Button>
+            </form>
+          ) : (
+            <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "cadastro")}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Entrar</TabsTrigger>
+                <TabsTrigger value="cadastro">Criar conta</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="login" className="mt-4">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      defaultValue={emailSalvo}
+                      key={emailSalvo}
+                      placeholder="voce@exemplo.com"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="senha">Senha</Label>
+                    <PasswordInput
+                      id="senha"
+                      name="senha"
+                      autoComplete="current-password"
+                      required
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setModo("recuperar")}
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      Esqueci minha senha
+                    </button>
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95"
+                  >
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
+                  </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="cadastro" className="mt-4">
+                <form onSubmit={handleCadastro} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="nome">Nome</Label>
+                    <Input
+                      id="nome"
+                      name="nome"
+                      type="text"
+                      autoComplete="name"
+                      required
+                      placeholder="Seu nome"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email-cad">Email</Label>
+                    <Input
+                      id="email-cad"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      placeholder="voce@exemplo.com"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="senha-cad">Senha</Label>
+                    <PasswordInput
+                      id="senha-cad"
+                      name="senha"
+                      autoComplete="new-password"
+                      required
+                      placeholder="Mínimo 6 caracteres"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95"
+                  >
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}
+                  </Button>
+                  <p className="text-center text-xs text-muted-foreground">
+                    Ao criar conta, você concorda com nossos termos e política de
+                    privacidade.
+                  </p>
+                </form>
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
+
 
       </div>
     </div>

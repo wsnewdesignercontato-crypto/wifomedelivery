@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as CadastroRouteImport } from './routes/cadastro'
@@ -103,6 +104,11 @@ import { Route as AuthenticatedClienteEstabelecimentoIdRouteImport } from './rou
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
+  id: '/redefinir-senha',
+  path: '/redefinir-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -630,6 +636,7 @@ export interface FileRoutesByFullPath {
   '/cadastro': typeof CadastroRoute
   '/entrar': typeof EntrarRoute
   '/login': typeof LoginRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRoute
@@ -721,6 +728,7 @@ export interface FileRoutesByTo {
   '/cadastro': typeof CadastroRoute
   '/entrar': typeof EntrarRoute
   '/login': typeof LoginRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app': typeof AuthenticatedAppRoute
   '/admin/anuncios': typeof AuthenticatedAdminAnunciosRoute
@@ -810,6 +818,7 @@ export interface FileRoutesById {
   '/cadastro': typeof CadastroRoute
   '/entrar': typeof EntrarRoute
   '/login': typeof LoginRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRoute
@@ -903,6 +912,7 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/entrar'
     | '/login'
+    | '/redefinir-senha'
     | '/sitemap.xml'
     | '/admin'
     | '/app'
@@ -994,6 +1004,7 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/entrar'
     | '/login'
+    | '/redefinir-senha'
     | '/sitemap.xml'
     | '/app'
     | '/admin/anuncios'
@@ -1082,6 +1093,7 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/entrar'
     | '/login'
+    | '/redefinir-senha'
     | '/sitemap.xml'
     | '/_authenticated/admin'
     | '/_authenticated/app'
@@ -1175,6 +1187,7 @@ export interface RootRouteChildren {
   CadastroRoute: typeof CadastroRoute
   EntrarRoute: typeof EntrarRoute
   LoginRoute: typeof LoginRoute
+  RedefinirSenhaRoute: typeof RedefinirSenhaRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
 }
@@ -1186,6 +1199,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/redefinir-senha': {
+      id: '/redefinir-senha'
+      path: '/redefinir-senha'
+      fullPath: '/redefinir-senha'
+      preLoaderRoute: typeof RedefinirSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -2070,6 +2090,7 @@ const rootRouteChildren: RootRouteChildren = {
   CadastroRoute: CadastroRoute,
   EntrarRoute: EntrarRoute,
   LoginRoute: LoginRoute,
+  RedefinirSenhaRoute: RedefinirSenhaRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
 }
