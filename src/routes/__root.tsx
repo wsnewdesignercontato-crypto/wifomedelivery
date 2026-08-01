@@ -170,7 +170,6 @@ function RootComponent() {
       <ThemeProvider>
         <AuthSync />
         <Outlet />
-        <PromoAnnouncement />
         <Toaster richColors position="top-right" />
       </ThemeProvider>
     </QueryClientProvider>
