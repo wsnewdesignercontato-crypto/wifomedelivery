@@ -276,8 +276,8 @@ function ClienteHome() {
     return arr;
   }, [estabs, catSel, sortBy, reviewCountById, salesCount, promoIds]);
 
-  const compactCount = 4;
-  const visibleCats = showAllCats ? cats : cats.slice(0, compactCount);
+  const compactCount = cats.length;
+  const visibleCats = cats;
 
   return (
     <div className="space-y-6">
