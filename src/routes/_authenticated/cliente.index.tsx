@@ -276,7 +276,7 @@ function ClienteHome() {
     return arr;
   }, [estabs, catSel, sortBy, reviewCountById, salesCount, promoIds]);
 
-  const compactCount = 8;
+  const compactCount = 16;
   const visibleCats = showAllCats ? cats : cats.slice(0, compactCount);
 
   return (
@@ -339,7 +339,7 @@ function ClienteHome() {
           className={
             showAllCats
               ? "grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8"
-              : "grid grid-cols-4 gap-3 sm:grid-cols-5 md:grid-cols-8"
+              : "grid grid-cols-4 gap-3 md:grid-cols-8"
           }
         >
           {visibleCats.map((c) => {
@@ -381,19 +381,6 @@ function ClienteHome() {
               </button>
             );
           })}
-          {!showAllCats && cats.length > compactCount && (
-            <button
-              onClick={() => setShowAllCats(true)}
-              className="flex flex-col items-center gap-1.5"
-            >
-              <div className="grid aspect-square w-full place-items-center rounded-2xl bg-primary/10 text-primary shadow-sm transition-all hover:scale-[1.03]">
-                <span className="text-2xl font-black">+</span>
-              </div>
-              <span className="text-center text-[11px] font-semibold leading-tight text-primary sm:text-xs">
-                Ver todas
-              </span>
-            </button>
-          )}
         </div>
       </section>
 
