@@ -263,7 +263,12 @@ function Veiculo() {
                         {v.modelo && <span className="text-muted-foreground"> {v.modelo}</span>}
                       </p>
                       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                        {v.placa && <span className="rounded-md bg-muted px-2 py-0.5 font-mono font-semibold text-foreground">{v.placa}</span>}
+                        {v.placa ? (
+                          <span className="rounded-md bg-muted px-2 py-0.5 font-mono font-semibold text-foreground">{v.placa}</span>
+                        ) : (
+                          <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 font-semibold text-emerald-600">Sem placa</span>
+                        )}
+
                         {v.cor && <span>{v.cor}</span>}
                         {v.ano && <span>{v.ano}</span>}
                       </div>
