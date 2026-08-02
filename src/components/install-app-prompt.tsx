@@ -142,6 +142,29 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
     setShowIOSHelp(true);
   }
 
+  // Reserva espaço no fim da página para o banner não cobrir conteúdo
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const el = cardRef.current;
+    if (!visible || !el) {
+      document.documentElement.style.removeProperty("--install-banner-space");
+      return;
+    }
+    const update = () => {
+      document.documentElement.style.setProperty(
+        "--install-banner-space",
+        `${Math.ceil(el.getBoundingClientRect().height) + 16}px`,
+      );
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      document.documentElement.style.removeProperty("--install-banner-space");
+    };
+  }, [visible]);
+
   if (!visible) return null;
 
   const themeClass =
@@ -150,10 +173,11 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
   return (
     <>
       <div
-        className={`${themeClass} pointer-events-none fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-lg px-3 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-[calc(env(safe-area-inset-bottom)+0.75rem)]`}
+        className={`${themeClass} pointer-events-none fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-lg px-3 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-[calc(env(safe-area-inset-bottom)+0.75rem)]`}
       >
-        <div className="pointer-events-auto rounded-2xl border border-primary/30 bg-card/95 p-4 shadow-xl backdrop-blur">
+        <div ref={cardRef} className="pointer-events-auto rounded-2xl border border-primary/30 bg-card/95 p-4 shadow-xl backdrop-blur">
           <div className="flex items-start gap-3">
+
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-brand">
               <Smartphone className="h-5 w-5" />
             </div>
