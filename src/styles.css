@@ -628,6 +628,11 @@ table {
   }
 }
 
+/* Espaço reservado para o banner de instalação (definido em runtime) */
+body {
+  padding-bottom: var(--install-banner-space, 0px);
+}
+
 
 /* Safe areas (notch / barra inferior) */
 @utility safe-bottom {
