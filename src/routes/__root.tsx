@@ -171,11 +171,15 @@ function RootComponent() {
       <ThemeProvider>
         <AuthSync />
         <LiveRefresh />
-        <div className="min-h-screen">
+        <a href="#conteudo" className="skip-link">
+          Pular para o conteúdo
+        </a>
+        <div id="conteudo" className="min-h-dvh">
           <Outlet />
           <InstallAppPrompt />
         </div>
-        <Toaster richColors position="top-right" />
+        <Toaster richColors closeButton position="top-right" />
+
       </ThemeProvider>
     </QueryClientProvider>
   );

@@ -661,3 +661,100 @@ body {
     padding-bottom: 0.25rem;
   }
 }
+
+/* ============================================================
+   UI/UX POLISH — micro-interações, foco acessível, skeletons
+   ============================================================ */
+
+/* Skeleton com brilho deslizante */
+@keyframes skeleton-shimmer {
+  0%   { background-position: -150% 0; }
+  100% { background-position: 250% 0; }
+}
+
+@utility skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background-image: linear-gradient(
+    100deg,
+    transparent 20%,
+    color-mix(in oklab, var(--color-foreground) 8%, transparent) 40%,
+    color-mix(in oklab, var(--color-foreground) 12%, transparent) 50%,
+    color-mix(in oklab, var(--color-foreground) 8%, transparent) 60%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s linear infinite;
+}
+
+/* Foco visível consistente em todos os elementos interativos */
+:where(a, button, [role="button"], input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm, 0.375rem);
+}
+
+/* Feedback de toque/clique */
+@utility press {
+  transition: transform 150ms ease-out, box-shadow 200ms ease-out;
+  &:active { transform: scale(0.97); }
+}
+
+/* Elevação suave no hover para cards clicáveis */
+@utility lift {
+  transition: transform 250ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 250ms cubic-bezier(0.22, 1, 0.36, 1);
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px -14px color-mix(in oklab, var(--color-primary) 45%, transparent);
+  }
+}
+
+/* Transição padrão de superfícies (tema claro/escuro incluso) */
+@utility surface-transition {
+  transition: background-color 250ms ease, border-color 250ms ease, color 250ms ease;
+}
+
+/* Micro-interação: pulso suave para destacar novidades */
+@keyframes soft-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-primary) 45%, transparent); }
+  50%      { box-shadow: 0 0 0 8px color-mix(in oklab, var(--color-primary) 0%, transparent); }
+}
+@utility pulse-ring {
+  animation: soft-pulse 2s ease-out infinite;
+}
+
+/* Conteúdo entrando com fade suave */
+@keyframes ui-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@utility animate-fade-in {
+  animation: ui-fade-in 0.28s ease-out both;
+}
+
+/* Rolagem mais confortável ao navegar por âncoras/foco */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* Respeita usuários que preferem menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer, .pulse-ring { animation: none !important; }
+}
+
+/* Link para pular direto ao conteúdo (leitores de tela / teclado) */
+.skip-link {
+  position: absolute;
+  left: 0.5rem;
+  top: -3rem;
+  z-index: 100;
+  border-radius: 0.5rem;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: top 180ms ease-out;
+}
+.skip-link:focus { top: 0.5rem; }
