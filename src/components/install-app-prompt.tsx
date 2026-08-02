@@ -149,8 +149,10 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
 
   return (
     <>
-      <div className={themeClass}>
-        <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 shadow-sm">
+      <div
+        className={`${themeClass} pointer-events-none fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-lg px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]`}
+      >
+        <div className="pointer-events-auto rounded-2xl border border-primary/30 bg-card/95 p-4 shadow-xl backdrop-blur">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-brand">
               <Smartphone className="h-5 w-5" />
