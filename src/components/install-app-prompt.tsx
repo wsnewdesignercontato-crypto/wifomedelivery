@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Download, Share, Plus, X, Smartphone } from "lucide-react";
 
 type BIPEvent = Event & {
