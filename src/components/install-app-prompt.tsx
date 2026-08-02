@@ -76,6 +76,8 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
   const [deferred, setDeferred] = useState<BIPEvent | null>(null);
   const [visible, setVisible] = useState(false);
   const [showIOSHelp, setShowIOSHelp] = useState(false);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+
 
   // Aponta o manifest para o app do perfil atual
   useEffect(() => {
