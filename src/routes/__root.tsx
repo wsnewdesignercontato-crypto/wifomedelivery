@@ -172,10 +172,8 @@ function RootComponent() {
         <AuthSync />
         <LiveRefresh />
         <div className="min-h-screen">
-          <div className="mx-auto w-full max-w-7xl px-4 pt-2 sm:px-6 lg:px-8">
-            <InstallAppPrompt />
-          </div>
           <Outlet />
+          <InstallAppPrompt />
         </div>
         <Toaster richColors position="top-right" />
       </ThemeProvider>
