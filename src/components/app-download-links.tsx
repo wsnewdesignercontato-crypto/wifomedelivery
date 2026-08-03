@@ -47,12 +47,20 @@ function storageKey(perfil: Perfil) {
 
 /** Já instalado? App rodando em modo standalone ou marcação salva após instalar. */
 function jaInstalado(perfil: Perfil) {
-  if (typeof window === "undefined") return true;
-  const standalone =
-    window.matchMedia?.("(display-mode: standalone)").matches ||
-    // iOS Safari
-    (navigator as unknown as { standalone?: boolean }).standalone === true;
+  if (typeof window === "undefined") return false;
+  
+  // 1. Detecta modo standalone (PWA instalado e aberto)
+  const standalone = 
+    window.matchMedia?.("(display-mode: standalone)").matches || 
+    (window.navigator as any).standalone === true;
+    
   if (standalone) return true;
+
+  // 2. Verifica se o app é acessado via TWA (Trusted Web Activity - comum em Android)
+  const isTWA = document.referrer.includes("android-app://");
+  if (isTWA) return true;
+
+  // 3. Marcação local após clique em "Já instalei" ou sucesso no evento de instalação
   try {
     return window.localStorage.getItem(storageKey(perfil)) === "1";
   } catch {
