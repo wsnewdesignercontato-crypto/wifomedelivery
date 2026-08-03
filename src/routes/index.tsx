@@ -178,7 +178,7 @@ const beneficios = [
 
 function CategoriasRail() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-muted/40 via-background to-muted/30 py-20 sm:py-28">
+    <section className="relative z-0 overflow-hidden bg-gradient-to-b from-muted/40 via-background to-muted/30 py-20 sm:py-28">
       <div
         aria-hidden
         className="pointer-events-none absolute -top-24 left-1/4 h-64 w-64 rounded-full bg-primary/10 blur-3xl"
