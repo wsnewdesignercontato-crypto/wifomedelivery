@@ -587,35 +587,24 @@ table {
   }
 }
 
-/* Touch targets mínimos de 44x44 em telas de toque */
+/* Touch targets confortáveis em telas de toque.
+   Usa apenas área de toque (padding do ::before via .tap-target) para chips,
+   abas e links; min-height fica restrito a botões reais para não entortar o layout. */
 @media (pointer: coarse) {
-  button,
-  [role="button"],
-  a[href],
+  button:not(.tap-target):not(.no-touch-target),
+  [role="button"]:not(.tap-target):not(.no-touch-target),
   input[type="checkbox"],
   input[type="radio"],
   select,
-  summary,
-  [role="tab"],
-  [role="menuitem"],
-  [role="switch"] {
+  summary {
     min-height: 44px;
   }
 
-  button,
-  [role="button"],
-  select,
-  [role="tab"],
-  a[href][aria-label] {
-    min-width: 44px;
-  }
-
   /* Exceções: elementos inline dentro de texto e chips compactos */
-  p a[href],
-  li a[href],
-  span a[href],
-  label a[href],
-  a[href].link-inline,
+  p button,
+  li button,
+  span button,
+  label button,
   .tap-target,
   .no-touch-target,
   .no-touch-target * {
