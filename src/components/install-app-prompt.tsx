@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Download, Share, Plus, X, Smartphone } from "lucide-react";
+import { useAppInstalado } from "@/hooks/use-app-instalado";
 
 type BIPEvent = Event & {
   prompt: () => Promise<void>;
@@ -78,6 +79,12 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
   const [visible, setVisible] = useState(false);
   const [showIOSHelp, setShowIOSHelp] = useState(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
+  const { instalado } = useAppInstalado(perfilAtivo);
+
+  // Checagem automática: assim que o app deste perfil é instalado, o convite some.
+  useEffect(() => {
+    if (instalado) setVisible(false);
+  }, [instalado]);
 
 
   // Aponta o manifest para o app do perfil atual
