@@ -10,12 +10,21 @@ type BIPEvent = Event & {
 
 const apps: Record<
   Perfil,
-  { nome: string; legenda: string; manifest: string; Icon: typeof ShoppingBag; theme: string }
+  {
+    nome: string;
+    legenda: string;
+    manifest: string;
+    /** Nome curto que aparece embaixo do ícone na tela inicial (evita corte). */
+    nomeTela: string;
+    Icon: typeof ShoppingBag;
+    theme: string;
+  }
 > = {
   cliente: {
     nome: "WiFome Cliente",
     legenda: "Peça e acompanhe pelo app",
     manifest: "/manifest-cliente.webmanifest",
+    nomeTela: "WiFome",
     Icon: ShoppingBag,
     theme: "theme-cliente",
   },
@@ -23,6 +32,7 @@ const apps: Record<
     nome: "WiFome Estabelecimento",
     legenda: "Gerencie pedidos pelo app",
     manifest: "/manifest-estabelecimento.webmanifest",
+    nomeTela: "WiFome Loja",
     Icon: Store,
     theme: "theme-estab",
   },
@@ -30,6 +40,7 @@ const apps: Record<
     nome: "WiFome Entregador",
     legenda: "Receba corridas pelo app",
     manifest: "/manifest-entregador.webmanifest",
+    nomeTela: "WiFome Moto",
     Icon: Bike,
     theme: "theme-entregador",
   },
