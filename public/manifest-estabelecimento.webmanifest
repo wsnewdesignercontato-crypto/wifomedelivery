@@ -1,6 +1,6 @@
 {
-  "name": "WiFome Estabelecimento",
-  "short_name": "WiFome Loja",
+  "name": "WiLoja",
+  "short_name": "WiLoja",
   "description": "Gerencie pedidos, cardápio e entregas do seu estabelecimento no WiFome.",
   "start_url": "/auth?perfil=estabelecimento",
   "scope": "/",

@@ -1,6 +1,6 @@
 {
-  "name": "WiFome Entregador",
-  "short_name": "WiFome Moto",
+  "name": "WiMoto",
+  "short_name": "WiMoto",
   "description": "Receba corridas, faça entregas e acompanhe seus ganhos no WiFome.",
   "start_url": "/auth?perfil=entregador",
   "scope": "/",
