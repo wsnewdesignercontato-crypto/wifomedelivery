@@ -248,46 +248,51 @@ function AuthPage() {
   const Icon = info.Icon;
 
   return (
-    <div className={`relative min-h-screen bg-background ${themeClass}`}>
+    <div className={`relative min-h-dvh bg-background ${themeClass}`}>
       <div
+        aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-72 opacity-40"
         style={{
           background:
             "radial-gradient(60% 60% at 50% 0%, color-mix(in oklab, var(--primary) 35%, transparent) 0%, transparent 70%)",
         }}
       />
-      <div className="relative mx-auto flex min-h-screen max-w-md flex-col px-4 py-6">
-        <div className="flex items-center justify-between">
+      <div
+        className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 py-5 sm:py-8"
+        style={{ paddingBottom: "calc(var(--install-banner-space, 1.5rem) + 1rem)" }}
+      >
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+            className="tap-target inline-flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Início
+            <ArrowLeft className="h-4 w-4 shrink-0" />
+            <span className="truncate">Início</span>
           </Link>
           <ThemeToggle />
         </div>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center" data-no-reveal>
           <IFomeLogo size="lg" showWord={false} className="mx-auto" perfil={perfil} />
-          <h1 className="mt-4 text-2xl font-black tracking-tight text-foreground">
+          <h1 className="mx-auto mt-4 max-w-[16ch] text-balance text-2xl font-black leading-tight tracking-tight text-foreground sm:text-3xl">
             {perfil === "cliente"
               ? "Entrar como cliente"
               : perfil === "estabelecimento"
                 ? "Entrar como estabelecimento"
                 : "Entrar como entregador"}
           </h1>
-          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1 text-xs font-medium text-foreground">
-            <Icon className="h-3.5 w-3.5 text-primary" />
-            {info.titulo}
+          <div className="mt-3 inline-flex max-w-full items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1 text-xs font-medium text-foreground">
+            <Icon className="h-3.5 w-3.5 shrink-0 text-primary" />
+            <span className="truncate">{info.titulo}</span>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">{info.descricao}</p>
         </div>
 
-        <div className="mt-6 rounded-3xl border border-border bg-card p-6 shadow-card">
+        <div className="mt-6 rounded-3xl border border-border bg-card p-5 shadow-card sm:p-6">
           {modo === "confirmar-email" || modo === "link-enviado" ? (
             <div className="space-y-4 py-2 text-center">
               <MailCheck className="mx-auto h-12 w-12 text-primary" />
+
               <h2 className="text-lg font-bold text-foreground">
                 {modo === "confirmar-email"
                   ? "Bem-vindo ao WiFome! 🎉"
