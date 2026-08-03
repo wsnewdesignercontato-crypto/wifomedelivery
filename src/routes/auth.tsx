@@ -480,9 +480,8 @@ function AuthPage() {
           )}
         </div>
 
-        <AppDownloadLinks perfilAtual={perfil} />
-
         <div className="flex-1" />
+
       </div>
     </div>
   );
