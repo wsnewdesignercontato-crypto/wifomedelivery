@@ -10,12 +10,21 @@ type BIPEvent = Event & {
 
 const apps: Record<
   Perfil,
-  { nome: string; legenda: string; manifest: string; Icon: typeof ShoppingBag; theme: string }
+  {
+    nome: string;
+    legenda: string;
+    manifest: string;
+    /** Nome curto que aparece embaixo do ícone na tela inicial (evita corte). */
+    nomeTela: string;
+    Icon: typeof ShoppingBag;
+    theme: string;
+  }
 > = {
   cliente: {
     nome: "WiFome Cliente",
     legenda: "Peça e acompanhe pelo app",
     manifest: "/manifest-cliente.webmanifest",
+    nomeTela: "WiFome",
     Icon: ShoppingBag,
     theme: "theme-cliente",
   },
@@ -23,6 +32,7 @@ const apps: Record<
     nome: "WiFome Estabelecimento",
     legenda: "Gerencie pedidos pelo app",
     manifest: "/manifest-estabelecimento.webmanifest",
+    nomeTela: "WiFome Loja",
     Icon: Store,
     theme: "theme-estab",
   },
@@ -30,6 +40,7 @@ const apps: Record<
     nome: "WiFome Entregador",
     legenda: "Receba corridas pelo app",
     manifest: "/manifest-entregador.webmanifest",
+    nomeTela: "WiFome Moto",
     Icon: Bike,
     theme: "theme-entregador",
   },
@@ -80,6 +91,23 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
 
   useEffect(() => {
     setVisivel(!jaInstalado(perfilAtual));
+  }, [perfilAtual]);
+
+  // Aponta o manifest e o nome de tela inicial (iOS) do perfil atual assim que
+  // a tela de acesso abre — evita que o rótulo do ícone saia cortado/errado.
+  useEffect(() => {
+    const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+    link?.setAttribute("href", apps[perfilAtual].manifest);
+
+    let meta = document.querySelector<HTMLMetaElement>(
+      'meta[name="apple-mobile-web-app-title"]',
+    );
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.setAttribute("name", "apple-mobile-web-app-title");
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute("content", apps[perfilAtual].nomeTela);
   }, [perfilAtual]);
 
   useEffect(() => {

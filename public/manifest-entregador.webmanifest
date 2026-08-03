@@ -1,6 +1,6 @@
 {
-  "name": "WiFome — Entregador",
-  "short_name": "WiFome Entrega",
+  "name": "WiFome Entregador",
+  "short_name": "WiFome Moto",
   "description": "Receba corridas, faça entregas e acompanhe seus ganhos no WiFome.",
   "start_url": "/auth?perfil=entregador",
   "scope": "/",
@@ -10,7 +10,11 @@
   "background_color": "#0B0B0F",
   "theme_color": "#3FA845",
   "lang": "pt-BR",
-  "categories": ["business", "navigation", "productivity"],
+  "categories": [
+    "business",
+    "navigation",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "/__l5e/assets-v1/04de9be3-cb25-45df-bc8a-a3ea0c6bc931/wifome-logo.png",

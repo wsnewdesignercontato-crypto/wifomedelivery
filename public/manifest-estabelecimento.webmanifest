@@ -1,5 +1,5 @@
 {
-  "name": "WiFome — Estabelecimento",
+  "name": "WiFome Estabelecimento",
   "short_name": "WiFome Loja",
   "description": "Gerencie pedidos, cardápio e entregas do seu estabelecimento no WiFome.",
   "start_url": "/auth?perfil=estabelecimento",
@@ -10,7 +10,11 @@
   "background_color": "#0B0B0F",
   "theme_color": "#E02424",
   "lang": "pt-BR",
-  "categories": ["business", "food", "productivity"],
+  "categories": [
+    "business",
+    "food",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "/__l5e/assets-v1/04de9be3-cb25-45df-bc8a-a3ea0c6bc931/wifome-logo.png",
