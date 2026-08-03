@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ShoppingBag, Store, Bike, Download, Share, Plus, Smartphone, X } from "lucide-react";
+import { useAppInstalado } from "@/hooks/use-app-instalado";
 
 type Perfil = "cliente" | "estabelecimento" | "entregador";
 
@@ -52,59 +53,6 @@ function isIOS() {
   return /iPad|iPhone|iPod/.test(ua) && !/CriOS|FxiOS/.test(ua);
 }
 
-function storageKey(perfil: Perfil) {
-  return `wifome:app-instalado:${perfil}`;
-}
-
-function marcarInstalado(perfil: Perfil) {
-  try {
-    window.localStorage.setItem(storageKey(perfil), "1");
-  } catch {
-    /* ignore */
-  }
-}
-
-/** Perfil do app que está rodando agora em modo instalado (standalone/TWA), se houver. */
-function perfilInstaladoEmExecucao(): Perfil | null {
-  if (typeof window === "undefined") return null;
-
-  const standalone =
-    window.matchMedia?.("(display-mode: standalone)").matches ||
-    (window.navigator as any).standalone === true ||
-    document.referrer.includes("android-app://");
-
-  if (!standalone) return null;
-
-  // Cada app instalado abre pelo seu start_url (?perfil=...), então o modo
-  // standalone só comprova a instalação DESTE perfil — não dos outros.
-  const busca = window.location.search.toLowerCase();
-  const caminho = window.location.pathname.toLowerCase();
-  if (busca.includes("perfil=estabelecimento") || caminho.startsWith("/estabelecimento")) {
-    return "estabelecimento";
-  }
-  if (busca.includes("perfil=entregador") || caminho.startsWith("/entregador")) {
-    return "entregador";
-  }
-  return "cliente";
-}
-
-/** Já instalado? Verificação individual por perfil (cliente, loja e entregador são apps distintos). */
-function jaInstalado(perfil: Perfil) {
-  if (typeof window === "undefined") return false;
-
-  const emExecucao = perfilInstaladoEmExecucao();
-  if (emExecucao) {
-    marcarInstalado(emExecucao);
-    if (emExecucao === perfil) return true;
-  }
-
-  try {
-    return window.localStorage.getItem(storageKey(perfil)) === "1";
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Barra fina de instalação do app do perfil atual, exibida no topo das telas de acesso.
  * Some automaticamente depois que a pessoa instala o aplicativo.
@@ -113,11 +61,8 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
   const app = apps[perfilAtual];
   const [deferred, setDeferred] = useState<BIPEvent | null>(null);
   const [ajuda, setAjuda] = useState(false);
-  const [visivel, setVisivel] = useState(false);
-
-  useEffect(() => {
-    setVisivel(!jaInstalado(perfilAtual));
-  }, [perfilAtual]);
+  const { instalado, revalidar, confirmarInstalado } = useAppInstalado(perfilAtual);
+  const visivel = !instalado;
 
   // Aponta o manifest e o nome de tela inicial (iOS) do perfil atual assim que
   // a tela de acesso abre — evita que o rótulo do ícone saia cortado/errado.
@@ -142,12 +87,7 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
       setDeferred(e as BIPEvent);
     };
     const onInstalled = () => {
-      try {
-        window.localStorage.setItem(storageKey(perfilAtual), "1");
-      } catch {
-        /* ignore */
-      }
-      setVisivel(false);
+      confirmarInstalado();
       setAjuda(false);
     };
     window.addEventListener("beforeinstallprompt", onBIP);
@@ -156,7 +96,7 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
       window.removeEventListener("beforeinstallprompt", onBIP);
       window.removeEventListener("appinstalled", onInstalled);
     };
-  }, [perfilAtual]);
+  }, [perfilAtual, confirmarInstalado]);
 
   async function baixar() {
     const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
@@ -167,12 +107,9 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
       const { outcome } = await deferred.userChoice;
       setDeferred(null);
       if (outcome === "accepted") {
-        try {
-          window.localStorage.setItem(storageKey(perfilAtual), "1");
-        } catch {
-          /* ignore */
-        }
-        setVisivel(false);
+        confirmarInstalado();
+      } else {
+        void revalidar();
       }
       return;
     }
@@ -180,13 +117,8 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
   }
 
   function confirmarInstalacao() {
-    try {
-      window.localStorage.setItem(storageKey(perfilAtual), "1");
-    } catch {
-      /* ignore */
-    }
+    confirmarInstalado();
     setAjuda(false);
-    setVisivel(false);
   }
 
   if (!visivel) return null;
