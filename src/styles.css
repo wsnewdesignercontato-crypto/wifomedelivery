@@ -2,6 +2,23 @@
   display: none !important;
 }
 
+html {
+  overflow-x: hidden;
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100%;
+}
+
+body {
+  overflow-x: hidden;
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100%;
+  position: relative !important;
+  touch-action: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -237,6 +254,8 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    min-height: 100%;
+    position: relative;
   }
 }
 
@@ -498,18 +517,11 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-}
-
-html,
-body {
-  overflow-x: hidden;
-  max-width: 100%;
 }
 
 body {
   -webkit-tap-highlight-color: transparent;
-  overscroll-behavior-y: none;
+  overflow-x: hidden;
 }
 
 /* Nada estoura a largura da tela */
