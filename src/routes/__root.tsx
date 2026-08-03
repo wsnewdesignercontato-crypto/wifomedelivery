@@ -174,7 +174,7 @@ function RootComponent() {
         <a href="#conteudo" className="skip-link">
           Pular para o conteúdo
         </a>
-        <div id="conteudo" className="relative min-h-dvh">
+        <div id="conteudo" className="relative h-full">
           <Outlet />
           <InstallAppPrompt />
         </div>
