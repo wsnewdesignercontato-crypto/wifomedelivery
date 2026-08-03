@@ -273,7 +273,7 @@ function AuthPage() {
           <ThemeToggle />
         </div>
 
-        <div className="mt-3">
+        <div className="mt-3 overflow-hidden transition-all duration-500 ease-in-out">
           <AppDownloadLinks perfilAtual={perfil} />
         </div>
 
