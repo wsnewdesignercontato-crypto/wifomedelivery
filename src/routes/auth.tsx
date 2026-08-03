@@ -275,7 +275,7 @@ function AuthPage() {
 
         <div className="mt-6 text-center" data-no-reveal>
           <IFomeLogo size="lg" showWord={false} className="mx-auto" perfil={perfil} />
-          <h1 className="mx-auto mt-4 max-w-[16ch] text-balance text-2xl font-black leading-tight tracking-tight text-foreground sm:text-3xl">
+          <h1 className="mx-auto mt-4 max-w-[15ch] text-balance text-xl font-black leading-tight tracking-tight text-foreground sm:text-2xl">
             {perfil === "cliente"
               ? "Entrar como cliente"
               : perfil === "estabelecimento"

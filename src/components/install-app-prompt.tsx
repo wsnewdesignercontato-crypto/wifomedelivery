@@ -95,6 +95,15 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
     if (typeof window === "undefined") return;
     if (isStandalone()) return;
     if (recentlyDismissed()) return;
+    // Nas telas de acesso já existe a seção "Baixe o aplicativo" — evita banner duplicado
+    const path = window.location.pathname.toLowerCase();
+    const telaDeAcesso =
+      path === "/auth" ||
+      path === "/login" ||
+      path === "/entrar" ||
+      path === "/cadastro" ||
+      path === "/redefinir-senha";
+    if (telaDeAcesso) return;
     setVisible(true);
 
     const onBIP = (e: Event) => {
