@@ -191,6 +191,24 @@ body {
 }
 
 /* ============= Theme scopes ============= */
+/* Cliente — laranja da marca (reseta temas herdados) */
+.theme-cliente {
+  --primary: oklch(0.685 0.204 47);
+  --primary-foreground: oklch(1 0 0);
+  --primary-glow: oklch(0.78 0.18 58);
+  --ring: oklch(0.685 0.204 47);
+  --accent: oklch(0.965 0.03 55);
+  --accent-foreground: oklch(0.30 0.15 40);
+}
+:is(.dark) .theme-cliente {
+  --primary: oklch(0.73 0.20 50);
+  --primary-foreground: oklch(0.15 0.02 40);
+  --primary-glow: oklch(0.82 0.17 60);
+  --ring: oklch(0.73 0.20 50);
+  --accent: oklch(0.27 0.05 50);
+  --accent-foreground: oklch(0.90 0.10 60);
+}
+
 /* Estabelecimento — vermelho vivo da logo (#ED1C24) */
 .theme-estab {
   --gradient-brand: linear-gradient(135deg, var(--primary) 0%, var(--primary-glow) 100%);
@@ -548,18 +566,21 @@ th {
   overflow-wrap: anywhere;
 }
 
-/* Tipografia fluida: escala suave de 320px até 1920px */
-h1 {
-  font-size: clamp(1.5rem, 1.05rem + 2.2vw, 3rem);
-  line-height: 1.1;
-}
-h2 {
-  font-size: clamp(1.25rem, 1rem + 1.3vw, 2.25rem);
-  line-height: 1.15;
-}
-h3 {
-  font-size: clamp(1.05rem, 0.95rem + 0.6vw, 1.5rem);
-  line-height: 1.25;
+/* Tipografia fluida: escala suave de 320px até 1920px.
+   Em @layer base para que utilitários text-* do Tailwind continuem vencendo. */
+@layer base {
+  h1 {
+    font-size: clamp(1.5rem, 1.05rem + 2.2vw, 3rem);
+    line-height: 1.1;
+  }
+  h2 {
+    font-size: clamp(1.25rem, 1rem + 1.3vw, 2.25rem);
+    line-height: 1.15;
+  }
+  h3 {
+    font-size: clamp(1.05rem, 0.95rem + 0.6vw, 1.5rem);
+    line-height: 1.25;
+  }
 }
 
 /* Tabelas: rolagem horizontal suave e células sem quebra agressiva */
@@ -584,35 +605,24 @@ table {
   }
 }
 
-/* Touch targets mínimos de 44x44 em telas de toque */
+/* Touch targets confortáveis em telas de toque.
+   Usa apenas área de toque (padding do ::before via .tap-target) para chips,
+   abas e links; min-height fica restrito a botões reais para não entortar o layout. */
 @media (pointer: coarse) {
-  button,
-  [role="button"],
-  a[href],
+  button:not(.tap-target):not(.no-touch-target),
+  [role="button"]:not(.tap-target):not(.no-touch-target),
   input[type="checkbox"],
   input[type="radio"],
   select,
-  summary,
-  [role="tab"],
-  [role="menuitem"],
-  [role="switch"] {
+  summary {
     min-height: 44px;
   }
 
-  button,
-  [role="button"],
-  select,
-  [role="tab"],
-  a[href][aria-label] {
-    min-width: 44px;
-  }
-
   /* Exceções: elementos inline dentro de texto e chips compactos */
-  p a[href],
-  li a[href],
-  span a[href],
-  label a[href],
-  a[href].link-inline,
+  p button,
+  li button,
+  span button,
+  label button,
   .tap-target,
   .no-touch-target,
   .no-touch-target * {
