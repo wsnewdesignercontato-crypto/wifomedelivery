@@ -93,6 +93,23 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
     setVisivel(!jaInstalado(perfilAtual));
   }, [perfilAtual]);
 
+  // Aponta o manifest e o nome de tela inicial (iOS) do perfil atual assim que
+  // a tela de acesso abre — evita que o rótulo do ícone saia cortado/errado.
+  useEffect(() => {
+    const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+    link?.setAttribute("href", apps[perfilAtual].manifest);
+
+    let meta = document.querySelector<HTMLMetaElement>(
+      'meta[name="apple-mobile-web-app-title"]',
+    );
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.setAttribute("name", "apple-mobile-web-app-title");
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute("content", apps[perfilAtual].nomeTela);
+  }, [perfilAtual]);
+
   useEffect(() => {
     const onBIP = (e: Event) => {
       e.preventDefault();
