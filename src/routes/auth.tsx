@@ -15,6 +15,7 @@ import { senhaForteSchema } from "@/lib/password-strength";
 
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AppDownloadLinks } from "@/components/app-download-links";
 
 const perfilSchema = z.enum(["cliente", "estabelecimento", "entregador"]).catch("cliente");
 const searchSchema = z.object({
@@ -404,7 +405,7 @@ function AuthPage() {
                     <button
                       type="button"
                       onClick={() => setModo("recuperar")}
-                      className="text-xs font-medium text-primary hover:underline"
+                      className="tap-target -my-1 inline-flex items-center px-1 text-xs font-medium text-primary hover:underline"
                     >
                       Esqueci minha senha
                     </button>
@@ -474,7 +475,9 @@ function AuthPage() {
           )}
         </div>
 
+        <AppDownloadLinks perfilAtual={perfil} />
 
+        <div className="flex-1" />
       </div>
     </div>
   );
