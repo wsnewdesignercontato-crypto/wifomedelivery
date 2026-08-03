@@ -273,7 +273,12 @@ function AuthPage() {
           <ThemeToggle />
         </div>
 
+        <div className="mt-3">
+          <AppDownloadLinks perfilAtual={perfil} />
+        </div>
+
         <div className="mt-6 text-center" data-no-reveal>
+
           <IFomeLogo size="lg" showWord={false} className="mx-auto" perfil={perfil} />
           <h1 className="mx-auto mt-4 max-w-[15ch] text-balance text-xl font-black leading-tight tracking-tight text-foreground sm:text-2xl">
             {perfil === "cliente"
@@ -475,9 +480,8 @@ function AuthPage() {
           )}
         </div>
 
-        <AppDownloadLinks perfilAtual={perfil} />
-
         <div className="flex-1" />
+
       </div>
     </div>
   );
