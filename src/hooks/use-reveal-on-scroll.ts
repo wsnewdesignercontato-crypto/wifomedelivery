@@ -134,15 +134,25 @@ export function useRevealOnScroll(selector = ".reveal") {
       mo?.observe(document.body, { childList: true, subtree: true });
     };
 
-    const schedule = () => {
+    const schedule = (mutations?: MutationRecord[]) => {
       if (running || scheduled) return;
+      
+      // Se forem mutações, verifica se são apenas mudanças de visibilidade feitas por nós
+      if (mutations && mutations.length > 0) {
+        const isSelf = mutations.every(m => 
+          m.type === 'attributes' && 
+          (m.attributeName === 'class' || m.attributeName?.startsWith('data-reveal'))
+        );
+        if (isSelf) return;
+      }
+
       scheduled = window.setTimeout(() => {
         scheduled = 0;
         enhance();
-      }, 200);
+      }, 500); // Aumentado para 500ms para evitar debounce agressivo
     };
 
-    mo = new MutationObserver(schedule);
+    mo = new MutationObserver((muts) => schedule(muts));
     enhance();
 
     return () => {
