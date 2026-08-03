@@ -2,14 +2,21 @@
   display: none !important;
 }
 
-html, body {
-  overflow-x: hidden !important;
+html {
+  overflow-x: hidden;
   overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  touch-action: auto !important;
-  position: relative !important;
   height: auto !important;
-  min-height: 100% !important;
+  min-height: 100%;
+}
+
+body {
+  overflow-x: hidden;
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100%;
+  position: relative !important;
+  touch-action: auto !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 @import "tailwindcss" source(none);
