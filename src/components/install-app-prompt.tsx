@@ -175,7 +175,7 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
   return (
     <>
       <div
-        className={`${themeClass} pointer-events-none fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-lg px-3 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-[calc(env(safe-area-inset-bottom)+0.75rem)]`}
+        className={`${themeClass} pointer-events-none fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-lg px-3 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-[calc(env(safe-area-inset-bottom)+0.75rem)] isolate`}
       >
         <div ref={cardRef} className="pointer-events-auto rounded-2xl border border-primary/30 bg-card/95 p-4 shadow-xl backdrop-blur">
           <div className="flex items-start gap-3">
