@@ -482,7 +482,7 @@ body {
 .text-reveal, .reveal, .word-split .word {
   animation-fill-mode: forwards;
 }
-.text-reveal:not(.is-visible) { animation: safety-show 0.01s 2s forwards; }
+.text-reveal:not(.is-visible), .reveal:not(.is-visible), .word-split.is-visible .word:not(.is-visible) { animation: safety-show 0.01s 1.5s forwards; }
 
 @media (prefers-reduced-motion: reduce) {
   .text-reveal, .text-reveal.is-visible,
