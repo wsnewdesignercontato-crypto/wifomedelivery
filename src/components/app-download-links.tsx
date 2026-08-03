@@ -56,22 +56,48 @@ function storageKey(perfil: Perfil) {
   return `wifome:app-instalado:${perfil}`;
 }
 
-/** Já instalado? App rodando em modo standalone ou marcação salva após instalar. */
+function marcarInstalado(perfil: Perfil) {
+  try {
+    window.localStorage.setItem(storageKey(perfil), "1");
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Perfil do app que está rodando agora em modo instalado (standalone/TWA), se houver. */
+function perfilInstaladoEmExecucao(): Perfil | null {
+  if (typeof window === "undefined") return null;
+
+  const standalone =
+    window.matchMedia?.("(display-mode: standalone)").matches ||
+    (window.navigator as any).standalone === true ||
+    document.referrer.includes("android-app://");
+
+  if (!standalone) return null;
+
+  // Cada app instalado abre pelo seu start_url (?perfil=...), então o modo
+  // standalone só comprova a instalação DESTE perfil — não dos outros.
+  const busca = window.location.search.toLowerCase();
+  const caminho = window.location.pathname.toLowerCase();
+  if (busca.includes("perfil=estabelecimento") || caminho.startsWith("/estabelecimento")) {
+    return "estabelecimento";
+  }
+  if (busca.includes("perfil=entregador") || caminho.startsWith("/entregador")) {
+    return "entregador";
+  }
+  return "cliente";
+}
+
+/** Já instalado? Verificação individual por perfil (cliente, loja e entregador são apps distintos). */
 function jaInstalado(perfil: Perfil) {
   if (typeof window === "undefined") return false;
-  
-  // 1. Detecta modo standalone (PWA instalado e aberto)
-  const standalone = 
-    window.matchMedia?.("(display-mode: standalone)").matches || 
-    (window.navigator as any).standalone === true;
-    
-  if (standalone) return true;
 
-  // 2. Verifica se o app é acessado via TWA (Trusted Web Activity - comum em Android)
-  const isTWA = document.referrer.includes("android-app://");
-  if (isTWA) return true;
+  const emExecucao = perfilInstaladoEmExecucao();
+  if (emExecucao) {
+    marcarInstalado(emExecucao);
+    if (emExecucao === perfil) return true;
+  }
 
-  // 3. Marcação local após clique em "Já instalei" ou sucesso no evento de instalação
   try {
     return window.localStorage.getItem(storageKey(perfil)) === "1";
   } catch {
