@@ -191,6 +191,24 @@ body {
 }
 
 /* ============= Theme scopes ============= */
+/* Cliente — laranja da marca (reseta temas herdados) */
+.theme-cliente {
+  --primary: oklch(0.685 0.204 47);
+  --primary-foreground: oklch(1 0 0);
+  --primary-glow: oklch(0.78 0.18 58);
+  --ring: oklch(0.685 0.204 47);
+  --accent: oklch(0.965 0.03 55);
+  --accent-foreground: oklch(0.30 0.15 40);
+}
+:is(.dark) .theme-cliente {
+  --primary: oklch(0.73 0.20 50);
+  --primary-foreground: oklch(0.15 0.02 40);
+  --primary-glow: oklch(0.82 0.17 60);
+  --ring: oklch(0.73 0.20 50);
+  --accent: oklch(0.27 0.05 50);
+  --accent-foreground: oklch(0.90 0.10 60);
+}
+
 /* Estabelecimento — vermelho vivo da logo (#ED1C24) */
 .theme-estab {
   --gradient-brand: linear-gradient(135deg, var(--primary) 0%, var(--primary-glow) 100%);

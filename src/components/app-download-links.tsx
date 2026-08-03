@@ -22,7 +22,7 @@ const apps: {
     legenda: "Peça e acompanhe",
     manifest: "/manifest-cliente.webmanifest",
     Icon: ShoppingBag,
-    theme: "",
+    theme: "theme-cliente",
   },
   {
     perfil: "estabelecimento",
