@@ -1,5 +1,5 @@
 {
-  "name": "WiFome — Delivery",
+  "name": "WiFome Delivery",
   "short_name": "WiFome",
   "description": "Peça comida, acompanhe entregas em tempo real e gerencie seu negócio no WiFome.",
   "start_url": "/",
@@ -9,7 +9,11 @@
   "background_color": "#0B0B0F",
   "theme_color": "#FF6B00",
   "lang": "pt-BR",
-  "categories": ["food", "shopping", "lifestyle"],
+  "categories": [
+    "food",
+    "shopping",
+    "lifestyle"
+  ],
   "icons": [
     {
       "src": "/__l5e/assets-v1/04de9be3-cb25-45df-bc8a-a3ea0c6bc931/wifome-logo.png",
