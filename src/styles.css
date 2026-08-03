@@ -2,6 +2,16 @@
   display: none !important;
 }
 
+html, body {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: auto !important;
+  position: relative !important;
+  height: auto !important;
+  min-height: 100% !important;
+}
+
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
