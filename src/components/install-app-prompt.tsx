@@ -41,6 +41,7 @@ function detectPerfilFromUrl(): Perfil {
 }
 
 const DISMISS_KEY = "wifome_install_dismissed_at";
+const instaladoKey = (perfil: Perfil) => `wifome:app-instalado:${perfil}`;
 const DISMISS_DAYS = 7;
 
 function isStandalone() {
@@ -93,7 +94,16 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (isStandalone()) return;
+    // Standalone comprova apenas a instalação do app deste perfil
+    if (isStandalone()) {
+      try {
+        localStorage.setItem(instaladoKey(perfilAtivo), "1");
+      } catch {}
+      return;
+    }
+    try {
+      if (localStorage.getItem(instaladoKey(perfilAtivo)) === "1") return;
+    } catch {}
     if (recentlyDismissed()) return;
     // Nas telas de acesso já existe a seção "Baixe o aplicativo" — evita banner duplicado
     const path = window.location.pathname.toLowerCase();
@@ -120,6 +130,7 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
       setVisible(false);
       setDeferred(null);
       try {
+        localStorage.setItem(instaladoKey(perfilAtivo), "1");
         localStorage.removeItem(DISMISS_KEY);
       } catch {}
     };
@@ -129,7 +140,7 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
       window.removeEventListener("beforeinstallprompt", onBIP);
       window.removeEventListener("appinstalled", onInstalled);
     };
-  }, []);
+  }, [perfilAtivo]);
 
   function dismiss() {
     setVisible(false);
