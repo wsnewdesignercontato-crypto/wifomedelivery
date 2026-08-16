@@ -1,10 +1,6 @@
-import { useEffect, useState } from "react";
 import { Sandwich, Store, Bike } from "lucide-react";
-import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 
 export type LoaderPerfil = "cliente" | "estabelecimento" | "entregador";
-
-const STEP_MS = 1400;
 
 const STEPS = [
   { icon: Sandwich, label: "Pedido" },
@@ -28,15 +24,6 @@ function themeClassFor(perfil: LoaderPerfil) {
 
 /** Animação de carregamento: pedido → loja → entregador, em loop contínuo. */
 export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
-  const reduced = usePrefersReducedMotion();
-  const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    if (reduced) return;
-    const id = window.setInterval(() => setStep((s) => (s + 1) % STEPS.length), STEP_MS);
-    return () => window.clearInterval(id);
-  }, [reduced]);
-
   const size = compact ? "size-7" : "size-9";
   const icon = compact ? 14 : 18;
 
@@ -45,21 +32,14 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
       <div className="flex items-center gap-1.5 sm:gap-2">
         {STEPS.map((s, i) => {
           const Icon = s.icon;
-          const active = i === step;
-          const done = i < step;
           return (
             <div key={s.label} className="flex items-center gap-1.5 sm:gap-2">
               <div
-                key={`${i}-${active ? step : "idle"}`}
                 className={[
                   size,
-                  "grid place-items-center rounded-xl border transition-all duration-500 ease-out",
-                  active
-                    ? "animate-loader-plup scale-110 border-primary-foreground/80 bg-primary-foreground/25 text-primary-foreground opacity-100 shadow-[0_0_18px_-2px_rgba(255,255,255,0.75)]"
-                    : done
-                      ? "border-primary-foreground/40 bg-primary-foreground/10 text-primary-foreground opacity-60"
-                      : "border-primary-foreground/20 bg-primary-foreground/5 text-primary-foreground opacity-35",
+                  "loader-step-icon grid place-items-center rounded-xl border border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground",
                 ].join(" ")}
+                style={{ animationDelay: `${i * 0.32}s` }}
               >
                 <Icon size={icon} strokeWidth={2.2} />
               </div>
@@ -71,8 +51,8 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
                   ].join(" ")}
                 >
                   <span
-                    className="absolute inset-y-0 left-0 rounded-full bg-primary-foreground/90 transition-all duration-700 ease-out"
-                    style={{ width: i < step ? "100%" : active && !reduced ? "100%" : "0%" }}
+                    className="loader-step-line absolute inset-y-0 left-0 w-full origin-left rounded-full bg-primary-foreground/90"
+                    style={{ animationDelay: `${i * 0.32 + 0.12}s` }}
                   />
                 </span>
               )}
