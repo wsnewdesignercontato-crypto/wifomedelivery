@@ -1,14 +1,13 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useEffect, useState } from "react";
 import { Sandwich, Store, Bike } from "lucide-react";
-import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 
 export type LoaderPerfil = "cliente" | "estabelecimento" | "entregador";
 
 const STEPS = [
-  { icon: Sandwich, label: "Preparando o pedido" },
-  { icon: Store, label: "Enviando para a loja" },
-  { icon: Bike, label: "Saindo para entrega" },
+  { icon: Sandwich, label: "Pedido" },
+  { icon: Store, label: "Loja" },
+  { icon: Bike, label: "Entrega" },
 ] as const;
 
 export function detectPerfil(pathname?: string): LoaderPerfil {
@@ -26,17 +25,8 @@ function themeClassFor(perfil: LoaderPerfil) {
   return "";
 }
 
-/** Animação de carregamento: pedido → loja → entregador, em loop. */
+/** Animação de carregamento: pedido → loja → entregador, em loop contínuo. */
 export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
-  const reduced = usePrefersReducedMotion();
-  const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    if (reduced) return;
-    const id = window.setInterval(() => setStep((s) => (s + 1) % STEPS.length), 850);
-    return () => window.clearInterval(id);
-  }, [reduced]);
-
   const size = compact ? "size-7" : "size-9";
   const icon = compact ? 14 : 18;
 
@@ -45,20 +35,14 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
       <div className="flex items-center gap-1.5 sm:gap-2">
         {STEPS.map((s, i) => {
           const Icon = s.icon;
-          const active = i === step;
-          const done = i < step;
           return (
             <div key={s.label} className="flex items-center gap-1.5 sm:gap-2">
               <div
                 className={[
                   size,
-                  "grid place-items-center rounded-xl border transition-all duration-500",
-                  active
-                    ? "scale-110 border-primary-foreground/70 bg-primary-foreground/20 text-primary-foreground shadow-md"
-                    : done
-                      ? "border-primary-foreground/40 bg-primary-foreground/10 text-primary-foreground/80"
-                      : "border-primary-foreground/20 bg-primary-foreground/5 text-primary-foreground/45",
+                  "loader-step-icon grid place-items-center rounded-xl border border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground",
                 ].join(" ")}
+                style={{ animationDelay: `${i * 0.32}s` }}
               >
                 <Icon size={icon} strokeWidth={2.2} />
               </div>
@@ -70,8 +54,8 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
                   ].join(" ")}
                 >
                   <span
-                    className="absolute inset-y-0 left-0 rounded-full bg-primary-foreground/90 transition-all duration-700 ease-out"
-                    style={{ width: i < step ? "100%" : active && !reduced ? "100%" : "0%" }}
+                    className="loader-step-line absolute inset-y-0 left-0 w-full origin-left rounded-full bg-primary-foreground/90"
+                    style={{ animationDelay: `${i * 0.32 + 0.12}s` }}
                   />
                 </span>
               )}
@@ -79,9 +63,6 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
           );
         })}
       </div>
-      {!compact && (
-        <p className="text-xs font-medium text-primary-foreground/80">{STEPS[step].label}…</p>
-      )}
     </div>
   );
 }
@@ -105,7 +86,7 @@ export function WifomeLoader({ perfil, message }: { perfil?: LoaderPerfil; messa
       aria-live="polite"
       aria-label="Carregando"
     >
-      <div className="text-center">
+      <div className="animate-loader-logo-pop text-center">
         <span className="text-4xl font-extrabold tracking-tight text-primary-foreground sm:text-5xl">
           WiFome
         </span>

@@ -4,17 +4,21 @@
 
 html {
   overflow-x: hidden;
-  overflow-y: auto !important;
-  height: 100% !important;
+  overflow-y: scroll !important;
+  height: auto !important;
+  min-height: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
   overflow-x: hidden;
   overflow-y: auto !important;
-  height: 100% !important;
+  height: auto !important;
+  min-height: 100%;
   position: relative !important;
   touch-action: pan-y pinch-zoom !important;
   -webkit-overflow-scrolling: touch !important;
+  background-color: oklch(var(--background));
 }
 
 @import "tailwindcss" source(none);
@@ -778,3 +782,28 @@ body {
   transition: top 180ms ease-out;
 }
 .skip-link:focus { top: 0.5rem; }
+
+/* WiFome loader */
+@keyframes loader-logo-pop {
+  0% { opacity: 0; transform: scale(0.86); }
+  60% { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes loader-plup {
+  0%, 22%, 100% { opacity: 0.32; transform: translateY(0) scale(0.9); box-shadow: none; }
+  8% { opacity: 1; transform: translateY(-4px) scale(1.1); box-shadow: 0 0 18px color-mix(in srgb, currentColor 75%, transparent); }
+  14% { opacity: 0.78; transform: translateY(0) scale(1); box-shadow: 0 0 8px color-mix(in srgb, currentColor 35%, transparent); }
+}
+@keyframes loader-line-flow {
+  0%, 8% { opacity: 0; transform: scaleX(0); }
+  16% { opacity: 0.9; transform: scaleX(1); }
+  24%, 100% { opacity: 0; transform: scaleX(1); }
+}
+.animate-loader-logo-pop { animation: loader-logo-pop 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.loader-step-icon { animation: loader-plup 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite both; will-change: transform, opacity; }
+.loader-step-line { animation: loader-line-flow 2.4s ease-in-out infinite both; will-change: transform, opacity; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-loader-logo-pop { animation: none; }
+  .loader-step-icon { animation-duration: 3.6s; transform: none; }
+  .loader-step-line { animation-duration: 3.6s; }
+}
