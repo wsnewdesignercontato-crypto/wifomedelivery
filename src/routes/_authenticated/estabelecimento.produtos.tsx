@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyEstab, fmt } from "@/hooks/use-my-estab";
@@ -24,18 +24,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Copy,
-  Loader2,
-  Package,
-  Pencil,
-  Plus,
-  Search,
-  Sparkles,
-  Store,
-  Trash2,
-  Wand2,
-} from "lucide-react";
+import { Loader2, Plus, Trash2, Copy, Pencil, Sparkles, Wand2 } from "lucide-react";
 import {
   getCategoryKind,
   KIND_LABEL,
@@ -98,7 +87,6 @@ function ProdutosPage() {
   }
   useEffect(() => {
     reload();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estab?.id]);
 
   async function toggle(p: Produto) {
@@ -136,292 +124,114 @@ function ProdutosPage() {
       (filterCat === "todas" || p.menu_category_id === filterCat) &&
       (!busca || p.nome.toLowerCase().includes(busca.toLowerCase())),
   );
-  const summary = useMemo(() => {
-    const ativos = produtos.filter((p) => p.disponivel).length;
-    const emPromo = produtos.filter((p) => p.preco_promo_cents != null).length;
-    const estoqueBaixo = produtos.filter((p) => p.estoque != null && p.estoque <= 5).length;
-    return { ativos, emPromo, estoqueBaixo };
-  }, [produtos]);
 
   return (
-    <div className="space-y-5">
-      <section className="card-premium relative overflow-hidden border-none bg-gradient-to-br from-primary/12 via-white to-primary/5 p-5 dark:from-primary/15 dark:via-card dark:to-primary/10 sm:p-6">
-        <div className="absolute -left-10 top-0 h-36 w-36 rounded-full bg-primary/15 blur-3xl" />
-        <div className="absolute -right-10 bottom-0 h-44 w-44 rounded-full bg-primary/10 blur-3xl" />
-
-        <div className="relative grid gap-6 xl:grid-cols-[1.14fr_0.86fr] xl:items-start">
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className="bg-primary text-primary-foreground">Catalogo premium</Badge>
-              <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
-                Gestao da loja
-              </Badge>
-              <span className="text-xs font-semibold text-muted-foreground">
-                {produtos.length} produtos cadastrados
-              </span>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-muted-foreground">
-                Mais clareza para organizar precos, estoque, promocoes e disponibilidade.
-              </p>
-              <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-                Seu cardapio com visual mais premium e operacao mais forte.
-              </h1>
-              <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
-                Controle a vitrine da loja com filtros mais inteligentes, cards mais claros e edicao
-                mais organizada.
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-4">
-              <HeroMetric label="Produtos" value={String(produtos.length)} hint="Catalogo atual" />
-              <HeroMetric
-                label="Ativos"
-                value={String(summary.ativos)}
-                hint="Disponiveis para venda"
-              />
-              <HeroMetric
-                label="Em promo"
-                value={String(summary.emPromo)}
-                hint="Com preco promocional"
-              />
-              <HeroMetric
-                label="Estoque baixo"
-                value={String(summary.estoqueBaixo)}
-                hint="Itens que pedem atencao"
-              />
-            </div>
-          </div>
-
-          <div className="rounded-[1.75rem] border border-white/70 bg-white/90 p-5 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.26em] text-muted-foreground">
-                  Acao rapida
-                </p>
-                <p className="mt-2 text-2xl font-black text-foreground">
-                  {filtrados.length} itens nesta visao
-                </p>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Package className="h-5 w-5" />
-              </div>
-            </div>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  Filtro atual
-                </p>
-                <p className="mt-1 font-bold text-foreground">
-                  {filterCat === "todas"
-                    ? "Todas as categorias"
-                    : (cats.find((c) => c.id === filterCat)?.nome ?? "Categoria")}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border/70 bg-background/70 p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  Busca
-                </p>
-                <p className="mt-1 font-bold text-foreground">
-                  {busca ? `"${busca}"` : "Sem termo ativo"}
-                </p>
-              </div>
-            </div>
-
-            <Dialog open={openNew} onOpenChange={setOpenNew}>
-              <DialogTrigger asChild>
-                <Button className="mt-4 w-full rounded-full">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Novo produto
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-3xl">
-                <DialogHeader>
-                  <DialogTitle>Novo produto</DialogTitle>
-                </DialogHeader>
-                <ProdutoForm
-                  cats={cats}
-                  addonGroups={addonGroups}
-                  onSaved={() => {
-                    setOpenNew(false);
-                    reload();
-                  }}
-                />
-              </DialogContent>
-            </Dialog>
-
-            <div className="mt-4 rounded-2xl border border-border/70 bg-background/70 p-3">
-              <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                <Sparkles className="h-3.5 w-3.5" />
-                Cardapio premium
-              </p>
-              <p className="mt-1 text-sm font-semibold text-foreground">
-                Destaque promocao, disponibilidade, categoria e preparo sem poluir a tela.
-              </p>
-            </div>
-          </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight">Produtos</h1>
+          <p className="text-sm text-muted-foreground">{produtos.length} produtos cadastrados</p>
         </div>
-      </section>
-
-      <section className="card-premium border-none bg-gradient-to-br from-card to-muted/20 p-4">
-        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_260px]">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Buscar produto..."
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              className="pl-9"
+        <Dialog open={openNew} onOpenChange={setOpenNew}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" /> Novo produto
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Novo produto</DialogTitle>
+            </DialogHeader>
+            <ProdutoForm
+              cats={cats}
+              addonGroups={addonGroups}
+              onSaved={() => {
+                setOpenNew(false);
+                reload();
+              }}
             />
-          </div>
-          <Select value={filterCat} onValueChange={setFilterCat}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas as categorias</SelectItem>
-              {cats.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </section>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Input
+          placeholder="Buscar produto..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          className="max-w-xs"
+        />
+        <Select value={filterCat} onValueChange={setFilterCat}>
+          <SelectTrigger className="max-w-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todas">Todas as categorias</SelectItem>
+            {cats.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       {filtrados.length === 0 ? (
-        <div className="card-premium rounded-[1.75rem] border-dashed p-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
           Nenhum produto encontrado.
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filtrados.map((p) => {
-            const categoryName =
-              cats.find((c) => c.id === p.menu_category_id)?.nome ?? "Sem categoria";
-            const hasPromo = p.preco_promo_cents != null && p.preco_promo_cents < p.preco_cents;
-            const lowStock = p.estoque != null && p.estoque <= 5;
-
-            return (
-              <div
-                key={p.id}
-                className="card-premium rounded-[1.75rem] border-none bg-gradient-to-br from-card to-muted/20 p-4"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-[1.25rem] bg-muted ring-1 ring-border/60">
-                    {p.foto_url ? (
-                      <img src={p.foto_url} alt={p.nome} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="grid h-full w-full place-items-center bg-primary/10 text-primary">
-                        <Store className="h-6 w-6" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className="border-primary/30 bg-primary/10 text-primary"
-                      >
-                        {categoryName}
-                      </Badge>
-                      {!p.disponivel && (
-                        <Badge variant="secondary" className="text-xs">
-                          Off
-                        </Badge>
-                      )}
-                      {lowStock && (
-                        <Badge variant="destructive" className="text-xs">
-                          Estoque {p.estoque}
-                        </Badge>
-                      )}
-                    </div>
-                    <h2 className="mt-3 truncate text-xl font-black tracking-tight text-foreground">
-                      {p.nome}
-                    </h2>
-                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                      {p.descricao?.replace(/\s*\[\[extras:[^\]]+\]\]\s*$/, "") ||
-                        "Produto com informacoes mais claras para o cliente decidir melhor."}
-                    </p>
-                  </div>
+        <div className="grid gap-2 md:grid-cols-2">
+          {filtrados.map((p) => (
+            <div
+              key={p.id}
+              className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-card"
+            >
+              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-muted">
+                {p.foto_url && (
+                  <img src={p.foto_url} alt={p.nome} className="h-full w-full object-cover" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1 basis-40">
+                <div className="flex items-center gap-2">
+                  <p className="truncate font-semibold">{p.nome}</p>
+                  {!p.disponivel && (
+                    <Badge variant="secondary" className="text-xs">
+                      Off
+                    </Badge>
+                  )}
+                  {p.estoque !== null && p.estoque !== undefined && p.estoque <= 5 && (
+                    <Badge variant="destructive" className="text-xs">
+                      Estoque {p.estoque}
+                    </Badge>
+                  )}
                 </div>
-
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-[1.35rem] border border-border/70 bg-background/70 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      Preco
-                    </p>
-                    <div className="mt-1 flex flex-wrap items-center gap-2">
-                      <span className="text-lg font-black text-primary">
-                        {fmt(hasPromo ? (p.preco_promo_cents ?? p.preco_cents) : p.preco_cents)}
-                      </span>
-                      {hasPromo && (
-                        <span className="text-sm text-muted-foreground line-through">
-                          {fmt(p.preco_cents)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="rounded-[1.35rem] border border-border/70 bg-background/70 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      Operacao
-                    </p>
-                    <p className="mt-1 text-sm font-bold text-foreground">
-                      {p.tempo_preparo_min
-                        ? `${p.tempo_preparo_min} min de preparo`
-                        : "Tempo nao informado"}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {p.disponivel ? "Disponivel para venda" : "Pausado no cardapio"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                  <Switch checked={p.disponivel} onCheckedChange={() => toggle(p)} />
-                  <span>{p.disponivel ? "Exibindo no app" : "Oculto temporariamente"}</span>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full"
-                    onClick={() => setEditing(p)}
-                  >
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Editar
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full"
-                    onClick={() => duplicar(p)}
-                  >
-                    <Copy className="mr-2 h-4 w-4" />
-                    Duplicar
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full"
-                    onClick={() => remover(p.id)}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4 text-destructive" />
-                    Remover
-                  </Button>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-semibold text-primary">{fmt(p.preco_cents)}</span>
+                  {p.preco_promo_cents && (
+                    <span className="text-xs text-emerald-500">{fmt(p.preco_promo_cents)}</span>
+                  )}
                 </div>
               </div>
-            );
-          })}
+              <div className="ml-auto flex shrink-0 items-center gap-1">
+                <Switch checked={p.disponivel} onCheckedChange={() => toggle(p)} />
+                <Button size="icon" variant="ghost" onClick={() => setEditing(p)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" onClick={() => duplicar(p)}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" onClick={() => remover(p.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Editar produto</DialogTitle>
           </DialogHeader>
@@ -438,18 +248,6 @@ function ProdutosPage() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-function HeroMetric({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return (
-    <div className="rounded-[1.5rem] border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-border dark:bg-card/80">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-black tracking-tight text-foreground">{value}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{hint}</p>
     </div>
   );
 }
@@ -528,7 +326,7 @@ function ProdutoForm({
       });
       setExtras(obj);
     }
-  }, [produto?.id, produto?.descricao]);
+  }, [produto?.id]);
 
   function toggleGroup(id: string) {
     setSelectedGroups((prev) => {
@@ -682,27 +480,7 @@ function ProdutoForm({
   }
 
   return (
-    <div className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
-      <div className="card-premium border-none bg-gradient-to-br from-primary/10 via-card to-primary/5 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-              Edicao premium
-            </p>
-            <p className="mt-2 text-xl font-black text-foreground">
-              {produto
-                ? "Atualize o produto com mais clareza."
-                : "Monte um novo produto com mais contexto."}
-            </p>
-          </div>
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Sparkles className="h-5 w-5" />
-          </div>
-        </div>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Organize categoria, precos, variacoes e adicionais sem perder a leitura operacional.
-        </p>
-      </div>
+    <div className="grid gap-3 max-h-[75vh] overflow-y-auto pr-1">
       <div>
         <Label>Categoria</Label>
         <Select

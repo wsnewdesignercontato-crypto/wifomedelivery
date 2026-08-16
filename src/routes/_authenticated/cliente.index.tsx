@@ -1,19 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ArrowRight,
-  ChevronRight,
-  Clock,
-  Flame,
-  Heart,
-  Loader2,
-  MapPin,
-  Search,
-  ShieldCheck,
-  Sparkles,
-  Star,
-  Tag,
-} from "lucide-react";
+import { Star, ChevronRight, Loader2, Tag, Flame, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 import catPizza from "@/assets/cat-pizza.jpg";
@@ -38,10 +25,9 @@ import catPorcoes from "@/assets/cat-porcoes.jpg";
 import catMercado from "@/assets/cat-mercado.jpg";
 import catFarmacia from "@/assets/cat-farmacia.jpg";
 import bannerFreteGratis from "@/assets/banner-frete-gratis-premium.png.asset.json";
-import promoCliente from "@/assets/promo-cliente.jpg";
 import { AdRotator } from "@/components/cliente/ad-rotator";
-import { CitySwitchCard } from "@/components/cliente/city-switch-card";
 import { useCityDetection } from "@/hooks/use-city-detection";
+import { CitySwitchCard } from "@/components/cliente/city-switch-card";
 
 export const Route = createFileRoute("/_authenticated/cliente/")({
   component: ClienteHome,
@@ -61,10 +47,17 @@ type Estab = {
   is_open: boolean;
   cidade: string | null;
 };
+type ActiveLocation = { cidade_ativa: string | null; estado_ativo: string | null };
+type CouponRow = { establishment_id: string | null; expires_at: string | null };
+type OrderCountRow = { establishment_id: string | null };
+type PlatformSettings = { bestseller_threshold: number | null; ad_default_seconds: number | null };
+type EstablishmentHourRow = { establishment_id: string; abre: string | null; fecha: string | null };
+type ReviewCountRow = { establishment_id: string | null };
 
 const fmt = (c: number) =>
   (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+// Foto real por slug (fallback usa emoji)
 const CAT_IMG: Record<string, string> = {
   pizza: catPizza,
   hamburguer: catHamburguer,
@@ -110,6 +103,7 @@ function ClienteHome() {
   const catsPausedRef = useRef(false);
   const { detected, dismiss } = useCityDetection(activeCidade, activeEstado);
 
+  // Carrega cidade ativa do perfil
   useEffect(() => {
     (async () => {
       const { data: auth } = await supabase.auth.getUser();
@@ -119,27 +113,29 @@ function ClienteHome() {
         .select("cidade_ativa,estado_ativo")
         .eq("id", auth.user.id)
         .maybeSingle();
-      setActiveCidade((data as { cidade_ativa?: string | null } | null)?.cidade_ativa ?? null);
-      setActiveEstado((data as { estado_ativo?: string | null } | null)?.estado_ativo ?? null);
+      const profile = data as ActiveLocation | null;
+      setActiveCidade(profile?.cidade_ativa ?? null);
+      setActiveEstado(profile?.estado_ativo ?? null);
     })();
   }, []);
 
+  // Auto-scroll lento das categorias — pausa ao interagir, ao selecionar,
+  // ao expandir em grade, ao trocar de aba e para reduced-motion.
   useEffect(() => {
     const el = catsScrollRef.current;
     if (!el) return;
-    if (showAllCats) return;
+    if (showAllCats) return; // no modo grade não há scroll horizontal
     if (
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
-    ) {
+    )
       return;
-    }
 
     let raf = 0;
     let last = performance.now();
     let pos = el.scrollLeft;
     let resumeTimer: ReturnType<typeof setTimeout> | null = null;
-    const speed = 84;
+    const SPEED = 84; // px/s — roda as categorias de forma visível e fluida
 
     const pause = (ms = 2500) => {
       catsPausedRef.current = true;
@@ -154,14 +150,14 @@ function ClienteHome() {
       last = now;
       const max = el.scrollWidth - el.clientWidth;
       if (!catsPausedRef.current && !document.hidden && max > 4) {
+        // Sincroniza acumulador quando o usuário rolou manualmente
         if (Math.abs(pos - el.scrollLeft) > 2) pos = el.scrollLeft;
-        pos += speed * dt;
+        pos += SPEED * dt;
         if (pos >= max - 0.5) pos = 0;
         el.scrollLeft = pos;
       }
       raf = requestAnimationFrame(step);
     };
-
     raf = requestAnimationFrame(step);
 
     const onEnter = () => {
@@ -194,6 +190,7 @@ function ClienteHome() {
     };
   }, [cats.length, showAllCats]);
 
+  // Pausa longa quando o usuário seleciona uma categoria (mantém a escolha visível)
   useEffect(() => {
     if (!catSel) return;
     catsPausedRef.current = true;
@@ -223,15 +220,7 @@ function ClienteHome() {
         estabQ.order("avaliacao", { ascending: false, nullsFirst: false }),
         supabase.from("coupons").select("establishment_id,expires_at,ativo").eq("ativo", true),
         supabase.from("orders").select("establishment_id").eq("status", "delivered"),
-        (
-          supabase as typeof supabase & {
-            from: (table: string) => {
-              select: (columns: string) => {
-                maybeSingle: () => Promise<{ data: { bestseller_threshold?: number } | null }>;
-              };
-            };
-          }
-        )
+        supabase
           .from("public_platform_settings")
           .select("bestseller_threshold, ad_default_seconds")
           .maybeSingle(),
@@ -239,21 +228,22 @@ function ClienteHome() {
       setCats((c.data ?? []) as Categoria[]);
       setEstabs((e.data ?? []) as Estab[]);
       const promos = new Set<string>();
-      (cp.data ?? []).forEach(
-        (r: { establishment_id?: string | null; expires_at?: string | null }) => {
-          if (r.establishment_id && (!r.expires_at || r.expires_at > nowIso))
-            promos.add(r.establishment_id);
-        },
-      );
+      (cp.data ?? []).forEach((r: CouponRow) => {
+        if (r.establishment_id && (!r.expires_at || r.expires_at > nowIso))
+          promos.add(r.establishment_id);
+      });
       setPromoIds(promos);
       const counts: Record<string, number> = {};
-      (od.data ?? []).forEach((r: { establishment_id?: string | null }) => {
+      (od.data ?? []).forEach((r: OrderCountRow) => {
         if (r.establishment_id) counts[r.establishment_id] = (counts[r.establishment_id] ?? 0) + 1;
       });
       setSalesCount(counts);
-      if (ps.data?.bestseller_threshold) setThreshold(ps.data.bestseller_threshold);
+      const platformSettings = ps.data as PlatformSettings | null;
+      if (platformSettings?.bestseller_threshold)
+        setThreshold(platformSettings.bestseller_threshold);
 
-      const ids = (e.data ?? []).map((x) => x.id);
+      // Horário de hoje para as lojas listadas
+      const ids = ((e.data ?? []) as Estab[]).map((x) => x.id);
       if (ids.length) {
         const today = new Date().getDay();
         const { data: hrs } = await supabase
@@ -263,7 +253,7 @@ function ClienteHome() {
           .eq("dia_semana", today)
           .eq("ativo", true);
         const map: Record<string, { abre: string; fecha: string }> = {};
-        (hrs ?? []).forEach((h: { establishment_id: string; abre: string; fecha: string }) => {
+        (hrs ?? []).forEach((h: EstablishmentHourRow) => {
           map[h.establishment_id] = {
             abre: String(h.abre).slice(0, 5),
             fecha: String(h.fecha).slice(0, 5),
@@ -276,7 +266,7 @@ function ClienteHome() {
           .select("establishment_id")
           .in("establishment_id", ids);
         const rc: Record<string, number> = {};
-        (revs ?? []).forEach((r: { establishment_id?: string | null }) => {
+        (revs ?? []).forEach((r: ReviewCountRow) => {
           if (r.establishment_id) rc[r.establishment_id] = (rc[r.establishment_id] ?? 0) + 1;
         });
         setReviewCountById(rc);
@@ -304,6 +294,7 @@ function ClienteHome() {
           (reviewCountById[b.id] ?? 0) - (reviewCountById[a.id] ?? 0),
       );
     } else {
+      // Recomendados: score ponderado (nota + volume avaliações + vendas + promo)
       const score = (e: Estab) => {
         const rating = Number(e.avaliacao ?? 0);
         const revs = reviewCountById[e.id] ?? 0;
@@ -314,24 +305,10 @@ function ClienteHome() {
       arr.sort((a, b) => score(b) - score(a));
     }
     return arr;
-  }, [catSel, estabs, promoIds, reviewCountById, salesCount, sortBy]);
+  }, [estabs, catSel, sortBy, reviewCountById, salesCount, promoIds]);
 
-  const freeDeliveryCount = useMemo(
-    () => estabs.filter((estab) => estab.taxa_entrega_cents === 0).length,
-    [estabs],
-  );
-  const topRatedCount = useMemo(
-    () => estabs.filter((estab) => Number(estab.avaliacao ?? 0) >= 4.7).length,
-    [estabs],
-  );
-  const averageEta = useMemo(() => {
-    const times = estabs
-      .map((estab) => estab.tempo_medio_min)
-      .filter((tempo): tempo is number => typeof tempo === "number");
-    if (!times.length) return null;
-    return Math.round(times.reduce((sum, tempo) => sum + tempo, 0) / times.length);
-  }, [estabs]);
-  const selectedCategory = catSel ? (cats.find((c) => c.id === catSel)?.nome ?? "Categoria") : null;
+  const compactCount = cats.length;
+  const visibleCats = cats;
 
   return (
     <div className="space-y-6">
@@ -352,126 +329,7 @@ function ClienteHome() {
           onDismiss={dismiss}
         />
       )}
-
-      <section className="card-premium relative overflow-hidden border-none bg-gradient-to-br from-primary/10 via-white to-primary/5 p-5 dark:from-primary/15 dark:via-card dark:to-primary/10 sm:p-6">
-        <div className="absolute -left-16 top-0 h-36 w-36 rounded-full bg-primary/15 blur-3xl" />
-        <div className="absolute -right-8 bottom-0 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
-        <div className="relative grid gap-6 xl:grid-cols-[1.1fr_0.9fr] xl:items-center">
-          <div className="space-y-5">
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/20 bg-white/80 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-primary shadow-sm dark:bg-card/80">
-              <Sparkles className="h-3.5 w-3.5" />
-              Curadoria premium
-            </div>
-
-            <div className="space-y-3">
-              <p className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-                <MapPin className="h-4 w-4 text-primary" />
-                {activeCidade
-                  ? `${activeCidade}${activeEstado ? `, ${activeEstado}` : ""}`
-                  : "Sua regiao"}
-              </p>
-              <h1 className="max-w-2xl text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-                {activeCidade
-                  ? `O melhor delivery de ${activeCidade} com cara de app premium.`
-                  : "Descubra restaurantes, promocoes e pedidos mais rapidos em um so lugar."}
-              </h1>
-              <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
-                Selecionamos lojas bem avaliadas, com entrega rapida e mais clareza nas informacoes
-                para voce pedir com mais seguranca, sem perder tempo.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => navigate({ to: "/cliente/buscar" })}
-                className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-brand transition-transform hover:-translate-y-0.5"
-              >
-                <Search className="h-4 w-4" />
-                Buscar agora
-              </button>
-              <Link
-                to="/cliente/pedidos"
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-white/80 px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:text-primary dark:bg-card/80"
-              >
-                Ver pedidos
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                to="/cliente/favoritos"
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-white/80 px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:text-primary dark:bg-card/80"
-              >
-                <Heart className="h-4 w-4" />
-                Favoritos
-              </Link>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <ClienteHeroMetric
-                label="Lojas abertas"
-                value={loading ? "..." : String(estabs.length)}
-                hint="Operando agora"
-              />
-              <ClienteHeroMetric
-                label="Frete gratis"
-                value={loading ? "..." : String(freeDeliveryCount)}
-                hint="Opcoes ativas"
-              />
-              <ClienteHeroMetric
-                label="Tempo medio"
-                value={loading ? "..." : averageEta ? `${averageEta} min` : "--"}
-                hint="Entrega estimada"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-2 text-xs font-semibold text-muted-foreground">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1.5 shadow-sm dark:bg-card/80">
-                <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                Informacoes mais claras do pedido
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1.5 shadow-sm dark:bg-card/80">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-                Vitrine com foco nas melhores lojas
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1.5 shadow-sm dark:bg-card/80">
-                <Star className="h-3.5 w-3.5 text-primary" />
-                {loading ? "Avaliacoes em destaque" : `${topRatedCount} lojas top avaliadas`}
-              </span>
-            </div>
-          </div>
-
-          <div className="relative hidden min-h-[320px] xl:block">
-            <div className="absolute inset-y-6 left-12 right-0 rounded-[2rem] bg-primary/10 blur-3xl" />
-            <img
-              src={promoCliente}
-              alt="Experiencia premium para clientes"
-              className="relative ml-auto h-full max-h-[360px] w-full max-w-[480px] rounded-[2rem] object-cover shadow-brand"
-            />
-            <div className="absolute left-0 top-8 w-52 rounded-[1.5rem] border border-white/70 bg-white/90 p-4 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
-                Recomendados
-              </p>
-              <p className="mt-2 text-2xl font-black text-foreground">
-                {loading ? "..." : `${filtered.length}+`}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {selectedCategory
-                  ? `${selectedCategory} com destaque na sua regiao`
-                  : "Lojas ordenadas por avaliacao, vendas e promocoes"}
-              </p>
-            </div>
-            <div className="absolute -bottom-2 right-4 w-56 rounded-[1.5rem] border border-primary/15 bg-card/95 p-4 shadow-card">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
-                Pedido com mais confianca
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Taxa, nota, horario e tempo de entrega aparecem de forma mais facil para decidir
-                rapido.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      {/* Banner único: anúncios patrocinados (rotativo) com fallback de frete grátis */}
       <AdRotator
         fallback={
           <button
@@ -480,7 +338,7 @@ function ClienteHome() {
           >
             <img
               src={bannerFreteGratis.url}
-              alt="Frete gratis nas suas primeiras 3 entregas"
+              alt="Frete grátis nas suas primeiras 3 entregas"
               width={1200}
               height={600}
               loading="lazy"
@@ -489,7 +347,7 @@ function ClienteHome() {
             <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
             <div className="absolute inset-0 flex flex-col justify-center p-5">
               <p className="text-2xl font-black leading-tight text-white drop-shadow-lg sm:text-3xl">
-                Frete gratis
+                Frete grátis
               </p>
               <p className="mt-1 text-sm font-medium text-white/90 drop-shadow-md">
                 nas suas primeiras
@@ -502,16 +360,10 @@ function ClienteHome() {
         }
       />
 
-      <section className="card-premium space-y-4 p-4 sm:p-5">
+      {/* Categorias — rail horizontal compacto, expande em grade ao ver todas */}
+      <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-black tracking-tight text-foreground">
-              Categorias premium
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Navegue pelos atalhos mais procurados e filtre rapido o que faz sentido para agora.
-            </p>
-          </div>
+          <h2 className="text-base font-black text-foreground">Categorias</h2>
           {!showAllCats && (
             <button
               onClick={() => setShowAllCats(true)}
@@ -529,7 +381,7 @@ function ClienteHome() {
               : "flex gap-3 overflow-x-auto scrollbar-hide pb-2"
           }
         >
-          {cats.map((c) => {
+          {visibleCats.map((c) => {
             const img = CAT_IMG[c.slug];
             const active = catSel === c.id;
             return (
@@ -541,7 +393,9 @@ function ClienteHome() {
                 <div
                   className={`aspect-square overflow-hidden rounded-2xl bg-muted shadow-sm transition-all ${
                     showAllCats ? "w-full" : "h-16 w-16 sm:h-[72px] sm:w-[72px]"
-                  } ${active ? "ring-2 ring-primary ring-offset-2 scale-[1.03]" : "hover:scale-[1.03]"}`}
+                  } ${
+                    active ? "ring-2 ring-primary ring-offset-2 scale-[1.03]" : "hover:scale-[1.03]"
+                  }`}
                 >
                   {img ? (
                     <img
@@ -554,7 +408,7 @@ function ClienteHome() {
                     />
                   ) : (
                     <div className="grid h-full w-full place-items-center bg-gradient-to-br from-primary/15 to-primary/5 text-2xl">
-                      :)
+                      🍽️
                     </div>
                   )}
                 </div>
@@ -568,6 +422,19 @@ function ClienteHome() {
               </button>
             );
           })}
+          {!showAllCats && cats.length > compactCount && (
+            <button
+              onClick={() => setShowAllCats(true)}
+              className="flex shrink-0 flex-col items-center gap-1.5"
+            >
+              <div className="grid h-16 w-16 place-items-center rounded-2xl bg-muted text-lg font-bold text-primary shadow-sm transition-all hover:scale-[1.03] sm:h-[72px] sm:w-[72px]">
+                +{cats.length - compactCount}
+              </div>
+              <span className="text-center text-[11px] font-semibold leading-tight text-primary sm:text-xs">
+                Ver todas
+              </span>
+            </button>
+          )}
         </div>
         {showAllCats && (
           <button
@@ -579,17 +446,12 @@ function ClienteHome() {
         )}
       </section>
 
-      <section className="card-premium space-y-4 p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-black tracking-tight text-foreground">
-              {selectedCategory ? selectedCategory : "Restaurantes proximos"}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Uma lista mais inteligente para o cliente: destaque por nota, volume de vendas e
-              promocoes ativas.
-            </p>
-          </div>
+      {/* Restaurantes próximos */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-black text-foreground">
+            {catSel ? cats.find((c) => c.id === catSel)?.nome : "Restaurantes próximos"}
+          </h2>
           {catSel ? (
             <button
               onClick={() => setCatSel(null)}
@@ -602,12 +464,11 @@ function ClienteHome() {
               to="/cliente/buscar"
               className="tap-target px-1 py-1 text-xs font-bold text-primary"
             >
-              Explorar tudo
+              Ver todos
             </Link>
           )}
         </div>
-
-        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3">
+        <div className="grid w-full grid-cols-3 gap-2">
           {(
             [
               ["recomendados", "Recomendados"],
@@ -618,7 +479,7 @@ function ClienteHome() {
             <button
               key={k}
               onClick={() => setSortBy(k)}
-              className={`rounded-full border px-2 py-2 text-xs font-semibold transition-colors ${
+              className={`rounded-full border px-2 py-1.5 text-[11px] font-semibold transition-colors sm:text-xs ${
                 sortBy === k
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -656,18 +517,6 @@ function ClienteHome() {
   );
 }
 
-function ClienteHeroMetric({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return (
-    <div className="rounded-[1.5rem] border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-border dark:bg-card/80">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-black tracking-tight text-foreground">{value}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{hint}</p>
-    </div>
-  );
-}
-
 function EstabRow({
   estab,
   hasPromo,
@@ -685,98 +534,96 @@ function EstabRow({
     <Link
       to="/cliente/estabelecimento/$id"
       params={{ id: estab.id }}
-      className="card-premium group relative flex items-center gap-3 rounded-[1.5rem] border-none bg-gradient-to-br from-card to-muted/20 p-3"
+      className="group relative flex items-center gap-3 rounded-2xl border border-border bg-card p-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-brand"
     >
+      {/* Badge de status: minúsculo no canto superior direito */}
       {estab.is_open ? (
-        <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-600 ring-1 ring-emerald-500/30">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-          Aberto agora
+        <span className="absolute right-1.5 top-1.5 z-10 inline-flex items-center gap-0.5 rounded-full bg-emerald-500/15 px-1 py-[1px] text-[7px] font-bold uppercase tracking-wide text-emerald-600 ring-1 ring-emerald-500/40">
+          <span className="h-[3px] w-[3px] animate-pulse rounded-full bg-emerald-500" />
+          Aberto
         </span>
       ) : (
-        <span className="absolute right-3 top-3 z-10 inline-flex items-center rounded-full bg-muted px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground ring-1 ring-border">
+        <span className="absolute right-1.5 top-1.5 z-10 inline-flex items-center rounded-full bg-muted px-1 py-[1px] text-[7px] font-bold uppercase tracking-wide text-muted-foreground ring-1 ring-border">
           Fechado
         </span>
       )}
 
-      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-[1.25rem] bg-muted ring-1 ring-border/60">
+      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted ring-1 ring-border/60">
         {estab.logo_url || estab.capa_url ? (
           <img
             src={estab.logo_url ?? estab.capa_url ?? ""}
             alt={estab.nome}
-            width={192}
-            height={192}
+            width={160}
+            height={160}
             loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover"
           />
         ) : (
-          <div className="grid h-full w-full place-items-center bg-gradient-brand text-2xl font-black text-primary-foreground">
+          <div className="grid h-full w-full place-items-center bg-gradient-to-br from-primary to-primary/70 text-xl font-black text-primary-foreground">
             {estab.nome.charAt(0).toUpperCase()}
           </div>
         )}
+        {!estab.is_open && (
+          <span className="absolute inset-0 grid place-items-center bg-black/55 text-[10px] font-bold uppercase text-white">
+            Fechado
+          </span>
+        )}
       </div>
-
       <div className="min-w-0 flex-1">
-        <div className="pr-16">
-          <h3 className="truncate text-base font-black tracking-tight text-foreground">
-            {estab.nome}
-          </h3>
-          {estab.descricao ? (
-            <p className="mt-1 text-xs text-muted-foreground">{estab.descricao}</p>
-          ) : (
-            <p className="mt-1 text-xs text-muted-foreground">
-              Entrega com informacoes claras e experiencia premium.
-            </p>
-          )}
-        </div>
-
+        <h3 className="truncate pr-12 text-base font-extrabold tracking-tight text-foreground">
+          {estab.nome}
+        </h3>
         {(isBestseller || hasPromo) && (
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <div className="mt-1 flex flex-wrap items-center gap-1">
             {isBestseller && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-orange-600 ring-1 ring-orange-500/30">
-                <Flame className="h-3 w-3" />
-                Mais vendido
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-600 ring-1 ring-orange-500/30">
+                <Flame className="h-3 w-3" /> Mais vendido
               </span>
             )}
             {hasPromo && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-primary ring-1 ring-primary/30">
-                <Tag className="h-3 w-3" />
-                Promocao
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary ring-1 ring-primary/30">
+                <Tag className="h-3 w-3" /> Promoção
               </span>
             )}
           </div>
         )}
-
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-[12px] text-muted-foreground">
+        <div className="mt-1 flex items-center gap-2 text-[12px] text-muted-foreground">
           {estab.avaliacao != null && (
-            <span className="flex items-center gap-1 font-semibold text-foreground">
+            <span className="flex items-center gap-0.5 font-semibold text-foreground">
               <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
               {Number(estab.avaliacao).toFixed(1)}
-              <span className="font-normal text-muted-foreground">({reviewCount})</span>
+              <span className="ml-0.5 font-normal text-muted-foreground">({reviewCount})</span>
             </span>
           )}
           {estab.tempo_medio_min ? (
-            <span className="inline-flex items-center gap-1 font-semibold text-foreground">
-              <Clock className="h-3.5 w-3.5 text-primary" />
-              {estab.tempo_medio_min}-{estab.tempo_medio_min + 10} min
-            </span>
+            <>
+              <span aria-hidden>·</span>
+              <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                <Clock className="h-3.5 w-3.5 text-primary" />
+                {estab.tempo_medio_min}–{estab.tempo_medio_min + 10} min
+              </span>
+            </>
           ) : null}
         </div>
-
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-          <span className="rounded-full bg-muted px-2 py-1 font-semibold text-foreground">
-            {estab.taxa_entrega_cents === 0
-              ? "Entrega gratis"
-              : `Entrega ${fmt(estab.taxa_entrega_cents)}`}
-          </span>
+        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+          Entrega{" "}
+          {estab.taxa_entrega_cents === 0 ? (
+            <span className="font-bold text-emerald-600">grátis</span>
+          ) : (
+            fmt(estab.taxa_entrega_cents)
+          )}
           {hoje ? (
-            <span className="rounded-full bg-muted px-2 py-1 font-semibold text-foreground">
-              Hoje {hoje.abre}-{hoje.fecha}
-            </span>
+            <>
+              {" · "}
+              <span className="font-semibold text-foreground">
+                Hoje {hoje.abre}–{hoje.fecha}
+              </span>
+            </>
           ) : null}
-        </div>
+        </p>
       </div>
 
-      <ChevronRight className="h-5 w-5 shrink-0 text-primary transition-transform group-hover:translate-x-0.5" />
+      <ChevronRight className="h-5 w-5 shrink-0 text-primary" />
     </Link>
   );
 }

@@ -10,6 +10,7 @@ const codigoEntregaSchema = z
 import {
   Bike,
   MapPin,
+  Package,
   CheckCircle2,
   Phone,
   MessageSquare,
@@ -20,11 +21,6 @@ import {
   Camera,
   Banknote,
   AlertTriangle,
-  Route as RouteIcon,
-  Sparkles,
-  Store,
-  UserRound,
-  Wallet,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { validateImageFile } from "@/lib/upload-validation";
@@ -78,12 +74,7 @@ type Estab = {
   cidade: string | null;
   telefone?: string | null;
 };
-type EstabLocation = {
-  id: string;
-  nome: string;
-  lat: number | null;
-  lng: number | null;
-};
+type EstabLocation = { id: string; nome: string; lat: number | null; lng: number | null };
 type ClienteInfo = { nome: string | null; telefone: string | null };
 
 const STAGES = [
@@ -282,22 +273,11 @@ function Corridas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courier?.user_id, courier?.aprovacao, courier?.kyc_status]);
 
-  const activeDeliveryId = ativa?.id ?? null;
-  const activeOrderId = ativa?.order_id ?? null;
-  const activeStatus = ativa?.status ?? null;
-  const courierUserId = courier?.user_id ?? null;
-
   useEffect(() => {
     const shouldTrack =
-      activeStatus != null &&
-      ["to_store", "at_store", "picked_up", "to_customer", "at_customer"].includes(activeStatus);
-    if (
-      !shouldTrack ||
-      !activeDeliveryId ||
-      !activeOrderId ||
-      !courierUserId ||
-      !("geolocation" in navigator)
-    ) {
+      ativa &&
+      ["to_store", "at_store", "picked_up", "to_customer", "at_customer"].includes(ativa.status);
+    if (!shouldTrack || !courier || !("geolocation" in navigator)) {
       if (watchIdRef.current != null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
@@ -312,10 +292,10 @@ function Corridas() {
         lastSent = now;
         const { latitude: lat, longitude: lng, accuracy, heading, speed } = pos.coords;
         await Promise.all([
-          supabase.from("deliveries").update({ lat, lng }).eq("id", activeDeliveryId),
+          supabase.from("deliveries").update({ lat, lng }).eq("id", ativa!.id),
           supabase.from("tracking_points").insert({
-            courier_id: courierUserId,
-            order_id: activeOrderId,
+            courier_id: courier.user_id,
+            order_id: ativa!.order_id,
             lat,
             lng,
             accuracy: accuracy ?? null,
@@ -325,7 +305,7 @@ function Corridas() {
           supabase
             .from("courier_profiles")
             .update({ lat, lng, last_seen: new Date().toISOString() })
-            .eq("user_id", courierUserId),
+            .eq("user_id", courier.user_id),
         ]);
       },
       (err) => console.warn("GPS error", err),
@@ -337,12 +317,12 @@ function Corridas() {
         watchIdRef.current = null;
       }
     };
-  }, [activeDeliveryId, activeOrderId, activeStatus, courierUserId]);
+  }, [ativa?.id, ativa?.status, courier?.user_id]);
 
   async function aceitar(d: Delivery) {
     if (!courier) return;
     if (!canReceiveRides) {
-      return toast.error("Seu cadastro ainda nao foi aprovado para receber corridas.");
+      return toast.error("Seu cadastro ainda não foi aprovado para receber corridas.");
     }
     if (ativa) return toast.error("Finalize sua corrida atual antes");
     const { data, error } = await supabase
@@ -506,216 +486,30 @@ function Corridas() {
     order && order.forma_pagamento === "dinheiro" && order.troco_para_cents
       ? Math.max(0, order.troco_para_cents - order.total_cents)
       : 0;
-  const cityLabel = courier?.cidade_atuacao || courier?.cidades_atuacao?.[0] || "Sua região";
-  const stageProgress =
-    currentStageIdx >= 0 ? Math.round(((currentStageIdx + 1) / STAGES.length) * 100) : 0;
-  const availablePayout = disponiveis.reduce(
-    (sum, ride) => sum + (ride.valor_entrega_cents ?? 0),
-    0,
-  );
-  const directCalls = disponiveis.filter((ride) => ride.entregador_id === courier?.user_id).length;
 
   return (
     <div className="space-y-6">
-      <section className="card-premium relative overflow-hidden border-none bg-gradient-to-br from-primary/12 via-white to-primary/5 p-5 dark:from-primary/15 dark:via-card dark:to-primary/10 sm:p-6">
-        <div className="absolute -left-10 top-0 h-36 w-36 rounded-full bg-primary/15 blur-3xl" />
-        <div className="absolute -right-10 bottom-0 h-44 w-44 rounded-full bg-primary/10 blur-3xl" />
-
-        <div className="relative grid gap-6 xl:grid-cols-[1.14fr_0.86fr] xl:items-start">
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className="bg-primary text-primary-foreground">
-                Central premium do entregador
-              </Badge>
-              <Badge
-                variant="outline"
-                className={
-                  ativa
-                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                    : "border-primary/30 bg-primary/10 text-primary"
-                }
-              >
-                {ativa ? "Corrida em andamento" : "Monitorando chamados"}
-              </Badge>
-              <Badge variant="outline" className="border-border bg-background/70 text-foreground">
-                {getCourierApprovalLabel(courier)}
-              </Badge>
-              <span className="text-xs font-semibold text-muted-foreground">{cityLabel}</span>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-muted-foreground">
-                Operacao ao vivo para quem precisa decidir rapido
-              </p>
-              <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-                {ativa
-                  ? "Sua entrega esta sob controle."
-                  : "Chamados prontos para sua proxima corrida."}
-              </h1>
-              <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
-                {ativa
-                  ? "Acompanhe a etapa atual, contatos, pagamento e seguranca em uma visao mais limpa enquanto a corrida avanca."
-                  : "Veja oportunidades abertas, valor potencial e rotas prioritarias em uma interface feita para aceitar rapido sem perder clareza."}
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-[1.4rem] border border-white/70 bg-white/85 p-4 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
-                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  <RouteIcon className="h-3.5 w-3.5" />
-                  Status
-                </p>
-                <p className="mt-2 text-lg font-black text-foreground">
-                  {ativa
-                    ? (currentStage?.label ?? "Em andamento")
-                    : `${disponiveis.length} abertas`}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {ativa
-                    ? `${stageProgress}% da jornada concluida`
-                    : "Fila monitorada em tempo real"}
-                </p>
-              </div>
-              <div className="rounded-[1.4rem] border border-white/70 bg-white/85 p-4 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
-                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  <Wallet className="h-3.5 w-3.5" />
-                  Potencial
-                </p>
-                <p className="mt-2 text-lg font-black text-foreground">
-                  {ativa ? fmt(ativa.valor_entrega_cents) : fmt(availablePayout)}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {ativa ? "Valor da corrida em andamento" : "Soma das corridas visiveis agora"}
-                </p>
-              </div>
-              <div className="rounded-[1.4rem] border border-white/70 bg-white/85 p-4 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
-                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  Seguranca
-                </p>
-                <p className="mt-2 text-lg font-black text-foreground">
-                  {ativa ? "SOS pronto" : "Codigo em 4 digitos"}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {ativa
-                    ? "Acione suporte imediato se necessario"
-                    : "Confirmacao forte para a entrega final"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-[1.75rem] border border-white/70 bg-white/90 p-5 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
-            {ativa ? (
-              <div className="space-y-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.26em] text-muted-foreground">
-                      Corrida ativa
-                    </p>
-                    <p className="mt-2 text-2xl font-black text-foreground">
-                      {stageProgress}% concluida
-                    </p>
-                  </div>
-                  <div className="shrink-0">
-                    <SOSButton orderId={ativa.order_id} deliveryId={ativa.id} />
-                  </div>
-                </div>
-                <div className="h-2 rounded-full bg-muted/80">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-orange-400 transition-all"
-                    style={{ width: `${stageProgress}%` }}
-                  />
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      Etapa agora
-                    </p>
-                    <p className="mt-1 font-bold text-foreground">
-                      {currentStage?.label ?? "Em andamento"}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-border/70 bg-background/70 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      Pedido
-                    </p>
-                    <p className="mt-1 font-bold text-foreground">
-                      {order ? fmt(order.total_cents) : "--"}
-                    </p>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-border/70 bg-background/70 p-3">
-                  <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Proximo passo
-                  </p>
-                  <p className="mt-1 font-semibold text-foreground">
-                    {currentStage?.cta ?? "Aguardando atualizacao"}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.26em] text-muted-foreground">
-                    Janela de oportunidades
-                  </p>
-                  <p className="mt-2 text-2xl font-black text-foreground">
-                    {disponiveis.length} corridas em observacao
-                  </p>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      Chamados diretos
-                    </p>
-                    <p className="mt-1 font-bold text-foreground">{directCalls}</p>
-                  </div>
-                  <div className="rounded-2xl border border-border/70 bg-background/70 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      Potencial agora
-                    </p>
-                    <p className="mt-1 font-bold text-foreground">{fmt(availablePayout)}</p>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-border/70 bg-background/70 p-3">
-                  <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Modo premium
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-foreground">
-                    Aceite com foco em valor, distancia e prioridade.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-2">
+          <h1 className="truncate text-2xl font-black">Corridas</h1>
+          <Badge variant="outline" className="border-border bg-background/70 text-foreground">
+            {getCourierApprovalLabel(courier)}
+          </Badge>
         </div>
-      </section>
+        {ativa && (
+          <div className="shrink-0">
+            <SOSButton orderId={ativa.order_id} deliveryId={ativa.id} />
+          </div>
+        )}
+      </div>
 
       {ativa && (
-        <section className="card-premium overflow-hidden border-none bg-gradient-to-br from-card to-muted/20 p-5 shadow-brand sm:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge className="bg-primary text-primary-foreground">Corrida ativa</Badge>
-                <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
-                  #{ativa.order_id.slice(0, 8).toUpperCase()}
-                </Badge>
-              </div>
-              <h2 className="text-2xl font-black tracking-tight text-foreground">
-                Operacao guiada do aceite ate a confirmacao.
-              </h2>
-            </div>
-            <div className="text-right">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                Ganho desta corrida
-              </p>
-              <p className="mt-2 text-2xl font-black text-primary">
-                {fmt(ativa.valor_entrega_cents)}
-              </p>
-            </div>
+        <section className="rounded-2xl border-2 border-primary bg-card p-4 shadow-brand">
+          <div className="flex items-center justify-between gap-3">
+            <Badge className="bg-primary text-primary-foreground shrink-0">Corrida ativa</Badge>
+            <span className="font-bold text-primary shrink-0">
+              {fmt(ativa.valor_entrega_cents)}
+            </span>
           </div>
 
           <div className="mt-4">
@@ -740,7 +534,7 @@ function Corridas() {
             <div className="mt-4 grid gap-3 text-sm md:grid-cols-2">
               <div className="min-w-0 rounded-xl border border-border bg-background p-3">
                 <p className="mb-1 flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
-                  <Store className="h-3.5 w-3.5 shrink-0" /> Loja
+                  <Package className="h-3.5 w-3.5 shrink-0" /> Loja
                 </p>
                 <p className="truncate font-semibold">{estab.nome}</p>
                 <p className="truncate text-xs text-muted-foreground">
@@ -774,7 +568,7 @@ function Corridas() {
               </div>
               <div className="min-w-0 rounded-xl border border-border bg-background p-3">
                 <p className="mb-1 flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
-                  <UserRound className="h-3.5 w-3.5 shrink-0" /> Cliente
+                  <MapPin className="h-3.5 w-3.5 shrink-0" /> Cliente
                 </p>
                 <p className="truncate font-semibold">{cliente?.nome ?? "Cliente"}</p>
                 <p className="truncate text-xs text-muted-foreground">
@@ -1013,10 +807,10 @@ function Corridas() {
       )}
 
       {!ativa && !canReceiveRides && (
-        <section className="rounded-[1.75rem] border border-amber-500/30 bg-amber-500/10 p-5">
+        <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5">
           <p className="text-sm font-bold text-foreground">Corridas bloqueadas por enquanto</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Seu cadastro ainda nao foi aprovado pelo admin. Assim que a validacao for concluida, as
+            Seu cadastro ainda não foi aprovado pelo admin. Assim que a validação for concluída, as
             ofertas aparecem aqui em tempo real.
           </p>
         </section>

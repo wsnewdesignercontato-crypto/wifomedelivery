@@ -1,33 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  CheckCircle2,
-  Eye,
-  Landmark,
   Loader2,
-  ImageIcon,
-  MapPin,
-  Palette,
-  Phone,
-  Save,
-  Sparkles,
-  Store,
-  TimerReset,
-  Truck,
   Upload,
+  Store,
+  Phone,
+  MapPin,
+  Truck,
   Wallet,
+  Palette,
+  Save,
+  ImageIcon,
+  Sparkles,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useMyEstab } from "@/hooks/use-my-estab";
 import type { Estab } from "@/hooks/use-estab";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { PushToggleCard } from "@/components/push-toggle-card";
 
@@ -91,12 +85,6 @@ const EMPTY: FormState = {
   banco_documento: "",
 };
 
-const money = (value: string) =>
-  Number(value || "0").toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-
 function ConfigPage() {
   const { estab, userId } = useMyEstab();
   const qc = useQueryClient();
@@ -136,7 +124,6 @@ function ConfigPage() {
       banco_titular: estab.banco_titular ?? "",
       banco_documento: estab.banco_documento ?? "",
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estab?.id]);
 
   // Sync UF/cidade/endereço vindos do banco sem sobrescrever edições em andamento
@@ -148,7 +135,6 @@ function ConfigPage() {
       cidade: prev.cidade || (estab.cidade ?? ""),
       endereco: prev.endereco || (estab.endereco ?? ""),
     }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estab?.estado, estab?.cidade, estab?.endereco]);
 
   async function uploadImage(file: File, kind: "logo" | "capa") {
@@ -228,67 +214,6 @@ function ConfigPage() {
     toast.success("Configurações salvas ✨");
   }
 
-  const setupItems = useMemo(
-    () => [
-      {
-        label: "Identidade visual",
-        ready: Boolean(form.nome.trim() && form.logo_url && form.capa_url),
-      },
-      {
-        label: "Descricao comercial",
-        ready: Boolean(form.descricao.trim() && form.slogan.trim()),
-      },
-      {
-        label: "Contato e endereco",
-        ready: Boolean(
-          form.telefone.trim() &&
-          form.whatsapp.trim() &&
-          form.endereco.trim() &&
-          form.cidade.trim() &&
-          form.estado.trim(),
-        ),
-      },
-      {
-        label: "Regras operacionais",
-        ready: Boolean(form.taxa.trim() && form.minimo.trim() && Number(form.tempo) > 0),
-      },
-      {
-        label: "Recebimento",
-        ready: Boolean(
-          form.pix_key.trim() ||
-          (form.banco_nome.trim() &&
-            form.banco_conta.trim() &&
-            form.banco_titular.trim() &&
-            form.banco_documento.trim()),
-        ),
-      },
-    ],
-    [
-      form.capa_url,
-      form.cidade,
-      form.descricao,
-      form.endereco,
-      form.estado,
-      form.logo_url,
-      form.minimo,
-      form.nome,
-      form.pix_key,
-      form.slogan,
-      form.taxa,
-      form.telefone,
-      form.tempo,
-      form.whatsapp,
-      form.banco_conta,
-      form.banco_documento,
-      form.banco_nome,
-      form.banco_titular,
-    ],
-  );
-
-  const setupPct = Math.round(
-    (setupItems.filter((item) => item.ready).length / setupItems.length) * 100,
-  );
-
   if (!estab) return null;
 
   const initials = (form.nome || "LOJA")
@@ -299,202 +224,9 @@ function ConfigPage() {
     .toUpperCase();
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 pb-32">
-      <section className="card-premium relative overflow-hidden border-none bg-gradient-to-br from-primary/12 via-white to-primary/5 p-5 dark:from-primary/15 dark:via-card dark:to-primary/10 sm:p-6">
-        <div className="absolute -left-10 top-0 h-36 w-36 rounded-full bg-primary/15 blur-3xl" />
-        <div className="absolute -right-10 bottom-0 h-44 w-44 rounded-full bg-primary/10 blur-3xl" />
-
-        <div className="relative grid gap-6 xl:grid-cols-[1.1fr_0.9fr] xl:items-start">
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className="bg-primary text-primary-foreground">Controle premium</Badge>
-              <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
-                Cliente, entregador e financeiro
-              </Badge>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-muted-foreground">
-                Edite a identidade da loja e as informacoes operacionais em um unico painel.
-              </p>
-              <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-                A base que organiza a experiencia dos 3 aplicativos.
-              </h1>
-              <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
-                O cliente enxerga marca, frete e prazo. O motorista depende de endereco e contato. O
-                financeiro usa PIX e conta para repasse.
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <HeroStat label="Perfil completo" value={`${setupPct}%`} hint="Checklist da loja" />
-              <HeroStat label="Frete base" value={money(form.taxa)} hint="Visivel ao cliente" />
-              <HeroStat label="Pedido minimo" value={money(form.minimo)} hint="Regra comercial" />
-              <HeroStat
-                label="Tempo medio"
-                value={`${form.tempo || "30"} min`}
-                hint="Promessa operacional"
-              />
-            </div>
-          </div>
-
-          <div className="rounded-[1.75rem] border border-white/70 bg-white/90 p-5 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.26em] text-muted-foreground">
-                  Prontidao da operacao
-                </p>
-                <p className="mt-2 text-3xl font-black tracking-tight text-foreground">
-                  {setupPct}%
-                </p>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Sparkles className="h-5 w-5" />
-              </div>
-            </div>
-
-            <p className="mt-3 text-sm text-muted-foreground">
-              Complete os pontos abaixo para deixar marca, entregas e repasses redondos.
-            </p>
-
-            <div className="mt-4">
-              <Progress value={setupPct} className="h-2.5" />
-            </div>
-
-            <div className="mt-4 space-y-3">
-              {setupItems.map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center justify-between rounded-2xl border border-border/70 bg-background/80 px-3 py-2.5"
-                >
-                  <span className="text-sm font-semibold text-foreground">{item.label}</span>
-                  <Badge
-                    variant="secondary"
-                    className={
-                      item.ready
-                        ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                        : "bg-muted text-muted-foreground"
-                    }
-                  >
-                    {item.ready ? "Pronto" : "Ajustar"}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-3">
-              <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-                <CheckCircle2 className="h-3.5 w-3.5" />O que mais pesa
-              </p>
-              <p className="mt-1 text-sm text-foreground">
-                Logo, capa, descricao, prazo, frete e PIX sao os campos que mais influenciam a
-                percepcao premium da loja.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <section className="card-premium overflow-hidden rounded-[1.75rem] border-none bg-gradient-to-br from-card to-muted/20">
-          <div
-            className="relative h-40"
-            style={{
-              background: form.capa_url
-                ? `url(${form.capa_url}) center/cover`
-                : `linear-gradient(135deg, ${form.cor_destaque}, ${form.cor_destaque}99)`,
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-            <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-black/45 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
-              <Eye className="h-3.5 w-3.5" />
-              Como o cliente enxerga
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[1.5rem] border border-border/70 bg-background text-xl font-black text-primary">
-              {form.logo_url ? (
-                <img
-                  src={form.logo_url}
-                  alt="Logo"
-                  className="h-full w-full object-contain p-1.5"
-                />
-              ) : (
-                initials
-              )}
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <h2 className="truncate text-2xl font-black tracking-tight text-foreground">
-                {form.nome || "Sua loja"}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {form.slogan || "Seu slogan aparece aqui para valorizar a marca."}
-              </p>
-              <p className="mt-3 text-sm text-muted-foreground">
-                {form.descricao ||
-                  "Uma boa descricao ajuda o cliente a confiar mais e comprar mais rapido."}
-              </p>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                <AudienceChip icon={Truck} label={`Frete ${money(form.taxa)}`} />
-                <AudienceChip icon={TimerReset} label={`${form.tempo || "30"} min`} />
-                <AudienceChip icon={Store} label={`Minimo ${money(form.minimo)}`} />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="space-y-4">
-          <PushToggleCard />
-
-          <section className="card-premium rounded-[1.75rem] border-none bg-gradient-to-br from-card to-muted/20 p-5">
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.26em] text-muted-foreground">
-                  Impacto por app
-                </p>
-                <h2 className="mt-2 text-2xl font-black tracking-tight text-foreground">
-                  O que cada lado precisa ver
-                </h2>
-              </div>
-
-              <AudienceInsight
-                icon={Eye}
-                title="Cliente"
-                desc="Descricao, capa, prazo e ticket minimo elevam conversao e confianca."
-                ready={Boolean(form.descricao.trim() && form.capa_url && form.tempo.trim())}
-              />
-              <AudienceInsight
-                icon={MapPin}
-                title="Entregador"
-                desc="Endereco, cidade, WhatsApp e tempo medio deixam a operacao mais clara."
-                ready={Boolean(
-                  form.endereco.trim() &&
-                  form.cidade.trim() &&
-                  form.whatsapp.trim() &&
-                  Number(form.tempo) > 0,
-                )}
-              />
-              <AudienceInsight
-                icon={Landmark}
-                title="Financeiro"
-                desc="PIX e dados bancarios reduzem atrito nos repasses da loja."
-                ready={Boolean(
-                  form.pix_key.trim() ||
-                  (form.banco_nome.trim() &&
-                    form.banco_conta.trim() &&
-                    form.banco_titular.trim() &&
-                    form.banco_documento.trim()),
-                )}
-              />
-            </div>
-          </section>
-        </div>
-      </div>
-
-      {/* Header premium com preview de capa e logo */}
+    <div className="mx-auto max-w-3xl space-y-6 pb-32">
+      <PushToggleCard />
+      {/* Header com preview de capa e logo */}
       <section className="relative rounded-3xl border border-border bg-card shadow-sm">
         <div
           className="relative h-40 w-full overflow-hidden rounded-t-3xl"
@@ -777,65 +509,6 @@ function Section({
       </header>
       <div className="grid gap-3 md:grid-cols-2">{children}</div>
     </section>
-  );
-}
-
-function HeroStat({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return (
-    <div className="rounded-[1.5rem] border border-white/70 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-border dark:bg-card/80">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-black tracking-tight text-foreground">{value}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{hint}</p>
-    </div>
-  );
-}
-
-function AudienceChip({ icon: Icon, label }: { icon: typeof Truck; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-2 rounded-full bg-background px-3 py-1.5 text-xs font-semibold text-muted-foreground">
-      <Icon className="h-3.5 w-3.5 text-primary" />
-      {label}
-    </span>
-  );
-}
-
-function AudienceInsight({
-  icon: Icon,
-  title,
-  desc,
-  ready,
-}: {
-  icon: typeof Eye;
-  title: string;
-  desc: string;
-  ready: boolean;
-}) {
-  return (
-    <div className="rounded-2xl border border-border/70 bg-background/80 p-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Icon className="h-4 w-4" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-foreground">{title}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{desc}</p>
-          </div>
-        </div>
-        <Badge
-          variant="secondary"
-          className={
-            ready
-              ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-              : "bg-muted text-muted-foreground"
-          }
-        >
-          {ready ? "OK" : "Pendente"}
-        </Badge>
-      </div>
-    </div>
   );
 }
 

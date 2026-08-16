@@ -388,7 +388,7 @@ function EstabelecimentoPage() {
 
   return (
     <div className="space-y-4">
-      {/* COVER (capa) — vitrine premium */}
+      {/* COVER (capa) */}
       <div className="relative -mx-4 h-48 overflow-hidden bg-gradient-to-br from-primary/25 to-primary/5 sm:mx-0 sm:h-56 sm:rounded-2xl">
         {estab.capa_url ? (
           <img src={estab.capa_url} alt={estab.nome} className="h-full w-full object-cover" />

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyEstab, fmt } from "@/hooks/use-my-estab";
@@ -20,17 +20,12 @@ import { OrderHistory } from "@/components/order-history";
 import { dispatchOrderDelivery } from "@/lib/delivery-dispatch";
 import {
   Bike,
-  Clock3,
-  DollarSign,
-  MapPin,
-  Phone,
-  Printer,
   ReceiptText,
-  Settings as SettingsIcon,
-  Sparkles,
-  Store,
-  TrendingUp,
+  Printer,
+  Phone,
   User,
+  MapPin,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { printOrderReceipt, buildReceiptHtml } from "@/lib/print-receipt";
 
@@ -200,7 +195,7 @@ function PedidosPage() {
         orderId: order.id,
         feeCents: estab.taxa_entrega_cents,
       });
-      if (result === "exists") return toast.info("Ja existe uma corrida ativa para este pedido");
+      if (result === "exists") return toast.info("Já existe uma corrida ativa para este pedido");
       toast.success("Corrida enviada aos entregadores");
     } catch (dispatchError) {
       const message =
@@ -210,7 +205,7 @@ function PedidosPage() {
   }
 
   async function confirmarRetirada(order: Order) {
-    const codigo = (prompt("Codigo de retirada de 4 digitos:") ?? "").trim();
+    const codigo = (prompt("Código de retirada de 4 dígitos:") ?? "").trim();
     if (!codigo) return;
 
     const { error } = await supabase.rpc("confirm_pickup_order", {
@@ -219,7 +214,7 @@ function PedidosPage() {
     });
 
     if (error) {
-      toast.error("Nao foi possivel confirmar a retirada", {
+      toast.error("Não foi possível confirmar a retirada", {
         description: error.message,
       });
       return;
@@ -304,168 +299,35 @@ function PedidosPage() {
     { key: "cancelled", label: "Cancelados" },
   ];
   const lista = filter === "todos" ? orders : orders.filter((o) => o.status === filter);
-  const summary = useMemo(() => {
-    const ativos = orders.filter((o) => !TERMINAL.has(o.status)).length;
-    const novos = orders.filter((o) => o.status === "placed").length;
-    const prontos = orders.filter(
-      (o) => o.status === "ready" || o.status === "waiting_courier",
-    ).length;
-    const cancelados = orders.filter(
-      (o) => o.status === "cancelled" || o.status === "refunded",
-    ).length;
-    const receita = orders
-      .filter((o) => o.status === "delivered")
-      .reduce((sum, o) => sum + (o.total_cents ?? 0), 0);
-    return { ativos, novos, prontos, cancelados, receita };
-  }, [orders]);
-  const filtrosComContagem = FILTROS.map((f) => ({
-    ...f,
-    count: f.key === "todos" ? orders.length : orders.filter((o) => o.status === f.key).length,
-  }));
 
   return (
-    <div className="space-y-5">
-      <section className="card-premium relative overflow-hidden border-none bg-gradient-to-br from-primary/12 via-white to-primary/5 p-5 dark:from-primary/15 dark:via-card dark:to-primary/10 sm:p-6">
-        <div className="absolute -left-10 top-0 h-36 w-36 rounded-full bg-primary/15 blur-3xl" />
-        <div className="absolute -right-10 bottom-0 h-44 w-44 rounded-full bg-primary/10 blur-3xl" />
-
-        <div className="relative grid gap-6 xl:grid-cols-[1.14fr_0.86fr] xl:items-start">
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className="bg-primary text-primary-foreground">
-                Central premium de pedidos
-              </Badge>
-              <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
-                Atualizacao em tempo real
-              </Badge>
-              <span className="text-xs font-semibold text-muted-foreground">
-                {estab?.nome ?? "Sua loja"}
-              </span>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-muted-foreground">
-                Operacao viva para decidir rapido, imprimir melhor e manter a fila sob controle
-              </p>
-              <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-                Pedidos com leitura executiva e acao imediata.
-              </h1>
-              <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
-                Acompanhe o que entrou agora, o que precisa de preparo e o que ja esta pronto para
-                seguir com o entregador.
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-4">
-              <div className="rounded-[1.4rem] border border-white/70 bg-white/85 p-4 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
-                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  <Store className="h-3.5 w-3.5" />
-                  Ativos
-                </p>
-                <p className="mt-2 text-2xl font-black text-foreground">{summary.ativos}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {summary.novos} aguardando resposta
-                </p>
-              </div>
-              <div className="rounded-[1.4rem] border border-white/70 bg-white/85 p-4 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
-                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  <Clock3 className="h-3.5 w-3.5" />
-                  Prontos
-                </p>
-                <p className="mt-2 text-2xl font-black text-foreground">{summary.prontos}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Fila pronta para expedicao</p>
-              </div>
-              <div className="rounded-[1.4rem] border border-white/70 bg-white/85 p-4 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
-                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  <DollarSign className="h-3.5 w-3.5" />
-                  Receita
-                </p>
-                <p className="mt-2 text-2xl font-black text-foreground">{fmt(summary.receita)}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Pedidos entregues nesta lista</p>
-              </div>
-              <div className="rounded-[1.4rem] border border-white/70 bg-white/85 p-4 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
-                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  <TrendingUp className="h-3.5 w-3.5" />
-                  Risco
-                </p>
-                <p className="mt-2 text-2xl font-black text-foreground">{summary.cancelados}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Cancelados ou reembolsados</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-[1.75rem] border border-white/70 bg-white/90 p-5 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.26em] text-muted-foreground">
-                  Painel rapido
-                </p>
-                <p className="mt-2 text-2xl font-black text-foreground">
-                  {lista.length} pedidos nesta visao
-                </p>
-              </div>
-              <div className="shrink-0">
-                <PrinterSettingsDialog />
-              </div>
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  Filtro ativo
-                </p>
-                <p className="mt-1 font-bold text-foreground">
-                  {filtrosComContagem.find((f) => f.key === filter)?.label ?? "Todos"}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border/70 bg-background/70 p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  Destaque
-                </p>
-                <p className="mt-1 font-bold text-foreground">
-                  {summary.prontos > 0
-                    ? `${summary.prontos} prontos para despacho`
-                    : "Fila sob controle"}
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 rounded-2xl border border-border/70 bg-background/70 p-3">
-              <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                <Sparkles className="h-3.5 w-3.5" />
-                Operacao premium
-              </p>
-              <p className="mt-1 text-sm font-semibold text-foreground">
-                Filtre, imprima, atualize status e acompanhe historico com menos ruido visual.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+    <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-black tracking-tight">Fila detalhada</h2>
+          <h1 className="text-2xl font-black tracking-tight">Central de pedidos</h1>
           <p className="text-sm text-muted-foreground">Atualização em tempo real.</p>
         </div>
+        <PrinterSettingsDialog />
       </div>
-      <div className="card-premium flex flex-wrap gap-2 border-none bg-gradient-to-br from-card to-muted/20 p-3">
-        {filtrosComContagem.map((f) => (
+      <div className="flex flex-wrap gap-2">
+        {FILTROS.map((f) => (
           <Button
             key={f.key}
             size="sm"
             variant={filter === f.key ? "default" : "outline"}
-            className={filter === f.key ? "rounded-full shadow-brand" : "rounded-full"}
             onClick={() => setFilter(f.key)}
           >
-            {f.label} ({f.count})
+            {f.label}
           </Button>
         ))}
       </div>
       {lista.length === 0 ? (
-        <div className="card-premium rounded-[1.75rem] border-dashed p-10 text-center">
+        <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
           <ReceiptText className="mx-auto h-10 w-10 text-muted-foreground" />
           <p className="mt-3 text-sm text-muted-foreground">Nenhum pedido nesta aba.</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {lista.map((o) => {
             const step = proxima(o.status);
             const isDelivered = o.status === "delivered";
@@ -510,7 +372,7 @@ function PedidosPage() {
               <div
                 key={o.id}
                 className={cn(
-                  "card-premium relative overflow-hidden rounded-[1.75rem] border-none bg-gradient-to-br from-card to-muted/20 p-5 transition",
+                  "relative overflow-hidden rounded-2xl border bg-card p-4 shadow-card transition",
                   tone.card,
                   "before:absolute before:left-0 before:top-0 before:h-full before:w-1.5",
                   tone.accent,
@@ -703,7 +565,7 @@ function PrinterSettingsDialog() {
     setEnabled(!!estab.printer_enabled);
     setAuto(!!estab.printer_auto);
     setWidth(String(estab.printer_width_mm ?? 80));
-  }, [estab, estab?.id, estab?.printer_enabled, estab?.printer_auto, estab?.printer_width_mm]);
+  }, [estab?.id, estab?.printer_enabled, estab?.printer_auto, estab?.printer_width_mm]);
 
   function buildSample() {
     const w = parseInt(width) === 58 ? 58 : 80;
