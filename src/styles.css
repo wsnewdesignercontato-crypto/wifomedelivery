@@ -4,14 +4,16 @@
 
 html {
   overflow-x: hidden;
-  overflow-y: auto !important;
-  height: 100% !important;
+  overflow-y: scroll !important;
+  height: auto !important;
+  min-height: 100%;
 }
 
 body {
   overflow-x: hidden;
   overflow-y: auto !important;
-  height: 100% !important;
+  height: auto !important;
+  min-height: 100%;
   position: relative !important;
   touch-action: pan-y pinch-zoom !important;
   -webkit-overflow-scrolling: touch !important;
