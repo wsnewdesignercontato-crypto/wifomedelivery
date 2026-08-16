@@ -7,38 +7,13 @@ const codigoEntregaSchema = z
   .string()
   .trim()
   .regex(/^\d{4}$/, { message: "O código deve ter exatamente 4 dígitos numéricos." });
-import {
-  Bike,
-  MapPin,
-  CheckCircle2,
-  Phone,
-  MessageSquare,
-  Navigation,
-  Clock,
-  ShieldCheck,
-  Loader2,
-  Camera,
-  Banknote,
-  AlertTriangle,
-  Route as RouteIcon,
-  Sparkles,
-  Store,
-  UserRound,
-  Wallet,
-} from "lucide-react";
+import { Bike, MapPin, Package, CheckCircle2, Phone, MessageSquare, Navigation, Clock, ShieldCheck, Loader2, Camera, Banknote, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { validateImageFile } from "@/lib/upload-validation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useMyCourier, fmt } from "@/hooks/use-courier";
 import { OrderChat } from "@/components/order-chat";
@@ -49,40 +24,16 @@ export const Route = createFileRoute("/_authenticated/entregador/corridas")({
 });
 
 type Delivery = {
-  id: string;
-  order_id: string;
-  status: string;
-  valor_entrega_cents: number;
-  entregador_id: string | null;
-  aceito_em: string | null;
-  coletado_em: string | null;
-  entregue_em: string | null;
+  id: string; order_id: string; status: string; valor_entrega_cents: number; entregador_id: string | null;
+  aceito_em: string | null; coletado_em: string | null; entregue_em: string | null;
 };
 type OrderLite = {
-  id: string;
-  establishment_id: string;
-  total_cents: number;
-  cliente_id: string;
+  id: string; establishment_id: string; total_cents: number; cliente_id: string;
   endereco_entrega: { endereco?: string; bairro?: string; complemento?: string } | null;
-  codigo_entrega: string | null;
-  observacoes: string | null;
-  forma_pagamento: string;
+  codigo_entrega: string | null; observacoes: string | null; forma_pagamento: string;
   troco_para_cents: number | null;
 };
-type OrderMeta = { id: string; establishment_id: string };
-type Estab = {
-  id: string;
-  nome: string;
-  endereco: string | null;
-  cidade: string | null;
-  telefone?: string | null;
-};
-type EstabLocation = {
-  id: string;
-  nome: string;
-  lat: number | null;
-  lng: number | null;
-};
+type Estab = { id: string; nome: string; endereco: string | null; cidade: string | null; telefone?: string | null };
 type ClienteInfo = { nome: string | null; telefone: string | null };
 
 const STAGES = [
@@ -90,21 +41,13 @@ const STAGES = [
   { key: "to_store", label: "A caminho da loja", next: "at_store", cta: "Cheguei na loja" },
   { key: "at_store", label: "Na loja", next: "picked_up", cta: "Pedido coletado" },
   { key: "picked_up", label: "Coletado", next: "to_customer", cta: "Iniciar rota até o cliente" },
-  {
-    key: "to_customer",
-    label: "A caminho do cliente",
-    next: "at_customer",
-    cta: "Cheguei no cliente",
-  },
+  { key: "to_customer", label: "A caminho do cliente", next: "at_customer", cta: "Cheguei no cliente" },
   { key: "at_customer", label: "No cliente", next: "delivered", cta: "Confirmar entrega" },
 ];
 const ORDER_MAP: Record<string, string> = {
-  to_store: "courier_assigned",
-  at_store: "courier_assigned",
-  picked_up: "picked_up",
-  to_customer: "on_the_way",
-  at_customer: "arriving",
-  delivered: "delivered",
+  to_store: "courier_assigned", at_store: "courier_assigned",
+  picked_up: "picked_up", to_customer: "on_the_way",
+  at_customer: "arriving", delivered: "delivered",
 };
 
 const INCIDENT_TYPES = [
@@ -131,11 +74,8 @@ function Corridas() {
   const [proofPreview, setProofPreview] = useState<string | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
   const [codeAttempts, setCodeAttempts] = useState(0);
-  const [deliveredInfo, setDeliveredInfo] = useState<{
-    valorCents: number;
-    clienteNome: string | null;
-  } | null>(null);
-
+  const [deliveredInfo, setDeliveredInfo] = useState<{ valorCents: number; clienteNome: string | null } | null>(null);
+  
   const [incidentOpen, setIncidentOpen] = useState(false);
   const [incidentType, setIncidentType] = useState("cliente_ausente");
   const [incidentText, setIncidentText] = useState("");
@@ -143,15 +83,9 @@ function Corridas() {
   const watchIdRef = useRef<number | null>(null);
   const proofInputRef = useRef<HTMLInputElement>(null);
   const [myPos, setMyPos] = useState<{ lat: number; lng: number } | null>(null);
-  const [availMeta, setAvailMeta] = useState<
-    Record<string, { nome: string; distKm: number | null }>
-  >({});
+  const [availMeta, setAvailMeta] = useState<Record<string, { nome: string; distKm: number | null }>>({});
   const [navPickerOpen, setNavPickerOpen] = useState(false);
-  const [navTarget, setNavTarget] = useState<{
-    next: string;
-    address: string;
-    label: string;
-  } | null>(null);
+  const [navTarget, setNavTarget] = useState<{ next: string; address: string; label: string } | null>(null);
 
   useEffect(() => {
     if (!("geolocation" in navigator)) return;
@@ -167,9 +101,7 @@ function Corridas() {
     const toRad = (d: number) => (d * Math.PI) / 180;
     const dLat = toRad(b.lat - a.lat);
     const dLng = toRad(b.lng - a.lng);
-    const s =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+    const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
     return 2 * R * Math.asin(Math.sqrt(s));
   }
 
@@ -177,9 +109,7 @@ function Corridas() {
     if (!courier) return;
     const { data: dv } = await supabase
       .from("deliveries")
-      .select(
-        "id,order_id,status,valor_entrega_cents,entregador_id,aceito_em,coletado_em,entregue_em",
-      )
+      .select("id,order_id,status,valor_entrega_cents,entregador_id,aceito_em,coletado_em,entregue_em")
       .eq("status", "broadcasting")
       .or(`entregador_id.is.null,entregador_id.eq.${courier.user_id}`)
       .order("created_at", { ascending: false });
@@ -193,20 +123,14 @@ function Corridas() {
         .from("orders")
         .select("id, establishment_id")
         .in("id", orderIds);
-      const orderRows = (ords ?? []) as OrderMeta[];
-      const estabIds = Array.from(new Set(orderRows.map((o) => o.establishment_id)));
+      const estabIds = Array.from(new Set((ords ?? []).map((o: any) => o.establishment_id)));
       const { data: estabs } = estabIds.length
         ? await supabase.from("establishments").select("id, nome, lat, lng").in("id", estabIds)
-        : { data: [] as EstabLocation[] };
-      const estabById: Record<string, { nome: string; lat: number | null; lng: number | null }> =
-        {};
-      ((estabs ?? []) as EstabLocation[]).forEach((e) => {
-        estabById[e.id] = { nome: e.nome, lat: e.lat, lng: e.lng };
-      });
+        : { data: [] as any[] };
+      const estabById: Record<string, { nome: string; lat: number | null; lng: number | null }> = {};
+      (estabs ?? []).forEach((e: any) => { estabById[e.id] = { nome: e.nome, lat: e.lat, lng: e.lng }; });
       const orderToEstab: Record<string, string> = {};
-      orderRows.forEach((o) => {
-        orderToEstab[o.id] = o.establishment_id;
-      });
+      (ords ?? []).forEach((o: any) => { orderToEstab[o.id] = o.establishment_id; });
       const meta: Record<string, { nome: string; distKm: number | null }> = {};
       for (const d of dvList) {
         const eid = orderToEstab[d.order_id];
@@ -224,9 +148,7 @@ function Corridas() {
 
     const { data: at } = await supabase
       .from("deliveries")
-      .select(
-        "id,order_id,status,valor_entrega_cents,entregador_id,aceito_em,coletado_em,entregue_em",
-      )
+      .select("id,order_id,status,valor_entrega_cents,entregador_id,aceito_em,coletado_em,entregue_em")
       .eq("entregador_id", courier.user_id)
       .not("status", "in", "(delivered,cancelled)")
       .order("created_at", { ascending: false })
@@ -235,149 +157,77 @@ function Corridas() {
     setAtiva((at as Delivery) ?? null);
 
     if (at) {
-      const { data: o } = await supabase
-        .from("orders")
-        .select(
-          "id,establishment_id,total_cents,cliente_id,endereco_entrega,codigo_entrega,observacoes,forma_pagamento,troco_para_cents",
-        )
-        .eq("id", at.order_id)
-        .maybeSingle();
+      const { data: o } = await supabase.from("orders")
+        .select("id,establishment_id,total_cents,cliente_id,endereco_entrega,codigo_entrega,observacoes,forma_pagamento,troco_para_cents")
+        .eq("id", at.order_id).maybeSingle();
       setOrder(o as OrderLite);
       if (o) {
         const [{ data: e }, { data: c }] = await Promise.all([
-          supabase
-            .from("establishments")
-            .select("id,nome,endereco,cidade,telefone")
-            .eq("id", o.establishment_id)
-            .maybeSingle(),
+          supabase.from("establishments").select("id,nome,endereco,cidade,telefone").eq("id", o.establishment_id).maybeSingle(),
           supabase.from("profiles").select("nome,telefone").eq("id", o.cliente_id).maybeSingle(),
         ]);
         setEstab(e as Estab);
         setCliente((c as ClienteInfo) ?? null);
       }
-    } else {
-      setOrder(null);
-      setEstab(null);
-      setCliente(null);
-    }
+    } else { setOrder(null); setEstab(null); setCliente(null); }
   }
 
   useEffect(() => {
     if (!courier) return;
     load();
-    const ch = supabase
-      .channel("courier-corridas-" + courier.user_id)
+    const ch = supabase.channel("courier-corridas-" + courier.user_id)
       .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, load)
       .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
+    return () => { supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courier?.user_id]);
 
-  const activeDeliveryId = ativa?.id ?? null;
-  const activeOrderId = ativa?.order_id ?? null;
-  const activeStatus = ativa?.status ?? null;
-  const courierUserId = courier?.user_id ?? null;
-
   useEffect(() => {
-    const shouldTrack =
-      activeStatus != null &&
-      ["to_store", "at_store", "picked_up", "to_customer", "at_customer"].includes(activeStatus);
-    if (
-      !shouldTrack ||
-      !activeDeliveryId ||
-      !activeOrderId ||
-      !courierUserId ||
-      !("geolocation" in navigator)
-    ) {
-      if (watchIdRef.current != null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-        watchIdRef.current = null;
-      }
+    const shouldTrack = ativa && ["to_store","at_store","picked_up","to_customer","at_customer"].includes(ativa.status);
+    if (!shouldTrack || !courier || !("geolocation" in navigator)) {
+      if (watchIdRef.current != null) { navigator.geolocation.clearWatch(watchIdRef.current); watchIdRef.current = null; }
       return;
     }
     let lastSent = 0;
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      async (pos) => {
-        const now = Date.now();
-        if (now - lastSent < 12000) return;
-        lastSent = now;
-        const { latitude: lat, longitude: lng, accuracy, heading, speed } = pos.coords;
-        await Promise.all([
-          supabase.from("deliveries").update({ lat, lng }).eq("id", activeDeliveryId),
-          supabase.from("tracking_points").insert({
-            courier_id: courierUserId,
-            order_id: activeOrderId,
-            lat,
-            lng,
-            accuracy: accuracy ?? null,
-            heading: heading ?? null,
-            speed: speed ?? null,
-          }),
-          supabase
-            .from("courier_profiles")
-            .update({ lat, lng, last_seen: new Date().toISOString() })
-            .eq("user_id", courierUserId),
-        ]);
-      },
-      (err) => console.warn("GPS error", err),
-      { enableHighAccuracy: true, maximumAge: 8000, timeout: 20000 },
-    );
-    return () => {
-      if (watchIdRef.current != null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-        watchIdRef.current = null;
-      }
-    };
-  }, [activeDeliveryId, activeOrderId, activeStatus, courierUserId]);
+    watchIdRef.current = navigator.geolocation.watchPosition(async (pos) => {
+      const now = Date.now();
+      if (now - lastSent < 12000) return;
+      lastSent = now;
+      const { latitude: lat, longitude: lng, accuracy, heading, speed } = pos.coords;
+      await Promise.all([
+        supabase.from("deliveries").update({ lat, lng }).eq("id", ativa!.id),
+        supabase.from("tracking_points").insert({
+          courier_id: courier.user_id, order_id: ativa!.order_id,
+          lat, lng, accuracy: accuracy ?? null, heading: heading ?? null, speed: speed ?? null,
+        }),
+        supabase.from("courier_profiles").update({ lat, lng, last_seen: new Date().toISOString() }).eq("user_id", courier.user_id),
+      ]);
+    }, (err) => console.warn("GPS error", err), { enableHighAccuracy: true, maximumAge: 8000, timeout: 20000 });
+    return () => { if (watchIdRef.current != null) { navigator.geolocation.clearWatch(watchIdRef.current); watchIdRef.current = null; } };
+  }, [ativa?.id, ativa?.status, courier?.user_id]);
 
   async function aceitar(d: Delivery) {
     if (!courier) return;
     if (ativa) return toast.error("Finalize sua corrida atual antes");
-    const { data, error } = await supabase
-      .from("deliveries")
-      .update({
-        entregador_id: courier.user_id,
-        status: "accepted",
-        aceito_em: new Date().toISOString(),
-      })
-      .eq("id", d.id)
-      .eq("status", "broadcasting")
-      .select("*")
-      .maybeSingle();
+    const { data, error } = await supabase.from("deliveries")
+      .update({ entregador_id: courier.user_id, status: "accepted", aceito_em: new Date().toISOString() })
+      .eq("id", d.id).eq("status", "broadcasting").select("*").maybeSingle();
     if (error || !data) return toast.error("Corrida indisponível");
     await supabase.from("orders").update({ status: "courier_assigned" }).eq("id", d.order_id);
-    await supabase
-      .from("courier_profiles")
-      .update({ status: "ocupado" })
-      .eq("user_id", courier.user_id);
+    await supabase.from("courier_profiles").update({ status: "ocupado" }).eq("user_id", courier.user_id);
     toast.success("Corrida aceita!");
     load();
   }
 
   async function avancar(next: string) {
     if (!ativa || !courier || advancing) return;
-    if (next === "delivered") {
-      setCodeOpen(true);
-      return;
-    }
+    if (next === "delivered") { setCodeOpen(true); return; }
     setAdvancing(true);
     const patch: Record<string, unknown> = { status: next };
     if (next === "picked_up") patch.coletado_em = new Date().toISOString();
-    const { error } = await supabase
-      .from("deliveries")
-      .update(patch as never)
-      .eq("id", ativa.id);
-    if (error) {
-      setAdvancing(false);
-      return toast.error("Falha ao atualizar");
-    }
-    if (ORDER_MAP[next])
-      await supabase
-        .from("orders")
-        .update({ status: ORDER_MAP[next] as never })
-        .eq("id", ativa.order_id);
+    const { error } = await supabase.from("deliveries").update(patch as never).eq("id", ativa.id);
+    if (error) { setAdvancing(false); return toast.error("Falha ao atualizar"); }
+    if (ORDER_MAP[next]) await supabase.from("orders").update({ status: ORDER_MAP[next] as never }).eq("id", ativa.order_id);
     setAdvancing(false);
     load();
   }
@@ -411,9 +261,7 @@ function Corridas() {
       }`;
       setCodeError(msg);
       setCodeInput("");
-      return toast.error("Código incorreto", {
-        description: "Peça ao cliente o código de 4 dígitos correto.",
-      });
+      return toast.error("Código incorreto", { description: "Peça ao cliente o código de 4 dígitos correto." });
     }
     setCodeError(null);
     setCodeAttempts(0);
@@ -422,19 +270,11 @@ function Corridas() {
     let metodo: string = "code";
     if (proofFile) {
       const invalidProof = validateImageFile(proofFile);
-      if (invalidProof) {
-        setAdvancing(false);
-        return toast.error(invalidProof);
-      }
+      if (invalidProof) { setAdvancing(false); return toast.error(invalidProof); }
       const path = `${courier.user_id}/${order.id}/${Date.now()}-${proofFile.name}`;
       const up = await supabase.storage.from("delivery-proofs").upload(path, proofFile);
-      if (up.error) {
-        setAdvancing(false);
-        return toast.error("Falha ao enviar foto");
-      }
-      const { data: signed } = await supabase.storage
-        .from("delivery-proofs")
-        .createSignedUrl(path, 60 * 60 * 24 * 30);
+      if (up.error) { setAdvancing(false); return toast.error("Falha ao enviar foto"); }
+      const { data: signed } = await supabase.storage.from("delivery-proofs").createSignedUrl(path, 60 * 60 * 24 * 30);
       prova_url = signed?.signedUrl ?? path;
       metodo = "code+photo";
     }
@@ -449,10 +289,7 @@ function Corridas() {
       setAdvancing(false);
       return toast.error("Falha ao finalizar", { description: rpcErr.message });
     }
-    await supabase
-      .from("courier_profiles")
-      .update({ status: "online" })
-      .eq("user_id", courier.user_id);
+    await supabase.from("courier_profiles").update({ status: "online" }).eq("user_id", courier.user_id);
 
     // Atualização imediata do estado local + confirmação visual
     const valorCents = ativa.valor_entrega_cents ?? 0;
@@ -492,217 +329,21 @@ function Corridas() {
 
   const currentStageIdx = ativa ? STAGES.findIndex((s) => s.key === ativa.status) : -1;
   const currentStage = currentStageIdx >= 0 ? STAGES[currentStageIdx] : null;
-  const trocoDevolver =
-    order && order.forma_pagamento === "dinheiro" && order.troco_para_cents
-      ? Math.max(0, order.troco_para_cents - order.total_cents)
-      : 0;
-  const cityLabel = courier?.cidade_atuacao || courier?.cidades_atuacao?.[0] || "Sua região";
-  const stageProgress =
-    currentStageIdx >= 0 ? Math.round(((currentStageIdx + 1) / STAGES.length) * 100) : 0;
-  const availablePayout = disponiveis.reduce(
-    (sum, ride) => sum + (ride.valor_entrega_cents ?? 0),
-    0,
-  );
-  const directCalls = disponiveis.filter((ride) => ride.entregador_id === courier?.user_id).length;
+  const trocoDevolver = order && order.forma_pagamento === "dinheiro" && order.troco_para_cents
+    ? Math.max(0, order.troco_para_cents - order.total_cents) : 0;
 
   return (
     <div className="space-y-6">
-      <section className="card-premium relative overflow-hidden border-none bg-gradient-to-br from-primary/12 via-white to-primary/5 p-5 dark:from-primary/15 dark:via-card dark:to-primary/10 sm:p-6">
-        <div className="absolute -left-10 top-0 h-36 w-36 rounded-full bg-primary/15 blur-3xl" />
-        <div className="absolute -right-10 bottom-0 h-44 w-44 rounded-full bg-primary/10 blur-3xl" />
-
-        <div className="relative grid gap-6 xl:grid-cols-[1.14fr_0.86fr] xl:items-start">
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className="bg-primary text-primary-foreground">
-                Central premium do entregador
-              </Badge>
-              <Badge
-                variant="outline"
-                className={
-                  ativa
-                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                    : "border-primary/30 bg-primary/10 text-primary"
-                }
-              >
-                {ativa ? "Corrida em andamento" : "Monitorando chamados"}
-              </Badge>
-              <span className="text-xs font-semibold text-muted-foreground">{cityLabel}</span>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-muted-foreground">
-                Operacao ao vivo para quem precisa decidir rapido
-              </p>
-              <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-                {ativa
-                  ? "Sua entrega esta sob controle."
-                  : "Chamados prontos para sua proxima corrida."}
-              </h1>
-              <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
-                {ativa
-                  ? "Acompanhe a etapa atual, contatos, pagamento e seguranca em uma visao mais limpa enquanto a corrida avanca."
-                  : "Veja oportunidades abertas, valor potencial e rotas prioritarias em uma interface feita para aceitar rapido sem perder clareza."}
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-[1.4rem] border border-white/70 bg-white/85 p-4 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
-                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  <RouteIcon className="h-3.5 w-3.5" />
-                  Status
-                </p>
-                <p className="mt-2 text-lg font-black text-foreground">
-                  {ativa
-                    ? (currentStage?.label ?? "Em andamento")
-                    : `${disponiveis.length} abertas`}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {ativa
-                    ? `${stageProgress}% da jornada concluida`
-                    : "Fila monitorada em tempo real"}
-                </p>
-              </div>
-              <div className="rounded-[1.4rem] border border-white/70 bg-white/85 p-4 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
-                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  <Wallet className="h-3.5 w-3.5" />
-                  Potencial
-                </p>
-                <p className="mt-2 text-lg font-black text-foreground">
-                  {ativa ? fmt(ativa.valor_entrega_cents) : fmt(availablePayout)}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {ativa ? "Valor da corrida em andamento" : "Soma das corridas visiveis agora"}
-                </p>
-              </div>
-              <div className="rounded-[1.4rem] border border-white/70 bg-white/85 p-4 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
-                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  Seguranca
-                </p>
-                <p className="mt-2 text-lg font-black text-foreground">
-                  {ativa ? "SOS pronto" : "Codigo em 4 digitos"}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {ativa
-                    ? "Acione suporte imediato se necessario"
-                    : "Confirmacao forte para a entrega final"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-[1.75rem] border border-white/70 bg-white/90 p-5 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
-            {ativa ? (
-              <div className="space-y-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.26em] text-muted-foreground">
-                      Corrida ativa
-                    </p>
-                    <p className="mt-2 text-2xl font-black text-foreground">
-                      {stageProgress}% concluida
-                    </p>
-                  </div>
-                  <div className="shrink-0">
-                    <SOSButton orderId={ativa.order_id} deliveryId={ativa.id} />
-                  </div>
-                </div>
-                <div className="h-2 rounded-full bg-muted/80">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-orange-400 transition-all"
-                    style={{ width: `${stageProgress}%` }}
-                  />
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      Etapa agora
-                    </p>
-                    <p className="mt-1 font-bold text-foreground">
-                      {currentStage?.label ?? "Em andamento"}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-border/70 bg-background/70 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      Pedido
-                    </p>
-                    <p className="mt-1 font-bold text-foreground">
-                      {order ? fmt(order.total_cents) : "--"}
-                    </p>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-border/70 bg-background/70 p-3">
-                  <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Proximo passo
-                  </p>
-                  <p className="mt-1 font-semibold text-foreground">
-                    {currentStage?.cta ?? "Aguardando atualizacao"}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.26em] text-muted-foreground">
-                    Janela de oportunidades
-                  </p>
-                  <p className="mt-2 text-2xl font-black text-foreground">
-                    {disponiveis.length} corridas em observacao
-                  </p>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      Chamados diretos
-                    </p>
-                    <p className="mt-1 font-bold text-foreground">{directCalls}</p>
-                  </div>
-                  <div className="rounded-2xl border border-border/70 bg-background/70 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      Potencial agora
-                    </p>
-                    <p className="mt-1 font-bold text-foreground">{fmt(availablePayout)}</p>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-border/70 bg-background/70 p-3">
-                  <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Modo premium
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-foreground">
-                    Aceite com foco em valor, distancia e prioridade.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="truncate text-2xl font-black">Corridas</h1>
+        {ativa && <div className="shrink-0"><SOSButton orderId={ativa.order_id} deliveryId={ativa.id} /></div>}
+      </div>
 
       {ativa && (
-        <section className="card-premium overflow-hidden border-none bg-gradient-to-br from-card to-muted/20 p-5 shadow-brand sm:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge className="bg-primary text-primary-foreground">Corrida ativa</Badge>
-                <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
-                  #{ativa.order_id.slice(0, 8).toUpperCase()}
-                </Badge>
-              </div>
-              <h2 className="text-2xl font-black tracking-tight text-foreground">
-                Operacao guiada do aceite ate a confirmacao.
-              </h2>
-            </div>
-            <div className="text-right">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                Ganho desta corrida
-              </p>
-              <p className="mt-2 text-2xl font-black text-primary">
-                {fmt(ativa.valor_entrega_cents)}
-              </p>
-            </div>
+        <section className="rounded-2xl border-2 border-primary bg-card p-4 shadow-brand">
+          <div className="flex items-center justify-between gap-3">
+            <Badge className="bg-primary text-primary-foreground shrink-0">Corrida ativa</Badge>
+            <span className="font-bold text-primary shrink-0">{fmt(ativa.valor_entrega_cents)}</span>
           </div>
 
           <div className="mt-4">
@@ -723,75 +364,57 @@ function Corridas() {
             </p>
           </div>
 
+
           {order && estab && (
             <div className="mt-4 grid gap-3 text-sm md:grid-cols-2">
               <div className="min-w-0 rounded-xl border border-border bg-background p-3">
                 <p className="mb-1 flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
-                  <Store className="h-3.5 w-3.5 shrink-0" /> Loja
+                  <Package className="h-3.5 w-3.5 shrink-0" /> Loja
                 </p>
                 <p className="truncate font-semibold">{estab.nome}</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {estab.endereco ?? "—"}
-                  {estab.cidade ? ` · ${estab.cidade}` : ""}
+                  {estab.endereco ?? "—"}{estab.cidade ? ` · ${estab.cidade}` : ""}
                 </p>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   {estab.telefone ? (
                     <a href={`tel:${estab.telefone}`} className="w-full">
                       <Button size="sm" variant="outline" className="w-full">
-                        <Phone className="mr-1.5 h-3 w-3" />
-                        Ligar
+                        <Phone className="mr-1.5 h-3 w-3" />Ligar
                       </Button>
                     </a>
                   ) : (
                     <Button size="sm" variant="outline" className="w-full" disabled>
-                      <Phone className="mr-1.5 h-3 w-3" />
-                      Ligar
+                      <Phone className="mr-1.5 h-3 w-3" />Ligar
                     </Button>
                   )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setChatOpen("store_courier")}
-                  >
-                    <MessageSquare className="mr-1.5 h-3 w-3" />
-                    Chat loja
+                  <Button size="sm" variant="outline" className="w-full" onClick={() => setChatOpen("store_courier")}>
+                    <MessageSquare className="mr-1.5 h-3 w-3" />Chat loja
                   </Button>
                 </div>
               </div>
               <div className="min-w-0 rounded-xl border border-border bg-background p-3">
                 <p className="mb-1 flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
-                  <UserRound className="h-3.5 w-3.5 shrink-0" /> Cliente
+                  <MapPin className="h-3.5 w-3.5 shrink-0" /> Cliente
                 </p>
                 <p className="truncate font-semibold">{cliente?.nome ?? "Cliente"}</p>
                 <p className="truncate text-xs text-muted-foreground">
                   {order.endereco_entrega?.endereco ?? "—"}
-                  {order.endereco_entrega?.complemento
-                    ? ` · ${order.endereco_entrega.complemento}`
-                    : ""}
+                  {order.endereco_entrega?.complemento ? ` · ${order.endereco_entrega.complemento}` : ""}
                 </p>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   {cliente?.telefone ? (
                     <a href={`tel:${cliente.telefone}`} className="w-full">
                       <Button size="sm" variant="outline" className="w-full">
-                        <Phone className="mr-1.5 h-3 w-3" />
-                        Ligar
+                        <Phone className="mr-1.5 h-3 w-3" />Ligar
                       </Button>
                     </a>
                   ) : (
                     <Button size="sm" variant="outline" className="w-full" disabled>
-                      <Phone className="mr-1.5 h-3 w-3" />
-                      Ligar
+                      <Phone className="mr-1.5 h-3 w-3" />Ligar
                     </Button>
                   )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setChatOpen("client_courier")}
-                  >
-                    <MessageSquare className="mr-1.5 h-3 w-3" />
-                    Chat cliente
+                  <Button size="sm" variant="outline" className="w-full" onClick={() => setChatOpen("client_courier")}>
+                    <MessageSquare className="mr-1.5 h-3 w-3" />Chat cliente
                   </Button>
                 </div>
               </div>
@@ -807,33 +430,18 @@ function Corridas() {
                   </p>
                   <p className="mt-1 text-xs">
                     Total a receber: <strong>{fmt(order.total_cents)}</strong>
-                    {order.troco_para_cents ? (
-                      <>
-                        {" "}
-                        · Cliente vai pagar com <strong>
-                          {fmt(order.troco_para_cents)}
-                        </strong> ·{" "}
-                        <span className="text-emerald-600 dark:text-emerald-400">
-                          Levar troco: <strong>{fmt(trocoDevolver)}</strong>
-                        </span>
-                      </>
-                    ) : (
-                      <> · Sem necessidade de troco</>
-                    )}
+                    {order.troco_para_cents ? <> · Cliente vai pagar com <strong>{fmt(order.troco_para_cents)}</strong> · <span className="text-emerald-600 dark:text-emerald-400">Levar troco: <strong>{fmt(trocoDevolver)}</strong></span></> : <> · Sem necessidade de troco</>}
                   </p>
                 </div>
               )}
               <div className="md:col-span-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-border bg-background px-3 py-2 text-xs">
                 <span className="flex min-w-0 items-center gap-2 truncate">
                   <Clock className="h-3.5 w-3.5 shrink-0" />
-                  Pagamento:{" "}
-                  <strong className="text-foreground uppercase">{order.forma_pagamento}</strong>
+                  Pagamento: <strong className="text-foreground uppercase">{order.forma_pagamento}</strong>
                 </span>
-                <span className="shrink-0">
-                  Total pedido:{" "}
-                  <strong className="text-foreground">{fmt(order.total_cents)}</strong>
-                </span>
+                <span className="shrink-0">Total pedido: <strong className="text-foreground">{fmt(order.total_cents)}</strong></span>
               </div>
+
 
               {currentStage?.key === "at_customer" && (
                 <div className="md:col-span-2 min-w-0 overflow-hidden rounded-2xl border-2 border-primary bg-primary/5 p-3 sm:p-4">
@@ -844,17 +452,14 @@ function Corridas() {
                     <div className="min-w-0 flex-1">
                       <p className="font-black text-primary">Código obrigatório para finalizar</p>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Peça ao cliente o código de 4 dígitos que aparece no pedido dele. Sem esse
-                        código, a entrega não finaliza.
+                        Peça ao cliente o código de 4 dígitos que aparece no pedido dele. Sem esse código, a entrega não finaliza.
                       </p>
                     </div>
                   </div>
 
                   <div className="mt-4 space-y-3">
                     <div className="min-w-0">
-                      <label className="mb-1 block text-xs font-bold uppercase text-muted-foreground">
-                        Digite o código do cliente
-                      </label>
+                      <label className="mb-1 block text-xs font-bold uppercase text-muted-foreground">Digite o código do cliente</label>
                       <Input
                         inputMode="numeric"
                         maxLength={4}
@@ -869,27 +474,14 @@ function Corridas() {
                         className={`h-14 w-full text-center text-2xl font-black tracking-[0.35em] sm:text-3xl sm:tracking-[0.45em] ${codeError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                       />
                       {codeError && (
-                        <p
-                          id="codigo-erro-inline"
-                          role="alert"
-                          className="mt-2 flex items-start gap-1.5 break-words text-xs font-semibold text-destructive"
-                        >
+                        <p id="codigo-erro-inline" role="alert" className="mt-2 flex items-start gap-1.5 break-words text-xs font-semibold text-destructive">
                           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                           <span className="min-w-0 flex-1">{codeError}</span>
                         </p>
                       )}
                     </div>
-                    <Button
-                      size="lg"
-                      className="w-full"
-                      onClick={confirmarEntrega}
-                      disabled={advancing || codeInput.length !== 4}
-                    >
-                      {advancing ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                      )}
+                    <Button size="lg" className="w-full" onClick={confirmarEntrega} disabled={advancing || codeInput.length !== 4}>
+                      {advancing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
                       Finalizar entrega
                     </Button>
                   </div>
@@ -905,29 +497,13 @@ function Corridas() {
                     />
                     {proofPreview ? (
                       <div className="min-w-0 rounded-xl border border-border bg-background p-2">
-                        <img
-                          src={proofPreview}
-                          alt="Prova de entrega"
-                          className="max-h-52 w-full rounded-lg object-cover"
-                        />
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="mt-2 w-full"
-                          onClick={() => {
-                            setProofFile(null);
-                            setProofPreview(null);
-                          }}
-                        >
+                        <img src={proofPreview} alt="Prova de entrega" className="max-h-52 w-full rounded-lg object-cover" />
+                        <Button size="sm" variant="outline" className="mt-2 w-full" onClick={() => { setProofFile(null); setProofPreview(null); }}>
                           Trocar foto da prova
                         </Button>
                       </div>
                     ) : (
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => proofInputRef.current?.click()}
-                      >
+                      <Button variant="outline" className="w-full" onClick={() => proofInputRef.current?.click()}>
                         <Camera className="mr-2 h-4 w-4 shrink-0" />
                         <span className="truncate">Adicionar foto da entrega (opcional)</span>
                       </Button>
@@ -940,115 +516,66 @@ function Corridas() {
 
           <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
             {currentStage && (
-              <Button
-                size="lg"
-                className="w-full"
-                onClick={() => {
-                  if (currentStage.key === "accepted") {
-                    const addr = [estab?.endereco, estab?.cidade, "Brasil"]
-                      .filter(Boolean)
-                      .join(", ");
-                    if (!addr) {
-                      avancar(currentStage.next);
-                      return;
-                    }
-                    setNavTarget({
-                      next: currentStage.next,
-                      address: addr,
-                      label: `Loja: ${estab?.nome ?? ""}`,
-                    });
-                    setNavPickerOpen(true);
-                  } else if (currentStage.key === "picked_up") {
-                    const e = order?.endereco_entrega;
-                    const addr = [e?.endereco, e?.bairro, "Brasil"].filter(Boolean).join(", ");
-                    if (!addr) {
-                      avancar(currentStage.next);
-                      return;
-                    }
-                    setNavTarget({
-                      next: currentStage.next,
-                      address: addr,
-                      label: `Cliente: ${cliente?.nome ?? ""}`,
-                    });
-                    setNavPickerOpen(true);
-                  } else {
-                    avancar(currentStage.next);
-                  }
-                }}
-                disabled={advancing}
-              >
-                {advancing ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : currentStage.key === "at_customer" ? (
-                  <ShieldCheck className="mr-2 h-4 w-4" />
-                ) : (
-                  <Navigation className="mr-2 h-4 w-4" />
-                )}
+              <Button size="lg" className="w-full" onClick={() => {
+                if (currentStage.key === "accepted") {
+                  const addr = [estab?.endereco, estab?.cidade, "Brasil"].filter(Boolean).join(", ");
+                  if (!addr) { avancar(currentStage.next); return; }
+                  setNavTarget({ next: currentStage.next, address: addr, label: `Loja: ${estab?.nome ?? ""}` });
+                  setNavPickerOpen(true);
+                } else if (currentStage.key === "picked_up") {
+                  const e = order?.endereco_entrega;
+                  const addr = [e?.endereco, e?.bairro, "Brasil"].filter(Boolean).join(", ");
+                  if (!addr) { avancar(currentStage.next); return; }
+                  setNavTarget({ next: currentStage.next, address: addr, label: `Cliente: ${cliente?.nome ?? ""}` });
+                  setNavPickerOpen(true);
+                } else {
+                  avancar(currentStage.next);
+                }
+              }} disabled={advancing}>
+                {advancing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : currentStage.key === "at_customer" ? <ShieldCheck className="mr-2 h-4 w-4" /> : <Navigation className="mr-2 h-4 w-4" />}
                 {currentStage.cta}
               </Button>
             )}
-            <Button
-              size="lg"
-              variant="outline"
-              className="w-full sm:w-auto"
-              onClick={() => setIncidentOpen(true)}
-            >
+            <Button size="lg" variant="outline" className="w-full sm:w-auto" onClick={() => setIncidentOpen(true)}>
               <AlertTriangle className="mr-2 h-4 w-4" /> Reportar problema
             </Button>
           </div>
+
         </section>
       )}
 
       {!ativa && (
         <section>
-          <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
-            Disponíveis ({disponiveis.length})
-          </h2>
+          <h2 className="mb-3 text-sm font-semibold text-muted-foreground">Disponíveis ({disponiveis.length})</h2>
           <div className="space-y-3">
             {disponiveis.length === 0 && (
               <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
                 <Bike className="mx-auto h-10 w-10 text-muted-foreground" />
-                <p className="mt-3 text-sm text-muted-foreground">
-                  Nenhuma corrida disponível no momento.
-                </p>
+                <p className="mt-3 text-sm text-muted-foreground">Nenhuma corrida disponível no momento.</p>
               </div>
             )}
             {disponiveis.map((d) => {
               const m = availMeta[d.id];
               return (
-                <div
-                  key={d.id}
-                  className="rounded-2xl border-2 border-primary/60 bg-primary/5 p-4 shadow-card"
-                >
+                <div key={d.id} className="rounded-2xl border-2 border-primary/60 bg-primary/5 p-4 shadow-card">
                   <div className="flex items-start justify-between">
                     <div className="min-w-0">
                       <p className="font-semibold truncate">
-                        {d.entregador_id === courier?.user_id
-                          ? "🎯 Chamado direto para você"
-                          : m?.nome || "Corrida disponível"}
+                        {d.entregador_id === courier?.user_id ? "🎯 Chamado direto para você" : m?.nome || "Corrida disponível"}
                       </p>
                       <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                         <MapPin className="h-3 w-3" />
                         {m?.distKm != null ? (
-                          <span>
-                            <b className="text-foreground">
-                              {m.distKm.toString().replace(".", ",")} km
-                            </b>{" "}
-                            até a coleta
-                          </span>
+                          <span><b className="text-foreground">{m.distKm.toString().replace(".", ",")} km</b> até a coleta</span>
                         ) : (
                           <span>Aceite antes que outro entregador</span>
                         )}
                       </div>
                     </div>
-                    <span className="font-bold text-primary shrink-0">
-                      {fmt(d.valor_entrega_cents)}
-                    </span>
+                    <span className="font-bold text-primary shrink-0">{fmt(d.valor_entrega_cents)}</span>
                   </div>
                   <div className="mt-3">
-                    <Button className="w-full" onClick={() => aceitar(d)}>
-                      Aceitar corrida
-                    </Button>
+                    <Button className="w-full" onClick={() => aceitar(d)}>Aceitar corrida</Button>
                   </div>
                 </div>
               );
@@ -1063,15 +590,12 @@ function Corridas() {
           <DialogHeader>
             <DialogTitle>Confirmar entrega</DialogTitle>
             <DialogDescription>
-              Peça o código de 4 dígitos ao cliente e, se possível, tire uma foto do pedido entregue
-              como prova.
+              Peça o código de 4 dígitos ao cliente e, se possível, tire uma foto do pedido entregue como prova.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <Input
-              inputMode="numeric"
-              maxLength={4}
-              placeholder="0000"
+              inputMode="numeric" maxLength={4} placeholder="0000"
               value={codeInput}
               onChange={(e) => {
                 setCodeInput(e.target.value.replace(/\D/g, "").slice(0, 4));
@@ -1083,68 +607,40 @@ function Corridas() {
               autoFocus
             />
             {codeError && (
-              <p
-                id="codigo-erro-modal"
-                role="alert"
-                className="flex items-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive"
-              >
+              <p id="codigo-erro-modal" role="alert" className="flex items-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">
                 <AlertTriangle className="h-4 w-4 shrink-0" /> {codeError}
               </p>
             )}
 
             <div className="space-y-2">
-              <p className="text-xs font-bold uppercase text-muted-foreground">
-                Prova de entrega (opcional)
-              </p>
+              <p className="text-xs font-bold uppercase text-muted-foreground">Prova de entrega (opcional)</p>
               <input
                 ref={proofInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
+                type="file" accept="image/*" capture="environment" className="hidden"
                 onChange={(e) => e.target.files?.[0] && pickProof(e.target.files[0])}
               />
               {proofPreview ? (
                 <div className="relative">
                   <img src={proofPreview} alt="prova" className="w-full rounded-xl" />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-2 w-full"
-                    onClick={() => {
-                      setProofFile(null);
-                      setProofPreview(null);
-                    }}
-                  >
+                  <Button size="sm" variant="outline" className="mt-2 w-full" onClick={() => { setProofFile(null); setProofPreview(null); }}>
                     Trocar foto
                   </Button>
                 </div>
               ) : (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => proofInputRef.current?.click()}
-                >
+                <Button variant="outline" className="w-full" onClick={() => proofInputRef.current?.click()}>
                   <Camera className="mr-2 h-4 w-4" /> Tirar foto do pedido entregue
                 </Button>
               )}
             </div>
 
             <p className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs text-muted-foreground">
-              <strong className="text-primary">Obrigatório:</strong> peça ao cliente o código de 4
-              dígitos que aparece no pedido dele. Sem o código, a entrega não pode ser finalizada.
+              <strong className="text-primary">Obrigatório:</strong> peça ao cliente o código de 4 dígitos que aparece no pedido dele. Sem o código, a entrega não pode ser finalizada.
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCodeOpen(false)}>
-              Cancelar
-            </Button>
+            <Button variant="outline" onClick={() => setCodeOpen(false)}>Cancelar</Button>
             <Button onClick={confirmarEntrega} disabled={advancing || codeInput.length !== 4}>
-              {advancing ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-              )}
+              {advancing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
               Confirmar entrega
             </Button>
           </DialogFooter>
@@ -1155,9 +651,7 @@ function Corridas() {
       <Sheet open={chatOpen !== null} onOpenChange={(o) => !o && setChatOpen(null)}>
         <SheetContent side="right" className="flex w-full flex-col p-0 sm:max-w-md">
           <SheetHeader className="border-b border-border p-4">
-            <SheetTitle>
-              {chatOpen === "client_courier" ? "Chat com o cliente" : "Chat com a loja"}
-            </SheetTitle>
+            <SheetTitle>{chatOpen === "client_courier" ? "Chat com o cliente" : "Chat com a loja"}</SheetTitle>
           </SheetHeader>
           {chatOpen && ativa && order && (
             <div className="flex-1 p-3">
@@ -1184,13 +678,10 @@ function Corridas() {
             <div className="grid grid-cols-2 gap-2 text-sm">
               {INCIDENT_TYPES.map((t) => (
                 <button
-                  key={t.k}
-                  type="button"
+                  key={t.k} type="button"
                   onClick={() => setIncidentType(t.k)}
                   className={`rounded-xl border-2 p-3 font-semibold transition ${
-                    incidentType === t.k
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border bg-background"
+                    incidentType === t.k ? "border-primary bg-primary/10 text-primary" : "border-border bg-background"
                   }`}
                 >
                   {t.label}
@@ -1199,22 +690,14 @@ function Corridas() {
             </div>
             <textarea
               className="w-full rounded-xl border border-border bg-background p-3 text-sm"
-              rows={3}
-              placeholder="Descreva o que aconteceu (opcional)"
-              value={incidentText}
-              onChange={(e) => setIncidentText(e.target.value)}
+              rows={3} placeholder="Descreva o que aconteceu (opcional)"
+              value={incidentText} onChange={(e) => setIncidentText(e.target.value)}
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIncidentOpen(false)}>
-              Cancelar
-            </Button>
+            <Button variant="outline" onClick={() => setIncidentOpen(false)}>Cancelar</Button>
             <Button onClick={salvarIncidente} disabled={savingIncident}>
-              {savingIncident ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <AlertTriangle className="mr-2 h-4 w-4" />
-              )}
+              {savingIncident ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AlertTriangle className="mr-2 h-4 w-4" />}
               Registrar
             </Button>
           </DialogFooter>
@@ -1230,22 +713,16 @@ function Corridas() {
             </DialogDescription>
           </DialogHeader>
           <div className="my-4 flex flex-col items-center gap-2">
-            <div className="h-20 w-20 rounded-full bg-green-500/15 flex items-center justify-center text-4xl">
-              ✅
-            </div>
+            <div className="h-20 w-20 rounded-full bg-green-500/15 flex items-center justify-center text-4xl">✅</div>
             {deliveredInfo?.clienteNome && (
-              <p className="text-sm text-muted-foreground">
-                Cliente: <b>{deliveredInfo.clienteNome}</b>
-              </p>
+              <p className="text-sm text-muted-foreground">Cliente: <b>{deliveredInfo.clienteNome}</b></p>
             )}
             {deliveredInfo && deliveredInfo.valorCents > 0 && (
               <p className="text-lg font-black text-primary">
                 + R$ {(deliveredInfo.valorCents / 100).toFixed(2).replace(".", ",")}
               </p>
             )}
-            <p className="text-xs text-muted-foreground">
-              Você já está online para novas corridas.
-            </p>
+            <p className="text-xs text-muted-foreground">Você já está online para novas corridas.</p>
           </div>
           <DialogFooter>
             <button
@@ -1258,15 +735,7 @@ function Corridas() {
         </DialogContent>
       </Dialog>
 
-      <Dialog
-        open={navPickerOpen}
-        onOpenChange={(o) => {
-          if (!o) {
-            setNavPickerOpen(false);
-            setNavTarget(null);
-          }
-        }}
-      >
+      <Dialog open={navPickerOpen} onOpenChange={(o) => { if (!o) { setNavPickerOpen(false); setNavTarget(null); } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Abrir navegação</DialogTitle>
@@ -1275,67 +744,36 @@ function Corridas() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-2 py-2">
-            {navTarget &&
-              (() => {
-                const q = encodeURIComponent(navTarget.address);
-                const isIOS =
-                  typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
-                const openAndAdvance = (url: string) => {
-                  window.open(url, "_blank");
-                  const next = navTarget.next;
-                  setNavPickerOpen(false);
-                  setNavTarget(null);
-                  setTimeout(() => avancar(next), 300);
-                };
-                return (
-                  <>
-                    <Button
-                      size="lg"
-                      className="w-full justify-start"
-                      onClick={() =>
-                        openAndAdvance(
-                          `https://www.google.com/maps/dir/?api=1&destination=${q}&travelmode=driving`,
-                        )
-                      }
-                    >
-                      <Navigation className="mr-2 h-4 w-4" /> Google Maps
-                    </Button>
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="w-full justify-start"
-                      onClick={() => openAndAdvance(`https://waze.com/ul?q=${q}&navigate=yes`)}
-                    >
-                      <Navigation className="mr-2 h-4 w-4" /> Waze
-                    </Button>
-                    {isIOS && (
-                      <Button
-                        size="lg"
-                        variant="outline"
-                        className="w-full justify-start"
-                        onClick={() =>
-                          openAndAdvance(`https://maps.apple.com/?daddr=${q}&dirflg=d`)
-                        }
-                      >
-                        <Navigation className="mr-2 h-4 w-4" /> Apple Maps
-                      </Button>
-                    )}
-                    <p className="mt-1 text-center text-xs text-muted-foreground truncate">
-                      {navTarget.address}
-                    </p>
-                  </>
-                );
-              })()}
-          </div>
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              className="w-full"
-              onClick={() => {
+            {navTarget && (() => {
+              const q = encodeURIComponent(navTarget.address);
+              const isIOS = typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
+              const openAndAdvance = (url: string) => {
+                window.open(url, "_blank");
+                const next = navTarget.next;
                 setNavPickerOpen(false);
                 setNavTarget(null);
-              }}
-            >
+                setTimeout(() => avancar(next), 300);
+              };
+              return (
+                <>
+                  <Button size="lg" className="w-full justify-start" onClick={() => openAndAdvance(`https://www.google.com/maps/dir/?api=1&destination=${q}&travelmode=driving`)}>
+                    <Navigation className="mr-2 h-4 w-4" /> Google Maps
+                  </Button>
+                  <Button size="lg" variant="outline" className="w-full justify-start" onClick={() => openAndAdvance(`https://waze.com/ul?q=${q}&navigate=yes`)}>
+                    <Navigation className="mr-2 h-4 w-4" /> Waze
+                  </Button>
+                  {isIOS && (
+                    <Button size="lg" variant="outline" className="w-full justify-start" onClick={() => openAndAdvance(`https://maps.apple.com/?daddr=${q}&dirflg=d`)}>
+                      <Navigation className="mr-2 h-4 w-4" /> Apple Maps
+                    </Button>
+                  )}
+                  <p className="mt-1 text-center text-xs text-muted-foreground truncate">{navTarget.address}</p>
+                </>
+              );
+            })()}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" className="w-full" onClick={() => { setNavPickerOpen(false); setNavTarget(null); }}>
               Cancelar
             </Button>
           </DialogFooter>
