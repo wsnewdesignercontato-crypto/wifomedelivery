@@ -22,26 +22,40 @@ export type ReceiptOrder = {
   tipo_entrega: "delivery" | "pickup" | null;
   observacoes?: string | null;
   endereco_entrega?: {
-    rua?: string; numero?: string | null; complemento?: string | null;
-    bairro?: string | null; cidade?: string; estado?: string | null; cep?: string | null;
+    rua?: string;
+    numero?: string | null;
+    complemento?: string | null;
+    bairro?: string | null;
+    cidade?: string;
+    estado?: string | null;
+    cep?: string | null;
   } | null;
   troco_para_cents?: number | null;
   codigo_entrega?: string | null;
 };
-export type ReceiptEstab = { nome: string; telefone?: string | null; endereco?: string | null; cnpj?: string | null };
+export type ReceiptEstab = {
+  nome: string;
+  telefone?: string | null;
+  endereco?: string | null;
+  cnpj?: string | null;
+};
 export type ReceiptContact = { nome?: string | null; telefone?: string | null } | null;
 
 const fmt = (c: number) =>
   (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 const PAY_LABEL: Record<string, string> = {
-  pix: "PIX", cartao: "Cartão", dinheiro: "Dinheiro", carteira: "Carteira",
+  pix: "PIX",
+  cartao: "Cartão",
+  dinheiro: "Dinheiro",
+  carteira: "Carteira",
 };
 
 function escapeHtml(s: string) {
-  return s.replace(/[&<>"']/g, (c) => (
-    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string
-  ));
+  return s.replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string,
+  );
 }
 
 export function buildReceiptHtml(
@@ -59,19 +73,25 @@ export function buildReceiptHtml(
         addr.bairro,
         [addr.cidade, addr.estado].filter(Boolean).join("/"),
         addr.cep,
-      ].filter(Boolean).join(" · ")
+      ]
+        .filter(Boolean)
+        .join(" · ")
     : null;
 
-  const itemsHtml = items.map((it) => {
-    const line = `${it.quantidade}x ${escapeHtml(it.nome_snapshot)}`;
-    const total = fmt(it.preco_unit_cents * it.quantidade);
-    const addons = (it.addons ?? []).map((a) => {
-      const p = a.preco_extra_cents ? ` (${fmt(a.preco_extra_cents)})` : "";
-      return `<div class="ad">+ ${escapeHtml(a.nome)}${p}</div>`;
-    }).join("");
-    const obs = it.observacoes ? `<div class="obs">Obs: ${escapeHtml(it.observacoes)}</div>` : "";
-    return `<div class="it"><div class="row"><span>${line}</span><span>${total}</span></div>${addons}${obs}</div>`;
-  }).join("");
+  const itemsHtml = items
+    .map((it) => {
+      const line = `${it.quantidade}x ${escapeHtml(it.nome_snapshot)}`;
+      const total = fmt(it.preco_unit_cents * it.quantidade);
+      const addons = (it.addons ?? [])
+        .map((a) => {
+          const p = a.preco_extra_cents ? ` (${fmt(a.preco_extra_cents)})` : "";
+          return `<div class="ad">+ ${escapeHtml(a.nome)}${p}</div>`;
+        })
+        .join("");
+      const obs = it.observacoes ? `<div class="obs">Obs: ${escapeHtml(it.observacoes)}</div>` : "";
+      return `<div class="it"><div class="row"><span>${line}</span><span>${total}</span></div>${addons}${obs}</div>`;
+    })
+    .join("");
 
   return `<!doctype html>
 <html><head><meta charset="utf-8"><title>Pedido #${order.id.slice(0, 8)}</title>
@@ -106,7 +126,7 @@ ${order.troco_para_cents ? `<div class="row"><span>Troco para</span><span>${fmt(
 <div class="sep"></div>
 <div><strong>Cliente:</strong> ${escapeHtml(contact?.nome || "—")}</div>
 ${contact?.telefone ? `<div><strong>Telefone:</strong> ${escapeHtml(contact.telefone)}</div>` : ""}
-${enderecoStr ? `<div><strong>Endereço:</strong> ${escapeHtml(enderecoStr)}</div>` : (order.tipo_entrega === "pickup" ? `<div><em>Cliente retira no local</em></div>` : "")}
+${enderecoStr ? `<div><strong>Endereço:</strong> ${escapeHtml(enderecoStr)}</div>` : order.tipo_entrega === "pickup" ? `<div><em>Cliente retira no local</em></div>` : ""}
 ${order.codigo_entrega ? `<div class="sep"></div><div class="muted center">Código de entrega</div><div class="code">${escapeHtml(order.codigo_entrega)}</div>` : ""}
 <div class="sep"></div>
 ${itemsHtml}

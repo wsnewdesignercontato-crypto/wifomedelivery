@@ -24,6 +24,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useMyCourier, fmt } from "@/hooks/use-courier";
+import {
+  canCourierAccessRides,
+  canCourierGoOnline,
+  getCourierApprovalLabel,
+} from "@/lib/courier-approval";
 
 export const Route = createFileRoute("/_authenticated/entregador/")({
   component: Home,
@@ -68,6 +73,8 @@ const FLOW = [
 function Home() {
   const { courier } = useMyCourier();
   const qc = useQueryClient();
+  const canGoOnline = canCourierGoOnline(courier);
+  const canReceiveRides = canCourierAccessRides(courier);
   const [online, setOnline] = useState(
     courier?.status === "online" || courier?.status === "ocupado",
   );
@@ -151,6 +158,11 @@ function Home() {
   }
 
   async function loadDisponiveis() {
+    if (!canReceiveRides) {
+      setDisponiveis([]);
+      return;
+    }
+
     const { data } = await supabase
       .from("deliveries")
       .select("id,order_id,status,valor_entrega_cents,entregador_id")
@@ -164,7 +176,8 @@ function Home() {
     if (!courier) return;
     void loadStats();
     void loadAtiva();
-    if (online) void loadDisponiveis();
+    if (online && canReceiveRides) void loadDisponiveis();
+    else setDisponiveis([]);
   });
 
   useEffect(() => {
@@ -187,6 +200,11 @@ function Home() {
 
   async function toggleOnline(v: boolean) {
     if (!courier) return;
+    if (v && !canGoOnline) {
+      setOnline(false);
+      toast.error("Seu cadastro ainda esta em analise e nao pode ficar online.");
+      return;
+    }
     setOnline(v);
     await supabase
       .from("courier_profiles")
@@ -197,6 +215,9 @@ function Home() {
 
   async function aceitar(d: Delivery) {
     if (!courier) return;
+    if (!canReceiveRides) {
+      return toast.error("Seu cadastro ainda nao foi aprovado para receber corridas.");
+    }
     const { data, error } = await supabase
       .from("deliveries")
       .update({
@@ -324,13 +345,21 @@ function Home() {
                   Recebendo corridas
                 </p>
                 <div className="mt-3 flex items-center gap-3">
-                  <Switch checked={online} onCheckedChange={toggleOnline} />
+                  <Switch
+                    checked={online}
+                    onCheckedChange={toggleOnline}
+                    disabled={!canGoOnline && !online}
+                  />
                   <div>
                     <p className="text-sm font-bold text-foreground">
                       {online ? "Voce esta online" : "Voce esta offline"}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {online ? "Ofertas em tempo real habilitadas" : "Ative para voltar a receber"}
+                      {online
+                        ? "Ofertas em tempo real habilitadas"
+                        : canGoOnline
+                          ? "Ative para voltar a receber"
+                          : "Aguardando aprovacao do cadastro"}
                     </p>
                   </div>
                 </div>
@@ -376,9 +405,7 @@ function Home() {
               </span>
               <span className="inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 shadow-sm dark:bg-card/80">
                 <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                {courier.kyc_status === "approved" || courier.aprovacao === "aprovado"
-                  ? "Cadastro validado"
-                  : "Cadastro em analise"}
+                {getCourierApprovalLabel(courier)}
               </span>
               <span className="inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1.5 shadow-sm dark:bg-card/80">
                 <MapPin className="h-3.5 w-3.5 text-primary" />
@@ -538,7 +565,7 @@ function Home() {
         </section>
       ) : null}
 
-      {!ativa && online ? (
+      {!ativa && online && canReceiveRides ? (
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -581,11 +608,14 @@ function Home() {
         <section className="card-premium rounded-[1.75rem] border-dashed p-10 text-center">
           <RouteIcon className="mx-auto h-10 w-10 text-muted-foreground" />
           <p className="mt-3 text-lg font-bold text-foreground">
-            Ative seu modo online para voltar ao mapa de corridas
+            {canGoOnline
+              ? "Ative seu modo online para voltar ao mapa de corridas"
+              : "Seu cadastro ainda esta em analise"}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Quando voce fica online, o app libera ofertas em tempo real, leitura de desempenho e
-            ganhos do dia.
+            {canGoOnline
+              ? "Quando voce fica online, o app libera ofertas em tempo real, leitura de desempenho e ganhos do dia."
+              : "Assim que o admin aprovar seu cadastro e documentos, o app libera corridas em tempo real."}
           </p>
         </section>
       ) : null}

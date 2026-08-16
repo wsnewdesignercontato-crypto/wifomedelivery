@@ -58,11 +58,17 @@ function ClientesPage() {
 
   async function toggleBlock(userId: string, block: boolean) {
     if (block) {
-      const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "cliente");
+      const { error } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId)
+        .eq("role", "cliente");
       if (error) return toast.error("Falha ao bloquear");
       toast.success("Perfil cliente removido");
     } else {
-      const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "cliente" });
+      const { error } = await supabase
+        .from("user_roles")
+        .insert({ user_id: userId, role: "cliente" });
       if (error) return toast.error("Falha ao restaurar");
       toast.success("Perfil cliente restaurado");
     }
@@ -88,7 +94,12 @@ function ClientesPage() {
         </div>
         <div className="relative w-full max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nome ou telefone" className="pl-9" />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar por nome ou telefone"
+            className="pl-9"
+          />
         </div>
       </div>
 
@@ -128,7 +139,9 @@ function ClientesPage() {
                       </div>
                       <div>
                         <p className="font-medium text-foreground">{c.nome || "Sem nome"}</p>
-                        <p className="font-mono text-[10px] text-muted-foreground">{c.id.slice(0, 8)}</p>
+                        <p className="font-mono text-[10px] text-muted-foreground">
+                          {c.id.slice(0, 8)}
+                        </p>
                       </div>
                     </div>
                   </td>

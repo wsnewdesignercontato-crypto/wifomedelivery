@@ -6,17 +6,40 @@ export const Route = createFileRoute("/_authenticated/cliente/perfil/termos")({
 });
 
 const DOCS = [
-  { title: "Termos de uso", desc: "Regras para usar o aplicativo WiFome", href: "https://wifome.com.br/termos" },
-  { title: "Política de privacidade", desc: "Como tratamos seus dados", href: "https://wifome.com.br/privacidade" },
-  { title: "Política de cookies", desc: "Uso de cookies e tecnologias similares", href: "https://wifome.com.br/cookies" },
-  { title: "LGPD — Seus direitos", desc: "Consulta, exclusão e portabilidade de dados", href: "https://wifome.com.br/lgpd" },
-  { title: "Código de conduta", desc: "Boas práticas para clientes, lojas e entregadores", href: "https://wifome.com.br/conduta" },
+  {
+    title: "Termos de uso",
+    desc: "Regras para usar o aplicativo WiFome",
+    href: "https://wifome.com.br/termos",
+  },
+  {
+    title: "Política de privacidade",
+    desc: "Como tratamos seus dados",
+    href: "https://wifome.com.br/privacidade",
+  },
+  {
+    title: "Política de cookies",
+    desc: "Uso de cookies e tecnologias similares",
+    href: "https://wifome.com.br/cookies",
+  },
+  {
+    title: "LGPD — Seus direitos",
+    desc: "Consulta, exclusão e portabilidade de dados",
+    href: "https://wifome.com.br/lgpd",
+  },
+  {
+    title: "Código de conduta",
+    desc: "Boas práticas para clientes, lojas e entregadores",
+    href: "https://wifome.com.br/conduta",
+  },
 ];
 
 function TermosPage() {
   return (
     <div className="space-y-5">
-      <Link to="/cliente/perfil" className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+      <Link
+        to="/cliente/perfil"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground"
+      >
         <ChevronLeft className="h-4 w-4" /> Voltar
       </Link>
       <h1 className="flex items-center gap-2 text-xl font-bold">

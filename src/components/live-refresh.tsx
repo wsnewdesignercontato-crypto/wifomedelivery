@@ -18,7 +18,9 @@ function useVersionWatcher() {
           cache: "no-store",
         });
         const html = await res.text();
-        const scripts = Array.from(html.matchAll(/src="([^"]*assets\/[^"]+\.js)"/g)).map((m) => m[1]);
+        const scripts = Array.from(html.matchAll(/src="([^"]*assets\/[^"]+\.js)"/g)).map(
+          (m) => m[1],
+        );
         return scripts.sort().join("|") || null;
       } catch {
         return null;
@@ -72,7 +74,6 @@ function useVersionWatcher() {
     };
   }, []);
 }
-
 
 /**
  * Mantém o app sempre atualizado: revalida dados após qualquer salvamento,

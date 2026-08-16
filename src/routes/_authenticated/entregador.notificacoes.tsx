@@ -7,12 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { PushToggleCard } from "@/components/push-toggle-card";
 import { LocationToggleCard } from "@/components/location-toggle-card";
 
-
 export const Route = createFileRoute("/_authenticated/entregador/notificacoes")({
   component: Notif,
 });
 
-type N = { id: string; titulo: string; mensagem: string; lida: boolean; created_at: string; link_url: string | null };
+type N = {
+  id: string;
+  titulo: string;
+  mensagem: string;
+  lida: boolean;
+  created_at: string;
+  link_url: string | null;
+};
 
 function Notif() {
   const { courier } = useMyCourier();
@@ -20,10 +26,14 @@ function Notif() {
 
   useEffect(() => {
     if (!courier) return;
-    supabase.from("notifications").select("*").eq("user_id", courier.user_id)
+    supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", courier.user_id)
       .in("audience", ["entregador", "all"])
       .eq("lida", false)
-      .order("created_at", { ascending: false }).limit(100)
+      .order("created_at", { ascending: false })
+      .limit(100)
       .then(({ data }) => setList((data ?? []) as N[]));
   }, [courier]);
 
@@ -38,7 +48,6 @@ function Notif() {
       <PushToggleCard />
       <LocationToggleCard />
       {list.length === 0 ? (
-
         <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
           <Bell className="mx-auto h-10 w-10 text-muted-foreground" />
           <p className="mt-3 text-sm text-muted-foreground">Sem notificações.</p>
@@ -46,14 +55,19 @@ function Notif() {
       ) : (
         <div className="space-y-2">
           {list.map((n) => (
-            <button key={n.id} onClick={() => marcar(n.id)}
-              className="w-full rounded-2xl border border-primary/40 bg-primary/5 p-4 text-left shadow-card transition hover:bg-primary/10">
+            <button
+              key={n.id}
+              onClick={() => marcar(n.id)}
+              className="w-full rounded-2xl border border-primary/40 bg-primary/5 p-4 text-left shadow-card transition hover:bg-primary/10"
+            >
               <div className="flex items-center justify-between">
                 <p className="font-semibold">{n.titulo}</p>
                 <Badge>Nova</Badge>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">{n.mensagem}</p>
-              <p className="mt-2 text-[11px] text-muted-foreground">{new Date(n.created_at).toLocaleString("pt-BR")}</p>
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                {new Date(n.created_at).toLocaleString("pt-BR")}
+              </p>
             </button>
           ))}
         </div>
@@ -61,4 +75,3 @@ function Notif() {
     </div>
   );
 }
-

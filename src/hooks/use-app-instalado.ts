@@ -2,6 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 
 export type PerfilApp = "cliente" | "estabelecimento" | "entregador";
 
+type NavigatorWithInstallSignals = Navigator & {
+  standalone?: boolean;
+  getInstalledRelatedApps?: () => Promise<Array<{ platform?: string; url?: string; id?: string }>>;
+};
+
 export const manifestPerfil: Record<PerfilApp, string> = {
   cliente: "/manifest-cliente.webmanifest?v=2",
   estabelecimento: "/manifest-estabelecimento.webmanifest?v=2",
@@ -24,9 +29,10 @@ export function marcarInstalado(perfil: PerfilApp) {
 export function perfilInstaladoEmExecucao(): PerfilApp | null {
   if (typeof window === "undefined") return null;
 
+  const browserNavigator = window.navigator as NavigatorWithInstallSignals;
   const standalone =
     window.matchMedia?.("(display-mode: standalone)").matches ||
-    (window.navigator as any).standalone === true ||
+    browserNavigator.standalone === true ||
     document.referrer.includes("android-app://");
 
   if (!standalone) return null;
@@ -61,11 +67,10 @@ export function lerInstalado(perfil: PerfilApp) {
 
 /** Consulta o sistema (Android/Chrome) para saber se o app deste perfil está instalado. */
 async function checarNoSistema(perfil: PerfilApp): Promise<boolean> {
-  const api = (navigator as any).getInstalledRelatedApps;
+  const api = (navigator as NavigatorWithInstallSignals).getInstalledRelatedApps;
   if (typeof api !== "function") return false;
   try {
-    const apps: Array<{ platform?: string; url?: string; id?: string }> =
-      await api.call(navigator);
+    const apps: Array<{ platform?: string; url?: string; id?: string }> = await api.call(navigator);
     const alvo = manifestPerfil[perfil].split("?")[0];
     return apps.some((a) => (a.url ?? a.id ?? "").includes(alvo));
   } catch {

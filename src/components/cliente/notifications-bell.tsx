@@ -2,16 +2,11 @@ import { useEffect, useState } from "react";
 import { Bell, BellOff, BellRing, CheckCheck, Package, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { playBellChime } from "@/lib/notification-sound";
 import { setAppBadgeCount, usePushNotifications } from "@/hooks/use-push-notifications";
-
 
 type Notif = {
   id: string;
@@ -35,11 +30,9 @@ export function NotificationsBell({
   const navigate = useNavigate();
   const push = usePushNotifications();
 
-
   useEffect(() => {
     let alive = true;
-    const audienceOk = (a: string | null | undefined) =>
-      !a || a === audience || a === "all";
+    const audienceOk = (a: string | null | undefined) => !a || a === audience || a === "all";
     async function load() {
       const { data } = await supabase
         .from("notifications")
@@ -56,7 +49,12 @@ export function NotificationsBell({
       .channel(`notif-${audience}-${userId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${userId}`,
+        },
         (p) => {
           const n = p.new as Notif & { audience?: string | null };
           if (!audienceOk(n.audience)) return;
@@ -66,21 +64,21 @@ export function NotificationsBell({
           const isDelivered = /entregue/i.test(n.mensagem);
           if (isDelivered && audience === "cliente") {
             if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-              try { navigator.vibrate?.([120, 60, 120]); } catch { /* ignore */ }
+              try {
+                navigator.vibrate?.([120, 60, 120]);
+              } catch {
+                /* ignore */
+              }
             }
             toast.success("🎉 " + n.titulo, {
               description: n.mensagem,
               duration: 8000,
-              action: n.link_url
-                ? { label: "Avaliar", onClick: () => handleClick(n) }
-                : undefined,
+              action: n.link_url ? { label: "Avaliar", onClick: () => handleClick(n) } : undefined,
             });
           } else {
             toast(n.titulo, {
               description: n.mensagem,
-              action: n.link_url
-                ? { label: "Ver", onClick: () => handleClick(n) }
-                : undefined,
+              action: n.link_url ? { label: "Ver", onClick: () => handleClick(n) } : undefined,
             });
           }
         },
@@ -98,7 +96,6 @@ export function NotificationsBell({
   useEffect(() => {
     setAppBadgeCount(unread);
   }, [unread]);
-
 
   async function handleClick(n: Notif) {
     setItems((prev) => prev.filter((i) => i.id !== n.id));
@@ -175,9 +172,7 @@ export function NotificationsBell({
                 <Bell className="h-5 w-5 text-muted-foreground" />
               </div>
               <p className="text-sm font-medium">Sem notificações</p>
-              <p className="text-xs text-muted-foreground">
-                Você verá aqui novas atualizações.
-              </p>
+              <p className="text-xs text-muted-foreground">Você verá aqui novas atualizações.</p>
             </div>
           ) : (
             <ul className="divide-y divide-border/60">
@@ -213,7 +208,11 @@ export function NotificationsBell({
           <div className="flex items-center justify-between gap-3 border-t border-border/60 bg-muted/30 px-3 py-2.5">
             <div className="flex min-w-0 items-center gap-2">
               <div className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-                {push.subscribed ? <BellRing className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                {push.subscribed ? (
+                  <BellRing className="h-4 w-4" />
+                ) : (
+                  <BellOff className="h-4 w-4" />
+                )}
               </div>
               <div className="min-w-0">
                 <p className="truncate text-xs font-semibold">
@@ -237,7 +236,6 @@ export function NotificationsBell({
             </Button>
           </div>
         )}
-
       </PopoverContent>
     </Popover>
   );

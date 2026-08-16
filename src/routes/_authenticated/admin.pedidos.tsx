@@ -40,7 +40,11 @@ async function fetchOrders() {
 }
 
 function PedidosPage() {
-  const { data, isLoading } = useQuery({ queryKey: ["admin-orders-kanban"], queryFn: fetchOrders, refetchInterval: 15000 });
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-orders-kanban"],
+    queryFn: fetchOrders,
+    refetchInterval: 15000,
+  });
   const qc = useQueryClient();
 
   useEffect(() => {
@@ -77,7 +81,10 @@ function PedidosPage() {
         {COLUMNS.map((col) => {
           const items = grouped.get(col.key) ?? [];
           return (
-            <div key={col.key} className="flex min-h-[300px] flex-col rounded-2xl border border-border bg-card p-3 shadow-sm">
+            <div
+              key={col.key}
+              className="flex min-h-[300px] flex-col rounded-2xl border border-border bg-card p-3 shadow-sm"
+            >
               <div className="mb-3 flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
                   <span className={`h-2 w-2 rounded-full ${col.color}`} />
@@ -103,7 +110,9 @@ function PedidosPage() {
                       <span className="font-mono text-[10px] text-muted-foreground">
                         #{o.id.slice(0, 8)}
                       </span>
-                      <span className={`font-bold tabular-nums ${o.status === "delivered" ? "text-success" : "text-foreground"}`}>
+                      <span
+                        className={`font-bold tabular-nums ${o.status === "delivered" ? "text-success" : "text-foreground"}`}
+                      >
                         {brl(o.total_cents)}
                       </span>
                     </div>

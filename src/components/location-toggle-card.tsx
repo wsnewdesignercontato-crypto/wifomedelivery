@@ -16,7 +16,9 @@ export function LocationToggleCard({ className = "" }: { className?: string }) {
   useEffect(() => {
     try {
       setEnabled(localStorage.getItem(KEY) === "1");
-    } catch {}
+    } catch {
+      // Ignore storage failures in private mode.
+    }
     if (typeof navigator !== "undefined" && navigator.permissions?.query) {
       navigator.permissions
         .query({ name: "geolocation" as PermissionName })
@@ -28,51 +30,50 @@ export function LocationToggleCard({ className = "" }: { className?: string }) {
     }
   }, []);
 
-  const toggle = useCallback(
-    async (v: boolean) => {
-      if (!v) {
+  const toggle = useCallback(async (v: boolean) => {
+    if (!v) {
+      setEnabled(false);
+      localStorage.setItem(KEY, "0");
+      toast.success("Localização desativada no app");
+      return;
+    }
+    if (typeof window !== "undefined" && window.self !== window.top) {
+      toast.error(
+        "Abra o app em uma aba própria (ou pelo ícone instalado no celular) para liberar o GPS — a pré-visualização bloqueia o pedido.",
+      );
+      return;
+    }
+    setBusy(true);
+    // Dispara o pedido de permissão do sistema imediatamente.
+    navigator.geolocation.getCurrentPosition(
+      () => {
+        setBusy(false);
+        setEnabled(true);
+        localStorage.setItem(KEY, "1");
+        setPermission("granted");
+        toast.success("Localização ativada");
+      },
+      (err) => {
+        setBusy(false);
         setEnabled(false);
         localStorage.setItem(KEY, "0");
-        toast.success("Localização desativada no app");
-        return;
-      }
-      if (typeof window !== "undefined" && window.self !== window.top) {
-        toast.error(
-          "Abra o app em uma aba própria (ou pelo ícone instalado no celular) para liberar o GPS — a pré-visualização bloqueia o pedido.",
-        );
-        return;
-      }
-      setBusy(true);
-      // Dispara o pedido de permissão do sistema imediatamente.
-      navigator.geolocation.getCurrentPosition(
-        () => {
-          setBusy(false);
-          setEnabled(true);
-          localStorage.setItem(KEY, "1");
-          setPermission("granted");
-          toast.success("Localização ativada");
-        },
-        (err) => {
-          setBusy(false);
-          setEnabled(false);
-          localStorage.setItem(KEY, "0");
-          if (err.code === err.PERMISSION_DENIED) {
-            setPermission("denied");
-            toast.error("Permissão de localização negada. Libere nas configurações do navegador.");
-          } else {
-            toast.error("Não foi possível obter sua localização agora. Tente de novo.");
-          }
-        },
-        { enableHighAccuracy: true, timeout: 10000 },
-      );
-    },
-    [],
-  );
+        if (err.code === err.PERMISSION_DENIED) {
+          setPermission("denied");
+          toast.error("Permissão de localização negada. Libere nas configurações do navegador.");
+        } else {
+          toast.error("Não foi possível obter sua localização agora. Tente de novo.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  }, []);
 
   if (!supported) return null;
 
   return (
-    <div className={`space-y-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 shadow-card ${className}`}>
+    <div
+      className={`space-y-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 shadow-card ${className}`}
+    >
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">

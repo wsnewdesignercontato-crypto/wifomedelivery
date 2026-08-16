@@ -1,10 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 
-type Point = { courier_id: string; lat: number; lng: number; created_at: string; order_id: string | null };
-type Estab = { id: string; nome: string; lat: number; lng: number; is_open: boolean; cidade: string | null };
+type Point = {
+  courier_id: string;
+  lat: number;
+  lng: number;
+  created_at: string;
+  order_id: string | null;
+};
+type Estab = {
+  id: string;
+  nome: string;
+  lat: number;
+  lng: number;
+  is_open: boolean;
+  cidade: string | null;
+};
 
-const BROWSER_KEY = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as string | undefined;
-const TRACKING_ID = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as string | undefined;
+const BROWSER_KEY = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as
+  string | undefined;
+const TRACKING_ID = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as
+  string | undefined;
 
 declare global {
   interface Window {
@@ -192,7 +207,7 @@ export default function LiveMap({
       hasAny = true;
     }
 
-    if (hasAny && (establishments.length + points.length) > 1) {
+    if (hasAny && establishments.length + points.length > 1) {
       map.fitBounds(bounds, 60);
     }
   }, [ready, points, establishments, userLocation]);

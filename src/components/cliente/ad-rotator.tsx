@@ -50,7 +50,9 @@ export function AdRotator({
       const [sponsored, banners] = await Promise.all([
         supabase
           .from("sponsored_ads")
-          .select("id, establishment_id, titulo, subtitulo, imagem_url, banner_path, video_url, destino_url, cta_texto, patrocinado")
+          .select(
+            "id, establishment_id, titulo, subtitulo, imagem_url, banner_path, video_url, destino_url, cta_texto, patrocinado",
+          )
           .eq("ativo", true)
           .eq("status", "approved")
           .order("prioridade", { ascending: false })
@@ -63,7 +65,14 @@ export function AdRotator({
       ]);
       if (sponsored.error) throw sponsored.error;
       const sponsoredAds = (sponsored.data ?? []) as Ad[];
-      const bannerAds: Ad[] = ((banners.data ?? []) as Array<{ id: string; titulo: string; image_url: string; link_url: string | null }>).map((b) => ({
+      const bannerAds: Ad[] = (
+        (banners.data ?? []) as Array<{
+          id: string;
+          titulo: string;
+          image_url: string;
+          link_url: string | null;
+        }>
+      ).map((b) => ({
         id: `banner-${b.id}`,
         establishment_id: null,
         titulo: b.titulo,
@@ -84,7 +93,10 @@ export function AdRotator({
   const { data: seconds = 6 } = useQuery({
     queryKey: ["ad_default_seconds"],
     queryFn: async () => {
-      const { data } = await (supabase as any).from("public_platform_settings").select("ad_default_seconds").maybeSingle();
+      const { data } = await supabase
+        .from("public_platform_settings")
+        .select("ad_default_seconds")
+        .maybeSingle();
       return (data as { ad_default_seconds?: number } | null)?.ad_default_seconds ?? 6;
     },
     refetchOnWindowFocus: false,
@@ -98,7 +110,9 @@ export function AdRotator({
     (async () => {
       const next: Record<string, string> = {};
       for (const a of missing) {
-        const { data } = await supabase.storage.from("ad-banners").createSignedUrl(a.banner_path!, 60 * 60);
+        const { data } = await supabase.storage
+          .from("ad-banners")
+          .createSignedUrl(a.banner_path!, 60 * 60);
         if (data?.signedUrl) next[a.id] = data.signedUrl;
       }
       if (Object.keys(next).length) setSigned((s) => ({ ...s, ...next }));
@@ -108,10 +122,11 @@ export function AdRotator({
   const [idx, setIdx] = useState(0);
   const count = ads.length;
   const rotationMs = Math.min(30, Math.max(3, Number(seconds) || 6)) * 1000;
+  const adsKey = ads.map((ad) => ad.id).join("|");
 
   useEffect(() => {
     setIdx(0);
-  }, [ads.map((ad) => ad.id).join("|")]);
+  }, [adsKey]);
 
   useEffect(() => {
     if (count <= 1) return;
@@ -120,7 +135,6 @@ export function AdRotator({
     }, rotationMs);
     return () => clearInterval(t);
   }, [count, rotationMs]);
-
 
   if (ads.length === 0) return fallback ? <>{fallback}</> : null;
 

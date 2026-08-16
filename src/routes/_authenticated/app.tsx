@@ -20,10 +20,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 type Role = "cliente" | "estabelecimento" | "entregador" | "admin";
 
 async function fetchRoles(userId: string): Promise<Role[]> {
-  const { data, error } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId);
+  const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", userId);
   if (error) throw error;
   return (data ?? []).map((r) => r.role as Role);
 }
@@ -121,9 +118,7 @@ function AppDispatcher() {
 
   async function addRoleAndGo(role: "cliente" | "estabelecimento" | "entregador") {
     setState("adding");
-    const { error } = await supabase
-      .from("user_roles")
-      .insert({ user_id: user.id, role });
+    const { error } = await supabase.from("user_roles").insert({ user_id: user.id, role });
     if (error && !error.message.includes("duplicate")) {
       toast.error("Não foi possível ativar este perfil");
       setState("pick");
@@ -157,9 +152,7 @@ function AppDispatcher() {
             return (
               <button
                 key={key}
-                onClick={() =>
-                  tem ? navigate({ to, replace: true }) : addRoleAndGo(key)
-                }
+                onClick={() => (tem ? navigate({ to, replace: true }) : addRoleAndGo(key))}
                 className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-4 text-left shadow-card transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-brand"
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-brand text-primary-foreground shadow-brand">

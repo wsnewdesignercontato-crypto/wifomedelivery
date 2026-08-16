@@ -63,7 +63,9 @@ function CarrinhoPage() {
     setLoading(true);
     const { data } = await supabase
       .from("cart_items")
-      .select("id,product_id,nome_snapshot,preco_unit_cents,quantidade,observacoes,establishment_id,addons")
+      .select(
+        "id,product_id,nome_snapshot,preco_unit_cents,quantidade,observacoes,establishment_id,addons",
+      )
       .eq("user_id", user.id)
       .order("created_at");
     const arr = ((data ?? []) as unknown as Item[]).map((i) => ({
@@ -86,7 +88,9 @@ function CarrinhoPage() {
     const nowIso = new Date().toISOString();
     const { data: cps } = await supabase
       .from("coupons")
-      .select("id,code,type,value_cents,percent,min_order_cents,descricao,establishment_id,expires_at,starts_at,ativo")
+      .select(
+        "id,code,type,value_cents,percent,min_order_cents,descricao,establishment_id,expires_at,starts_at,ativo",
+      )
       .eq("ativo", true)
       .or(`establishment_id.is.null${estabId ? `,establishment_id.eq.${estabId}` : ""}`)
       .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
@@ -118,14 +122,21 @@ function CarrinhoPage() {
   const frete = estab?.taxa_entrega_cents ?? 0;
   const total = subtotal + frete;
 
-  if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+  if (loading)
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
 
   if (items.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
         <ShoppingBag className="mx-auto h-10 w-10 text-muted-foreground" />
         <p className="mt-3 text-sm text-muted-foreground">Seu carrinho está vazio.</p>
-        <Button className="mt-4" onClick={() => navigate({ to: "/cliente" })}>Descobrir restaurantes</Button>
+        <Button className="mt-4" onClick={() => navigate({ to: "/cliente" })}>
+          Descobrir restaurantes
+        </Button>
       </div>
     );
   }
@@ -137,7 +148,9 @@ function CarrinhoPage() {
           <h1 className="text-xl font-bold">Carrinho</h1>
           {estab && <p className="text-sm text-muted-foreground">{estab.nome}</p>}
         </div>
-        <Button variant="ghost" size="sm" onClick={limpar}>Esvaziar</Button>
+        <Button variant="ghost" size="sm" onClick={limpar}>
+          Esvaziar
+        </Button>
       </div>
 
       <div className="space-y-2">
@@ -157,16 +170,41 @@ function CarrinhoPage() {
                   ))}
                 </ul>
               )}
-              {i.observacoes && <p className="mt-0.5 text-xs italic text-muted-foreground">"{i.observacoes}"</p>}
-              <p className="mt-1 text-sm font-bold text-primary">{fmt(i.preco_unit_cents * i.quantidade)}</p>
+              {i.observacoes && (
+                <p className="mt-0.5 text-xs italic text-muted-foreground">"{i.observacoes}"</p>
+              )}
+              <p className="mt-1 text-sm font-bold text-primary">
+                {fmt(i.preco_unit_cents * i.quantidade)}
+              </p>
             </div>
             <div className="flex flex-col items-end gap-2">
               <div className="flex items-center gap-1">
-                <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => alterar(i.id, i.quantidade - 1)}><Minus className="h-3 w-3" /></Button>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-7 w-7"
+                  onClick={() => alterar(i.id, i.quantidade - 1)}
+                >
+                  <Minus className="h-3 w-3" />
+                </Button>
                 <span className="w-6 text-center text-sm font-bold">{i.quantidade}</span>
-                <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => alterar(i.id, i.quantidade + 1)}><Plus className="h-3 w-3" /></Button>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-7 w-7"
+                  onClick={() => alterar(i.id, i.quantidade + 1)}
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
               </div>
-              <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground" onClick={() => remover(i.id)}><Trash2 className="h-3 w-3" /></Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 text-muted-foreground"
+                onClick={() => remover(i.id)}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
             </div>
           </div>
         ))}
@@ -176,15 +214,25 @@ function CarrinhoPage() {
         <div className="flex items-center justify-between">
           <label className="text-xs font-medium">Cupom (opcional)</label>
           {cupom && (
-            <button onClick={() => setCupom("")} className="text-[11px] text-muted-foreground underline">
+            <button
+              onClick={() => setCupom("")}
+              className="text-[11px] text-muted-foreground underline"
+            >
               limpar
             </button>
           )}
         </div>
-        <Input value={cupom} onChange={(e) => setCupom(e.target.value.toUpperCase())} placeholder="Ex: BEMVINDO10" className="mt-1" />
+        <Input
+          value={cupom}
+          onChange={(e) => setCupom(e.target.value.toUpperCase())}
+          placeholder="Ex: BEMVINDO10"
+          className="mt-1"
+        />
         {coupons.length > 0 ? (
           <div className="mt-3 space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Cupons disponíveis</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Cupons disponíveis
+            </p>
             <div className="flex flex-wrap gap-2">
               {coupons.map((c) => {
                 const active = cupom === c.code;
@@ -192,8 +240,8 @@ function CarrinhoPage() {
                   c.type === "percent"
                     ? `${c.percent}% OFF`
                     : c.type === "fixed"
-                    ? `${fmt(c.value_cents)} OFF`
-                    : "Frete grátis";
+                      ? `${fmt(c.value_cents)} OFF`
+                      : "Frete grátis";
                 return (
                   <button
                     key={c.id}
@@ -208,9 +256,13 @@ function CarrinhoPage() {
                     <span className="font-mono text-xs font-bold">{c.code}</span>
                     <span className="text-[11px] font-semibold">{label}</span>
                     {c.min_order_cents > 0 && (
-                      <span className="text-[10px] text-muted-foreground">mín. {fmt(c.min_order_cents)}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        mín. {fmt(c.min_order_cents)}
+                      </span>
                     )}
-                    {c.descricao && <span className="text-[10px] text-muted-foreground">{c.descricao}</span>}
+                    {c.descricao && (
+                      <span className="text-[10px] text-muted-foreground">{c.descricao}</span>
+                    )}
                   </button>
                 );
               })}
@@ -233,11 +285,7 @@ function CarrinhoPage() {
         )}
       </div>
 
-      <Link
-        to="/cliente/checkout"
-        search={{ cupom: cupom || undefined }}
-        className="block"
-      >
+      <Link to="/cliente/checkout" search={{ cupom: cupom || undefined }} className="block">
         <Button
           className="w-full"
           size="lg"
@@ -258,7 +306,9 @@ function CarrinhoPage() {
 
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (
-    <div className={`flex justify-between ${bold ? "text-base font-bold" : "text-muted-foreground"}`}>
+    <div
+      className={`flex justify-between ${bold ? "text-base font-bold" : "text-muted-foreground"}`}
+    >
       <span>{label}</span>
       <span className={bold ? "text-foreground" : ""}>{value}</span>
     </div>

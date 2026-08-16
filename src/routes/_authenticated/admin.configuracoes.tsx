@@ -135,7 +135,10 @@ function ConfigPage() {
               step="0.5"
               value={(form.default_delivery_fee_cents / 100).toFixed(2)}
               onChange={(e) =>
-                setForm({ ...form, default_delivery_fee_cents: Math.round(Number(e.target.value) * 100) })
+                setForm({
+                  ...form,
+                  default_delivery_fee_cents: Math.round(Number(e.target.value) * 100),
+                })
               }
               className="mt-1.5"
             />
@@ -163,7 +166,8 @@ function ConfigPage() {
             className="mt-1.5"
           />
           <p className="mt-1 text-xs text-muted-foreground">
-            Estabelecimentos com pelo menos esse número de pedidos entregues ganham o selo laranja "Mais vendido".
+            Estabelecimentos com pelo menos esse número de pedidos entregues ganham o selo laranja
+            "Mais vendido".
           </p>
         </div>
         <div>
@@ -178,7 +182,8 @@ function ConfigPage() {
             className="mt-1.5"
           />
           <p className="mt-1 text-xs text-muted-foreground">
-            Tempo padrão de exibição de cada anúncio antes de girar para o próximo. Sugerido: 5 a 10 segundos.
+            Tempo padrão de exibição de cada anúncio antes de girar para o próximo. Sugerido: 5 a 10
+            segundos.
           </p>
         </div>
 
@@ -186,7 +191,8 @@ function ConfigPage() {
           <div>
             <p className="font-semibold">Score mensal de qualidade</p>
             <p className="text-xs text-muted-foreground">
-              Regras de perda de pontos para estabelecimentos e entregadores. Cada mês começa no valor inicial abaixo.
+              Regras de perda de pontos para estabelecimentos e entregadores. Cada mês começa no
+              valor inicial abaixo.
             </p>
           </div>
 
@@ -195,64 +201,116 @@ function ConfigPage() {
             <div className="grid gap-3 sm:grid-cols-3">
               <div>
                 <Label htmlFor="ss">Valor inicial mensal</Label>
-                <Input id="ss" type="number" min={1} max={1000}
+                <Input
+                  id="ss"
+                  type="number"
+                  min={1}
+                  max={1000}
                   value={form.score_start}
                   onChange={(e) => setForm({ ...form, score_start: Number(e.target.value) })}
-                  className="mt-1.5" />
-                <p className="mt-1 text-[11px] text-muted-foreground">Padrão: 100. Todo mês recomeça neste valor.</p>
+                  className="mt-1.5"
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Padrão: 100. Todo mês recomeça neste valor.
+                </p>
               </div>
               <div>
                 <Label htmlFor="sbw">Faixa "Atenção" abaixo de</Label>
-                <Input id="sbw" type="number" min={1} max={1000}
+                <Input
+                  id="sbw"
+                  type="number"
+                  min={1}
+                  max={1000}
                   value={form.score_band_warn}
                   onChange={(e) => setForm({ ...form, score_band_warn: Number(e.target.value) })}
-                  className="mt-1.5" />
-                <p className="mt-1 text-[11px] text-muted-foreground">Notifica em amarelo ao cair abaixo. Padrão: 85.</p>
+                  className="mt-1.5"
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Notifica em amarelo ao cair abaixo. Padrão: 85.
+                </p>
               </div>
               <div>
                 <Label htmlFor="sbc">Faixa "Crítico" abaixo de</Label>
-                <Input id="sbc" type="number" min={1} max={1000}
+                <Input
+                  id="sbc"
+                  type="number"
+                  min={1}
+                  max={1000}
                   value={form.score_band_critical}
-                  onChange={(e) => setForm({ ...form, score_band_critical: Number(e.target.value) })}
-                  className="mt-1.5" />
-                <p className="mt-1 text-[11px] text-muted-foreground">Notifica em vermelho ao cair abaixo. Padrão: 60.</p>
+                  onChange={(e) =>
+                    setForm({ ...form, score_band_critical: Number(e.target.value) })
+                  }
+                  className="mt-1.5"
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Notifica em vermelho ao cair abaixo. Padrão: 60.
+                </p>
               </div>
             </div>
           </div>
-
 
           <div>
             <p className="mb-2 text-sm font-medium">Atrasos na entrega</p>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <Label htmlFor="dwr">Atenção: proporção de atraso &gt;</Label>
-                <Input id="dwr" type="number" step="0.05" min={1}
+                <Input
+                  id="dwr"
+                  type="number"
+                  step="0.05"
+                  min={1}
                   value={form.score_delay_warn_ratio}
-                  onChange={(e) => setForm({ ...form, score_delay_warn_ratio: Number(e.target.value) })}
-                  className="mt-1.5" />
-                <p className="mt-1 text-[11px] text-muted-foreground">Ex: 1.25 = 25% além do tempo estimado.</p>
+                  onChange={(e) =>
+                    setForm({ ...form, score_delay_warn_ratio: Number(e.target.value) })
+                  }
+                  className="mt-1.5"
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Ex: 1.25 = 25% além do tempo estimado.
+                </p>
               </div>
               <div>
                 <Label htmlFor="dwp">Pontos perdidos (atenção)</Label>
-                <Input id="dwp" type="number" min={0}
+                <Input
+                  id="dwp"
+                  type="number"
+                  min={0}
                   value={form.score_delay_warn_penalty}
-                  onChange={(e) => setForm({ ...form, score_delay_warn_penalty: Number(e.target.value) })}
-                  className="mt-1.5" />
+                  onChange={(e) =>
+                    setForm({ ...form, score_delay_warn_penalty: Number(e.target.value) })
+                  }
+                  className="mt-1.5"
+                />
               </div>
               <div>
                 <Label htmlFor="dsr">Severo: proporção de atraso &gt;</Label>
-                <Input id="dsr" type="number" step="0.05" min={1}
+                <Input
+                  id="dsr"
+                  type="number"
+                  step="0.05"
+                  min={1}
                   value={form.score_delay_severe_ratio}
-                  onChange={(e) => setForm({ ...form, score_delay_severe_ratio: Number(e.target.value) })}
-                  className="mt-1.5" />
-                <p className="mt-1 text-[11px] text-muted-foreground">Ex: 1.5 = 50% além do tempo estimado.</p>
+                  onChange={(e) =>
+                    setForm({ ...form, score_delay_severe_ratio: Number(e.target.value) })
+                  }
+                  className="mt-1.5"
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Ex: 1.5 = 50% além do tempo estimado.
+                </p>
               </div>
               <div>
                 <Label htmlFor="dsp">Pontos perdidos (severo)</Label>
-                <Input id="dsp" type="number" min={0}
+                <Input
+                  id="dsp"
+                  type="number"
+                  min={0}
                   value={form.score_delay_severe_penalty}
-                  onChange={(e) => setForm({ ...form, score_delay_severe_penalty: Number(e.target.value) })}
-                  className="mt-1.5" />
+                  onChange={(e) =>
+                    setForm({ ...form, score_delay_severe_penalty: Number(e.target.value) })
+                  }
+                  className="mt-1.5"
+                />
               </div>
             </div>
           </div>
@@ -262,32 +320,60 @@ function ConfigPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <Label htmlFor="rbm">Nota máxima considerada "ruim" (★)</Label>
-                <Input id="rbm" type="number" min={1} max={5}
+                <Input
+                  id="rbm"
+                  type="number"
+                  min={1}
+                  max={5}
                   value={form.score_review_bad_max}
-                  onChange={(e) => setForm({ ...form, score_review_bad_max: Number(e.target.value) })}
-                  className="mt-1.5" />
-                <p className="mt-1 text-[11px] text-muted-foreground">Notas ≤ este valor perdem os pontos abaixo.</p>
+                  onChange={(e) =>
+                    setForm({ ...form, score_review_bad_max: Number(e.target.value) })
+                  }
+                  className="mt-1.5"
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Notas ≤ este valor perdem os pontos abaixo.
+                </p>
               </div>
               <div>
                 <Label htmlFor="rbp">Pontos perdidos (ruim)</Label>
-                <Input id="rbp" type="number" min={0}
+                <Input
+                  id="rbp"
+                  type="number"
+                  min={0}
                   value={form.score_review_bad_penalty}
-                  onChange={(e) => setForm({ ...form, score_review_bad_penalty: Number(e.target.value) })}
-                  className="mt-1.5" />
+                  onChange={(e) =>
+                    setForm({ ...form, score_review_bad_penalty: Number(e.target.value) })
+                  }
+                  className="mt-1.5"
+                />
               </div>
               <div>
                 <Label htmlFor="rrr">Nota "regular" (★)</Label>
-                <Input id="rrr" type="number" min={1} max={5}
+                <Input
+                  id="rrr"
+                  type="number"
+                  min={1}
+                  max={5}
                   value={form.score_review_regular_rating}
-                  onChange={(e) => setForm({ ...form, score_review_regular_rating: Number(e.target.value) })}
-                  className="mt-1.5" />
+                  onChange={(e) =>
+                    setForm({ ...form, score_review_regular_rating: Number(e.target.value) })
+                  }
+                  className="mt-1.5"
+                />
               </div>
               <div>
                 <Label htmlFor="rrp">Pontos perdidos (regular)</Label>
-                <Input id="rrp" type="number" min={0}
+                <Input
+                  id="rrp"
+                  type="number"
+                  min={0}
                   value={form.score_review_regular_penalty}
-                  onChange={(e) => setForm({ ...form, score_review_regular_penalty: Number(e.target.value) })}
-                  className="mt-1.5" />
+                  onChange={(e) =>
+                    setForm({ ...form, score_review_regular_penalty: Number(e.target.value) })
+                  }
+                  className="mt-1.5"
+                />
               </div>
             </div>
           </div>

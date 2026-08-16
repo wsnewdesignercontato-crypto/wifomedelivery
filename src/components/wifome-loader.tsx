@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useEffect, useState } from "react";
 import { Sandwich, Store, Bike } from "lucide-react";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
@@ -12,7 +13,8 @@ const STEPS = [
 
 export function detectPerfil(pathname?: string): LoaderPerfil {
   const path =
-    pathname ?? (typeof window !== "undefined" ? window.location.pathname + window.location.search : "");
+    pathname ??
+    (typeof window !== "undefined" ? window.location.pathname + window.location.search : "");
   if (path.includes("estabelecimento") || path.includes("estab")) return "estabelecimento";
   if (path.includes("entregador") || path.includes("courier")) return "entregador";
   return "cliente";
@@ -84,16 +86,18 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
   );
 }
 
-
 /** Tela cheia na cor do perfil (laranja/vermelho/verde) com a marca WiFome. */
-export function WifomeLoader({
-  perfil,
-  message,
-}: {
-  perfil?: LoaderPerfil;
-  message?: string;
-}) {
-  const resolved = perfil ?? detectPerfil();
+export function WifomeLoader({ perfil, message }: { perfil?: LoaderPerfil; message?: string }) {
+  const [resolved, setResolved] = useState<LoaderPerfil>(perfil ?? "cliente");
+
+  useEffect(() => {
+    if (perfil) {
+      setResolved(perfil);
+      return;
+    }
+    setResolved(detectPerfil());
+  }, [perfil]);
+
   return (
     <div
       className={`${themeClassFor(resolved)} fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 bg-primary px-6`}

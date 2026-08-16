@@ -52,7 +52,12 @@ type Notif = {
 
 const AUDIENCES: { key: Audience; label: string; icon: typeof Users; desc: string }[] = [
   { key: "cliente", label: "Clientes", icon: Users, desc: "Mensagens para quem faz pedidos" },
-  { key: "estabelecimento", label: "Estabelecimentos", icon: Store, desc: "Mensagens para as lojas parceiras" },
+  {
+    key: "estabelecimento",
+    label: "Estabelecimentos",
+    icon: Store,
+    desc: "Mensagens para as lojas parceiras",
+  },
   { key: "entregador", label: "Entregadores", icon: Bike, desc: "Mensagens para os motoristas" },
 ];
 
@@ -93,16 +98,22 @@ async function fetchUserIds(role: Audience) {
 
 function NotificacoesPage() {
   const [tab, setTab] = useState<Audience>("cliente");
-  const { data: templates = [] } = useQuery({ queryKey: ["notif-templates"], queryFn: fetchTemplates });
-  const { data: history = [], isLoading } = useQuery({ queryKey: ["notifs"], queryFn: fetchNotifs });
+  const { data: templates = [] } = useQuery({
+    queryKey: ["notif-templates"],
+    queryFn: fetchTemplates,
+  });
+  const { data: history = [], isLoading } = useQuery({
+    queryKey: ["notifs"],
+    queryFn: fetchNotifs,
+  });
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Notificações & Campanhas</h1>
         <p className="text-sm text-muted-foreground">
-          Modelos prontos e envio em massa, separados por público. Mensagens de promoção exibem um banner
-          em tela cheia quando o usuário entra no app.
+          Modelos prontos e envio em massa, separados por público. Mensagens de promoção exibem um
+          banner em tela cheia quando o usuário entra no app.
         </p>
       </div>
 
@@ -118,7 +129,12 @@ function NotificacoesPage() {
 
         {AUDIENCES.map((a) => (
           <TabsContent key={a.key} value={a.key} className="mt-5">
-            <AudiencePanel audience={a.key} label={a.label} desc={a.desc} templates={templates.filter((t) => t.audience === a.key)} />
+            <AudiencePanel
+              audience={a.key}
+              label={a.label}
+              desc={a.desc}
+              templates={templates.filter((t) => t.audience === a.key)}
+            />
           </TabsContent>
         ))}
       </Tabs>
@@ -143,7 +159,9 @@ function NotificacoesPage() {
               </div>
               <div className="mt-2 flex gap-2">
                 {n.audience && (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary">{n.audience}</span>
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary">
+                    {n.audience}
+                  </span>
                 )}
                 {n.tipo === "promo" && (
                   <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-500">
@@ -253,10 +271,14 @@ function AudiencePanel({
           </div>
           <p className="mb-4 text-xs text-muted-foreground">{desc}</p>
           <div className="space-y-4">
-            {grupos.length === 0 && <p className="text-sm text-muted-foreground">Nenhum modelo cadastrado.</p>}
+            {grupos.length === 0 && (
+              <p className="text-sm text-muted-foreground">Nenhum modelo cadastrado.</p>
+            )}
             {grupos.map(([cat, list]) => (
               <div key={cat}>
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{cat}</p>
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                  {cat}
+                </p>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {list.map((t) => (
                     <button
@@ -290,7 +312,11 @@ function AudiencePanel({
             </div>
             <div>
               <Label>Link ao tocar (opcional)</Label>
-              <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder={`/${audience}`} />
+              <Input
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                placeholder={`/${audience}`}
+              />
             </div>
 
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
@@ -305,31 +331,52 @@ function AudiencePanel({
               <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
                 <div>
                   <Label>Título do banner</Label>
-                  <Input value={banner.titulo ?? ""} onChange={(e) => setBanner({ ...banner, titulo: e.target.value })} />
+                  <Input
+                    value={banner.titulo ?? ""}
+                    onChange={(e) => setBanner({ ...banner, titulo: e.target.value })}
+                  />
                 </div>
                 <div>
                   <Label>Subtítulo</Label>
-                  <Input value={banner.subtitulo ?? ""} onChange={(e) => setBanner({ ...banner, subtitulo: e.target.value })} />
+                  <Input
+                    value={banner.subtitulo ?? ""}
+                    onChange={(e) => setBanner({ ...banner, subtitulo: e.target.value })}
+                  />
                 </div>
                 <div>
                   <Label className="flex items-center gap-1.5">
                     <ImageIcon className="h-3.5 w-3.5" /> Imagem (URL, opcional)
                   </Label>
-                  <Input value={banner.imagem_url ?? ""} onChange={(e) => setBanner({ ...banner, imagem_url: e.target.value })} />
+                  <Input
+                    value={banner.imagem_url ?? ""}
+                    onChange={(e) => setBanner({ ...banner, imagem_url: e.target.value })}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label>Texto do botão</Label>
-                    <Input value={banner.cta_texto ?? ""} onChange={(e) => setBanner({ ...banner, cta_texto: e.target.value })} />
+                    <Input
+                      value={banner.cta_texto ?? ""}
+                      onChange={(e) => setBanner({ ...banner, cta_texto: e.target.value })}
+                    />
                   </div>
                   <div>
                     <Label>Cor</Label>
-                    <Input type="color" value={banner.cor ?? "#FF6B00"} onChange={(e) => setBanner({ ...banner, cor: e.target.value })} className="h-10 p-1" />
+                    <Input
+                      type="color"
+                      value={banner.cor ?? "#FF6B00"}
+                      onChange={(e) => setBanner({ ...banner, cor: e.target.value })}
+                      className="h-10 p-1"
+                    />
                   </div>
                 </div>
                 <div>
                   <Label>Link do botão</Label>
-                  <Input value={banner.cta_link ?? ""} onChange={(e) => setBanner({ ...banner, cta_link: e.target.value })} placeholder={`/${audience}`} />
+                  <Input
+                    value={banner.cta_link ?? ""}
+                    onChange={(e) => setBanner({ ...banner, cta_link: e.target.value })}
+                    placeholder={`/${audience}`}
+                  />
                 </div>
               </div>
             )}
@@ -351,19 +398,34 @@ function AudiencePanel({
           banner={banner}
           audience={audience as PromoAudience}
         />
-
       </div>
     </div>
   );
 }
 
-function BannerPreview({ promo, titulo, mensagem, banner, audience }: { promo: boolean; titulo: string; mensagem: string; banner: Banner; audience: PromoAudience }) {
+function BannerPreview({
+  promo,
+  titulo,
+  mensagem,
+  banner,
+  audience,
+}: {
+  promo: boolean;
+  titulo: string;
+  mensagem: string;
+  banner: Banner;
+  audience: PromoAudience;
+}) {
   if (!promo) {
     return (
       <div className="rounded-xl border border-border bg-card p-4">
         <p className="text-sm font-semibold">{titulo || "Título da notificação"}</p>
-        <p className="mt-1 text-sm text-muted-foreground">{mensagem || "Texto da mensagem aparece aqui."}</p>
-        <p className="mt-3 text-xs text-muted-foreground">Aparece no sino e como push no celular.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {mensagem || "Texto da mensagem aparece aqui."}
+        </p>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Aparece no sino e como push no celular.
+        </p>
       </div>
     );
   }
@@ -378,7 +440,10 @@ function BannerPreview({ promo, titulo, mensagem, banner, audience }: { promo: b
         <img src={arte} alt="" className="h-40 w-full object-cover" loading="lazy" />
         <div
           className="absolute inset-0"
-          style={{ background: "linear-gradient(180deg, rgba(12,7,5,0) 35%, rgba(12,7,5,0.75) 78%, #1a0d05 100%)" }}
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(12,7,5,0) 35%, rgba(12,7,5,0.75) 78%, #1a0d05 100%)",
+          }}
         />
       </div>
       <div className="px-6 pb-6 pt-5 text-center">
@@ -391,8 +456,12 @@ function BannerPreview({ promo, titulo, mensagem, banner, audience }: { promo: b
         >
           {PROMO_LABEL[audience] || PROMO_LABEL.cliente}
         </span>
-        <h2 className="mt-3 text-2xl font-black leading-tight text-white">{banner.titulo || titulo || "Sua oferta aqui"}</h2>
-        <p className="mt-2 text-sm text-white/75">{banner.subtitulo || mensagem || "Descrição da promoção"}</p>
+        <h2 className="mt-3 text-2xl font-black leading-tight text-white">
+          {banner.titulo || titulo || "Sua oferta aqui"}
+        </h2>
+        <p className="mt-2 text-sm text-white/75">
+          {banner.subtitulo || mensagem || "Descrição da promoção"}
+        </p>
         <div
           className="mt-6 flex h-12 w-full items-center justify-center rounded-xl text-base font-bold text-white"
           style={{ backgroundColor: cor }}
@@ -404,4 +473,3 @@ function BannerPreview({ promo, titulo, mensagem, banner, audience }: { promo: b
     </div>
   );
 }
-

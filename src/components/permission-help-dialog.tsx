@@ -2,7 +2,12 @@ import { useState } from "react";
 import { ExternalLink, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 
 type Kind = "push" | "location";
@@ -76,8 +81,8 @@ export function PermissionHelpDialog({ kind }: { kind: Kind }) {
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            Por segurança, o navegador não deixa o app abrir os ajustes sozinho. Siga o passo a passo abaixo — leva
-            menos de um minuto.
+            Por segurança, o navegador não deixa o app abrir os ajustes sozinho. Siga o passo a
+            passo abaixo — leva menos de um minuto.
           </DialogDescription>
         </DialogHeader>
 

@@ -35,12 +35,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import heroFood from "@/assets/hero-food.jpg";
-import phoneApp from "@/assets/phone-app.png.asset.json";
 import trackingPhones from "@/assets/tracking-phones.png";
 import perfilCliente from "@/assets/perfil-cliente.png";
 import perfilEstabelecimento from "@/assets/perfil-estabelecimento.png";
 import perfilEntregador from "@/assets/perfil-entregador.png";
-
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -99,18 +97,57 @@ import catMercado from "@/assets/cat/mercado.png";
 import catFarmacia from "@/assets/cat/farmacia.png";
 
 const categorias = [
-  { img: catPizza,       nome: "Pizza",      tint: "oklch(0.96 0.05 55)",  glow: "oklch(0.72 0.19 45 / 0.35)" },
-  { img: catHamburguer,  nome: "Hambúrguer", tint: "oklch(0.96 0.05 80)",  glow: "oklch(0.75 0.16 75 / 0.35)" },
-  { img: catMarmita,     nome: "Marmita",    tint: "oklch(0.95 0.05 145)", glow: "oklch(0.7 0.15 145 / 0.3)" },
-  { img: catAcai,        nome: "Açaí",       tint: "oklch(0.94 0.05 310)", glow: "oklch(0.6 0.2 310 / 0.35)" },
-  { img: catSorvete,     nome: "Sorvete",    tint: "oklch(0.96 0.04 20)",  glow: "oklch(0.75 0.15 15 / 0.3)" },
-  { img: catPastel,      nome: "Pastel",     tint: "oklch(0.96 0.05 70)",  glow: "oklch(0.75 0.15 70 / 0.35)" },
-  { img: catLanches,     nome: "Lanches",    tint: "oklch(0.95 0.04 230)", glow: "oklch(0.65 0.15 230 / 0.3)" },
-  { img: catBebidas,     nome: "Bebidas",    tint: "oklch(0.94 0.06 25)",  glow: "oklch(0.65 0.22 25 / 0.35)" },
-  { img: catMercado,     nome: "Mercado",    tint: "oklch(0.95 0.04 265)", glow: "oklch(0.6 0.15 265 / 0.3)" },
-  { img: catFarmacia,    nome: "Farmácia",   tint: "oklch(0.95 0.04 350)", glow: "oklch(0.68 0.2 350 / 0.35)" },
+  { img: catPizza, nome: "Pizza", tint: "oklch(0.96 0.05 55)", glow: "oklch(0.72 0.19 45 / 0.35)" },
+  {
+    img: catHamburguer,
+    nome: "Hambúrguer",
+    tint: "oklch(0.96 0.05 80)",
+    glow: "oklch(0.75 0.16 75 / 0.35)",
+  },
+  {
+    img: catMarmita,
+    nome: "Marmita",
+    tint: "oklch(0.95 0.05 145)",
+    glow: "oklch(0.7 0.15 145 / 0.3)",
+  },
+  { img: catAcai, nome: "Açaí", tint: "oklch(0.94 0.05 310)", glow: "oklch(0.6 0.2 310 / 0.35)" },
+  {
+    img: catSorvete,
+    nome: "Sorvete",
+    tint: "oklch(0.96 0.04 20)",
+    glow: "oklch(0.75 0.15 15 / 0.3)",
+  },
+  {
+    img: catPastel,
+    nome: "Pastel",
+    tint: "oklch(0.96 0.05 70)",
+    glow: "oklch(0.75 0.15 70 / 0.35)",
+  },
+  {
+    img: catLanches,
+    nome: "Lanches",
+    tint: "oklch(0.95 0.04 230)",
+    glow: "oklch(0.65 0.15 230 / 0.3)",
+  },
+  {
+    img: catBebidas,
+    nome: "Bebidas",
+    tint: "oklch(0.94 0.06 25)",
+    glow: "oklch(0.65 0.22 25 / 0.35)",
+  },
+  {
+    img: catMercado,
+    nome: "Mercado",
+    tint: "oklch(0.95 0.04 265)",
+    glow: "oklch(0.6 0.15 265 / 0.3)",
+  },
+  {
+    img: catFarmacia,
+    nome: "Farmácia",
+    tint: "oklch(0.95 0.04 350)",
+    glow: "oklch(0.68 0.2 350 / 0.35)",
+  },
 ];
-
 
 const perfis = [
   {
@@ -144,7 +181,6 @@ const perfis = [
     search: { perfil: "entregador" as const },
   },
 ];
-
 
 const trackingFeatures = [
   "Rastreamento do entregador no mapa",
@@ -218,7 +254,6 @@ function CategoriasRail() {
 
         <div className="marquee-viewport overflow-hidden">
           <div className="marquee-track flex w-max gap-4 py-3 sm:gap-5">
-
             {[...categorias, ...categorias].map((c, i) => (
               <Link
                 key={`${c.nome}-${i}`}
@@ -287,14 +322,16 @@ function LandingPage() {
   useRevealOnScroll();
   return (
     <div className="min-h-screen bg-background">
-
       {/* ============= HEADER ============= */}
       <header
         id="inicio"
         className="absolute inset-x-0 top-0 z-40 border-b border-white/10 bg-transparent"
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:h-20 sm:px-6">
-          <IFomeLogo size="md" className="min-w-0 [&_span]:text-white [&_span]:text-base sm:[&_span]:text-xl" />
+          <IFomeLogo
+            size="md"
+            className="min-w-0 [&_span]:text-white [&_span]:text-base sm:[&_span]:text-xl"
+          />
           <nav className="hidden items-center gap-8 lg:flex">
             {navLinks.map((l) => (
               <a
@@ -395,19 +432,22 @@ function LandingPage() {
             <h1 className="reveal text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
               Sua fome
               <br />
-              tem{" "}
-              <span className="bg-gradient-brand bg-clip-text text-transparent">
-                endereço
-              </span>
+              tem <span className="bg-gradient-brand bg-clip-text text-transparent">endereço</span>
               <br />
               certo.
             </h1>
-            <p className="reveal mt-6 max-w-md text-base text-white/70 sm:text-lg" style={{ ["--reveal-delay" as never]: "120ms" } as React.CSSProperties}>
-              Peça em minutos dos melhores restaurantes da sua região, acompanhe a entrega
-              no mapa e receba tudo quentinho na sua porta.
+            <p
+              className="reveal mt-6 max-w-md text-base text-white/70 sm:text-lg"
+              style={{ ["--reveal-delay" as never]: "120ms" } as React.CSSProperties}
+            >
+              Peça em minutos dos melhores restaurantes da sua região, acompanhe a entrega no mapa e
+              receba tudo quentinho na sua porta.
             </p>
 
-            <div className="reveal mt-8 flex flex-col gap-3 sm:flex-row" style={{ ["--reveal-delay" as never]: "220ms" } as React.CSSProperties}>
+            <div
+              className="reveal mt-8 flex flex-col gap-3 sm:flex-row"
+              style={{ ["--reveal-delay" as never]: "220ms" } as React.CSSProperties}
+            >
               <Link to="/auth" search={{ perfil: "cliente" }}>
                 <Button
                   size="lg"
@@ -447,7 +487,9 @@ function LandingPage() {
                 <div
                   key={label}
                   className="reveal flex flex-col items-center gap-2 text-center"
-                  style={{ ["--reveal-delay" as never]: `${320 + i * 100}ms` } as React.CSSProperties}
+                  style={
+                    { ["--reveal-delay" as never]: `${320 + i * 100}ms` } as React.CSSProperties
+                  }
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 text-primary ring-1 ring-primary/40">
                     <Icon className="h-4.5 w-4.5" />
@@ -459,13 +501,16 @@ function LandingPage() {
           </div>
 
           {/* Phone mockup */}
-          <div className="reveal relative flex justify-center lg:justify-end" style={{ ["--reveal-delay" as never]: "180ms" } as React.CSSProperties}>
+          <div
+            className="reveal relative flex justify-center lg:justify-end"
+            style={{ ["--reveal-delay" as never]: "180ms" } as React.CSSProperties}
+          >
             <div
               className="animate-glow-pulse pointer-events-none absolute inset-0 mx-auto h-full w-[80%] rounded-full opacity-60 blur-3xl"
               style={{ background: "radial-gradient(closest-side, #FF6B00, transparent)" }}
             />
             <img
-              src={phoneApp.url}
+              src={trackingPhones}
               alt="Aplicativo WiFome"
               width={480}
               height={880}
@@ -477,8 +522,6 @@ function LandingPage() {
 
       {/* ============= CATEGORIAS (PREMIUM RAIL) ============= */}
       <CategoriasRail />
-
-
 
       {/* ============= 3 PERFIS (PREMIUM HORIZONTAL) ============= */}
       <section
@@ -495,12 +538,11 @@ function LandingPage() {
               Uma plataforma, três experiências
             </span>
             <h2 className="mt-5 text-4xl font-black leading-[1.05] tracking-tight text-foreground sm:text-5xl">
-              Escolha o seu{" "}
-              <span className="text-primary">papel</span>
+              Escolha o seu <span className="text-primary">papel</span>
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
-              Pedir, vender ou entregar — o WiFome foi desenhado para você
-              começar em minutos e crescer com a gente.
+              Pedir, vender ou entregar — o WiFome foi desenhado para você começar em minutos e
+              crescer com a gente.
             </p>
           </div>
 
@@ -549,7 +591,6 @@ function LandingPage() {
                   />
                 </div>
 
-
                 {/* icon */}
                 <div className="relative mb-4">
                   <div className="absolute -inset-3 rounded-3xl bg-primary/15 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
@@ -559,8 +600,7 @@ function LandingPage() {
                 </div>
 
                 <h3 className="text-balance text-2xl font-black leading-tight tracking-tight text-foreground">
-                  {tag}{" "}
-                  <span className="text-primary">{highlight}</span>
+                  {tag} <span className="text-primary">{highlight}</span>
                 </h3>
                 <p className="mt-2 flex-grow text-[15px] leading-relaxed text-muted-foreground">
                   {descricao}
@@ -584,8 +624,6 @@ function LandingPage() {
           </div>
         </div>
       </section>
-
-
 
       {/* ============= TAXA PREMIUM (DESTAQUE PARCEIROS) ============= */}
       <section
@@ -639,8 +677,8 @@ function LandingPage() {
               className="reveal mx-auto mt-6 max-w-xl text-base font-medium leading-relaxed text-white/80 sm:text-lg"
               style={{ ["--reveal-delay" as never]: "220ms" } as React.CSSProperties}
             >
-              Taxa justa para o seu restaurante crescer. Mais lucro no seu bolso, menos
-              burocracia no dia a dia.
+              Taxa justa para o seu restaurante crescer. Mais lucro no seu bolso, menos burocracia
+              no dia a dia.
             </p>
 
             <div
@@ -674,8 +712,6 @@ function LandingPage() {
           </div>
         </div>
       </section>
-
-
 
       {/* ============= TRACKING (PREMIUM FLOATING) ============= */}
       <section className="relative overflow-hidden bg-gradient-to-b from-background via-[oklch(0.99_0.01_60)] to-background py-20 sm:py-28">
@@ -718,17 +754,21 @@ function LandingPage() {
             <p className="reveal text-xs font-bold uppercase tracking-[0.2em] text-primary">
               Acompanhe tudo
             </p>
-            <h2 className="reveal mt-3 text-4xl font-black leading-tight tracking-tight text-foreground sm:text-5xl" style={{ ["--reveal-delay" as never]: "100ms" } as React.CSSProperties}>
+            <h2
+              className="reveal mt-3 text-4xl font-black leading-tight tracking-tight text-foreground sm:text-5xl"
+              style={{ ["--reveal-delay" as never]: "100ms" } as React.CSSProperties}
+            >
               Do pedido até
-              <br />a sua porta, em{" "}
-              <span className="text-primary">tempo real.</span>
+              <br />a sua porta, em <span className="text-primary">tempo real.</span>
             </h2>
             <ul className="mt-8 space-y-4">
               {trackingFeatures.map((f, i) => (
                 <li
                   key={f}
                   className="reveal flex items-start gap-3"
-                  style={{ ["--reveal-delay" as never]: `${200 + i * 90}ms` } as React.CSSProperties}
+                  style={
+                    { ["--reveal-delay" as never]: `${200 + i * 90}ms` } as React.CSSProperties
+                  }
                 >
                   <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     <Check className="h-3.5 w-3.5" strokeWidth={3} />
@@ -746,7 +786,6 @@ function LandingPage() {
                 <StoreBadge store="google" />
               </div>
             </div>
-
           </div>
         </div>
       </section>
@@ -824,18 +863,12 @@ function LandingPage() {
                 <h3 className="relative mt-5 text-base font-semibold tracking-tight text-white sm:text-lg">
                   {titulo}
                 </h3>
-                <p className="relative mt-2 text-sm leading-relaxed text-white/60">
-                  {texto}
-                </p>
+                <p className="relative mt-2 text-sm leading-relaxed text-white/60">{texto}</p>
               </div>
             ))}
           </div>
-
         </div>
       </section>
-
-
-
 
       {/* ============= FOOTER (ORANGE) ============= */}
       <footer id="ajuda" className="relative overflow-hidden bg-primary text-primary-foreground">
@@ -862,8 +895,20 @@ function LandingPage() {
             </div>
           </div>
 
-          <FooterCol title="Links rápidos" items={["Início", "Como funciona", "Para estabelecimentos", "Para entregadores", "Ajuda"]} />
-          <FooterCol title="Institucional" items={["Sobre nós", "Carreiras", "Blog", "Política de privacidade", "Termos de uso"]} />
+          <FooterCol
+            title="Links rápidos"
+            items={[
+              "Início",
+              "Como funciona",
+              "Para estabelecimentos",
+              "Para entregadores",
+              "Ajuda",
+            ]}
+          />
+          <FooterCol
+            title="Institucional"
+            items={["Sobre nós", "Carreiras", "Blog", "Política de privacidade", "Termos de uso"]}
+          />
 
           <div className="col-span-2 flex flex-col items-center justify-center text-center sm:col-span-3 lg:col-span-2">
             <p className="text-sm font-bold uppercase tracking-wider text-white">Em breve</p>
@@ -873,8 +918,6 @@ function LandingPage() {
               <StoreBadge store="google" dark />
             </div>
           </div>
-
-
         </div>
         <div className="border-t border-white/20">
           <p className="mx-auto max-w-7xl px-6 py-5 text-center text-xs text-white/80">
@@ -893,7 +936,10 @@ function FooterCol({ title, items }: { title: string; items: string[] }) {
       <ul className="mt-4 space-y-2.5">
         {items.map((i) => (
           <li key={i}>
-            <a href="#" className="tap-target inline-block py-1 text-sm text-white/85 transition hover:text-white">
+            <a
+              href="#"
+              className="tap-target inline-block py-1 text-sm text-white/85 transition hover:text-white"
+            >
               {i}
             </a>
           </li>
@@ -913,14 +959,20 @@ function StoreBadge({ store }: { store: "apple" | "google"; dark?: boolean }) {
     >
       {isApple ? (
         <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 fill-white" aria-hidden>
-          <path d="M16.365 1.43c0 1.14-.45 2.24-1.19 3.03-.79.85-2.08 1.5-3.14 1.42-.13-1.11.44-2.28 1.15-3.02.79-.83 2.13-1.44 3.18-1.43zM20.5 17.05c-.55 1.27-.82 1.84-1.53 2.96-1 1.56-2.41 3.51-4.16 3.53-1.56.01-1.96-1.01-4.07-1-2.12.01-2.56 1.02-4.11 1.01-1.75-.02-3.09-1.78-4.09-3.34C-.28 15.83-.66 10.7 1.02 8.02 2.2 6.12 4.07 5 5.83 5c1.79 0 2.92 1.03 4.4 1.03 1.44 0 2.32-1.03 4.39-1.03 1.57 0 3.23.86 4.42 2.34-3.88 2.13-3.25 7.68 1.46 9.71z"/>
+          <path d="M16.365 1.43c0 1.14-.45 2.24-1.19 3.03-.79.85-2.08 1.5-3.14 1.42-.13-1.11.44-2.28 1.15-3.02.79-.83 2.13-1.44 3.18-1.43zM20.5 17.05c-.55 1.27-.82 1.84-1.53 2.96-1 1.56-2.41 3.51-4.16 3.53-1.56.01-1.96-1.01-4.07-1-2.12.01-2.56 1.02-4.11 1.01-1.75-.02-3.09-1.78-4.09-3.34C-.28 15.83-.66 10.7 1.02 8.02 2.2 6.12 4.07 5 5.83 5c1.79 0 2.92 1.03 4.4 1.03 1.44 0 2.32-1.03 4.39-1.03 1.57 0 3.23.86 4.42 2.34-3.88 2.13-3.25 7.68 1.46 9.71z" />
         </svg>
       ) : (
         <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0" aria-hidden>
-          <path d="M3.6 1.7C3.23 2.09 3 2.7 3 3.5v17c0 .8.23 1.41.6 1.8L13.3 12.6 3.6 1.7z" fill="#00D2FF"/>
-          <path d="M17.1 8.8 13.3 12.6l3.8 3.8 4.6-2.6c1.3-.74 1.3-2.34 0-3.08L17.1 8.8z" fill="#FFCE00"/>
-          <path d="M3.6 22.3c.42.44 1.11.5 1.9.05l12-6.85-3.8-3.8-10.1 10.6z" fill="#FF3D48"/>
-          <path d="M17.5 8.6 5.5 1.75c-.79-.45-1.48-.4-1.9.05l9.7 10.8 4.2-4z" fill="#00F076"/>
+          <path
+            d="M3.6 1.7C3.23 2.09 3 2.7 3 3.5v17c0 .8.23 1.41.6 1.8L13.3 12.6 3.6 1.7z"
+            fill="#00D2FF"
+          />
+          <path
+            d="M17.1 8.8 13.3 12.6l3.8 3.8 4.6-2.6c1.3-.74 1.3-2.34 0-3.08L17.1 8.8z"
+            fill="#FFCE00"
+          />
+          <path d="M3.6 22.3c.42.44 1.11.5 1.9.05l12-6.85-3.8-3.8-10.1 10.6z" fill="#FF3D48" />
+          <path d="M17.5 8.6 5.5 1.75c-.79-.45-1.48-.4-1.9.05l9.7 10.8 4.2-4z" fill="#00F076" />
         </svg>
       )}
       <span className="flex flex-col items-start justify-center leading-none whitespace-nowrap">
@@ -931,9 +983,6 @@ function StoreBadge({ store }: { store: "apple" | "google"; dark?: boolean }) {
           {isApple ? "App Store" : "Google Play"}
         </span>
       </span>
-
     </a>
   );
 }
-
-

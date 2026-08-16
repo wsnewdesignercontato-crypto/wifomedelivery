@@ -38,6 +38,5 @@ export const senhaForteSchema = z
   .max(72, { message: "A senha deve ter no máximo 72 caracteres" })
   .min(8, { message: "A senha deve ter pelo menos 8 caracteres" })
   .refine((v) => passwordScore(v) >= MIN_RULES_OK, {
-    message:
-      "Senha fraca: use maiúscula, minúscula, número e símbolo (mínimo 8 caracteres)",
+    message: "Senha fraca: use maiúscula, minúscula, número e símbolo (mínimo 8 caracteres)",
   });

@@ -1,10 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { MapPin, Package, Navigation, Banknote, CreditCard, Timer, X, Bike, Route as RouteIcon, User, Phone } from "lucide-react";
+import {
+  MapPin,
+  Package,
+  Navigation,
+  Banknote,
+  CreditCard,
+  Timer,
+  X,
+  Bike,
+  Route as RouteIcon,
+  User,
+  Phone,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { canCourierAccessRides } from "@/lib/courier-approval";
 import { loadGoogleMaps, haversineKm } from "@/lib/google-maps-loader";
 import { ensureRingtoneUnlocked, startRideRingtone, stopRideRingtone } from "@/lib/ride-ringtone";
 import type { Courier } from "@/hooks/use-courier";
@@ -30,13 +43,55 @@ type Offer = {
   observacoes: string | null;
 };
 
+type OrderAddress = {
+  endereco?: string | null;
+  logradouro?: string | null;
+  rua?: string | null;
+  numero?: string | null;
+  bairro?: string | null;
+  cidade?: string | null;
+  uf?: string | null;
+  estado?: string | null;
+  cep?: string | null;
+  complemento?: string | null;
+  referencia?: string | null;
+  ponto_referencia?: string | null;
+  lat?: number | string | null;
+  lng?: number | string | null;
+};
+
+type OfferOrder = {
+  id: string;
+  cliente_id: string;
+  establishment_id: string;
+  total_cents: number | null;
+  endereco_entrega: OrderAddress | null;
+  forma_pagamento: string | null;
+  observacoes: string | null;
+};
+
+type OfferEstablishment = {
+  id: string;
+  nome: string;
+  endereco: string | null;
+  lat: number | string | null;
+  lng: number | string | null;
+  cidade: string | null;
+  estado: string | null;
+};
+
 const MAX_DELIVERY_DISTANCE_KM = 150;
 
 function cleanPart(value: unknown): string {
-  return String(value ?? "").trim().replace(/\s+/g, " ");
+  return String(value ?? "")
+    .trim()
+    .replace(/\s+/g, " ");
 }
 
-function fmtEndereco(e: any, fallback?: { cidade?: string | null; estado?: string | null }): string {
+function fmtEndereco(
+  e: OrderAddress | null | undefined,
+  fallback?: { cidade?: string | null; estado?: string | null },
+): string {
   if (!e) return "Endereço do cliente";
   const rua = cleanPart(e.endereco || e.logradouro || e.rua);
   const numero = cleanPart(e.numero);
@@ -88,7 +143,9 @@ async function geocode(
       .sort((a, b) => a.km - b.km)[0];
 
     return closest && closest.km <= MAX_DELIVERY_DISTANCE_KM ? closest : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 function fmtBrl(cents: number) {
@@ -128,12 +185,11 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
 
   // Busca corrida disponível
   useEffect(() => {
-    if (!enabled || !courier) return;
-    if (courier.status !== "online") return;
-    if (courier.aprovacao && courier.aprovacao !== "approved" && courier.aprovacao !== "aprovado") {
-      // aceitar tanto 'approved' quanto 'aprovado' se aplicável
+    if (!enabled || !courier || courier.status !== "online" || !canCourierAccessRides(courier)) {
+      stopRideRingtone();
+      setOffer(null);
+      return;
     }
-
     let cancelled = false;
 
     async function evaluate() {
@@ -147,7 +203,11 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         .not("status", "in", "(delivered,cancelled)")
         .limit(1)
         .maybeSingle();
-      if (ativa) { stopRideRingtone(); setOffer(null); return; }
+      if (ativa) {
+        stopRideRingtone();
+        setOffer(null);
+        return;
+      }
 
       const { data: disp } = await supabase
         .from("deliveries")
@@ -158,25 +218,42 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         .limit(5);
 
       const candidato = (disp ?? []).find((d) => !dismissedIds.has(d.id));
-      if (!candidato) { stopRideRingtone(); setOffer(null); return; }
+      if (!candidato) {
+        stopRideRingtone();
+        setOffer(null);
+        return;
+      }
 
       const { data: order } = await supabase
         .from("orders")
-        .select("id, cliente_id, establishment_id, total_cents, endereco_entrega, forma_pagamento, observacoes")
+        .select(
+          "id, cliente_id, establishment_id, total_cents, endereco_entrega, forma_pagamento, observacoes",
+        )
         .eq("id", candidato.order_id)
         .maybeSingle();
-      if (!order) { setOffer(null); return; }
+      if (!order) {
+        setOffer(null);
+        return;
+      }
+      const typedOrder = order as OfferOrder;
 
       const { data: estab } = await supabase
         .from("establishments")
         .select("id, nome, endereco, lat, lng, cidade, estado")
-        .eq("id", order.establishment_id)
+        .eq("id", typedOrder.establishment_id)
         .maybeSingle();
-      if (!estab || estab.lat == null || estab.lng == null) { setOffer(null); return; }
-      const pickupLat = Number(estab.lat);
-      const pickupLng = Number(estab.lng);
+      if (!estab || estab.lat == null || estab.lng == null) {
+        setOffer(null);
+        return;
+      }
+      const typedEstab = estab as OfferEstablishment;
+      const pickupLat = Number(typedEstab.lat);
+      const pickupLng = Number(typedEstab.lng);
       if (!inBrazilBounds(pickupLat, pickupLng)) {
-        console.warn("[NewRideOffer] Estabelecimento com coordenadas fora do Brasil, ignorando oferta", estab.id);
+        console.warn(
+          "[NewRideOffer] Estabelecimento com coordenadas fora do Brasil, ignorando oferta",
+          typedEstab.id,
+        );
         setOffer(null);
         return;
       }
@@ -184,24 +261,42 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
       const { data: cli } = await supabase
         .from("profiles")
         .select("nome, telefone")
-        .eq("id", (order as any).cliente_id)
+        .eq("id", typedOrder.cliente_id)
         .maybeSingle();
 
-      const endereco = (order as any).endereco_entrega ?? {};
-      const pickup = { lat: pickupLat, lng: pickupLng, nome: estab.nome, endereco: estab.endereco ?? null };
-      const enderecoFmt = fmtEndereco(endereco, { cidade: (estab as any).cidade, estado: (estab as any).estado });
+      const endereco = typedOrder.endereco_entrega ?? {};
+      const pickup = {
+        lat: pickupLat,
+        lng: pickupLng,
+        nome: typedEstab.nome,
+        endereco: typedEstab.endereco ?? null,
+      };
+      const enderecoFmt = fmtEndereco(endereco, {
+        cidade: typedEstab.cidade,
+        estado: typedEstab.estado,
+      });
 
       let dropLat = Number(endereco.lat);
       let dropLng = Number(endereco.lng);
-      const hasTrustedDropoff = Number.isFinite(dropLat) && Number.isFinite(dropLng) && inBrazilBounds(dropLat, dropLng);
-      const storedDropoffKm = hasTrustedDropoff ? distanceKm(pickup, { lat: dropLat, lng: dropLng }) : Infinity;
+      const hasTrustedDropoff =
+        Number.isFinite(dropLat) && Number.isFinite(dropLng) && inBrazilBounds(dropLat, dropLng);
+      const storedDropoffKm = hasTrustedDropoff
+        ? distanceKm(pickup, { lat: dropLat, lng: dropLng })
+        : Infinity;
 
       if (!hasTrustedDropoff || storedDropoffKm > MAX_DELIVERY_DISTANCE_KM) {
         // Sem lat/lng confiáveis: geocodifica o endereço real do cliente com bias BR e perto da loja.
-        try { await loadGoogleMaps(); } catch {}
+        try {
+          await loadGoogleMaps();
+        } catch {
+          // Geocode abaixo ainda tenta resolver a rota sem preload explicito.
+        }
         const geo = await geocode(enderecoFmt, pickup);
         if (!geo) {
-          console.warn("[NewRideOffer] Não foi possível localizar endereço de entrega com segurança", { order: order.id });
+          console.warn(
+            "[NewRideOffer] Não foi possível localizar endereço de entrega com segurança",
+            { order: typedOrder.id },
+          );
           setOffer(null);
           return;
         }
@@ -223,7 +318,10 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
 
       // Sanity: nenhuma entrega real ultrapassa o limite entre loja e cliente.
       if (distanciaEntrega > MAX_DELIVERY_DISTANCE_KM) {
-        console.warn("[NewRideOffer] Distância entrega irreal, provavelmente geocode incorreto", { estab: estab.id, distanciaEntrega });
+        console.warn("[NewRideOffer] Distância entrega irreal, provavelmente geocode incorreto", {
+          estab: typedEstab.id,
+          distanciaEntrega,
+        });
         setOffer(null);
         return;
       }
@@ -231,16 +329,16 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
       if (cancelled) return;
       setOffer({
         deliveryId: candidato.id,
-        orderId: order.id,
+        orderId: typedOrder.id,
         valorCents: candidato.valor_entrega_cents ?? 0,
-        totalPedidoCents: order.total_cents ?? 0,
-        formaPagamento: (order as any).forma_pagamento ?? "—",
+        totalPedidoCents: typedOrder.total_cents ?? 0,
+        formaPagamento: typedOrder.forma_pagamento ?? "-",
         pickup,
         dropoff,
         cliente: { nome: cli?.nome || "Cliente", telefone: cli?.telefone ?? null },
         distanciaColeta,
         distanciaEntrega,
-        observacoes: (order as any).observacoes ?? null,
+        observacoes: typedOrder.observacoes ?? null,
       });
     }
 
@@ -249,17 +347,33 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
     let debounceT: ReturnType<typeof setTimeout> | null = null;
     const scheduleEvaluate = () => {
       if (debounceT) clearTimeout(debounceT);
-      debounceT = setTimeout(() => { debounceT = null; evaluate(); }, 400);
+      debounceT = setTimeout(() => {
+        debounceT = null;
+        evaluate();
+      }, 400);
     };
     // Filtra por broadcasting para não receber updates irrelevantes do sistema todo
     const chBroadcast = supabase
       .channel("courier-offer-bcast-" + courier.user_id)
-      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries", filter: "status=eq.broadcasting" }, scheduleEvaluate)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "deliveries", filter: "status=eq.broadcasting" },
+        scheduleEvaluate,
+      )
       .subscribe();
     // Também precisamos reagir quando uma entrega do próprio entregador muda (aceita/finaliza)
     const chMine = supabase
       .channel("courier-offer-mine-" + courier.user_id)
-      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries", filter: `entregador_id=eq.${courier.user_id}` }, scheduleEvaluate)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "deliveries",
+          filter: `entregador_id=eq.${courier.user_id}`,
+        },
+        scheduleEvaluate,
+      )
       .subscribe();
     // Fallback lento (60s) caso realtime caia
     const t = setInterval(evaluate, 60000);
@@ -270,7 +384,17 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
       supabase.removeChannel(chMine);
       clearInterval(t);
     };
-  }, [enabled, courier?.user_id, courier?.status, dismissedIds]);
+    // The polling lifecycle intentionally ignores nested courier/myPos object churn to avoid
+    // recreating subscriptions on every live location tick.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    enabled,
+    courier?.user_id,
+    courier?.status,
+    courier?.aprovacao,
+    courier?.kyc_status,
+    dismissedIds,
+  ]);
 
   // Renderiza mapa quando a oferta abre (uma vez por oferta)
   useEffect(() => {
@@ -293,18 +417,30 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         mapObjRef.current = map;
 
         new google.maps.Marker({
-          map, position: offer.pickup, title: offer.pickup.nome,
+          map,
+          position: offer.pickup,
+          title: offer.pickup.nome,
           icon: {
-            path: google.maps.SymbolPath.CIRCLE, scale: 10,
-            fillColor: "#10B981", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 3,
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: "#10B981",
+            fillOpacity: 1,
+            strokeColor: "#fff",
+            strokeWeight: 3,
           },
           label: { text: "A", color: "#fff", fontWeight: "700", fontSize: "11px" },
         });
         new google.maps.Marker({
-          map, position: offer.dropoff, title: "Cliente",
+          map,
+          position: offer.dropoff,
+          title: "Cliente",
           icon: {
-            path: google.maps.SymbolPath.CIRCLE, scale: 10,
-            fillColor: "#EF4444", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 3,
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: "#EF4444",
+            fillOpacity: 1,
+            strokeColor: "#fff",
+            strokeWeight: 3,
           },
           label: { text: "B", color: "#fff", fontWeight: "700", fontSize: "11px" },
         });
@@ -314,8 +450,12 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
           visible: !!myPos,
           title: "Você",
           icon: {
-            path: google.maps.SymbolPath.CIRCLE, scale: 7,
-            fillColor: "#3B82F6", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 3,
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 7,
+            fillColor: "#3B82F6",
+            fillOpacity: 1,
+            strokeColor: "#fff",
+            strokeWeight: 3,
           },
         });
         // Linha viva entregador → loja (atualizada com watchPosition)
@@ -326,7 +466,11 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
           strokeOpacity: 0.85,
           strokeWeight: 4,
           icons: [
-            { icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 }, offset: "0", repeat: "12px" },
+            {
+              icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 },
+              offset: "0",
+              repeat: "12px",
+            },
           ],
         });
 
@@ -369,6 +513,8 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
       routeLineRef.current = null;
       mapObjRef.current = null;
     };
+    // The map instance is intentionally recreated only when the delivery offer changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [offer?.deliveryId]);
 
   // Atualiza posição do entregador e rota conforme ele se move
@@ -381,6 +527,8 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
     if (routeLineRef.current) {
       routeLineRef.current.setPath([myPos, offer.pickup]);
     }
+    // The route line only depends on the current offer identity plus the latest GPS position.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myPos, offer?.deliveryId]);
 
   // Toque contínuo enquanto a oferta estiver na tela (para ao aceitar/recusar/ser pega)
@@ -397,15 +545,26 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
       (window as unknown as { __wifomeRideOfferOpen?: boolean }).__wifomeRideOfferOpen = false;
       stopRideRingtone();
     };
+    // The ringtone lifecycle is keyed by the current offer identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [offer?.deliveryId]);
 
   async function aceitar() {
     if (!offer || !courier || accepting) return;
+    if (!canCourierAccessRides(courier)) {
+      stopRideRingtone();
+      setOffer(null);
+      return toast.error("Seu cadastro ainda nao foi aprovado para receber corridas.");
+    }
     stopRideRingtone();
     setAccepting(true);
     const { data, error } = await supabase
       .from("deliveries")
-      .update({ entregador_id: courier.user_id, status: "accepted", aceito_em: new Date().toISOString() })
+      .update({
+        entregador_id: courier.user_id,
+        status: "accepted",
+        aceito_em: new Date().toISOString(),
+      })
       .eq("id", offer.deliveryId)
       .eq("status", "broadcasting")
       .select("id")
@@ -417,7 +576,10 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
       return;
     }
     await supabase.from("orders").update({ status: "courier_assigned" }).eq("id", offer.orderId);
-    await supabase.from("courier_profiles").update({ status: "ocupado" }).eq("user_id", courier.user_id);
+    await supabase
+      .from("courier_profiles")
+      .update({ status: "ocupado" })
+      .eq("user_id", courier.user_id);
     toast.success("Corrida aceita! Boa entrega 🛵");
     setOffer(null);
     navigate({ to: "/entregador/corridas" });
@@ -435,6 +597,8 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
     if (!offer) return null;
     if (!myPos) return offer.distanciaColeta;
     return distanceKm(myPos, offer.pickup);
+    // The memo is keyed by stable offer identity to avoid recomputing on unrelated object changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myPos, offer?.deliveryId, offer?.distanciaColeta]);
 
   const totalKm = offer ? (distanciaColetaLive ?? 0) + offer.distanciaEntrega : 0;
@@ -455,7 +619,9 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
                 <Bike className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider opacity-90">Nova corrida</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider opacity-90">
+                  Nova corrida
+                </p>
                 <p className="text-xs font-semibold opacity-80 flex items-center gap-1">
                   <Timer className="h-3 w-3" /> Aceite rápido — outros entregadores estão vendo
                 </p>
@@ -494,19 +660,26 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         <div className="space-y-3 p-4">
           <div className="flex items-start gap-3">
             <div className="mt-1 flex flex-col items-center">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-black text-white">A</div>
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-black text-white">
+                A
+              </div>
               <div className="my-1 h-8 w-0.5 bg-border" />
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white">B</div>
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white">
+                B
+              </div>
             </div>
             <div className="min-w-0 flex-1 space-y-3">
               <div>
                 <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-muted-foreground">
-                  <Package className="h-3 w-3" /> Coleta {distanciaColetaLive != null && (
+                  <Package className="h-3 w-3" /> Coleta{" "}
+                  {distanciaColetaLive != null && (
                     <span className="text-foreground">· {fmtKm(distanciaColetaLive)} de você</span>
                   )}
                 </p>
                 <p className="truncate text-sm font-bold">{offer?.pickup.nome}</p>
-                <p className="truncate text-xs text-muted-foreground">{offer?.pickup.endereco ?? "—"}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {offer?.pickup.endereco ?? "—"}
+                </p>
               </div>
               <div>
                 <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-muted-foreground">
@@ -544,13 +717,18 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
           <div className="flex items-center justify-between rounded-xl border border-border bg-muted/40 px-3 py-2 text-xs">
             <span className="flex items-center gap-1.5 font-semibold">
               {offer?.formaPagamento === "dinheiro" ? (
-                <><Banknote className="h-3.5 w-3.5 text-emerald-600" /> Dinheiro</>
+                <>
+                  <Banknote className="h-3.5 w-3.5 text-emerald-600" /> Dinheiro
+                </>
               ) : (
-                <><CreditCard className="h-3.5 w-3.5 text-primary" /> {offer?.formaPagamento}</>
+                <>
+                  <CreditCard className="h-3.5 w-3.5 text-primary" /> {offer?.formaPagamento}
+                </>
               )}
             </span>
             <span className="text-muted-foreground">
-              Pedido: <strong className="text-foreground">{fmtBrl(offer?.totalPedidoCents ?? 0)}</strong>
+              Pedido:{" "}
+              <strong className="text-foreground">{fmtBrl(offer?.totalPedidoCents ?? 0)}</strong>
             </span>
           </div>
 
@@ -569,13 +747,17 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
           <Button
             size="lg"
             onClick={aceitar}
-            disabled={accepting}
+            disabled={accepting || !canCourierAccessRides(courier)}
             className="text-base font-black shadow-brand"
           >
             {accepting ? (
-              <><RouteIcon className="mr-2 h-5 w-5 animate-pulse" /> Aceitando...</>
+              <>
+                <RouteIcon className="mr-2 h-5 w-5 animate-pulse" /> Aceitando...
+              </>
             ) : (
-              <><Navigation className="mr-2 h-5 w-5" /> Aceitar corrida</>
+              <>
+                <Navigation className="mr-2 h-5 w-5" /> Aceitar corrida
+              </>
             )}
           </Button>
         </div>

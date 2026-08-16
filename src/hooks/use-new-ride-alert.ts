@@ -2,8 +2,19 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { canCourierAccessRides } from "@/lib/courier-approval";
 
-type Courier = { user_id: string; status: string | null; aprovacao?: string | null } | null;
+type Courier = {
+  user_id: string;
+  status: string | null;
+  aprovacao?: string | null;
+  kyc_status?: string | null;
+} | null;
+
+type WindowWithWebkitAudio = Window &
+  typeof globalThis & {
+    webkitAudioContext?: typeof AudioContext;
+  };
 
 // Contexto de áudio global reutilizável — precisa ser criado/resumido após
 // interação do usuário, senão o browser bloqueia som (autoplay policy).
@@ -12,12 +23,14 @@ let unlocked = false;
 
 function getCtx(): AudioContext | null {
   try {
-    const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
+    const Ctx = window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext;
     if (!Ctx) return null;
     if (!sharedCtx) sharedCtx = new Ctx();
     if (sharedCtx.state === "suspended") sharedCtx.resume().catch(() => {});
     return sharedCtx;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 function unlockAudio() {
@@ -33,7 +46,9 @@ function unlockAudio() {
     osc.connect(gain).connect(ctx.destination);
     osc.start();
     osc.stop(ctx.currentTime + 0.02);
-  } catch {}
+  } catch {
+    // Ignore browsers that block audio warm-up.
+  }
 }
 
 export function playSiren() {
@@ -56,9 +71,15 @@ export function playSiren() {
       osc.connect(gain).connect(ctx.destination);
       osc.start(now + t);
       osc.stop(now + t + 0.15);
-    } catch {}
+    } catch {
+      // Ignore transient oscillator failures on unsupported browsers.
+    }
   });
-  try { navigator.vibrate?.([250, 90, 250, 90, 250, 90, 400]); } catch {}
+  try {
+    navigator.vibrate?.([250, 90, 250, 90, 250, 90, 400]);
+  } catch {
+    // Ignore vibration API failures.
+  }
 }
 
 function nativeNotify() {
@@ -70,11 +91,16 @@ function nativeNotify() {
         tag: "wifome-ride",
         requireInteraction: true,
       });
-      n.onclick = () => { window.focus(); n.close(); };
+      n.onclick = () => {
+        window.focus();
+        n.close();
+      };
     } else if (Notification.permission === "default") {
       Notification.requestPermission().catch(() => {});
     }
-  } catch {}
+  } catch {
+    // Ignore notification API failures.
+  }
 }
 
 /**
@@ -85,10 +111,15 @@ export function useNewRideAlert(courier: Courier, soundEnabled = true) {
   const navigate = useNavigate();
   const toastIdRef = useRef<string | number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const courierId = courier?.user_id ?? null;
+  const courierStatus = courier?.status ?? null;
+  const canReceiveRides = canCourierAccessRides(courier);
 
   // Destrava áudio no primeiro clique/toque/tecla do usuário
   useEffect(() => {
-    const handler = () => { unlockAudio(); };
+    const handler = () => {
+      unlockAudio();
+    };
     window.addEventListener("click", handler, { once: false });
     window.addEventListener("touchstart", handler, { once: false });
     window.addEventListener("keydown", handler, { once: false });
@@ -97,7 +128,9 @@ export function useNewRideAlert(courier: Courier, soundEnabled = true) {
       if (typeof Notification !== "undefined" && Notification.permission === "default") {
         Notification.requestPermission().catch(() => {});
       }
-    } catch {}
+    } catch {
+      // Ignore notification permission issues during bootstrap.
+    }
     return () => {
       window.removeEventListener("click", handler);
       window.removeEventListener("touchstart", handler);
@@ -106,21 +139,27 @@ export function useNewRideAlert(courier: Courier, soundEnabled = true) {
   }, []);
 
   useEffect(() => {
-    if (!courier || courier.status !== "online" || (courier.aprovacao && courier.aprovacao !== "approved")) {
-      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
-      if (toastIdRef.current != null) { toast.dismiss(toastIdRef.current); toastIdRef.current = null; }
+    if (!courierId || courierStatus !== "online" || !canReceiveRides) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      if (toastIdRef.current != null) {
+        toast.dismiss(toastIdRef.current);
+        toastIdRef.current = null;
+      }
       return;
     }
 
     let cancelled = false;
 
     async function evaluate() {
-      if (cancelled || !courier) return;
+      if (cancelled || !courierId) return;
 
       const { data: ativa } = await supabase
         .from("deliveries")
         .select("id")
-        .eq("entregador_id", courier.user_id)
+        .eq("entregador_id", courierId)
         .not("status", "in", "(delivered,cancelled)")
         .limit(1)
         .maybeSingle();
@@ -129,7 +168,7 @@ export function useNewRideAlert(courier: Courier, soundEnabled = true) {
         .from("deliveries")
         .select("id")
         .eq("status", "broadcasting")
-        .or(`entregador_id.is.null,entregador_id.eq.${courier.user_id}`)
+        .or(`entregador_id.is.null,entregador_id.eq.${courierId}`)
         .limit(1);
 
       const hasRide = !ativa && (disp?.length ?? 0) > 0;
@@ -151,8 +190,14 @@ export function useNewRideAlert(courier: Courier, soundEnabled = true) {
           }, 1600);
         }
       } else {
-        if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
-        if (toastIdRef.current != null) { toast.dismiss(toastIdRef.current); toastIdRef.current = null; }
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        if (toastIdRef.current != null) {
+          toast.dismiss(toastIdRef.current);
+          toastIdRef.current = null;
+        }
       }
     }
 
@@ -160,15 +205,31 @@ export function useNewRideAlert(courier: Courier, soundEnabled = true) {
     let debounceT: ReturnType<typeof setTimeout> | null = null;
     const schedule = () => {
       if (debounceT) clearTimeout(debounceT);
-      debounceT = setTimeout(() => { debounceT = null; evaluate(); }, 500);
+      debounceT = setTimeout(() => {
+        debounceT = null;
+        evaluate();
+      }, 500);
     };
     const chBcast = supabase
-      .channel("ride-alert-bcast-" + courier.user_id)
-      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries", filter: "status=eq.broadcasting" }, schedule)
+      .channel("ride-alert-bcast-" + courierId)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "deliveries", filter: "status=eq.broadcasting" },
+        schedule,
+      )
       .subscribe();
     const chMine = supabase
-      .channel("ride-alert-mine-" + courier.user_id)
-      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries", filter: `entregador_id=eq.${courier.user_id}` }, schedule)
+      .channel("ride-alert-mine-" + courierId)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "deliveries",
+          filter: `entregador_id=eq.${courierId}`,
+        },
+        schedule,
+      )
       .subscribe();
 
     return () => {
@@ -176,8 +237,14 @@ export function useNewRideAlert(courier: Courier, soundEnabled = true) {
       if (debounceT) clearTimeout(debounceT);
       supabase.removeChannel(chBcast);
       supabase.removeChannel(chMine);
-      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
-      if (toastIdRef.current != null) { toast.dismiss(toastIdRef.current); toastIdRef.current = null; }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      if (toastIdRef.current != null) {
+        toast.dismiss(toastIdRef.current);
+        toastIdRef.current = null;
+      }
     };
-  }, [courier?.user_id, courier?.status, courier?.aprovacao, soundEnabled, navigate]);
+  }, [courierId, courierStatus, canReceiveRides, soundEnabled, navigate]);
 }

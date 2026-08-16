@@ -44,7 +44,6 @@ function AdminLogin() {
         return;
       }
 
-
       toast.success("Bem-vindo, Admin Master");
       navigate({ to: "/admin" });
     } catch (err) {
@@ -75,7 +74,9 @@ function AdminLogin() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-zinc-300">E-mail</Label>
+            <Label htmlFor="email" className="text-zinc-300">
+              E-mail
+            </Label>
             <Input
               id="email"
               type="email"
@@ -88,7 +89,9 @@ function AdminLogin() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-zinc-300">Senha</Label>
+            <Label htmlFor="password" className="text-zinc-300">
+              Senha
+            </Label>
             <Input
               id="password"
               type="password"

@@ -8,6 +8,29 @@ type Detected = {
   hasEstabsHere: boolean;
 } | null;
 
+type GoogleAddressComponent = {
+  long_name?: string;
+  short_name?: string;
+  types?: string[];
+};
+
+type GoogleGeocodeResponse = {
+  results?: Array<{
+    address_components?: GoogleAddressComponent[];
+  }>;
+};
+
+type NominatimResponse = {
+  address?: {
+    city?: string;
+    town?: string;
+    village?: string;
+    municipality?: string;
+    state_code?: string;
+    state?: string;
+  };
+};
+
 const SESSION_KEY = "wifome:city-detected-once";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
 
@@ -19,9 +42,12 @@ function norm(s: string | null | undefined) {
     .toLowerCase();
 }
 
-async function reverseGeocode(lat: number, lng: number): Promise<{ cidade: string; estado: string } | null> {
+async function reverseGeocode(
+  lat: number,
+  lng: number,
+): Promise<{ cidade: string; estado: string } | null> {
   try {
-    const lovableKey = (import.meta as any).env?.VITE_LOVABLE_API_KEY;
+    const lovableKey = import.meta.env.VITE_LOVABLE_API_KEY;
     // Use gateway com key do Google Maps (não precisamos passar a browser key aqui — usaremos Nominatim como fallback)
     if (lovableKey) {
       const res = await fetch(
@@ -29,8 +55,8 @@ async function reverseGeocode(lat: number, lng: number): Promise<{ cidade: strin
         { headers: { Authorization: `Bearer ${lovableKey}` } },
       );
       if (res.ok) {
-        const data = await res.json();
-        const comps: any[] = data?.results?.[0]?.address_components ?? [];
+        const data = (await res.json()) as GoogleGeocodeResponse;
+        const comps = data.results?.[0]?.address_components ?? [];
         const cidade =
           comps.find((c) => c.types?.includes("administrative_area_level_2"))?.long_name ??
           comps.find((c) => c.types?.includes("locality"))?.long_name ??
@@ -45,8 +71,9 @@ async function reverseGeocode(lat: number, lng: number): Promise<{ cidade: strin
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=pt-BR`,
     );
     if (!r.ok) return null;
-    const d = await r.json();
-    const cidade = d?.address?.city ?? d?.address?.town ?? d?.address?.village ?? d?.address?.municipality ?? "";
+    const d = (await r.json()) as NominatimResponse;
+    const cidade =
+      d?.address?.city ?? d?.address?.town ?? d?.address?.village ?? d?.address?.municipality ?? "";
     const estado = (d?.address?.state_code ?? d?.address?.state ?? "").slice(0, 2).toUpperCase();
     return cidade ? { cidade, estado } : null;
   } catch {

@@ -1,12 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 import { z } from "zod";
 
 type AppRole = "cliente" | "estabelecimento" | "entregador" | "admin";
 
-async function assertAdmin(context: { supabase: any; userId: string }) {
-  const { data, error } = await (context.supabase.rpc as any)("has_role", {
-
+async function assertAdmin(context: { supabase: SupabaseClient<Database>; userId: string }) {
+  const { data, error } = await context.supabase.rpc("has_role", {
     _user_id: context.userId,
     _role: "admin",
   });
@@ -16,7 +17,7 @@ async function assertAdmin(context: { supabase: any; userId: string }) {
 
 export const listAppUsers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { search?: string; page?: number }) => d)
+  .validator((d: { search?: string; page?: number }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -41,7 +42,10 @@ export const listAppUsers = createServerFn({ method: "POST" })
     const { data: roles } = await supabaseAdmin
       .from("user_roles")
       .select("user_id, role")
-      .in("user_id", filtered.map((u) => u.id));
+      .in(
+        "user_id",
+        filtered.map((u) => u.id),
+      );
     const rolesByUser = new Map<string, string[]>();
     (roles ?? []).forEach((r) => {
       const arr = rolesByUser.get(r.user_id) ?? [];
@@ -56,7 +60,7 @@ const roleSchema = z.enum(["cliente", "estabelecimento", "entregador", "admin"])
 
 export const grantAppRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { targetUserId: string; role: AppRole }) =>
+  .validator((d: { targetUserId: string; role: AppRole }) =>
     z.object({ targetUserId: z.string().uuid(), role: roleSchema }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -78,7 +82,7 @@ export const grantAppRole = createServerFn({ method: "POST" })
 
 export const revokeAppRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { targetUserId: string; role: AppRole }) =>
+  .validator((d: { targetUserId: string; role: AppRole }) =>
     z.object({ targetUserId: z.string().uuid(), role: roleSchema }).parse(d),
   )
   .handler(async ({ data, context }) => {

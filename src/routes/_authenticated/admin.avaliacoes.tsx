@@ -72,16 +72,21 @@ function AvaliacoesPage() {
                       className={`h-4 w-4 ${i < r.rating_loja ? "fill-amber-500 text-amber-500" : "text-muted"}`}
                     />
                   ))}
-                  <span className="ml-2 text-xs text-muted-foreground">{dateShort(r.created_at)}</span>
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {dateShort(r.created_at)}
+                  </span>
                 </div>
-                {r.comentario && (
-                  <p className="mt-2 text-sm text-foreground">{r.comentario}</p>
-                )}
+                {r.comentario && <p className="mt-2 text-sm text-foreground">{r.comentario}</p>}
                 <p className="mt-2 font-mono text-[10px] text-muted-foreground">
                   loja: {r.establishment_id.slice(0, 8)}
                 </p>
               </div>
-              <Button variant="outline" size="sm" className="text-rose-600" onClick={() => del(r.id)}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-rose-600"
+                onClick={() => del(r.id)}
+              >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>

@@ -25,45 +25,73 @@ function IaPage() {
   async function ask(question?: string) {
     const query = question ?? q;
     if (!query.trim()) return;
-    setLoading(true); setAnswer(null);
+    setLoading(true);
+    setAnswer(null);
     try {
       const r = await gen({ data: { question: query } });
       setAnswer(r.insight);
       setSummary(r.summary as Record<string, unknown>);
     } catch (e) {
       setAnswer(e instanceof Error ? e.message : "Erro");
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight"><Sparkles className="h-7 w-7 text-primary"/>IA Insights</h1>
-        <p className="text-sm text-muted-foreground">Pergunte à IA sobre operação, crescimento, riscos e marketing.</p>
+        <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight">
+          <Sparkles className="h-7 w-7 text-primary" />
+          IA Insights
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Pergunte à IA sobre operação, crescimento, riscos e marketing.
+        </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         {SUGGESTIONS.map((s) => (
-          <button key={s} onClick={()=>{setQ(s); ask(s);}}
-            className="rounded-xl border border-border bg-card p-4 text-left text-sm transition-all hover:border-primary hover:bg-primary/5">
+          <button
+            key={s}
+            onClick={() => {
+              setQ(s);
+              ask(s);
+            }}
+            className="rounded-xl border border-border bg-card p-4 text-left text-sm transition-all hover:border-primary hover:bg-primary/5"
+          >
             {s}
           </button>
         ))}
       </div>
 
       <div className="rounded-xl border border-border bg-card p-5">
-        <Textarea value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Faça uma pergunta sobre a plataforma…" rows={3}/>
-        <Button onClick={()=>ask()} disabled={loading} className="mt-3"><Sparkles className="mr-2 h-4 w-4"/>{loading?"Analisando…":"Gerar insight"}</Button>
+        <Textarea
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Faça uma pergunta sobre a plataforma…"
+          rows={3}
+        />
+        <Button onClick={() => ask()} disabled={loading} className="mt-3">
+          <Sparkles className="mr-2 h-4 w-4" />
+          {loading ? "Analisando…" : "Gerar insight"}
+        </Button>
       </div>
 
       {answer && (
         <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-6">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">Resposta da IA</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">
+            Resposta da IA
+          </p>
           <div className="whitespace-pre-wrap text-sm leading-relaxed">{answer}</div>
           {summary && (
             <details className="mt-4">
-              <summary className="cursor-pointer text-xs text-muted-foreground">Ver métricas usadas</summary>
-              <pre className="mt-2 overflow-x-auto rounded bg-muted/50 p-3 text-[10px]">{JSON.stringify(summary, null, 2)}</pre>
+              <summary className="cursor-pointer text-xs text-muted-foreground">
+                Ver métricas usadas
+              </summary>
+              <pre className="mt-2 overflow-x-auto rounded bg-muted/50 p-3 text-[10px]">
+                {JSON.stringify(summary, null, 2)}
+              </pre>
             </details>
           )}
         </div>

@@ -6,25 +6,28 @@ const placeOrderInput = z.object({
   establishment_id: z.string().uuid(),
   forma_pagamento: z.enum(["pix", "cartao", "dinheiro", "carteira"]),
   tipo_entrega: z.enum(["delivery", "pickup"]).default("delivery"),
-  endereco: z.object({
-    label: z.string().optional(),
-    rua: z.string().min(1),
-    numero: z.string().optional().nullable(),
-    complemento: z.string().optional().nullable(),
-    bairro: z.string().optional().nullable(),
-    cidade: z.string().min(1),
-    estado: z.string().optional().nullable(),
-    lat: z.number().optional().nullable(),
-    lng: z.number().optional().nullable(),
-    cep: z.string().optional().nullable(),
-  }).nullable().optional(),
+  endereco: z
+    .object({
+      label: z.string().optional(),
+      rua: z.string().min(1),
+      numero: z.string().optional().nullable(),
+      complemento: z.string().optional().nullable(),
+      bairro: z.string().optional().nullable(),
+      cidade: z.string().min(1),
+      estado: z.string().optional().nullable(),
+      lat: z.number().optional().nullable(),
+      lng: z.number().optional().nullable(),
+      cep: z.string().optional().nullable(),
+    })
+    .nullable()
+    .optional(),
   observacoes: z.string().max(500).optional().nullable(),
   coupon_code: z.string().trim().max(50).optional().nullable(),
 });
 
 export const placeOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: z.infer<typeof placeOrderInput>) => placeOrderInput.parse(d))
+  .validator((d: z.infer<typeof placeOrderInput>) => placeOrderInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -48,10 +51,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     const isPickup = data.tipo_entrega === "pickup";
     if (!isPickup && !data.endereco) throw new Error("Selecione um endereço de entrega");
 
-    const subtotal = items.reduce(
-      (s, i) => s + i.preco_unit_cents * i.quantidade,
-      0,
-    );
+    const subtotal = items.reduce((s, i) => s + i.preco_unit_cents * i.quantidade, 0);
     if (subtotal < loja.pedido_minimo_cents) {
       throw new Error(
         `Pedido mínimo desta loja é R$ ${(loja.pedido_minimo_cents / 100)
@@ -62,7 +62,7 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     // Cupom (opcional)
     let desconto = 0;
-    let frete = isPickup ? 0 : loja.taxa_entrega_cents;
+    const frete = isPickup ? 0 : loja.taxa_entrega_cents;
     if (data.coupon_code) {
       const { data: cup } = await supabase
         .from("coupons")
@@ -84,8 +84,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         throw new Error("Pedido abaixo do mínimo para este cupom");
       if (cup.type === "percent") {
         desconto = Math.floor((subtotal * Number(cup.percent)) / 100);
-        if (cup.max_discount_cents)
-          desconto = Math.min(desconto, cup.max_discount_cents);
+        if (cup.max_discount_cents) desconto = Math.min(desconto, cup.max_discount_cents);
       } else if (cup.type === "fixed") {
         desconto = cup.value_cents;
       } else if (cup.type === "free_delivery") {

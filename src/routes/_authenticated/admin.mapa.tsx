@@ -11,8 +11,21 @@ export const Route = createFileRoute("/_authenticated/admin/mapa")({ component: 
 
 const LiveMap = lazy(() => import("@/components/admin/live-map"));
 
-type Point = { courier_id: string; lat: number; lng: number; created_at: string; order_id: string | null };
-type Estab = { id: string; nome: string; lat: number; lng: number; is_open: boolean; cidade: string | null };
+type Point = {
+  courier_id: string;
+  lat: number;
+  lng: number;
+  created_at: string;
+  order_id: string | null;
+};
+type Estab = {
+  id: string;
+  nome: string;
+  lat: number;
+  lng: number;
+  is_open: boolean;
+  cidade: string | null;
+};
 
 async function fetchLatestPoints(): Promise<Point[]> {
   const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
@@ -46,7 +59,10 @@ async function fetchLatestPoints(): Promise<Point[]> {
   return Array.from(map.values());
 }
 
-async function fetchEstablishments(): Promise<{ withGeo: Estab[]; withoutGeo: { id: string; nome: string; cidade: string | null }[] }> {
+async function fetchEstablishments(): Promise<{
+  withGeo: Estab[];
+  withoutGeo: { id: string; nome: string; cidade: string | null }[];
+}> {
   const { data, error } = await supabase
     .from("establishments")
     .select("id,nome,lat,lng,is_open,cidade,status")
@@ -127,7 +143,9 @@ function MapaPage() {
       const res = await geocodeFn();
       toast.success(`Geocodificação concluída: ${res.atualizados}/${res.total} localizados.`);
       if (res.falhas.length) {
-        toast.warning(`${res.falhas.length} sem coordenadas: ${res.falhas.map((f) => f.nome).join(", ")}`);
+        toast.warning(
+          `${res.falhas.length} sem coordenadas: ${res.falhas.map((f) => f.nome).join(", ")}`,
+        );
       }
       qc.invalidateQueries({ queryKey: ["map-establishments"] });
     } catch (e) {
@@ -163,7 +181,8 @@ function MapaPage() {
       <div className="flex flex-wrap gap-2 text-xs">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1">
           <Store className="h-3.5 w-3.5 text-emerald-600" />
-          {estabs.length} de {estabs.length + semGeo.length} estabelecimento{estabs.length + semGeo.length === 1 ? "" : "s"} com posição real
+          {estabs.length} de {estabs.length + semGeo.length} estabelecimento
+          {estabs.length + semGeo.length === 1 ? "" : "s"} com posição real
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1">
           <Bike className="h-3.5 w-3.5 text-primary" />
@@ -191,18 +210,26 @@ function MapaPage() {
             disabled={geocoding}
             className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-amber-700 disabled:opacity-50"
           >
-            {geocoding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+            {geocoding ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Wand2 className="h-3.5 w-3.5" />
+            )}
             Geocodificar endereços
           </button>
         </div>
       )}
 
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-2">
-        <span className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Camadas</span>
+        <span className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Camadas
+        </span>
         <button
           onClick={() => setShowEstabs((v) => !v)}
           className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
-            showEstabs ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "border-border bg-muted/40 text-muted-foreground"
+            showEstabs
+              ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+              : "border-border bg-muted/40 text-muted-foreground"
           }`}
         >
           {showEstabs ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
@@ -212,7 +239,9 @@ function MapaPage() {
         <button
           onClick={() => setShowCouriers((v) => !v)}
           className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
-            showCouriers ? "border-primary/50 bg-primary/10 text-primary" : "border-border bg-muted/40 text-muted-foreground"
+            showCouriers
+              ? "border-primary/50 bg-primary/10 text-primary"
+              : "border-border bg-muted/40 text-muted-foreground"
           }`}
         >
           {showCouriers ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
@@ -223,7 +252,9 @@ function MapaPage() {
           onClick={() => setOnlyOpen((v) => !v)}
           disabled={!showEstabs}
           className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition disabled:opacity-40 ${
-            onlyOpen ? "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-400" : "border-border bg-muted/40 text-muted-foreground"
+            onlyOpen
+              ? "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+              : "border-border bg-muted/40 text-muted-foreground"
           }`}
         >
           Apenas abertos

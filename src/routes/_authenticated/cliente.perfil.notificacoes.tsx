@@ -36,7 +36,9 @@ function NotifPage() {
     try {
       const raw = localStorage.getItem(KEY);
       if (raw) setPrefs({ ...DEFAULTS, ...JSON.parse(raw) });
-    } catch {}
+    } catch {
+      // Ignore invalid persisted preferences.
+    }
   }, []);
 
   function update<K extends keyof Prefs>(k: K, v: Prefs[K]) {
@@ -47,7 +49,11 @@ function NotifPage() {
   }
 
   const rows: Array<{ key: keyof Prefs; title: string; desc: string }> = [
-    { key: "push_pedidos", title: "Push — Status do pedido", desc: "Aceite, preparo, entrega, etc." },
+    {
+      key: "push_pedidos",
+      title: "Push — Status do pedido",
+      desc: "Aceite, preparo, entrega, etc.",
+    },
     { key: "push_promos", title: "Push — Promoções", desc: "Cupons e ofertas relâmpago" },
     { key: "email_promos", title: "E-mail — Promoções", desc: "Ofertas semanais no seu inbox" },
     { key: "email_novidades", title: "E-mail — Novidades", desc: "Novos restaurantes e recursos" },
@@ -57,7 +63,10 @@ function NotifPage() {
 
   return (
     <div className="space-y-5">
-      <Link to="/cliente/perfil" className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+      <Link
+        to="/cliente/perfil"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground"
+      >
         <ChevronLeft className="h-4 w-4" /> Voltar
       </Link>
       <h1 className="flex items-center gap-2 text-xl font-bold">

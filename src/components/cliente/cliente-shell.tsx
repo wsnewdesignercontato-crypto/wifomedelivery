@@ -84,9 +84,7 @@ export function ClienteShell({ user }: Ctx) {
             {/* Desktop primary nav */}
             <nav className="hidden items-center gap-1 lg:flex" aria-label="Navegação">
               {NAV.map(({ to, label, icon: Icon, exact }) => {
-                const active = exact
-                  ? location.pathname === to
-                  : location.pathname.startsWith(to);
+                const active = exact ? location.pathname === to : location.pathname.startsWith(to);
                 return (
                   <Link
                     key={to}
@@ -180,9 +178,7 @@ export function ClienteShell({ user }: Ctx) {
       >
         <div className="mx-auto grid max-w-4xl grid-cols-5">
           {NAV.map(({ to, label, icon: Icon, exact }) => {
-            const active = exact
-              ? location.pathname === to
-              : location.pathname.startsWith(to);
+            const active = exact ? location.pathname === to : location.pathname.startsWith(to);
             return (
               <Link
                 key={to}

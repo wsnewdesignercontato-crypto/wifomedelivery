@@ -73,17 +73,12 @@ const senhaSchema = z
   .string()
   .min(6, { message: "A senha deve ter pelo menos 6 caracteres" })
   .max(72);
-const nomeSchema = z
-  .string()
-  .trim()
-  .min(2, { message: "Informe seu nome" })
-  .max(80);
+const nomeSchema = z.string().trim().min(2, { message: "Informe seu nome" }).max(80);
 
 function AuthPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
-  const perfil: "cliente" | "estabelecimento" | "entregador" =
-    search.perfil ?? "cliente";
+  const perfil: "cliente" | "estabelecimento" | "entregador" = search.perfil ?? "cliente";
   const info = perfilInfo[perfil];
   const themeClass =
     perfil === "estabelecimento"
@@ -140,7 +135,6 @@ function AuthPage() {
     });
   }, [navigate, perfil, confirmado]);
 
-
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
@@ -158,9 +152,9 @@ function AuthPage() {
     });
     setLoading(false);
     if (error) {
-      toast.error(error.message === "Invalid login credentials"
-        ? "Email ou senha inválidos"
-        : error.message);
+      toast.error(
+        error.message === "Invalid login credentials" ? "Email ou senha inválidos" : error.message,
+      );
       return;
     }
     try {
@@ -278,7 +272,6 @@ function AuthPage() {
         </div>
 
         <div className="mt-6 text-center" data-no-reveal>
-
           <IFomeLogo size="lg" showWord={false} className="mx-auto" perfil={perfil} />
           <h1 className="mx-auto mt-4 max-w-[15ch] text-balance text-xl font-black leading-tight tracking-tight text-foreground sm:text-2xl">
             {perfil === "cliente"
@@ -300,23 +293,20 @@ function AuthPage() {
               <MailCheck className="mx-auto h-12 w-12 text-primary" />
 
               <h2 className="text-lg font-bold text-foreground">
-                {modo === "confirmar-email"
-                  ? "Bem-vindo ao WiFome! 🎉"
-                  : "Link enviado!"}
+                {modo === "confirmar-email" ? "Bem-vindo ao WiFome! 🎉" : "Link enviado!"}
               </h2>
               <p className="text-sm text-muted-foreground">
                 {modo === "confirmar-email" ? (
                   <>
                     Enviamos um email de confirmação para{" "}
-                    <span className="font-semibold text-foreground">{emailSalvo}</span>.
-                    Confirme seu email para ativar a conta — depois você volta
-                    automaticamente para o login.
+                    <span className="font-semibold text-foreground">{emailSalvo}</span>. Confirme
+                    seu email para ativar a conta — depois você volta automaticamente para o login.
                   </>
                 ) : (
                   <>
                     Enviamos um link de recuperação para{" "}
-                    <span className="font-semibold text-foreground">{emailSalvo}</span>.
-                    Abra o email e crie sua nova senha.
+                    <span className="font-semibold text-foreground">{emailSalvo}</span>. Abra o
+                    email e crie sua nova senha.
                   </>
                 )}
               </p>
@@ -471,8 +461,7 @@ function AuthPage() {
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}
                   </Button>
                   <p className="text-center text-xs text-muted-foreground">
-                    Ao criar conta, você concorda com nossos termos e política de
-                    privacidade.
+                    Ao criar conta, você concorda com nossos termos e política de privacidade.
                   </p>
                 </form>
               </TabsContent>
@@ -481,7 +470,6 @@ function AuthPage() {
         </div>
 
         <div className="flex-1" />
-
       </div>
     </div>
   );

@@ -85,7 +85,12 @@ async function fetchOverview() {
 
   const orders = (ordersMonthRes.data ?? []) as Order[];
   const clientesTotal = clientesRes.count ?? 0;
-  const estabsList = (estabsRes.data ?? []) as { id: string; nome: string; is_open: boolean; status: string }[];
+  const estabsList = (estabsRes.data ?? []) as {
+    id: string;
+    nome: string;
+    is_open: boolean;
+    status: string;
+  }[];
   const estabsTotal = estabsRes.count ?? estabsList.length;
   const estabsAtivos = estabsList.filter((e) => e.status === "aprovado").length;
   const estabsAbertos = estabsList.filter((e) => e.status === "aprovado" && e.is_open).length;
@@ -96,9 +101,7 @@ async function fetchOverview() {
 
   const inRange = (o: Order, since: Date) => new Date(o.created_at) >= since;
   const revenue = (list: Order[]) =>
-    list
-      .filter((o) => o.status === "delivered")
-      .reduce((sum, o) => sum + (o.total_cents ?? 0), 0);
+    list.filter((o) => o.status === "delivered").reduce((sum, o) => sum + (o.total_cents ?? 0), 0);
 
   const today = orders.filter((o) => inRange(o, startOfDay));
   const week = orders.filter((o) => inRange(o, startOfWeek));
@@ -184,7 +187,17 @@ async function fetchOverview() {
   };
 }
 
-const STATUS_COLORS = ["#FF6B00", "#10B981", "#F59E0B", "#EF4444", "#6366F1", "#8B5CF6", "#EC4899", "#14B8A6", "#F97316"];
+const STATUS_COLORS = [
+  "#FF6B00",
+  "#10B981",
+  "#F59E0B",
+  "#EF4444",
+  "#6366F1",
+  "#8B5CF6",
+  "#EC4899",
+  "#14B8A6",
+  "#F97316",
+];
 
 const STATUS_LABEL: Record<string, string> = {
   placed: "Recebido",
@@ -309,7 +322,11 @@ function AdminDashboard() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="day" fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} />
+                <XAxis
+                  dataKey="day"
+                  fontSize={11}
+                  tick={{ fill: "hsl(var(--muted-foreground))" }}
+                />
                 <YAxis fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} />
                 <Tooltip
                   contentStyle={{
@@ -337,28 +354,48 @@ function AdminDashboard() {
           </div>
           {(() => {
             const raw = data?.statusData ?? [];
-            const concl = raw.filter((s) => s.status === "delivered").reduce((a, b) => a + b.value, 0);
-            const canc = raw.filter((s) => ["cancelled", "refunded"].includes(s.status)).reduce((a, b) => a + b.value, 0);
-            const and = raw.filter((s) => !["delivered", "cancelled", "refunded"].includes(s.status)).reduce((a, b) => a + b.value, 0);
+            const concl = raw
+              .filter((s) => s.status === "delivered")
+              .reduce((a, b) => a + b.value, 0);
+            const canc = raw
+              .filter((s) => ["cancelled", "refunded"].includes(s.status))
+              .reduce((a, b) => a + b.value, 0);
+            const and = raw
+              .filter((s) => !["delivered", "cancelled", "refunded"].includes(s.status))
+              .reduce((a, b) => a + b.value, 0);
             const total = concl + canc + and;
             const grouped = [
               { status: "Concluídos", value: concl, color: "#FF6B00" },
               { status: "Em andamento", value: and, color: "#10B981" },
               { status: "Cancelados", value: canc, color: "#EF4444" },
             ];
-            const pct = (v: number) => (total ? ((v / total) * 100).toFixed(1).replace(".", ",") : "0,0");
+            const pct = (v: number) =>
+              total ? ((v / total) * 100).toFixed(1).replace(".", ",") : "0,0";
             return (
               <div className="flex flex-col items-center gap-4 sm:flex-row">
                 <div className="relative h-44 w-44 shrink-0 sm:h-56 sm:w-56">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={grouped} dataKey="value" nameKey="status" cx="50%" cy="50%" innerRadius={58} outerRadius={88} paddingAngle={2}>
-                        {grouped.map((g, i) => <Cell key={i} fill={g.color} />)}
+                      <Pie
+                        data={grouped}
+                        dataKey="value"
+                        nameKey="status"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={58}
+                        outerRadius={88}
+                        paddingAngle={2}
+                      >
+                        {grouped.map((g, i) => (
+                          <Cell key={i} fill={g.color} />
+                        ))}
                       </Pie>
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl font-black tabular-nums text-foreground">{num(total)}</span>
+                    <span className="text-3xl font-black tabular-nums text-foreground">
+                      {num(total)}
+                    </span>
                     <span className="text-[11px] text-muted-foreground">Total</span>
                   </div>
                 </div>
@@ -368,7 +405,10 @@ function AdminDashboard() {
                       <span className="h-2.5 w-2.5 rounded-full" style={{ background: g.color }} />
                       <span className="min-w-0 truncate text-muted-foreground">{g.status}</span>
                       <span className="ml-auto shrink-0 whitespace-nowrap tabular-nums font-semibold text-foreground">
-                        {num(g.value)} <span className="text-xs font-normal text-muted-foreground">({pct(g.value)}%)</span>
+                        {num(g.value)}{" "}
+                        <span className="text-xs font-normal text-muted-foreground">
+                          ({pct(g.value)}%)
+                        </span>
                       </span>
                     </div>
                   ))}
@@ -383,9 +423,10 @@ function AdminDashboard() {
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <h2 className="mb-4 text-sm font-semibold text-foreground">Top estabelecimentos</h2>
           <div className="space-y-3">
-            {isLoading && Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-14 animate-pulse rounded-lg bg-muted" />
-            ))}
+            {isLoading &&
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-14 animate-pulse rounded-lg bg-muted" />
+              ))}
             {(() => {
               const list = data?.topEstabs ?? [];
               const max = list.reduce((m, e) => Math.max(m, e.pedidos), 0) || 1;
@@ -401,13 +442,19 @@ function AdminDashboard() {
                       <div className="flex items-baseline justify-between gap-2">
                         <p className="truncate text-sm font-semibold text-foreground">{e.nome}</p>
                         <p className="shrink-0 text-sm font-bold tabular-nums text-foreground">
-                          {brl(e.receita)} <span className="text-xs font-medium text-emerald-500">▲{trend}%</span>
+                          {brl(e.receita)}{" "}
+                          <span className="text-xs font-medium text-emerald-500">▲{trend}%</span>
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <p className="text-[11px] text-muted-foreground">{num(e.pedidos)} pedidos</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {num(e.pedidos)} pedidos
+                        </p>
                         <div className="ml-auto h-1 w-24 overflow-hidden rounded-full bg-muted">
-                          <div className="h-full rounded-full bg-primary" style={{ width: `${pctBar}%` }} />
+                          <div
+                            className="h-full rounded-full bg-primary"
+                            style={{ width: `${pctBar}%` }}
+                          />
                         </div>
                       </div>
                     </div>
@@ -416,7 +463,9 @@ function AdminDashboard() {
               });
             })()}
             {!isLoading && (data?.topEstabs ?? []).length === 0 && (
-              <p className="py-8 text-center text-sm text-muted-foreground">Sem dados no período.</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                Sem dados no período.
+              </p>
             )}
           </div>
         </div>
@@ -454,9 +503,7 @@ function AdminDashboard() {
               </div>
             ))}
             {!isLoading && (data?.recent ?? []).length === 0 && (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                Nenhum pedido ainda.
-              </p>
+              <p className="py-8 text-center text-sm text-muted-foreground">Nenhum pedido ainda.</p>
             )}
           </div>
         </div>

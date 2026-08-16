@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { X } from "lucide-react";
@@ -97,9 +98,7 @@ export function PromoAnnouncement({ audience }: { audience: PromoAudience }) {
       aria-modal="true"
       aria-label={titulo}
     >
-      <div
-        className="relative w-full max-w-sm overflow-hidden rounded-[2rem] border border-white/10 bg-[#0c0705] shadow-2xl animate-in zoom-in-95 duration-300"
-      >
+      <div className="relative w-full max-w-sm overflow-hidden rounded-[2rem] border border-white/10 bg-[#0c0705] shadow-2xl animate-in zoom-in-95 duration-300">
         {/* Hero de comida no topo */}
         <div className="relative h-56 w-full sm:h-64">
           <img

@@ -3,7 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const savePushSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { endpoint: string; p256dh: string; auth: string; userAgent?: string }) => {
+  .validator((data: { endpoint: string; p256dh: string; auth: string; userAgent?: string }) => {
     if (!data?.endpoint?.startsWith("https://")) throw new Error("endpoint inválido");
     if (!data.p256dh || !data.auth) throw new Error("chaves ausentes");
     if (data.endpoint.length > 1000) throw new Error("endpoint muito longo");
@@ -26,7 +26,7 @@ export const savePushSubscription = createServerFn({ method: "POST" })
 
 export const removePushSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { endpoint: string }) => {
+  .validator((data: { endpoint: string }) => {
     if (!data?.endpoint) throw new Error("endpoint inválido");
     return data;
   })

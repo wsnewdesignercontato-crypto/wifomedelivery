@@ -2,8 +2,22 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { PromoAnnouncement } from "@/components/promo-announcement";
 import { useEffect, useState } from "react";
 import {
-  Home, Bike, History, Wallet, Trophy, Star, FileText, Car,
-  User, LifeBuoy, Bell, Settings, LogOut, Loader2, DollarSign, MessageSquare,
+  Home,
+  Bike,
+  History,
+  Wallet,
+  Trophy,
+  Star,
+  FileText,
+  Car,
+  User,
+  LifeBuoy,
+  Bell,
+  Settings,
+  LogOut,
+  Loader2,
+  DollarSign,
+  MessageSquare,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { IFomeLogo } from "@/components/ifome-logo";
@@ -34,7 +48,13 @@ const NAV = [
 ];
 
 const BOTTOM = NAV.filter((n) =>
-  ["/entregador", "/entregador/corridas", "/entregador/ganhos", "/entregador/historico", "/entregador/perfil"].includes(n.to),
+  [
+    "/entregador",
+    "/entregador/corridas",
+    "/entregador/ganhos",
+    "/entregador/historico",
+    "/entregador/perfil",
+  ].includes(n.to),
 );
 
 export function EntregadorShell({ children }: { children: React.ReactNode }) {
@@ -58,26 +78,33 @@ export function EntregadorShell({ children }: { children: React.ReactNode }) {
     refresh();
     const ch = supabase
       .channel(`notif-count-entregador-${uid}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${uid}` }, (p) => {
-        refresh();
-        if (p.eventType === "INSERT") {
-          const n = p.new as { titulo?: string; mensagem?: string; lida?: boolean; audience?: string | null };
-          const aud = n.audience ?? null;
-          if (aud && aud !== "entregador" && aud !== "all") return;
-          if (n.lida) return;
-          playBellChime();
-          toast(n.titulo ?? "Nova notificação", { description: n.mensagem });
-        }
-      })
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${uid}` },
+        (p) => {
+          refresh();
+          if (p.eventType === "INSERT") {
+            const n = p.new as {
+              titulo?: string;
+              mensagem?: string;
+              lida?: boolean;
+              audience?: string | null;
+            };
+            const aud = n.audience ?? null;
+            if (aud && aud !== "entregador" && aud !== "all") return;
+            if (n.lida) return;
+            playBellChime();
+            toast(n.titulo ?? "Nova notificação", { description: n.mensagem });
+          }
+        },
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
   }, [courier]);
 
-
-  useNewRideAlert(courier as any, true);
-
+  useNewRideAlert(courier, true);
 
   if (isLoading) {
     return (
@@ -89,21 +116,33 @@ export function EntregadorShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="theme-entregador min-h-screen bg-background">
-      <NewRideOffer courier={courier as any} enabled={!!courier} />
+      <NewRideOffer courier={courier} enabled={!!courier} />
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex items-center gap-3">
             <IFomeLogo size="sm" />
-            <Badge variant="outline" className="hidden sm:inline-flex">Entregador</Badge>
+            <Badge variant="outline" className="hidden sm:inline-flex">
+              Entregador
+            </Badge>
           </div>
           <div className="flex items-center gap-2">
             {courier && (
-              <Badge className={courier.status === "online" ? "bg-emerald-500 text-white" : courier.status === "ocupado" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}>
+              <Badge
+                className={
+                  courier.status === "online"
+                    ? "bg-emerald-500 text-white"
+                    : courier.status === "ocupado"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                }
+              >
                 {courier.status}
               </Badge>
             )}
             <Link to="/entregador/notificacoes" className="relative">
-              <Button variant="ghost" size="icon"><Bell className="h-5 w-5" /></Button>
+              <Button variant="ghost" size="icon">
+                <Bell className="h-5 w-5" />
+              </Button>
               {unread > 0 && (
                 <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
                   {unread}
@@ -135,7 +174,9 @@ export function EntregadorShell({ children }: { children: React.ReactNode }) {
                   key={n.to}
                   to={n.to}
                   className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
-                    active ? "bg-primary text-primary-foreground shadow-brand" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    active
+                      ? "bg-primary text-primary-foreground shadow-brand"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   <Icon className="h-4 w-4" />

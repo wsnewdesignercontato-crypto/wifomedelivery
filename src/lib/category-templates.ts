@@ -4,25 +4,29 @@
 // lanche pede adicionais como bacon/ovo, pizza pede tamanho/borda, etc.
 
 export type CategoryKind =
-  | "bebida"
-  | "lanche"
-  | "pizza"
-  | "sobremesa"
-  | "acai"
-  | "marmita"
-  | "pastel"
-  | "sushi"
-  | "outro";
+  "bebida" | "lanche" | "pizza" | "sobremesa" | "acai" | "marmita" | "pastel" | "sushi" | "outro";
 
 const KEYWORDS: Array<[CategoryKind, RegExp]> = [
-  ["bebida", /\b(bebida|refri|refrigerante|suco|agua|água|cerveja|drink|drinque|cha|chá|cafe|café|energetico|energético|vinho|coquetel|milk\s?shake|milkshake|smoothie)\b/i],
+  [
+    "bebida",
+    /\b(bebida|refri|refrigerante|suco|agua|água|cerveja|drink|drinque|cha|chá|cafe|café|energetico|energético|vinho|coquetel|milk\s?shake|milkshake|smoothie)\b/i,
+  ],
   ["pizza", /\b(pizza|pizzas|calzone|esfiha)\b/i],
   ["acai", /\b(acai|açaí|açai|acaí|sorvete|gelato|picole|picolé)\b/i],
   ["sushi", /\b(sushi|sashimi|temaki|combinado|hot\s?roll|yakisoba|japones|japonês)\b/i],
   ["pastel", /\b(pastel|pasteis|pastéis|salgado|salgados|coxinha|esfirra|kibe|quibe|empada)\b/i],
-  ["marmita", /\b(marmita|marmitex|prato|refeicao|refeição|self|almoco|almoço|jantar|executivo|caseira)\b/i],
-  ["sobremesa", /\b(sobremesa|doce|bolo|torta|pudim|mousse|brigadeiro|beijinho|churros|cheesecake)\b/i],
-  ["lanche", /\b(lanche|lanches|hamb|hambur|burger|burguer|x-|sanduba|sanduíche|sanduiche|hot\s?dog|cachorro\s?quente|wrap|artesanal)\b/i],
+  [
+    "marmita",
+    /\b(marmita|marmitex|prato|refeicao|refeição|self|almoco|almoço|jantar|executivo|caseira)\b/i,
+  ],
+  [
+    "sobremesa",
+    /\b(sobremesa|doce|bolo|torta|pudim|mousse|brigadeiro|beijinho|churros|cheesecake)\b/i,
+  ],
+  [
+    "lanche",
+    /\b(lanche|lanches|hamb|hambur|burger|burguer|x-|sanduba|sanduíche|sanduiche|hot\s?dog|cachorro\s?quente|wrap|artesanal)\b/i,
+  ],
 ];
 
 export function getCategoryKind(name?: string | null): CategoryKind {
@@ -44,14 +48,18 @@ export const KIND_LABEL: Record<CategoryKind, string> = {
 };
 
 export const KIND_HINT: Record<CategoryKind, string> = {
-  bebida: "Configure volume (ml/L) e embalagem. Use variações para Lata, Garrafa, 1L, 2L com preços diferentes.",
-  lanche: "Configure adicionais pagos (bacon, ovo, queijo extra) e opções de ponto da carne. Deixe o cliente montar do jeito dele.",
-  pizza: "Configure tamanhos (P/M/G/GG), bordas recheadas e quantos sabores o cliente pode escolher.",
+  bebida:
+    "Configure volume (ml/L) e embalagem. Use variações para Lata, Garrafa, 1L, 2L com preços diferentes.",
+  lanche:
+    "Configure adicionais pagos (bacon, ovo, queijo extra) e opções de ponto da carne. Deixe o cliente montar do jeito dele.",
+  pizza:
+    "Configure tamanhos (P/M/G/GG), bordas recheadas e quantos sabores o cliente pode escolher.",
   sobremesa: "Adicione coberturas e acompanhamentos opcionais.",
   acai: "Configure tamanhos (300/500/700ml) e complementos como frutas, granola, leite condensado.",
   marmita: "Configure tamanhos (P/M/G) e acompanhamentos (arroz, feijão, salada, farofa).",
   pastel: "Configure recheios e molhos que acompanham.",
-  sushi: "Configure quantidade de peças, tipos de peixe e acompanhamentos (shoyu, wasabi, gengibre).",
+  sushi:
+    "Configure quantidade de peças, tipos de peixe e acompanhamentos (shoyu, wasabi, gengibre).",
   outro: "Configure grupos de complementos conforme necessário.",
 };
 
@@ -70,27 +78,21 @@ export const EXTRA_FIELDS: Record<CategoryKind, ExtraFieldDef[]> = {
   ],
   lanche: [
     { key: "peso_g", label: "Peso do hambúrguer", placeholder: "150", suffix: "g" },
-    { key: "ingredientes", label: "Ingredientes principais", placeholder: "Pão, blend 150g, queijo, alface..." },
+    {
+      key: "ingredientes",
+      label: "Ingredientes principais",
+      placeholder: "Pão, blend 150g, queijo, alface...",
+    },
   ],
   pizza: [
     { key: "num_fatias", label: "Nº de fatias", placeholder: "8" },
     { key: "sabores_max", label: "Sabores máximos", placeholder: "2" },
   ],
-  sobremesa: [
-    { key: "peso_g", label: "Peso / porção", placeholder: "120", suffix: "g" },
-  ],
-  acai: [
-    { key: "volume_ml", label: "Volume", placeholder: "500", suffix: "ml" },
-  ],
-  marmita: [
-    { key: "peso_g", label: "Peso", placeholder: "700", suffix: "g" },
-  ],
-  pastel: [
-    { key: "tamanho", label: "Tamanho", placeholder: "Grande / Broto" },
-  ],
-  sushi: [
-    { key: "pecas", label: "Nº de peças", placeholder: "10" },
-  ],
+  sobremesa: [{ key: "peso_g", label: "Peso / porção", placeholder: "120", suffix: "g" }],
+  acai: [{ key: "volume_ml", label: "Volume", placeholder: "500", suffix: "ml" }],
+  marmita: [{ key: "peso_g", label: "Peso", placeholder: "700", suffix: "g" }],
+  pastel: [{ key: "tamanho", label: "Tamanho", placeholder: "Grande / Broto" }],
+  sushi: [{ key: "pecas", label: "Nº de peças", placeholder: "10" }],
   outro: [],
 };
 
@@ -106,17 +108,29 @@ export type AddonTemplate = {
 export const ADDON_TEMPLATES: Record<CategoryKind, AddonTemplate[]> = {
   bebida: [
     {
-      nome: "Gelado?", obrigatorio: true, minimo: 1, maximo: 1,
-      itens: [{ nome: "Sim, bem gelada", preco_extra_cents: 0 }, { nome: "Natural", preco_extra_cents: 0 }],
+      nome: "Gelado?",
+      obrigatorio: true,
+      minimo: 1,
+      maximo: 1,
+      itens: [
+        { nome: "Sim, bem gelada", preco_extra_cents: 0 },
+        { nome: "Natural", preco_extra_cents: 0 },
+      ],
     },
     {
-      nome: "Copo com gelo", obrigatorio: false, minimo: 0, maximo: 1,
+      nome: "Copo com gelo",
+      obrigatorio: false,
+      minimo: 0,
+      maximo: 1,
       itens: [{ nome: "Enviar copo com gelo", preco_extra_cents: 0 }],
     },
   ],
   lanche: [
     {
-      nome: "Adicionais", obrigatorio: false, minimo: 0, maximo: 8,
+      nome: "Adicionais",
+      obrigatorio: false,
+      minimo: 0,
+      maximo: 8,
       itens: [
         { nome: "Bacon", preco_extra_cents: 500 },
         { nome: "Ovo", preco_extra_cents: 300 },
@@ -127,7 +141,10 @@ export const ADDON_TEMPLATES: Record<CategoryKind, AddonTemplate[]> = {
       ],
     },
     {
-      nome: "Ponto da carne", obrigatorio: true, minimo: 1, maximo: 1,
+      nome: "Ponto da carne",
+      obrigatorio: true,
+      minimo: 1,
+      maximo: 1,
       itens: [
         { nome: "Ao ponto", preco_extra_cents: 0 },
         { nome: "Bem passada", preco_extra_cents: 0 },
@@ -135,7 +152,10 @@ export const ADDON_TEMPLATES: Record<CategoryKind, AddonTemplate[]> = {
       ],
     },
     {
-      nome: "Retirar ingredientes", obrigatorio: false, minimo: 0, maximo: 5,
+      nome: "Retirar ingredientes",
+      obrigatorio: false,
+      minimo: 0,
+      maximo: 5,
       itens: [
         { nome: "Sem cebola", preco_extra_cents: 0 },
         { nome: "Sem tomate", preco_extra_cents: 0 },
@@ -146,7 +166,10 @@ export const ADDON_TEMPLATES: Record<CategoryKind, AddonTemplate[]> = {
   ],
   pizza: [
     {
-      nome: "Borda", obrigatorio: true, minimo: 1, maximo: 1,
+      nome: "Borda",
+      obrigatorio: true,
+      minimo: 1,
+      maximo: 1,
       itens: [
         { nome: "Tradicional (sem recheio)", preco_extra_cents: 0 },
         { nome: "Catupiry", preco_extra_cents: 800 },
@@ -155,7 +178,10 @@ export const ADDON_TEMPLATES: Record<CategoryKind, AddonTemplate[]> = {
       ],
     },
     {
-      nome: "Massa", obrigatorio: true, minimo: 1, maximo: 1,
+      nome: "Massa",
+      obrigatorio: true,
+      minimo: 1,
+      maximo: 1,
       itens: [
         { nome: "Tradicional", preco_extra_cents: 0 },
         { nome: "Fina", preco_extra_cents: 0 },
@@ -164,7 +190,10 @@ export const ADDON_TEMPLATES: Record<CategoryKind, AddonTemplate[]> = {
   ],
   sobremesa: [
     {
-      nome: "Cobertura", obrigatorio: false, minimo: 0, maximo: 3,
+      nome: "Cobertura",
+      obrigatorio: false,
+      minimo: 0,
+      maximo: 3,
       itens: [
         { nome: "Chocolate", preco_extra_cents: 200 },
         { nome: "Morango", preco_extra_cents: 200 },
@@ -174,7 +203,10 @@ export const ADDON_TEMPLATES: Record<CategoryKind, AddonTemplate[]> = {
   ],
   acai: [
     {
-      nome: "Frutas", obrigatorio: false, minimo: 0, maximo: 4,
+      nome: "Frutas",
+      obrigatorio: false,
+      minimo: 0,
+      maximo: 4,
       itens: [
         { nome: "Banana", preco_extra_cents: 100 },
         { nome: "Morango", preco_extra_cents: 300 },
@@ -182,7 +214,10 @@ export const ADDON_TEMPLATES: Record<CategoryKind, AddonTemplate[]> = {
       ],
     },
     {
-      nome: "Complementos", obrigatorio: false, minimo: 0, maximo: 6,
+      nome: "Complementos",
+      obrigatorio: false,
+      minimo: 0,
+      maximo: 6,
       itens: [
         { nome: "Granola", preco_extra_cents: 200 },
         { nome: "Leite condensado", preco_extra_cents: 200 },
@@ -194,7 +229,10 @@ export const ADDON_TEMPLATES: Record<CategoryKind, AddonTemplate[]> = {
   ],
   marmita: [
     {
-      nome: "Acompanhamentos", obrigatorio: true, minimo: 2, maximo: 4,
+      nome: "Acompanhamentos",
+      obrigatorio: true,
+      minimo: 2,
+      maximo: 4,
       itens: [
         { nome: "Arroz branco", preco_extra_cents: 0 },
         { nome: "Feijão", preco_extra_cents: 0 },
@@ -206,7 +244,10 @@ export const ADDON_TEMPLATES: Record<CategoryKind, AddonTemplate[]> = {
   ],
   pastel: [
     {
-      nome: "Molhos", obrigatorio: false, minimo: 0, maximo: 3,
+      nome: "Molhos",
+      obrigatorio: false,
+      minimo: 0,
+      maximo: 3,
       itens: [
         { nome: "Ketchup", preco_extra_cents: 0 },
         { nome: "Maionese", preco_extra_cents: 0 },
@@ -217,7 +258,10 @@ export const ADDON_TEMPLATES: Record<CategoryKind, AddonTemplate[]> = {
   ],
   sushi: [
     {
-      nome: "Acompanhamentos", obrigatorio: false, minimo: 0, maximo: 3,
+      nome: "Acompanhamentos",
+      obrigatorio: false,
+      minimo: 0,
+      maximo: 3,
       itens: [
         { nome: "Shoyu extra", preco_extra_cents: 0 },
         { nome: "Wasabi", preco_extra_cents: 0 },
@@ -225,7 +269,10 @@ export const ADDON_TEMPLATES: Record<CategoryKind, AddonTemplate[]> = {
       ],
     },
     {
-      nome: "Hashi", obrigatorio: false, minimo: 0, maximo: 1,
+      nome: "Hashi",
+      obrigatorio: false,
+      minimo: 0,
+      maximo: 1,
       itens: [{ nome: "Enviar hashi", preco_extra_cents: 0 }],
     },
   ],
@@ -258,7 +305,11 @@ export const VARIANT_TEMPLATES: Record<CategoryKind, VariantTemplate[]> = {
     { nome: "M", preco_cents: 2400 },
     { nome: "G", preco_cents: 3000 },
   ],
-  sushi: [{ nome: "10 peças", preco_cents: 3500 }, { nome: "20 peças", preco_cents: 6500 }, { nome: "40 peças", preco_cents: 12000 }],
+  sushi: [
+    { nome: "10 peças", preco_cents: 3500 },
+    { nome: "20 peças", preco_cents: 6500 },
+    { nome: "40 peças", preco_cents: 12000 },
+  ],
   lanche: [],
   sobremesa: [],
   pastel: [],

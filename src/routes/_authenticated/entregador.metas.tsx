@@ -10,9 +10,15 @@ export const Route = createFileRoute("/_authenticated/entregador/metas")({
 });
 
 type Mission = {
-  id: string; titulo: string; descricao: string | null;
-  meta_entregas: number; progresso: number; bonus_cents: number;
-  periodo_inicio: string; periodo_fim: string | null; status: string;
+  id: string;
+  titulo: string;
+  descricao: string | null;
+  meta_entregas: number;
+  progresso: number;
+  bonus_cents: number;
+  periodo_inicio: string;
+  periodo_fim: string | null;
+  status: string;
 };
 
 function Metas() {
@@ -21,7 +27,10 @@ function Metas() {
 
   useEffect(() => {
     if (!courier) return;
-    supabase.from("courier_missions").select("*").eq("courier_id", courier.user_id)
+    supabase
+      .from("courier_missions")
+      .select("*")
+      .eq("courier_id", courier.user_id)
       .order("created_at", { ascending: false })
       .then(({ data }) => setMissions((data ?? []) as Mission[]));
   }, [courier]);
@@ -32,7 +41,9 @@ function Metas() {
       {missions.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
           <Trophy className="mx-auto h-10 w-10 text-muted-foreground" />
-          <p className="mt-3 text-sm text-muted-foreground">Nenhuma meta ativa. Novas campanhas aparecem aqui.</p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Nenhuma meta ativa. Novas campanhas aparecem aqui.
+          </p>
         </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
@@ -52,7 +63,9 @@ function Metas() {
                     <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
                   </div>
                   <div className="mt-2 flex justify-between text-xs">
-                    <span className="text-muted-foreground">{m.progresso} / {m.meta_entregas} entregas</span>
+                    <span className="text-muted-foreground">
+                      {m.progresso} / {m.meta_entregas} entregas
+                    </span>
                     <span className="font-bold text-primary">Bônus {fmt(m.bonus_cents)}</span>
                   </div>
                 </div>

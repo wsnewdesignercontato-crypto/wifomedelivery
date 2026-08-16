@@ -65,7 +65,10 @@ function RecompensasPage() {
 
   return (
     <div className="space-y-5">
-      <Link to="/cliente/perfil" className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+      <Link
+        to="/cliente/perfil"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground"
+      >
         <ChevronLeft className="h-4 w-4" /> Voltar
       </Link>
       <h1 className="flex items-center gap-2 text-xl font-bold">
@@ -86,7 +89,8 @@ function RecompensasPage() {
               </div>
               <p className="mt-2 text-2xl font-black">{brl(cashbackCents)}</p>
               <p className="text-xs text-muted-foreground">
-                Você recebe 0,5% de volta em cada pedido — a cada R$ 100 gastos, R$ 0,50 de cashback.
+                Você recebe 0,5% de volta em cada pedido — a cada R$ 100 gastos, R$ 0,50 de
+                cashback.
               </p>
             </div>
             <div className="rounded-2xl border border-border bg-card p-4">
@@ -118,8 +122,8 @@ function RecompensasPage() {
           <section className="rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4 text-sm">
             <p className="font-semibold text-primary">Convide amigos e ganhe 15% de desconto</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Para cada amigo que fizer o primeiro pedido usando seu código, vocês dois ganham 15% de
-              desconto no próximo pedido.
+              Para cada amigo que fizer o primeiro pedido usando seu código, vocês dois ganham 15%
+              de desconto no próximo pedido.
             </p>
             <button
               onClick={copiarCodigo}

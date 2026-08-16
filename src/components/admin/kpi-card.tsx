@@ -38,11 +38,11 @@ export function KpiCard({
               value
             )}
           </p>
-          {hint && !loading && (
-            <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-          )}
+          {hint && !loading && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
         </div>
-        <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", toneClasses[tone])}>
+        <div
+          className={cn("flex h-10 w-10 items-center justify-center rounded-xl", toneClasses[tone])}
+        >
           <Icon className="h-5 w-5" />
         </div>
       </div>

@@ -70,7 +70,11 @@ export const geocodeMissingEstablishments = createServerFn({ method: "POST" })
         coords = await geocodeOne(fallback);
       }
       if (!coords) {
-        fails.push({ id: e.id, nome: e.nome, motivo: primary ? "endereço não localizado" : "sem endereço" });
+        fails.push({
+          id: e.id,
+          nome: e.nome,
+          motivo: primary ? "endereço não localizado" : "sem endereço",
+        });
       } else {
         const { error: upErr } = await supabaseAdmin
           .from("establishments")

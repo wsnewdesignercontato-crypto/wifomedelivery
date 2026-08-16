@@ -29,6 +29,7 @@ import { LocationToggleCard } from "@/components/location-toggle-card";
 import { PushToggleCard } from "@/components/push-toggle-card";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyCourier } from "@/hooks/use-courier";
+import { getKycLabel, normalizeReviewStatus } from "@/lib/courier-approval";
 
 export const Route = createFileRoute("/_authenticated/entregador/perfil/")({
   component: PerfilHub,
@@ -134,13 +135,6 @@ const STATUS_LABEL: Record<string, string> = {
   aprovado: "Aprovado",
 };
 
-const KYC_LABEL: Record<string, string> = {
-  aprovado: "Aprovado",
-  em_analise: "Em analise",
-  rejeitado: "Rejeitado",
-  pendente: "Pendente",
-};
-
 function PerfilHub() {
   const { courier, userId, isLoading } = useMyCourier();
   const navigate = useNavigate();
@@ -185,8 +179,9 @@ function PerfilHub() {
   );
 
   const statusLabel = STATUS_LABEL[courier?.status ?? "offline"] ?? courier?.status ?? "Offline";
-  const kyc = courier?.kyc_status ?? "pendente";
-  const kycLabel = KYC_LABEL[kyc] ?? kyc;
+  const kyc = courier?.kyc_status ?? null;
+  const kycState = normalizeReviewStatus(kyc);
+  const kycLabel = getKycLabel(kyc);
   const statusClass =
     courier?.status === "online"
       ? "bg-emerald-500 text-white"
@@ -196,17 +191,17 @@ function PerfilHub() {
           ? "bg-destructive text-destructive-foreground"
           : "bg-muted text-muted-foreground";
   const kycClass =
-    kyc === "aprovado"
+    kycState === "approved"
       ? "bg-emerald-500 text-white"
-      : kyc === "em_analise"
+      : kycState === "pending"
         ? "bg-amber-500 text-white"
-        : kyc === "rejeitado"
+        : kycState === "rejected"
           ? "bg-destructive text-destructive-foreground"
           : "bg-muted text-muted-foreground";
 
   const readinessItems = useMemo(
     () => [
-      { label: "Identidade validada", ready: kyc === "aprovado" },
+      { label: "Identidade validada", ready: kycState === "approved" },
       { label: "Veiculo cadastrado", ready: Boolean(courier?.veiculo && courier?.placa) },
       {
         label: "Pagamento configurado",
@@ -230,7 +225,7 @@ function PerfilHub() {
       courier?.pix_key,
       courier?.placa,
       courier?.veiculo,
-      kyc,
+      kycState,
     ],
   );
 
@@ -265,7 +260,7 @@ function PerfilHub() {
     {
       to: "/entregador/documentos" as const,
       label: "Documentos",
-      desc: kyc === "aprovado" ? "Tudo aprovado" : `Status atual: ${kycLabel}`,
+      desc: kycState === "approved" ? "Tudo aprovado" : `Status atual: ${kycLabel}`,
       icon: FileText,
     },
     {
@@ -399,13 +394,13 @@ function PerfilHub() {
 
             <div
               className={`mt-4 rounded-2xl border p-3 ${
-                kyc === "aprovado"
+                kycState === "approved"
                   ? "border-emerald-500/20 bg-emerald-500/10"
                   : "border-amber-500/20 bg-amber-500/10"
               }`}
             >
               <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-foreground">
-                {kyc === "aprovado" ? (
+                {kycState === "approved" ? (
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                 ) : (
                   <ShieldAlert className="h-3.5 w-3.5 text-amber-600" />
@@ -413,7 +408,7 @@ function PerfilHub() {
                 Status de conta
               </p>
               <p className="mt-1 text-sm text-foreground">
-                {kyc === "aprovado"
+                {kycState === "approved"
                   ? "Sua conta esta pronta para operar com mais autonomia."
                   : "Conclua documentos e pagamento para liberar toda a experiencia do entregador."}
               </p>
@@ -444,7 +439,7 @@ function PerfilHub() {
         })}
       </section>
 
-      {kyc !== "aprovado" && (
+      {kycState !== "approved" && (
         <section className="card-premium rounded-[1.75rem] border border-amber-500/20 bg-amber-500/10 p-4">
           <p className="flex items-center gap-2 text-sm font-bold text-foreground">
             <ShieldAlert className="h-4 w-4 text-amber-600" />

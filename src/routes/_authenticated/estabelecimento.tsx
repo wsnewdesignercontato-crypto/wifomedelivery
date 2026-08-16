@@ -102,14 +102,14 @@ function SetupForm({ userId }: { userId: string }) {
         taxa_entrega_cents: Math.round(parseFloat(form.taxa || "0") * 100),
         tempo_medio_min: parseInt(form.tempo || "30"),
         pedido_minimo_cents: Math.round(parseFloat(form.minimo || "0") * 100),
-        is_open: true,
-        status: "aprovado",
+        is_open: false,
+        status: "pendente",
       })
       .select("*")
       .single();
     setSaving(false);
     if (error || !data) return toast.error("Falha ao cadastrar");
-    toast.success("Estabelecimento criado!");
+    toast.success("Estabelecimento enviado para aprovacao!");
     qc.setQueryData(["myEstab", userId], data as unknown as Estab);
   }
 
@@ -120,7 +120,9 @@ function SetupForm({ userId }: { userId: string }) {
           <Store className="h-7 w-7" />
         </div>
         <h1 className="mt-4 text-2xl font-black tracking-tight">Cadastre seu estabelecimento</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Configure os dados básicos para começar a receber pedidos.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Configure os dados básicos para começar a receber pedidos.
+        </p>
       </div>
       <div className="grid gap-3">
         <div>
@@ -129,31 +131,64 @@ function SetupForm({ userId }: { userId: string }) {
         </div>
         <div>
           <Label>Descrição</Label>
-          <Textarea value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} />
+          <Textarea
+            value={form.descricao}
+            onChange={(e) => setForm({ ...form, descricao: e.target.value })}
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Telefone</Label>
-            <Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
+            <Input
+              value={form.telefone}
+              onChange={(e) => setForm({ ...form, telefone: e.target.value })}
+            />
           </div>
           <div>
             <Label>Categoria</Label>
-            <Select value={form.categoria_id} onValueChange={(v) => setForm({ ...form, categoria_id: v })}>
-              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <Select
+              value={form.categoria_id}
+              onValueChange={(v) => setForm({ ...form, categoria_id: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
               <SelectContent>
-                {cats.map((c) => (<SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>))}
+                {cats.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.nome}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
         </div>
         <div>
           <Label>Endereço</Label>
-          <Input value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} />
+          <Input
+            value={form.endereco}
+            onChange={(e) => setForm({ ...form, endereco: e.target.value })}
+          />
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div><Label>Cidade</Label><Input value={form.cidade} onChange={(e) => setForm({ ...form, cidade: e.target.value })} /></div>
-          <div><Label>Taxa (R$)</Label><Input value={form.taxa} onChange={(e) => setForm({ ...form, taxa: e.target.value })} /></div>
-          <div><Label>Mín. (R$)</Label><Input value={form.minimo} onChange={(e) => setForm({ ...form, minimo: e.target.value })} /></div>
+          <div>
+            <Label>Cidade</Label>
+            <Input
+              value={form.cidade}
+              onChange={(e) => setForm({ ...form, cidade: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>Taxa (R$)</Label>
+            <Input value={form.taxa} onChange={(e) => setForm({ ...form, taxa: e.target.value })} />
+          </div>
+          <div>
+            <Label>Mín. (R$)</Label>
+            <Input
+              value={form.minimo}
+              onChange={(e) => setForm({ ...form, minimo: e.target.value })}
+            />
+          </div>
         </div>
         <div>
           <Label>Tempo médio de preparo (min)</Label>

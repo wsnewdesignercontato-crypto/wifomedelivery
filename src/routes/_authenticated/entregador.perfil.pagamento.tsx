@@ -5,7 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useMyCourier } from "@/hooks/use-courier";
 import { useQueryClient } from "@tanstack/react-query";
 import { CreditCard, ShieldCheck } from "lucide-react";
@@ -66,7 +72,10 @@ function Pagamento() {
 
       <div className="rounded-2xl border border-amber-300 bg-amber-50 dark:bg-amber-950/30 p-4 text-xs text-amber-900 dark:text-amber-200 flex gap-2">
         <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5" />
-        <p>Somente contas em nome do titular cadastrado podem receber. Os dados são validados antes de cada saque.</p>
+        <p>
+          Somente contas em nome do titular cadastrado podem receber. Os dados são validados antes
+          de cada saque.
+        </p>
       </div>
 
       <section className="rounded-2xl border border-border bg-card p-4 space-y-3">
@@ -75,7 +84,9 @@ function Pagamento() {
           <div>
             <Label>Tipo</Label>
             <Select value={f.pix_tipo} onValueChange={(v) => setF({ ...f, pix_tipo: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="cpf">CPF</SelectItem>
                 <SelectItem value="cnpj">CNPJ</SelectItem>
@@ -95,24 +106,52 @@ function Pagamento() {
       <section className="rounded-2xl border border-border bg-card p-4 space-y-3">
         <h2 className="text-sm font-bold">Conta bancária (opcional)</h2>
         <div className="grid gap-3 md:grid-cols-2">
-          <div><Label>Banco</Label><Input value={f.banco_nome} onChange={(e) => setF({ ...f, banco_nome: e.target.value })} /></div>
+          <div>
+            <Label>Banco</Label>
+            <Input
+              value={f.banco_nome}
+              onChange={(e) => setF({ ...f, banco_nome: e.target.value })}
+            />
+          </div>
           <div>
             <Label>Tipo</Label>
             <Select value={f.banco_tipo} onValueChange={(v) => setF({ ...f, banco_tipo: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="corrente">Corrente</SelectItem>
                 <SelectItem value="poupanca">Poupança</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div><Label>Agência</Label><Input value={f.banco_agencia} onChange={(e) => setF({ ...f, banco_agencia: e.target.value })} /></div>
-          <div><Label>Conta</Label><Input value={f.banco_conta} onChange={(e) => setF({ ...f, banco_conta: e.target.value })} /></div>
-          <div className="md:col-span-2"><Label>Titular (obrigatório)</Label><Input value={f.banco_titular} onChange={(e) => setF({ ...f, banco_titular: e.target.value })} /></div>
+          <div>
+            <Label>Agência</Label>
+            <Input
+              value={f.banco_agencia}
+              onChange={(e) => setF({ ...f, banco_agencia: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>Conta</Label>
+            <Input
+              value={f.banco_conta}
+              onChange={(e) => setF({ ...f, banco_conta: e.target.value })}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <Label>Titular (obrigatório)</Label>
+            <Input
+              value={f.banco_titular}
+              onChange={(e) => setF({ ...f, banco_titular: e.target.value })}
+            />
+          </div>
         </div>
       </section>
 
-      <Button size="lg" className="w-full" onClick={salvar} disabled={saving}>Salvar dados de pagamento</Button>
+      <Button size="lg" className="w-full" onClick={salvar} disabled={saving}>
+        Salvar dados de pagamento
+      </Button>
     </div>
   );
 }

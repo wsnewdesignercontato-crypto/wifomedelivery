@@ -38,9 +38,7 @@ export function EmptyState({
         <Icon className="size-6" />
       </span>
       <h3 className="text-base font-semibold text-foreground">{title}</h3>
-      {description ? (
-        <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
-      ) : null}
+      {description ? <p className="max-w-sm text-sm text-muted-foreground">{description}</p> : null}
       {action ? <div className="pt-1">{action}</div> : null}
     </div>
   );
@@ -110,13 +108,7 @@ export function LoadingState({
   );
 }
 
-export function SkeletonList({
-  rows = 4,
-  className,
-}: {
-  rows?: number;
-  className?: string;
-}) {
+export function SkeletonList({ rows = 4, className }: { rows?: number; className?: string }) {
   return (
     <div className={cn("space-y-3", className)} role="status" aria-label="Carregando conteúdo">
       {Array.from({ length: rows }).map((_, i) => (
@@ -136,13 +128,7 @@ export function SkeletonList({
   );
 }
 
-export function SkeletonCards({
-  count = 6,
-  className,
-}: {
-  count?: number;
-  className?: string;
-}) {
+export function SkeletonCards({ count = 6, className }: { count?: number; className?: string }) {
   return (
     <div
       role="status"

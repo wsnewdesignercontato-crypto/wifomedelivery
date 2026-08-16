@@ -43,6 +43,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { useMyCourier, fmt } from "@/hooks/use-courier";
 import { OrderChat } from "@/components/order-chat";
 import { SOSButton } from "@/components/sos-button";
+import { canCourierAccessRides, getCourierApprovalLabel } from "@/lib/courier-approval";
 
 export const Route = createFileRoute("/_authenticated/entregador/corridas")({
   component: Corridas,
@@ -118,6 +119,7 @@ const INCIDENT_TYPES = [
 
 function Corridas() {
   const { courier } = useMyCourier();
+  const canReceiveRides = canCourierAccessRides(courier);
   const [disponiveis, setDisponiveis] = useState<Delivery[]>([]);
   const [ativa, setAtiva] = useState<Delivery | null>(null);
   const [order, setOrder] = useState<OrderLite | null>(null);
@@ -175,51 +177,56 @@ function Corridas() {
 
   async function load() {
     if (!courier) return;
-    const { data: dv } = await supabase
-      .from("deliveries")
-      .select(
-        "id,order_id,status,valor_entrega_cents,entregador_id,aceito_em,coletado_em,entregue_em",
-      )
-      .eq("status", "broadcasting")
-      .or(`entregador_id.is.null,entregador_id.eq.${courier.user_id}`)
-      .order("created_at", { ascending: false });
-    setDisponiveis((dv ?? []) as Delivery[]);
-
-    // Metadados (nome da loja + distância até a coleta)
-    const dvList = (dv ?? []) as Delivery[];
-    if (dvList.length) {
-      const orderIds = dvList.map((d) => d.order_id);
-      const { data: ords } = await supabase
-        .from("orders")
-        .select("id, establishment_id")
-        .in("id", orderIds);
-      const orderRows = (ords ?? []) as OrderMeta[];
-      const estabIds = Array.from(new Set(orderRows.map((o) => o.establishment_id)));
-      const { data: estabs } = estabIds.length
-        ? await supabase.from("establishments").select("id, nome, lat, lng").in("id", estabIds)
-        : { data: [] as EstabLocation[] };
-      const estabById: Record<string, { nome: string; lat: number | null; lng: number | null }> =
-        {};
-      ((estabs ?? []) as EstabLocation[]).forEach((e) => {
-        estabById[e.id] = { nome: e.nome, lat: e.lat, lng: e.lng };
-      });
-      const orderToEstab: Record<string, string> = {};
-      orderRows.forEach((o) => {
-        orderToEstab[o.id] = o.establishment_id;
-      });
-      const meta: Record<string, { nome: string; distKm: number | null }> = {};
-      for (const d of dvList) {
-        const eid = orderToEstab[d.order_id];
-        const e = eid ? estabById[eid] : undefined;
-        let distKm: number | null = null;
-        if (myPos && e && e.lat != null && e.lng != null) {
-          distKm = Math.round(haversineKm(myPos, { lat: e.lat, lng: e.lng }) * 10) / 10;
-        }
-        meta[d.id] = { nome: e?.nome ?? "Loja", distKm };
-      }
-      setAvailMeta(meta);
-    } else {
+    if (!canReceiveRides) {
+      setDisponiveis([]);
       setAvailMeta({});
+    } else {
+      const { data: dv } = await supabase
+        .from("deliveries")
+        .select(
+          "id,order_id,status,valor_entrega_cents,entregador_id,aceito_em,coletado_em,entregue_em",
+        )
+        .eq("status", "broadcasting")
+        .or(`entregador_id.is.null,entregador_id.eq.${courier.user_id}`)
+        .order("created_at", { ascending: false });
+      setDisponiveis((dv ?? []) as Delivery[]);
+
+      // Metadados (nome da loja + distância até a coleta)
+      const dvList = (dv ?? []) as Delivery[];
+      if (dvList.length) {
+        const orderIds = dvList.map((d) => d.order_id);
+        const { data: ords } = await supabase
+          .from("orders")
+          .select("id, establishment_id")
+          .in("id", orderIds);
+        const orderRows = (ords ?? []) as OrderMeta[];
+        const estabIds = Array.from(new Set(orderRows.map((o) => o.establishment_id)));
+        const { data: estabs } = estabIds.length
+          ? await supabase.from("establishments").select("id, nome, lat, lng").in("id", estabIds)
+          : { data: [] as EstabLocation[] };
+        const estabById: Record<string, { nome: string; lat: number | null; lng: number | null }> =
+          {};
+        ((estabs ?? []) as EstabLocation[]).forEach((e) => {
+          estabById[e.id] = { nome: e.nome, lat: e.lat, lng: e.lng };
+        });
+        const orderToEstab: Record<string, string> = {};
+        orderRows.forEach((o) => {
+          orderToEstab[o.id] = o.establishment_id;
+        });
+        const meta: Record<string, { nome: string; distKm: number | null }> = {};
+        for (const d of dvList) {
+          const eid = orderToEstab[d.order_id];
+          const e = eid ? estabById[eid] : undefined;
+          let distKm: number | null = null;
+          if (myPos && e && e.lat != null && e.lng != null) {
+            distKm = Math.round(haversineKm(myPos, { lat: e.lat, lng: e.lng }) * 10) / 10;
+          }
+          meta[d.id] = { nome: e?.nome ?? "Loja", distKm };
+        }
+        setAvailMeta(meta);
+      } else {
+        setAvailMeta({});
+      }
     }
 
     const { data: at } = await supabase
@@ -273,7 +280,7 @@ function Corridas() {
       supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courier?.user_id]);
+  }, [courier?.user_id, courier?.aprovacao, courier?.kyc_status]);
 
   const activeDeliveryId = ativa?.id ?? null;
   const activeOrderId = ativa?.order_id ?? null;
@@ -334,6 +341,9 @@ function Corridas() {
 
   async function aceitar(d: Delivery) {
     if (!courier) return;
+    if (!canReceiveRides) {
+      return toast.error("Seu cadastro ainda nao foi aprovado para receber corridas.");
+    }
     if (ativa) return toast.error("Finalize sua corrida atual antes");
     const { data, error } = await supabase
       .from("deliveries")
@@ -526,6 +536,9 @@ function Corridas() {
                 }
               >
                 {ativa ? "Corrida em andamento" : "Monitorando chamados"}
+              </Badge>
+              <Badge variant="outline" className="border-border bg-background/70 text-foreground">
+                {getCourierApprovalLabel(courier)}
               </Badge>
               <span className="text-xs font-semibold text-muted-foreground">{cityLabel}</span>
             </div>
@@ -999,7 +1012,17 @@ function Corridas() {
         </section>
       )}
 
-      {!ativa && (
+      {!ativa && !canReceiveRides && (
+        <section className="rounded-[1.75rem] border border-amber-500/30 bg-amber-500/10 p-5">
+          <p className="text-sm font-bold text-foreground">Corridas bloqueadas por enquanto</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Seu cadastro ainda nao foi aprovado pelo admin. Assim que a validacao for concluida, as
+            ofertas aparecem aqui em tempo real.
+          </p>
+        </section>
+      )}
+
+      {!ativa && canReceiveRides && (
         <section>
           <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
             Disponíveis ({disponiveis.length})

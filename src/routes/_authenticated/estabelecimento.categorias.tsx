@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyEstab } from "@/hooks/use-my-estab";
@@ -17,24 +17,36 @@ type Cat = { id: string; nome: string; ordem: number; ativo?: boolean };
 
 function CategoriasPage() {
   const { estab } = useMyEstab();
+  const estabId = estab?.id;
   const [cats, setCats] = useState<Cat[]>([]);
   const [nome, setNome] = useState("");
 
-  async function reload() {
-    if (!estab) return;
-    const { data } = await supabase.from("menu_categories")
-      .select("id,nome,ordem").eq("establishment_id", estab.id).order("ordem");
+  const reload = useCallback(async () => {
+    if (!estabId) return;
+    const { data } = await supabase
+      .from("menu_categories")
+      .select("id,nome,ordem")
+      .eq("establishment_id", estabId)
+      .order("ordem");
     setCats((data ?? []) as Cat[]);
-  }
-  useEffect(() => { reload(); }, [estab?.id]);
+  }, [estabId]);
+  useEffect(() => {
+    void reload();
+  }, [reload]);
 
   async function adicionar() {
     if (!estab || !nome.trim()) return;
     const ordem = (cats[cats.length - 1]?.ordem ?? 0) + 1;
     const { error } = await supabase.from("menu_categories").insert({
-      establishment_id: estab.id, nome: nome.trim(), ordem,
+      establishment_id: estab.id,
+      nome: nome.trim(),
+      ordem,
     });
-    if (error) toast.error("Falha"); else { setNome(""); reload(); }
+    if (error) toast.error("Falha");
+    else {
+      setNome("");
+      reload();
+    }
   }
   async function remover(id: string) {
     if (!confirm("Excluir categoria?")) return;
@@ -54,20 +66,37 @@ function CategoriasPage() {
     <div className="space-y-4 max-w-2xl">
       <h1 className="text-2xl font-black tracking-tight">Categorias do cardápio</h1>
       <div className="flex gap-2">
-        <Input placeholder="Nova categoria (ex: Pizzas)" value={nome} onChange={(e) => setNome(e.target.value)} />
-        <Button onClick={adicionar}><Plus className="mr-2 h-4 w-4" /> Adicionar</Button>
+        <Input
+          placeholder="Nova categoria (ex: Pizzas)"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+        />
+        <Button onClick={adicionar}>
+          <Plus className="mr-2 h-4 w-4" /> Adicionar
+        </Button>
       </div>
       <div className="space-y-2">
         {cats.map((c) => {
           const kind = getCategoryKind(c.nome);
           return (
-          <div key={c.id} className="flex items-center gap-2 rounded-2xl border border-border bg-card p-3">
-            <span className="flex-1 font-medium">{c.nome}</span>
-            <Badge variant="secondary" className="text-[10px]">{KIND_LABEL[kind]}</Badge>
-            <Button size="icon" variant="ghost" onClick={() => mover(c, -1)}><ArrowUp className="h-4 w-4" /></Button>
-            <Button size="icon" variant="ghost" onClick={() => mover(c, 1)}><ArrowDown className="h-4 w-4" /></Button>
-            <Button size="icon" variant="ghost" onClick={() => remover(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-          </div>
+            <div
+              key={c.id}
+              className="flex items-center gap-2 rounded-2xl border border-border bg-card p-3"
+            >
+              <span className="flex-1 font-medium">{c.nome}</span>
+              <Badge variant="secondary" className="text-[10px]">
+                {KIND_LABEL[kind]}
+              </Badge>
+              <Button size="icon" variant="ghost" onClick={() => mover(c, -1)}>
+                <ArrowUp className="h-4 w-4" />
+              </Button>
+              <Button size="icon" variant="ghost" onClick={() => mover(c, 1)}>
+                <ArrowDown className="h-4 w-4" />
+              </Button>
+              <Button size="icon" variant="ghost" onClick={() => remover(c.id)}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
           );
         })}
         {cats.length === 0 && (

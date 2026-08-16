@@ -1,9 +1,5 @@
 import { Check, X } from "lucide-react";
-import {
-  passwordRules,
-  passwordScore,
-  passwordStrengthLabel,
-} from "@/lib/password-strength";
+import { passwordRules, passwordScore, passwordStrengthLabel } from "@/lib/password-strength";
 
 const toneClass = {
   weak: "bg-destructive",

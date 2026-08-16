@@ -157,7 +157,8 @@ export function ScoreHistory({ entityType, entityId }: Props) {
                 hour: "2-digit",
                 minute: "2-digit",
               });
-              const band = novoScore != null ? bandFromScore(novoScore, bands.warn, bands.crit) : null;
+              const band =
+                novoScore != null ? bandFromScore(novoScore, bands.warn, bands.crit) : null;
               return (
                 <li key={notif.id} className="py-3">
                   <div className="flex items-start justify-between gap-3">
@@ -173,8 +174,12 @@ export function ScoreHistory({ entityType, entityId }: Props) {
                     </div>
                     {novoScore != null && band && (
                       <div className="shrink-0 text-right">
-                        <p className={`text-2xl font-black leading-none ${band.tone}`}>{novoScore}</p>
-                        <p className={`text-[10px] font-bold uppercase tracking-wider ${band.tone}`}>
+                        <p className={`text-2xl font-black leading-none ${band.tone}`}>
+                          {novoScore}
+                        </p>
+                        <p
+                          className={`text-[10px] font-bold uppercase tracking-wider ${band.tone}`}
+                        >
                           {band.label}
                         </p>
                       </div>
@@ -221,10 +226,7 @@ export function ScoreHistory({ entityType, entityId }: Props) {
                   </div>
                 </div>
                 <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                  <div
-                    className={`h-full ${band.bar}`}
-                    style={{ width: `${finalScore}%` }}
-                  />
+                  <div className={`h-full ${band.bar}`} style={{ width: `${finalScore}%` }} />
                 </div>
                 <ul className="mt-3 space-y-1.5">
                   {list.map((e) => {

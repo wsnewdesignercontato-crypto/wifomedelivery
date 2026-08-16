@@ -17,19 +17,32 @@ function Ganhos() {
     if (!courier) return;
     (async () => {
       const now = new Date();
-      const startDay = new Date(now); startDay.setHours(0, 0, 0, 0);
-      const startWeek = new Date(now); startWeek.setDate(now.getDate() - 7);
-      const startMonth = new Date(now); startMonth.setDate(1); startMonth.setHours(0, 0, 0, 0);
+      const startDay = new Date(now);
+      startDay.setHours(0, 0, 0, 0);
+      const startWeek = new Date(now);
+      startWeek.setDate(now.getDate() - 7);
+      const startMonth = new Date(now);
+      startMonth.setDate(1);
+      startMonth.setHours(0, 0, 0, 0);
 
-      const { data } = await supabase.from("deliveries")
+      const { data } = await supabase
+        .from("deliveries")
         .select("valor_entrega_cents,entregue_em")
-        .eq("entregador_id", courier.user_id).eq("status", "delivered")
-        .order("entregue_em", { ascending: false }).limit(500);
+        .eq("entregador_id", courier.user_id)
+        .eq("status", "delivered")
+        .order("entregue_em", { ascending: false })
+        .limit(500);
       const rows = (data ?? []) as { valor_entrega_cents: number; entregue_em: string }[];
       const inRange = (d: string, s: Date) => new Date(d) >= s;
-      const hoje = rows.filter((r) => inRange(r.entregue_em, startDay)).reduce((s, r) => s + r.valor_entrega_cents, 0);
-      const semana = rows.filter((r) => inRange(r.entregue_em, startWeek)).reduce((s, r) => s + r.valor_entrega_cents, 0);
-      const mes = rows.filter((r) => inRange(r.entregue_em, startMonth)).reduce((s, r) => s + r.valor_entrega_cents, 0);
+      const hoje = rows
+        .filter((r) => inRange(r.entregue_em, startDay))
+        .reduce((s, r) => s + r.valor_entrega_cents, 0);
+      const semana = rows
+        .filter((r) => inRange(r.entregue_em, startWeek))
+        .reduce((s, r) => s + r.valor_entrega_cents, 0);
+      const mes = rows
+        .filter((r) => inRange(r.entregue_em, startMonth))
+        .reduce((s, r) => s + r.valor_entrega_cents, 0);
       const todos = rows.reduce((s, r) => s + r.valor_entrega_cents, 0);
       const medio = rows.length ? Math.round(todos / rows.length) : 0;
       setTot({ hoje, semana, mes, todos, entregas: rows.length, medio });
@@ -39,7 +52,12 @@ function Ganhos() {
         const k = r.entregue_em.slice(0, 10);
         map.set(k, (map.get(k) ?? 0) + r.valor_entrega_cents);
       });
-      setByDay(Array.from(map.entries()).slice(0, 14).reverse().map(([day, total]) => ({ day, total })));
+      setByDay(
+        Array.from(map.entries())
+          .slice(0, 14)
+          .reverse()
+          .map(([day, total]) => ({ day, total })),
+      );
     })();
   }, [courier]);
 
@@ -65,7 +83,12 @@ function Ganhos() {
               const pct = max ? (d.total / max) * 100 : 0;
               return (
                 <div key={d.day} className="flex items-center gap-3">
-                  <span className="w-20 text-xs text-muted-foreground">{new Date(d.day).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</span>
+                  <span className="w-20 text-xs text-muted-foreground">
+                    {new Date(d.day).toLocaleDateString("pt-BR", {
+                      day: "2-digit",
+                      month: "2-digit",
+                    })}
+                  </span>
                   <div className="h-3 flex-1 rounded-full bg-muted">
                     <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
                   </div>
@@ -80,10 +103,21 @@ function Ganhos() {
   );
 }
 
-function Card({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
+function Card({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
-      <div className="flex items-center justify-between"><p className="text-xs text-muted-foreground">{label}</p><Icon className="h-4 w-4 text-primary" /></div>
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <Icon className="h-4 w-4 text-primary" />
+      </div>
       <p className="mt-2 text-xl font-black">{value}</p>
     </div>
   );

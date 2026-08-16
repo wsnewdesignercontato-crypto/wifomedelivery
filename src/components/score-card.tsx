@@ -19,7 +19,8 @@ type Evt = {
 
 function categorize(motivo: string): { label: string; tone: string } {
   const m = motivo.toLowerCase();
-  if (m.includes("atraso")) return { label: "Atraso na entrega", tone: "bg-amber-500/10 text-amber-600" };
+  if (m.includes("atraso"))
+    return { label: "Atraso na entrega", tone: "bg-amber-500/10 text-amber-600" };
   if (m.includes("avaliação") || m.includes("avaliacao"))
     return { label: "Avaliação baixa", tone: "bg-destructive/10 text-destructive" };
   return { label: "Outros", tone: "bg-muted text-muted-foreground" };
@@ -78,9 +79,17 @@ export function ScoreCard({ entityType, entityId }: Props) {
   }, [entityType, entityId]);
 
   const color =
-    score >= bands.warn ? "text-emerald-500" : score >= bands.crit ? "text-amber-500" : "text-destructive";
+    score >= bands.warn
+      ? "text-emerald-500"
+      : score >= bands.crit
+        ? "text-amber-500"
+        : "text-destructive";
   const bar =
-    score >= bands.warn ? "bg-emerald-500" : score >= bands.crit ? "bg-amber-500" : "bg-destructive";
+    score >= bands.warn
+      ? "bg-emerald-500"
+      : score >= bands.crit
+        ? "bg-amber-500"
+        : "bg-destructive";
   const label = score >= bands.warn ? "Excelente" : score >= bands.crit ? "Atenção" : "Crítico";
 
   const [y, m] = ym.split("-");
@@ -120,7 +129,10 @@ export function ScoreCard({ entityType, entityId }: Props) {
         </div>
       </div>
       <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
-        <div className={`h-full rounded-full ${bar} transition-all`} style={{ width: `${score}%` }} />
+        <div
+          className={`h-full rounded-full ${bar} transition-all`}
+          style={{ width: `${score}%` }}
+        />
       </div>
       <p className="mt-2 text-[11px] text-muted-foreground">
         Começa em 100 todo mês. Perde pontos com atrasos na entrega e avaliações baixas.
@@ -130,13 +142,19 @@ export function ScoreCard({ entityType, entityId }: Props) {
         <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3 sm:grid-cols-3">
           {summary.map((s) => (
             <div key={s.label} className={`rounded-lg px-2 py-1.5 ${s.tone}`}>
-              <p className="text-[10px] font-semibold uppercase tracking-wide opacity-80">{s.label}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide opacity-80">
+                {s.label}
+              </p>
               <p className="text-sm font-black leading-tight">−{s.total} pts</p>
-              <p className="text-[10px] opacity-70">{s.count} evento{s.count > 1 ? "s" : ""}</p>
+              <p className="text-[10px] opacity-70">
+                {s.count} evento{s.count > 1 ? "s" : ""}
+              </p>
             </div>
           ))}
           <div className="rounded-lg bg-muted/60 px-2 py-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Total do mês</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Total do mês
+            </p>
             <p className="text-sm font-black leading-tight text-destructive">−{totalPerdido} pts</p>
             <p className="text-[10px] text-muted-foreground">{events.length} no total</p>
           </div>

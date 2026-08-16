@@ -35,7 +35,9 @@ function DispositivoPage() {
     try {
       const raw = localStorage.getItem(KEY);
       if (raw) setPrefs({ ...DEFAULTS, ...JSON.parse(raw) });
-    } catch {}
+    } catch {
+      // Ignore invalid persisted preferences.
+    }
     if (typeof Notification !== "undefined") setPermNotif(Notification.permission);
   }, []);
 
@@ -76,13 +78,24 @@ function DispositivoPage() {
     { key: "som", title: "Som", desc: "Emitir som ao receber notificações" },
     { key: "vibracao", title: "Vibração", desc: "Vibrar em alertas importantes" },
     { key: "localizacao", title: "Localização", desc: "Usar GPS para melhores entregas" },
-    { key: "modo_escuro_auto", title: "Modo escuro automático", desc: "Seguir preferência do sistema" },
-    { key: "economia_dados", title: "Economia de dados", desc: "Carregar imagens em qualidade menor" },
+    {
+      key: "modo_escuro_auto",
+      title: "Modo escuro automático",
+      desc: "Seguir preferência do sistema",
+    },
+    {
+      key: "economia_dados",
+      title: "Economia de dados",
+      desc: "Carregar imagens em qualidade menor",
+    },
   ];
 
   return (
     <div className="space-y-5">
-      <Link to="/cliente/perfil" className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+      <Link
+        to="/cliente/perfil"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground"
+      >
         <ChevronLeft className="h-4 w-4" /> Voltar
       </Link>
       <h1 className="flex items-center gap-2 text-xl font-bold">

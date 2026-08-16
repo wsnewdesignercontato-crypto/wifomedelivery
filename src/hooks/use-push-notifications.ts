@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { PUSH_SW_URL, VAPID_PUBLIC_KEY, pushSupported, urlBase64ToUint8Array } from "@/lib/push-config";
+import {
+  PUSH_SW_URL,
+  VAPID_PUBLIC_KEY,
+  pushSupported,
+  urlBase64ToUint8Array,
+} from "@/lib/push-config";
 import { savePushSubscription, removePushSubscription, sendTestPush } from "@/lib/push.functions";
 
 type PermissionState = "unsupported" | "default" | "granted" | "denied";
@@ -55,7 +60,9 @@ export function usePushNotifications() {
 
   const enable = useCallback(async () => {
     if (!pushSupported()) {
-      toast.error("Seu navegador não suporta notificações. No iPhone, adicione o app à Tela de Início primeiro.");
+      toast.error(
+        "Seu navegador não suporta notificações. No iPhone, adicione o app à Tela de Início primeiro.",
+      );
       return false;
     }
     // Dentro da pré-visualização (iframe) o navegador bloqueia o pedido automaticamente.
@@ -77,7 +84,9 @@ export function usePushNotifications() {
       const perm = await Notification.requestPermission();
       setPermission(perm as PermissionState);
       if (perm !== "granted") {
-        toast.error("Permissão de notificações negada. Libere nas configurações do navegador para receber os avisos.");
+        toast.error(
+          "Permissão de notificações negada. Libere nas configurações do navegador para receber os avisos.",
+        );
         return false;
       }
 
@@ -138,7 +147,9 @@ export function usePushNotifications() {
       if (res.reason === "sem-aparelhos") {
         toast.error("Nenhum aparelho ativo. Toque em Ativar primeiro.");
       } else if (res.ok) {
-        toast.success(`Notificação de teste enviada para ${res.sent} aparelho(s). Confira a tela do celular.`);
+        toast.success(
+          `Notificação de teste enviada para ${res.sent} aparelho(s). Confira a tela do celular.`,
+        );
       } else {
         toast.error("Não foi possível entregar o teste neste aparelho.");
       }

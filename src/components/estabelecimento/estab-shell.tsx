@@ -122,10 +122,15 @@ export function EstabShell({ estab }: { estab: Estab }) {
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">{estab.nome}</p>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Badge variant={estab.is_open ? "default" : "secondary"} className={estab.is_open ? "bg-emerald-500 text-white" : ""}>
+                <Badge
+                  variant={estab.is_open ? "default" : "secondary"}
+                  className={estab.is_open ? "bg-emerald-500 text-white" : ""}
+                >
                   {estab.is_open ? "Aberto" : "Fechado"}
                 </Badge>
-                <span className="hidden sm:inline">{estab.status === "aprovado" ? "Loja aprovada" : `Status: ${estab.status}`}</span>
+                <span className="hidden sm:inline">
+                  {estab.status === "aprovado" ? "Loja aprovada" : `Status: ${estab.status}`}
+                </span>
               </div>
             </div>
             <div className="flex items-center gap-2">

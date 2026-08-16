@@ -30,7 +30,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean; group?: string };
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+  group?: string;
+};
 const navItems: NavItem[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag },
@@ -158,10 +164,7 @@ export function AdminShell() {
 
       {/* Backdrop */}
       {open && (
-        <div
-          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
-          onClick={() => setOpen(false)}
-        />
+        <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setOpen(false)} />
       )}
 
       {/* Main */}
@@ -175,10 +178,7 @@ export function AdminShell() {
           </button>
           <div className="relative hidden max-w-md flex-1 md:block">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Buscar clientes, pedidos, lojas…"
-              className="h-10 pl-9"
-            />
+            <Input placeholder="Buscar clientes, pedidos, lojas…" className="h-10 pl-9" />
           </div>
           <div className="ml-auto flex items-center gap-2">
             <button className="tap-target relative rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground">

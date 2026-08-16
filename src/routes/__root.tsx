@@ -18,7 +18,8 @@ import { LiveRefresh } from "@/components/live-refresh";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
 
 import { IFomeLogo } from "@/components/ifome-logo";
-import logoAsset from "@/assets/wifome-logo.png.asset.json";
+
+const BRAND_LOGO_URL = "/wifome-logo.svg";
 
 function NotFoundComponent() {
   return (
@@ -109,8 +110,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/png", href: logoAsset.url },
-      { rel: "apple-touch-icon", href: logoAsset.url },
+      { rel: "icon", type: "image/svg+xml", href: BRAND_LOGO_URL },
+      { rel: "apple-touch-icon", href: BRAND_LOGO_URL },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
@@ -127,7 +128,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@type": "Organization",
           name: "WiFome",
           url: "https://wifomedelivery.lovable.app",
-          logo: `https://wifomedelivery.lovable.app${logoAsset.url}`,
+          logo: `https://wifomedelivery.lovable.app${BRAND_LOGO_URL}`,
           description:
             "Plataforma de delivery que conecta clientes, restaurantes e entregadores em tempo real.",
         }),
@@ -179,7 +180,6 @@ function RootComponent() {
           <InstallAppPrompt />
         </div>
         <Toaster richColors closeButton position="top-right" />
-
       </ThemeProvider>
     </QueryClientProvider>
   );

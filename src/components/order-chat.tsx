@@ -118,17 +118,29 @@ export function OrderChat({
       .channel("order-chat-" + chatId)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "order_messages", filter: `chat_id=eq.${chatId}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "order_messages",
+          filter: `chat_id=eq.${chatId}`,
+        },
         (p) => {
           setMessages((prev) => [...prev, p.new as Message]);
-          queueMicrotask(() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }));
+          queueMicrotask(() =>
+            listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }),
+          );
         },
       )
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, [chatId]);
 
-  async function send(tipo: Message["tipo"], payload: { conteudo?: string; anexo_url?: string; lat?: number; lng?: number }) {
+  async function send(
+    tipo: Message["tipo"],
+    payload: { conteudo?: string; anexo_url?: string; lat?: number; lng?: number },
+  ) {
     if (!chatId || !uid) return;
     setSending(true);
     const { error } = await supabase.from("order_messages").insert({
@@ -159,8 +171,13 @@ export function OrderChat({
     const path = `${uid}/${orderId}/${Date.now()}-${file.name}`;
     setSending(true);
     const { error: upErr } = await supabase.storage.from("chat-attachments").upload(path, file);
-    if (upErr) { setSending(false); return toast.error("Falha ao enviar imagem"); }
-    const { data: signed } = await supabase.storage.from("chat-attachments").createSignedUrl(path, 60 * 60 * 24 * 7);
+    if (upErr) {
+      setSending(false);
+      return toast.error("Falha ao enviar imagem");
+    }
+    const { data: signed } = await supabase.storage
+      .from("chat-attachments")
+      .createSignedUrl(path, 60 * 60 * 24 * 7);
     await send("image", { anexo_url: signed?.signedUrl ?? path });
     setSending(false);
   }
@@ -174,7 +191,11 @@ export function OrderChat({
   }
 
   if (loading) {
-    return <div className="flex h-96 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
@@ -183,11 +204,16 @@ export function OrderChat({
         <div className="flex items-center justify-between border-b border-border p-3">
           <div>
             <p className="text-sm font-bold">{contactName ?? "Contato"}</p>
-            {contactPhone && <p className="text-xs text-muted-foreground">Tel: {mask(contactPhone)}</p>}
+            {contactPhone && (
+              <p className="text-xs text-muted-foreground">Tel: {mask(contactPhone)}</p>
+            )}
           </div>
           {contactPhone && (
             <a href={`tel:${contactPhone}`}>
-              <Button size="sm" variant="outline"><Phone className="mr-2 h-3 w-3" />Ligar</Button>
+              <Button size="sm" variant="outline">
+                <Phone className="mr-2 h-3 w-3" />
+                Ligar
+              </Button>
             </a>
           )}
         </div>
@@ -195,14 +221,20 @@ export function OrderChat({
 
       <div ref={listRef} className="flex-1 space-y-2 overflow-y-auto p-3">
         {messages.length === 0 && (
-          <p className="mt-16 text-center text-sm text-muted-foreground">Envie a primeira mensagem</p>
+          <p className="mt-16 text-center text-sm text-muted-foreground">
+            Envie a primeira mensagem
+          </p>
         )}
         {messages.map((m) => {
           const mine = m.sender_id === uid;
           return (
             <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${mine ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                {m.tipo === "text" && <p className="whitespace-pre-wrap break-words">{m.conteudo}</p>}
+              <div
+                className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${mine ? "bg-primary text-primary-foreground" : "bg-muted"}`}
+              >
+                {m.tipo === "text" && (
+                  <p className="whitespace-pre-wrap break-words">{m.conteudo}</p>
+                )}
                 {m.tipo === "image" && m.anexo_url && (
                   <a href={m.anexo_url} target="_blank" rel="noopener noreferrer">
                     <img src={m.anexo_url} alt="anexo" className="max-h-60 rounded-lg" />
@@ -211,14 +243,18 @@ export function OrderChat({
                 {m.tipo === "location" && m.lat != null && m.lng != null && (
                   <a
                     href={`https://www.google.com/maps?q=${m.lat},${m.lng}`}
-                    target="_blank" rel="noopener noreferrer"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-center gap-2 underline"
                   >
                     <MapPin className="h-3.5 w-3.5" /> Ver localização no mapa
                   </a>
                 )}
                 <p className="mt-1 text-[10px] opacity-70">
-                  {new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(m.created_at).toLocaleTimeString("pt-BR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </p>
               </div>
             </div>
@@ -230,7 +266,8 @@ export function OrderChat({
         <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
           {QUICK[myRole].map((q) => (
             <button
-              key={q} type="button"
+              key={q}
+              type="button"
               onClick={() => send("text", { conteudo: q })}
               className="whitespace-nowrap rounded-full border border-border bg-background px-3 py-1 text-xs hover:bg-primary hover:text-primary-foreground"
             >
@@ -246,7 +283,12 @@ export function OrderChat({
             className="hidden"
             onChange={(e) => e.target.files?.[0] && sendImage(e.target.files[0])}
           />
-          <Button size="icon" variant="outline" onClick={() => fileRef.current?.click()} disabled={sending}>
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => fileRef.current?.click()}
+            disabled={sending}
+          >
             <ImageIcon className="h-4 w-4" />
           </Button>
           <Button size="icon" variant="outline" onClick={sendLocation} disabled={sending}>

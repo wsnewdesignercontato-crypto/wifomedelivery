@@ -6,17 +6,38 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Bike, Car, Plus, Trash2, Truck, Zap, CheckCircle2, Clock, ShieldCheck, Sparkles, HelpCircle } from "lucide-react";
+import {
+  Bike,
+  Car,
+  Plus,
+  Trash2,
+  Truck,
+  Zap,
+  CheckCircle2,
+  Clock,
+  ShieldCheck,
+  Sparkles,
+  HelpCircle,
+} from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useMyCourier } from "@/hooks/use-courier";
 import { notifyDataUpdated, DATA_UPDATED_EVENT } from "@/lib/app-refresh";
-
 
 export const Route = createFileRoute("/_authenticated/entregador/veiculo")({
   component: Veiculo,
 });
 
-type V = { id: string; tipo: string; marca: string | null; modelo: string | null; ano: number | null; cor: string | null; placa: string | null; ativo: boolean; status: string };
+type V = {
+  id: string;
+  tipo: string;
+  marca: string | null;
+  modelo: string | null;
+  ano: number | null;
+  cor: string | null;
+  placa: string | null;
+  ativo: boolean;
+  status: string;
+};
 
 const TIPOS = [
   { value: "bicicleta", label: "Bicicleta", icon: Bike, motorizado: false },
@@ -36,15 +57,26 @@ function iconFor(tipo: string) {
   return t?.icon ?? Car;
 }
 
-
 function statusMeta(status: string) {
   switch (status) {
     case "aprovado":
-      return { label: "Aprovado", icon: CheckCircle2, cls: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" };
+      return {
+        label: "Aprovado",
+        icon: CheckCircle2,
+        cls: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+      };
     case "rejeitado":
-      return { label: "Rejeitado", icon: ShieldCheck, cls: "bg-rose-500/15 text-rose-600 border-rose-500/30" };
+      return {
+        label: "Rejeitado",
+        icon: ShieldCheck,
+        cls: "bg-rose-500/15 text-rose-600 border-rose-500/30",
+      };
     default:
-      return { label: "Em análise", icon: Clock, cls: "bg-amber-500/15 text-amber-600 border-amber-500/30" };
+      return {
+        label: "Em análise",
+        icon: Clock,
+        cls: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+      };
   }
 }
 
@@ -52,14 +84,28 @@ function Veiculo() {
   const { courier } = useMyCourier();
   const [list, setList] = useState<V[]>([]);
   const [docs, setDocs] = useState<{ tipo: string; status: string }[]>([]);
-  const [form, setForm] = useState<Partial<V>>({ tipo: "moto", marca: "", modelo: "", ano: undefined, cor: "", placa: "" });
+  const [form, setForm] = useState<Partial<V>>({
+    tipo: "moto",
+    marca: "",
+    modelo: "",
+    ano: undefined,
+    cor: "",
+    placa: "",
+  });
   const [saving, setSaving] = useState(false);
 
   async function load() {
     if (!courier) return;
-    const { data } = await supabase.from("courier_vehicles").select("*").eq("courier_id", courier.user_id).order("created_at", { ascending: false });
+    const { data } = await supabase
+      .from("courier_vehicles")
+      .select("*")
+      .eq("courier_id", courier.user_id)
+      .order("created_at", { ascending: false });
     setList((data ?? []) as V[]);
-    const { data: d } = await supabase.from("courier_documents").select("tipo,status").eq("courier_id", courier.user_id);
+    const { data: d } = await supabase
+      .from("courier_documents")
+      .select("tipo,status")
+      .eq("courier_id", courier.user_id);
     setDocs((d ?? []) as { tipo: string; status: string }[]);
   }
   useEffect(() => {
@@ -70,8 +116,26 @@ function Veiculo() {
     window.addEventListener("focus", onUpdate);
     const channel = supabase
       .channel(`veiculo-live-${courier.user_id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "courier_vehicles", filter: `courier_id=eq.${courier.user_id}` }, onUpdate)
-      .on("postgres_changes", { event: "*", schema: "public", table: "courier_documents", filter: `courier_id=eq.${courier.user_id}` }, onUpdate)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "courier_vehicles",
+          filter: `courier_id=eq.${courier.user_id}`,
+        },
+        onUpdate,
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "courier_documents",
+          filter: `courier_id=eq.${courier.user_id}`,
+        },
+        onUpdate,
+      )
       .subscribe();
     return () => {
       window.removeEventListener(DATA_UPDATED_EVENT, onUpdate);
@@ -91,7 +155,11 @@ function Veiculo() {
     setSaving(true);
     const { error } = await supabase.from("courier_vehicles").insert({
       courier_id: courier.user_id,
-      tipo: form.tipo!, marca: form.marca, modelo: form.modelo, ano: form.ano, cor: form.cor,
+      tipo: form.tipo!,
+      marca: form.marca,
+      modelo: form.modelo,
+      ano: form.ano,
+      cor: form.cor,
       placa: comPlaca ? placaLimpa : null,
       ativo: list.length === 0,
     });
@@ -107,10 +175,12 @@ function Veiculo() {
     notifyDataUpdated();
   }
 
-
   async function ativar(id: string) {
     if (!courier) return;
-    await supabase.from("courier_vehicles").update({ ativo: false }).eq("courier_id", courier.user_id);
+    await supabase
+      .from("courier_vehicles")
+      .update({ ativo: false })
+      .eq("courier_id", courier.user_id);
     await supabase.from("courier_vehicles").update({ ativo: true }).eq("id", id);
     toast.success("Veículo ativo alterado");
     await load();
@@ -131,7 +201,8 @@ function Veiculo() {
   // Passo a passo: baseado no veículo ativo (ou no tipo selecionado, se ainda não há veículo)
   const tipoRef = ativo?.tipo ?? list[0]?.tipo ?? form.tipo;
   const motorizado = precisaPlaca(tipoRef);
-  const docOk = (pref: string) => docs.some((d) => d.tipo.startsWith(pref) && d.status !== "rejeitado");
+  const docOk = (pref: string) =>
+    docs.some((d) => d.tipo.startsWith(pref) && d.status !== "rejeitado");
   const temDocIdentidade = docOk("cnh") || docOk("rg") || docOk("documento");
   const steps: {
     label: string;
@@ -154,7 +225,9 @@ function Veiculo() {
     },
     {
       label: "Cadastrar o veículo",
-      hint: motorizado ? "Marca, modelo e cor da moto/carro" : "Basta escolher o tipo (bike, e-bike ou patinete)",
+      hint: motorizado
+        ? "Marca, modelo e cor da moto/carro"
+        : "Basta escolher o tipo (bike, e-bike ou patinete)",
       done: list.length > 0,
       help: {
         semMotor:
@@ -164,16 +237,18 @@ function Veiculo() {
       },
     },
     ...(motorizado
-      ? [{
-          label: "Placa do veículo",
-          hint: "Obrigatória para veículos motorizados (ex.: ABC1D23)",
-          done: list.some((v) => !!v.placa),
-          help: {
-            semMotor: "Não se aplica a veículos sem motor.",
-            comMotor:
-              "Digite a placa com 7 caracteres, no padrão antigo (ABC1234) ou Mercosul (ABC1D23). Sem placa válida o app não libera as corridas para veículos motorizados.",
+      ? [
+          {
+            label: "Placa do veículo",
+            hint: "Obrigatória para veículos motorizados (ex.: ABC1D23)",
+            done: list.some((v) => !!v.placa),
+            help: {
+              semMotor: "Não se aplica a veículos sem motor.",
+              comMotor:
+                "Digite a placa com 7 caracteres, no padrão antigo (ABC1234) ou Mercosul (ABC1D23). Sem placa válida o app não libera as corridas para veículos motorizados.",
+            },
           },
-        }]
+        ]
       : []),
     {
       label: motorizado ? "Enviar a CNH" : "Enviar documento com foto",
@@ -205,9 +280,6 @@ function Veiculo() {
   const feitos = steps.filter((s) => s.done).length;
   const pct = Math.round((feitos / steps.length) * 100);
 
-
-
-
   return (
     <div className="space-y-8">
       {/* Hero header */}
@@ -221,128 +293,133 @@ function Veiculo() {
             </div>
             <h1 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">Meus veículos</h1>
             <p className="mt-1 max-w-md text-sm text-white/85">
-              Cadastre e gerencie os veículos usados nas suas entregas. O ativo é usado para todas as corridas.
+              Cadastre e gerencie os veículos usados nas suas entregas. O ativo é usado para todas
+              as corridas.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4">
             <MiniStat label="Cadastrados" value={list.length} />
             <MiniStat label="Aprovados" value={aprovados} />
             <MiniStat label="Ativo" value={ativo ? ativo.tipo.replace(/_/g, " ") : "—"} isText />
-      </div>
-
-      {/* Passo a passo guiado */}
-      <section className="rounded-3xl border border-border bg-card p-6 shadow-card">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold tracking-tight">O que falta para liberar o app</h2>
-            <p className="text-xs text-muted-foreground">
-              {motorizado
-                ? "Você escolheu um veículo motorizado: precisa de placa e CNH."
-                : "Você escolheu um veículo sem motor: não precisa de placa nem CNH, só um documento com foto."}
-            </p>
           </div>
-          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-            {feitos}/{steps.length} concluídos
-          </span>
-        </div>
 
-        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-primary to-amber-400 transition-all"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-
-        {feitos < steps.length && (
-          <p className="mt-3 text-xs font-semibold text-destructive">
-            Os itens em vermelho são obrigatórios — preencha todos para liberar o app.
-          </p>
-        )}
-
-        <ol className="mt-5 space-y-3">
-          {steps.map((s, i) => (
-            <li
-              key={s.label}
-              className={`flex items-start gap-3 rounded-2xl border p-3 transition-colors ${
-                s.done
-                  ? "border-emerald-500/30 bg-emerald-500/5"
-                  : "border-destructive/40 bg-destructive/5"
-              }`}
-            >
-              <div
-                className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold ${
-                  s.done ? "bg-emerald-500 text-white" : "bg-destructive text-destructive-foreground"
-                }`}
-              >
-                {s.done ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+          {/* Passo a passo guiado */}
+          <section className="rounded-3xl border border-border bg-card p-6 shadow-card">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-bold tracking-tight">O que falta para liberar o app</h2>
+                <p className="text-xs text-muted-foreground">
+                  {motorizado
+                    ? "Você escolheu um veículo motorizado: precisa de placa e CNH."
+                    : "Você escolheu um veículo sem motor: não precisa de placa nem CNH, só um documento com foto."}
+                </p>
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <p
-                    className={`text-sm font-semibold ${
-                      s.done ? "text-emerald-600" : "text-destructive"
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+                {feitos}/{steps.length} concluídos
+              </span>
+            </div>
+
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-primary to-amber-400 transition-all"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+
+            {feitos < steps.length && (
+              <p className="mt-3 text-xs font-semibold text-destructive">
+                Os itens em vermelho são obrigatórios — preencha todos para liberar o app.
+              </p>
+            )}
+
+            <ol className="mt-5 space-y-3">
+              {steps.map((s, i) => (
+                <li
+                  key={s.label}
+                  className={`flex items-start gap-3 rounded-2xl border p-3 transition-colors ${
+                    s.done
+                      ? "border-emerald-500/30 bg-emerald-500/5"
+                      : "border-destructive/40 bg-destructive/5"
+                  }`}
+                >
+                  <div
+                    className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold ${
+                      s.done
+                        ? "bg-emerald-500 text-white"
+                        : "bg-destructive text-destructive-foreground"
                     }`}
                   >
-                    {s.label}
-                    {!s.done && <span className="ml-1 font-bold">*</span>}
-                  </p>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label={`Ajuda sobre ${s.label}`}
-                        className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                    {s.done ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p
+                        className={`text-sm font-semibold ${
+                          s.done ? "text-emerald-600" : "text-destructive"
+                        }`}
                       >
-                        <HelpCircle className="h-4 w-4" />
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent align="start" className="w-80 text-xs">
-                      <p className="mb-2 text-sm font-bold">{s.label}</p>
-                      <div className="space-y-2">
-                        <div
-                          className={`rounded-lg border p-2 ${
-                            motorizado ? "border-border bg-muted/40" : "border-primary/40 bg-primary/5"
-                          }`}
-                        >
-                          <p className="mb-1 flex items-center gap-1.5 font-semibold">
-                            <Bike className="h-3.5 w-3.5" /> Bicicleta / e-bike / patinete
-                            {!motorizado && <span className="text-primary">(seu caso)</span>}
-                          </p>
-                          <p className="text-muted-foreground">{s.help.semMotor}</p>
-                        </div>
-                        <div
-                          className={`rounded-lg border p-2 ${
-                            motorizado ? "border-primary/40 bg-primary/5" : "border-border bg-muted/40"
-                          }`}
-                        >
-                          <p className="mb-1 flex items-center gap-1.5 font-semibold">
-                            <Car className="h-3.5 w-3.5" /> Moto / carro / utilitário
-                            {motorizado && <span className="text-primary">(seu caso)</span>}
-                          </p>
-                          <p className="text-muted-foreground">{s.help.comMotor}</p>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <p className="text-xs text-muted-foreground">{s.hint}</p>
-              </div>
-              {!s.done && s.to && (
-                <Button
-                  asChild
-                  size="sm"
-                  variant="outline"
-                  className="rounded-lg border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <Link to={s.to as any}>Completar</Link>
-                </Button>
-              )}
-            </li>
-          ))}
-        </ol>
-      </section>
-
-
+                        {s.label}
+                        {!s.done && <span className="ml-1 font-bold">*</span>}
+                      </p>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label={`Ajuda sobre ${s.label}`}
+                            className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                          >
+                            <HelpCircle className="h-4 w-4" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent align="start" className="w-80 text-xs">
+                          <p className="mb-2 text-sm font-bold">{s.label}</p>
+                          <div className="space-y-2">
+                            <div
+                              className={`rounded-lg border p-2 ${
+                                motorizado
+                                  ? "border-border bg-muted/40"
+                                  : "border-primary/40 bg-primary/5"
+                              }`}
+                            >
+                              <p className="mb-1 flex items-center gap-1.5 font-semibold">
+                                <Bike className="h-3.5 w-3.5" /> Bicicleta / e-bike / patinete
+                                {!motorizado && <span className="text-primary">(seu caso)</span>}
+                              </p>
+                              <p className="text-muted-foreground">{s.help.semMotor}</p>
+                            </div>
+                            <div
+                              className={`rounded-lg border p-2 ${
+                                motorizado
+                                  ? "border-primary/40 bg-primary/5"
+                                  : "border-border bg-muted/40"
+                              }`}
+                            >
+                              <p className="mb-1 flex items-center gap-1.5 font-semibold">
+                                <Car className="h-3.5 w-3.5" /> Moto / carro / utilitário
+                                {motorizado && <span className="text-primary">(seu caso)</span>}
+                              </p>
+                              <p className="text-muted-foreground">{s.help.comMotor}</p>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{s.hint}</p>
+                  </div>
+                  {!s.done && s.to && (
+                    <Button
+                      asChild
+                      size="sm"
+                      variant="outline"
+                      className="rounded-lg border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Link to={s.to as never}>Completar</Link>
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </section>
         </div>
       </div>
 
@@ -395,26 +472,54 @@ function Veiculo() {
         <div className="mb-5 rounded-2xl border border-primary/25 bg-primary/5 p-4 text-xs leading-relaxed text-muted-foreground">
           {comPlaca ? (
             <>
-              <span className="font-bold text-foreground">2. Veículo motorizado:</span> informe marca, modelo e a
-              <span className="font-semibold text-foreground"> placa</span>. Também é preciso enviar a
-              <span className="font-semibold text-foreground"> CNH</span> na aba Documentos.
+              <span className="font-bold text-foreground">2. Veículo motorizado:</span> informe
+              marca, modelo e a<span className="font-semibold text-foreground"> placa</span>. Também
+              é preciso enviar a<span className="font-semibold text-foreground"> CNH</span> na aba
+              Documentos.
             </>
           ) : (
             <>
-              <span className="font-bold text-foreground">2. Veículo sem motor:</span> não precisa de placa nem CNH.
-              Basta enviar um <span className="font-semibold text-foreground">documento com foto (RG ou CNH)</span> na
-              aba Documentos para validarmos sua identidade.
+              <span className="font-bold text-foreground">2. Veículo sem motor:</span> não precisa
+              de placa nem CNH. Basta enviar um{" "}
+              <span className="font-semibold text-foreground">documento com foto (RG ou CNH)</span>{" "}
+              na aba Documentos para validarmos sua identidade.
             </>
           )}
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <FieldInput label="Marca" placeholder={comPlaca ? "Honda, Yamaha…" : "Caloi, Sense…"} value={form.marca ?? ""} onChange={(v) => setForm({ ...form, marca: v })} />
-          <FieldInput label="Modelo" placeholder={comPlaca ? "CG 160, Factor…" : "Aro 29, Urbana…"} value={form.modelo ?? ""} onChange={(v) => setForm({ ...form, modelo: v })} />
-          <FieldInput label="Ano" placeholder="2022" type="number" value={form.ano?.toString() ?? ""} onChange={(v) => setForm({ ...form, ano: v ? Number(v) : undefined })} />
-          <FieldInput label="Cor" placeholder="Preta, Vermelha…" value={form.cor ?? ""} onChange={(v) => setForm({ ...form, cor: v })} />
+          <FieldInput
+            label="Marca"
+            placeholder={comPlaca ? "Honda, Yamaha…" : "Caloi, Sense…"}
+            value={form.marca ?? ""}
+            onChange={(v) => setForm({ ...form, marca: v })}
+          />
+          <FieldInput
+            label="Modelo"
+            placeholder={comPlaca ? "CG 160, Factor…" : "Aro 29, Urbana…"}
+            value={form.modelo ?? ""}
+            onChange={(v) => setForm({ ...form, modelo: v })}
+          />
+          <FieldInput
+            label="Ano"
+            placeholder="2022"
+            type="number"
+            value={form.ano?.toString() ?? ""}
+            onChange={(v) => setForm({ ...form, ano: v ? Number(v) : undefined })}
+          />
+          <FieldInput
+            label="Cor"
+            placeholder="Preta, Vermelha…"
+            value={form.cor ?? ""}
+            onChange={(v) => setForm({ ...form, cor: v })}
+          />
           {comPlaca && (
-            <FieldInput label="Placa (obrigatória)" placeholder="ABC1D23" value={form.placa ?? ""} onChange={(v) => setForm({ ...form, placa: v.toUpperCase() })} />
+            <FieldInput
+              label="Placa (obrigatória)"
+              placeholder="ABC1D23"
+              value={form.placa ?? ""}
+              onChange={(v) => setForm({ ...form, placa: v.toUpperCase() })}
+            />
           )}
         </div>
 
@@ -428,7 +533,6 @@ function Veiculo() {
             size="lg"
             className="rounded-xl bg-primary shadow-[0_10px_30px_-10px_rgba(255,107,0,0.7)] transition-transform hover:scale-[1.02]"
           >
-
             <Plus className="mr-2 h-4 w-4" />
             {saving ? "Salvando…" : "Adicionar veículo"}
           </Button>
@@ -448,7 +552,9 @@ function Veiculo() {
               <Car className="h-8 w-8" />
             </div>
             <p className="mt-4 font-semibold">Nenhum veículo cadastrado</p>
-            <p className="mt-1 text-sm text-muted-foreground">Adicione seu primeiro veículo acima para começar a receber corridas.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Adicione seu primeiro veículo acima para começar a receber corridas.
+            </p>
           </div>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
@@ -467,7 +573,9 @@ function Veiculo() {
                     </div>
                   )}
                   <div className="flex items-start gap-4">
-                    <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl ${v.ativo ? "bg-primary text-white" : "bg-primary/10 text-primary"} shadow-sm`}>
+                    <div
+                      className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl ${v.ativo ? "bg-primary text-white" : "bg-primary/10 text-primary"} shadow-sm`}
+                    >
                       <Icon className="h-7 w-7" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -478,16 +586,22 @@ function Veiculo() {
                       </p>
                       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         {v.placa ? (
-                          <span className="rounded-md bg-muted px-2 py-0.5 font-mono font-semibold text-foreground">{v.placa}</span>
+                          <span className="rounded-md bg-muted px-2 py-0.5 font-mono font-semibold text-foreground">
+                            {v.placa}
+                          </span>
                         ) : (
-                          <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 font-semibold text-emerald-600">Sem placa</span>
+                          <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 font-semibold text-emerald-600">
+                            Sem placa
+                          </span>
                         )}
 
                         {v.cor && <span>{v.cor}</span>}
                         {v.ano && <span>{v.ano}</span>}
                       </div>
                       <div className="mt-3 flex items-center gap-2">
-                        <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${st.cls}`}>
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${st.cls}`}
+                        >
                           <StIcon className="h-3 w-3" /> {st.label}
                         </span>
                         {v.ativo && (
@@ -498,11 +612,21 @@ function Veiculo() {
                   </div>
                   <div className="mt-4 flex items-center justify-end gap-2 border-t border-border/60 pt-3">
                     {!v.ativo && (
-                      <Button size="sm" variant="outline" className="rounded-lg" onClick={() => ativar(v.id)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-lg"
+                        onClick={() => ativar(v.id)}
+                      >
                         Tornar ativo
                       </Button>
                     )}
-                    <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-rose-600" onClick={() => remover(v.id)}>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="text-muted-foreground hover:text-rose-600"
+                      onClick={() => remover(v.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -516,20 +640,52 @@ function Veiculo() {
   );
 }
 
-function MiniStat({ label, value, isText }: { label: string; value: string | number; isText?: boolean }) {
+function MiniStat({
+  label,
+  value,
+  isText,
+}: {
+  label: string;
+  value: string | number;
+  isText?: boolean;
+}) {
   return (
     <div className="rounded-2xl border border-white/20 bg-white/10 px-3 py-2 backdrop-blur">
       <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">{label}</p>
-      <p className={`mt-0.5 font-black tracking-tight ${isText ? "text-sm capitalize" : "text-2xl"}`}>{value}</p>
+      <p
+        className={`mt-0.5 font-black tracking-tight ${isText ? "text-sm capitalize" : "text-2xl"}`}
+      >
+        {value}
+      </p>
     </div>
   );
 }
 
-function FieldInput({ label, value, onChange, type = "text", placeholder }: { label: string; value: string; onChange: (v: string) => void; type?: string; placeholder?: string }) {
+function FieldInput({
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  placeholder?: string;
+}) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</Label>
-      <Input type={type} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} className="h-11 rounded-xl" />
+      <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </Label>
+      <Input
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-11 rounded-xl"
+      />
     </div>
   );
 }

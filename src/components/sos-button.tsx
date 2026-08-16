@@ -1,11 +1,24 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { AlertOctagon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-export function SOSButton({ orderId, deliveryId }: { orderId?: string | null; deliveryId?: string | null }) {
+export function SOSButton({
+  orderId,
+  deliveryId,
+}: {
+  orderId?: string | null;
+  deliveryId?: string | null;
+}) {
   const [open, setOpen] = useState(false);
   const [tipo, setTipo] = useState<string>("assalto");
   const [detalhes, setDetalhes] = useState("");
@@ -21,10 +34,15 @@ export function SOSButton({ orderId, deliveryId }: { orderId?: string | null; de
       );
       lat = pos.coords.latitude;
       lng = pos.coords.longitude;
-    } catch { /* no-op */ }
+    } catch {
+      /* no-op */
+    }
 
     const { data: u } = await supabase.auth.getUser();
-    if (!u.user) { setSending(false); return toast.error("Sessão expirada"); }
+    if (!u.user) {
+      setSending(false);
+      return toast.error("Sessão expirada");
+    }
 
     void deliveryId;
     const { error } = await supabase.from("sos_events").insert({
@@ -32,7 +50,8 @@ export function SOSButton({ orderId, deliveryId }: { orderId?: string | null; de
       order_id: orderId ?? null,
       tipo,
       descricao: detalhes.trim() || null,
-      lat, lng,
+      lat,
+      lng,
     });
     setSending(false);
     if (error) return toast.error("Falha ao acionar SOS");
@@ -58,7 +77,8 @@ export function SOSButton({ orderId, deliveryId }: { orderId?: string | null; de
               <AlertOctagon className="h-5 w-5" /> Botão de Emergência
             </DialogTitle>
             <DialogDescription>
-              Só use em caso real de emergência. Sua localização e dados serão enviados imediatamente para a central WiFome.
+              Só use em caso real de emergência. Sua localização e dados serão enviados
+              imediatamente para a central WiFome.
             </DialogDescription>
           </DialogHeader>
 
@@ -71,10 +91,13 @@ export function SOSButton({ orderId, deliveryId }: { orderId?: string | null; de
                 { k: "outro", label: "Outro" },
               ].map((t) => (
                 <button
-                  key={t.k} type="button"
+                  key={t.k}
+                  type="button"
                   onClick={() => setTipo(t.k)}
                   className={`rounded-xl border-2 p-3 font-semibold transition ${
-                    tipo === t.k ? "border-red-600 bg-red-600/10 text-red-600" : "border-border bg-background"
+                    tipo === t.k
+                      ? "border-red-600 bg-red-600/10 text-red-600"
+                      : "border-border bg-background"
                   }`}
                 >
                   {t.label}
@@ -91,13 +114,15 @@ export function SOSButton({ orderId, deliveryId }: { orderId?: string | null; de
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button
-              onClick={trigger}
-              disabled={sending}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AlertOctagon className="mr-2 h-4 w-4" />}
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={trigger} disabled={sending} className="bg-red-600 hover:bg-red-700">
+              {sending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <AlertOctagon className="mr-2 h-4 w-4" />
+              )}
               Acionar emergência
             </Button>
           </DialogFooter>

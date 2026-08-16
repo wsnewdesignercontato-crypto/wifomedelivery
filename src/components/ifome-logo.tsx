@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
-import logoAsset from "@/assets/wifome-logo.png.asset.json";
+
+const BRAND_LOGO_URL = "/wifome-logo.svg";
 
 interface Props {
   className?: string;
@@ -26,7 +27,7 @@ export function IFomeLogo({ className, size = "md", showWord = true, perfil = "c
   return (
     <div className={cn("inline-flex shrink-0 items-center gap-2.5", className)}>
       <img
-        src={logoAsset.url}
+        src={BRAND_LOGO_URL}
         alt="WiFome"
         style={filter ? { filter } : undefined}
         className={cn("object-contain rounded-xl shadow-brand", s.box)}

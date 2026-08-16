@@ -9,7 +9,14 @@ export const Route = createFileRoute("/_authenticated/entregador/historico")({
   component: Historico,
 });
 
-type Row = { id: string; status: string; valor_entrega_cents: number; entregue_em: string | null; aceito_em: string | null; order_id: string };
+type Row = {
+  id: string;
+  status: string;
+  valor_entrega_cents: number;
+  entregue_em: string | null;
+  aceito_em: string | null;
+  order_id: string;
+};
 
 function Historico() {
   const { courier } = useMyCourier();
@@ -18,8 +25,12 @@ function Historico() {
 
   useEffect(() => {
     if (!courier) return;
-    let q = supabase.from("deliveries").select("id,status,valor_entrega_cents,entregue_em,aceito_em,order_id")
-      .eq("entregador_id", courier.user_id).order("aceito_em", { ascending: false }).limit(100);
+    let q = supabase
+      .from("deliveries")
+      .select("id,status,valor_entrega_cents,entregue_em,aceito_em,order_id")
+      .eq("entregador_id", courier.user_id)
+      .order("aceito_em", { ascending: false })
+      .limit(100);
     if (filter !== "todos") q = q.eq("status", filter);
     q.then(({ data }) => setRows((data ?? []) as Row[]));
   }, [courier, filter]);
@@ -30,8 +41,11 @@ function Historico() {
         <h1 className="text-2xl font-black">Histórico</h1>
         <div className="flex gap-1 rounded-xl border border-border bg-card p-1 text-xs">
           {(["todos", "delivered", "cancelled"] as const).map((f) => (
-            <button key={f} onClick={() => setFilter(f)}
-              className={`rounded-lg px-3 py-1.5 ${filter === f ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`rounded-lg px-3 py-1.5 ${filter === f ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+            >
               {f === "todos" ? "Todos" : f === "delivered" ? "Entregues" : "Cancelados"}
             </button>
           ))}
@@ -53,16 +67,30 @@ function Historico() {
                 ? "border-destructive/50 bg-destructive/10"
                 : "border-primary/50 bg-primary/5";
             return (
-            <div key={r.id} className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border-2 p-4 shadow-card ${tone}`}>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">#{r.order_id.slice(0, 8)}</p>
-                <p className="truncate text-xs text-muted-foreground">{r.entregue_em ? new Date(r.entregue_em).toLocaleString("pt-BR") : "—"}</p>
+              <div
+                key={r.id}
+                className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border-2 p-4 shadow-card ${tone}`}
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">#{r.order_id.slice(0, 8)}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {r.entregue_em ? new Date(r.entregue_em).toLocaleString("pt-BR") : "—"}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p
+                    className={`whitespace-nowrap font-bold ${done ? "text-success" : bad ? "text-destructive" : "text-primary"}`}
+                  >
+                    {fmt(r.valor_entrega_cents)}
+                  </p>
+                  <Badge
+                    variant={done ? "success" : bad ? "destructive" : "default"}
+                    className="mt-1 whitespace-nowrap"
+                  >
+                    {done ? "Entregue" : bad ? "Cancelada" : "Em andamento"}
+                  </Badge>
+                </div>
               </div>
-              <div className="shrink-0 text-right">
-                <p className={`whitespace-nowrap font-bold ${done ? "text-success" : bad ? "text-destructive" : "text-primary"}`}>{fmt(r.valor_entrega_cents)}</p>
-                <Badge variant={done ? "success" : bad ? "destructive" : "default"} className="mt-1 whitespace-nowrap">{done ? "Entregue" : bad ? "Cancelada" : "Em andamento"}</Badge>
-              </div>
-            </div>
             );
           })}
         </div>

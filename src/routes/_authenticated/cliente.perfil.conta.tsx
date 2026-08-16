@@ -98,7 +98,10 @@ function ContaPage() {
 
   return (
     <div className="space-y-5">
-      <Link to="/cliente/perfil" className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+      <Link
+        to="/cliente/perfil"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground"
+      >
         <ChevronLeft className="h-4 w-4" /> Voltar
       </Link>
 
@@ -120,13 +123,19 @@ function ContaPage() {
             <Label>Telefone</Label>
             <Input
               value={profile?.telefone ?? ""}
-              onChange={(e) => setProfile(profile ? { ...profile, telefone: e.target.value } : null)}
+              onChange={(e) =>
+                setProfile(profile ? { ...profile, telefone: e.target.value } : null)
+              }
             />
           </div>
           <div className="sm:col-span-2 space-y-2">
             <Label>Foto do perfil</Label>
             {profile?.foto_url ? (
-              <img src={profile.foto_url} alt="Avatar" className="h-20 w-20 rounded-full object-cover border border-border" />
+              <img
+                src={profile.foto_url}
+                alt="Avatar"
+                className="h-20 w-20 rounded-full object-cover border border-border"
+              />
             ) : null}
             <div className="flex flex-wrap items-center gap-2">
               <input
@@ -140,18 +149,37 @@ function ContaPage() {
                   e.target.value = "";
                 }}
               />
-              <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
-                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Upload className="h-4 w-4 mr-1" /> Enviar imagem</>}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-1" /> Enviar imagem
+                  </>
+                )}
               </Button>
               {profile?.foto_url && (
-                <Button type="button" variant="ghost" size="sm" onClick={() => setProfile(profile ? { ...profile, foto_url: "" } : null)}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setProfile(profile ? { ...profile, foto_url: "" } : null)}
+                >
                   Remover
                 </Button>
               )}
             </div>
             <Input
               value={profile?.foto_url ?? ""}
-              onChange={(e) => setProfile(profile ? { ...profile, foto_url: e.target.value } : null)}
+              onChange={(e) =>
+                setProfile(profile ? { ...profile, foto_url: e.target.value } : null)
+              }
               placeholder="ou cole uma URL: https://..."
             />
           </div>

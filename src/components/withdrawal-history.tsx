@@ -3,7 +3,13 @@ import { Download, FileText, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const fmt = (c: number) =>
   (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -23,16 +29,20 @@ export type WithdrawalRow = {
 
 const STATUS_META: Record<string, { label: string; className: string }> = {
   solicitado: { label: "Solicitado", className: "bg-amber-100 text-amber-800 border-amber-200" },
-  pendente:   { label: "Solicitado", className: "bg-amber-100 text-amber-800 border-amber-200" },
-  aprovado:   { label: "Aprovado",   className: "bg-blue-100 text-blue-800 border-blue-200" },
-  pago:       { label: "Pago",       className: "bg-emerald-100 text-emerald-800 border-emerald-200" },
-  recusado:   { label: "Recusado",   className: "bg-rose-100 text-rose-800 border-rose-200" },
-  cancelado:  { label: "Cancelado",  className: "bg-muted text-muted-foreground border-border" },
+  pendente: { label: "Solicitado", className: "bg-amber-100 text-amber-800 border-amber-200" },
+  aprovado: { label: "Aprovado", className: "bg-blue-100 text-blue-800 border-blue-200" },
+  pago: { label: "Pago", className: "bg-emerald-100 text-emerald-800 border-emerald-200" },
+  recusado: { label: "Recusado", className: "bg-rose-100 text-rose-800 border-rose-200" },
+  cancelado: { label: "Cancelado", className: "bg-muted text-muted-foreground border-border" },
 };
 
 function StatusBadge({ status }: { status: string }) {
   const meta = STATUS_META[status] ?? { label: status, className: "" };
-  return <Badge variant="outline" className={meta.className}>{meta.label}</Badge>;
+  return (
+    <Badge variant="outline" className={meta.className}>
+      {meta.label}
+    </Badge>
+  );
 }
 
 type Props = {
@@ -50,22 +60,35 @@ export function WithdrawalHistory({ table, ownerColumn, ownerId, bucket }: Props
   useEffect(() => {
     let mounted = true;
     async function load() {
-      if (!ownerId) { setRows([]); setLoading(false); return; }
+      if (!ownerId) {
+        setRows([]);
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       const query = supabase
         .from(table)
-        .select("id,valor_cents,liquido_cents,taxa_cents,metodo,status,motivo_recusa,processado_em,comprovante_url,created_at")
+        .select(
+          "id,valor_cents,liquido_cents,taxa_cents,metodo,status,motivo_recusa,processado_em,comprovante_url,created_at",
+        )
         .order("created_at", { ascending: false })
         .limit(200);
-      const { data, error } = await (query as unknown as {
-        eq: (col: string, val: string) => Promise<{ data: WithdrawalRow[] | null; error: unknown }>;
-      }).eq(ownerColumn, ownerId);
+      const { data, error } = await (
+        query as unknown as {
+          eq: (
+            col: string,
+            val: string,
+          ) => Promise<{ data: WithdrawalRow[] | null; error: unknown }>;
+        }
+      ).eq(ownerColumn, ownerId);
       if (!mounted) return;
       if (!error && data) setRows(data as WithdrawalRow[]);
       setLoading(false);
     }
     load();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [table, ownerColumn, ownerId]);
 
   const filtered = filter === "all" ? rows : rows.filter((r) => r.status === filter);
@@ -88,7 +111,9 @@ export function WithdrawalHistory({ table, ownerColumn, ownerId, bucket }: Props
           <p className="text-xs text-muted-foreground">{rows.length} solicitação(ões)</p>
         </div>
         <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="solicitado">Solicitado</SelectItem>
@@ -116,7 +141,9 @@ export function WithdrawalHistory({ table, ownerColumn, ownerId, bucket }: Props
                   <div className="flex items-center gap-2">
                     <p className="text-lg font-black">{fmt(w.valor_cents)}</p>
                     <StatusBadge status={w.status} />
-                    <Badge variant="secondary" className="uppercase text-[10px]">{w.metodo}</Badge>
+                    <Badge variant="secondary" className="uppercase text-[10px]">
+                      {w.metodo}
+                    </Badge>
                   </div>
                   <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
                     <p>Solicitado em {new Date(w.created_at).toLocaleString("pt-BR")}</p>
@@ -124,7 +151,9 @@ export function WithdrawalHistory({ table, ownerColumn, ownerId, bucket }: Props
                       <p>Processado em {new Date(w.processado_em).toLocaleString("pt-BR")}</p>
                     )}
                     {w.liquido_cents != null && w.liquido_cents !== w.valor_cents && (
-                      <p>Líquido: {fmt(w.liquido_cents)} · Taxa: {fmt(w.taxa_cents ?? 0)}</p>
+                      <p>
+                        Líquido: {fmt(w.liquido_cents)} · Taxa: {fmt(w.taxa_cents ?? 0)}
+                      </p>
                     )}
                     {w.status === "recusado" && w.motivo_recusa && (
                       <p className="text-rose-600">Motivo: {w.motivo_recusa}</p>
@@ -133,7 +162,11 @@ export function WithdrawalHistory({ table, ownerColumn, ownerId, bucket }: Props
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   {w.comprovante_url ? (
-                    <Button size="sm" variant="outline" onClick={() => openComprovante(w.comprovante_url!)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openComprovante(w.comprovante_url!)}
+                    >
                       <FileText className="mr-2 h-4 w-4" /> Comprovante
                       <ExternalLink className="ml-1 h-3 w-3" />
                     </Button>
@@ -152,7 +185,8 @@ export function WithdrawalHistory({ table, ownerColumn, ownerId, bucket }: Props
 
       {filtered.length > 0 && (
         <p className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Download className="h-3 w-3" /> Os comprovantes ficam disponíveis assim que o pagamento for concluído pelo financeiro.
+          <Download className="h-3 w-3" /> Os comprovantes ficam disponíveis assim que o pagamento
+          for concluído pelo financeiro.
         </p>
       )}
     </div>

@@ -64,12 +64,13 @@ function EntregadorLayout() {
         cnh: form.cnh || null,
         pix_key: form.pix || null,
         telefone: form.telefone || null,
-        status: "aprovado",
+        status: "pendente",
         aprovacao: "em_analise",
+        kyc_status: "pending",
       });
       setSaving(false);
       if (error) return toast.error("Falha ao cadastrar: " + error.message);
-      toast.success("Cadastro criado!");
+      toast.success("Cadastro enviado para analise!");
       qc.invalidateQueries({ queryKey: ["courier", userId] });
     }
 
@@ -92,11 +93,41 @@ function EntregadorLayout() {
               </p>
             </div>
             <div className="space-y-3">
-              <div><Label>Veículo</Label><Input value={form.veiculo} onChange={(e) => setForm({ ...form, veiculo: e.target.value })} /></div>
-              <div><Label>Placa</Label><Input value={form.placa} onChange={(e) => setForm({ ...form, placa: e.target.value })} /></div>
-              <div><Label>Telefone</Label><Input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} /></div>
-              <div><Label>CNH</Label><Input value={form.cnh} onChange={(e) => setForm({ ...form, cnh: e.target.value })} /></div>
-              <div><Label>Chave PIX</Label><Input value={form.pix} onChange={(e) => setForm({ ...form, pix: e.target.value })} /></div>
+              <div>
+                <Label>Veículo</Label>
+                <Input
+                  value={form.veiculo}
+                  onChange={(e) => setForm({ ...form, veiculo: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Placa</Label>
+                <Input
+                  value={form.placa}
+                  onChange={(e) => setForm({ ...form, placa: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Telefone</Label>
+                <Input
+                  value={form.telefone}
+                  onChange={(e) => setForm({ ...form, telefone: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>CNH</Label>
+                <Input
+                  value={form.cnh}
+                  onChange={(e) => setForm({ ...form, cnh: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Chave PIX</Label>
+                <Input
+                  value={form.pix}
+                  onChange={(e) => setForm({ ...form, pix: e.target.value })}
+                />
+              </div>
               <Button className="w-full" size="lg" onClick={salvar} disabled={saving}>
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Finalizar cadastro inicial

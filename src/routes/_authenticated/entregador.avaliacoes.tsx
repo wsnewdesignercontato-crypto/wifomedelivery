@@ -9,27 +9,43 @@ export const Route = createFileRoute("/_authenticated/entregador/avaliacoes")({
   component: Avaliacoes,
 });
 
-type Review = { id: string; rating_entregador: number | null; comentario: string | null; created_at: string };
+type Review = {
+  id: string;
+  rating_entregador: number | null;
+  comentario: string | null;
+  created_at: string;
+};
 
 function Avaliacoes() {
   const { courier } = useMyCourier();
   const [reviews, setReviews] = useState<Review[]>([]);
   const media = reviews.length
-    ? reviews.filter((r) => r.rating_entregador).reduce((s, r) => s + (r.rating_entregador ?? 0), 0) / reviews.filter((r) => r.rating_entregador).length
+    ? reviews
+        .filter((r) => r.rating_entregador)
+        .reduce((s, r) => s + (r.rating_entregador ?? 0), 0) /
+      reviews.filter((r) => r.rating_entregador).length
     : Number(courier?.avaliacao ?? 0);
 
   useEffect(() => {
     if (!courier) return;
     (async () => {
       const { data: dels } = await supabase
-        .from("deliveries").select("order_id").eq("entregador_id", courier.user_id).eq("status", "delivered");
+        .from("deliveries")
+        .select("order_id")
+        .eq("entregador_id", courier.user_id)
+        .eq("status", "delivered");
       const orderIds = (dels ?? []).map((d: { order_id: string }) => d.order_id);
-      if (!orderIds.length) { setReviews([]); return; }
-      const { data } = await supabase.from("reviews")
+      if (!orderIds.length) {
+        setReviews([]);
+        return;
+      }
+      const { data } = await supabase
+        .from("reviews")
         .select("id,rating_entregador,comentario,created_at")
         .in("order_id", orderIds)
         .not("rating_entregador", "is", null)
-        .order("created_at", { ascending: false }).limit(100);
+        .order("created_at", { ascending: false })
+        .limit(100);
       setReviews((data ?? []) as Review[]);
     })();
   }, [courier]);
@@ -45,14 +61,18 @@ function Avaliacoes() {
         <p className="mt-1 text-xs text-muted-foreground">{reviews.length} avaliações</p>
       </div>
       {reviews.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">Você ainda não recebeu avaliações.</p>
+        <p className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
+          Você ainda não recebeu avaliações.
+        </p>
       ) : (
         <div className="space-y-2">
           {reviews.map((r) => (
             <div key={r.id} className="rounded-2xl border border-border bg-card p-4 shadow-card">
               <div className="flex items-center justify-between">
                 <Badge>{r.rating_entregador} ★</Badge>
-                <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString("pt-BR")}</span>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(r.created_at).toLocaleDateString("pt-BR")}
+                </span>
               </div>
               {r.comentario && <p className="mt-2 text-sm">{r.comentario}</p>}
             </div>

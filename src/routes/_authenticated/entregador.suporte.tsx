@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,31 +14,52 @@ export const Route = createFileRoute("/_authenticated/entregador/suporte")({
   component: Suporte,
 });
 
-type Ticket = { id: string; assunto: string; status: string; created_at: string; priority: string | null };
+type Ticket = {
+  id: string;
+  assunto: string;
+  status: string;
+  created_at: string;
+  priority: string | null;
+};
 
 function Suporte() {
   const { courier } = useMyCourier();
+  const courierId = courier?.user_id;
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [f, setF] = useState({ assunto: "", mensagem: "", priority: "normal" });
 
-  async function load() {
-    if (!courier) return;
-    const { data } = await supabase.from("support_tickets").select("id,assunto,status,created_at,priority")
-      .eq("user_id", courier.user_id).order("created_at", { ascending: false });
+  const load = useCallback(async () => {
+    if (!courierId) return;
+    const { data } = await supabase
+      .from("support_tickets")
+      .select("id,assunto,status,created_at,priority")
+      .eq("user_id", courierId)
+      .order("created_at", { ascending: false });
     setTickets((data ?? []) as Ticket[]);
-  }
-  useEffect(() => { load(); }, [courier]);
+  }, [courierId]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   async function abrir() {
     if (!courier || !f.assunto || !f.mensagem) return toast.error("Preencha assunto e mensagem");
-    const { data, error } = await supabase.from("support_tickets").insert({
-      user_id: courier.user_id, assunto: f.assunto, status: "open", priority: f.priority as "normal",
-    }).select("id").single();
+    const { data, error } = await supabase
+      .from("support_tickets")
+      .insert({
+        user_id: courier.user_id,
+        assunto: f.assunto,
+        status: "open",
+        priority: f.priority as "normal",
+      })
+      .select("id")
+      .single();
     if (error || !data) return toast.error(error?.message ?? "Erro");
-    await supabase.from("support_messages").insert({ ticket_id: data.id, sender_id: courier.user_id, mensagem: f.mensagem });
+    await supabase
+      .from("support_messages")
+      .insert({ ticket_id: data.id, sender_id: courier.user_id, mensagem: f.mensagem });
     toast.success("Chamado aberto");
     setF({ assunto: "", mensagem: "", priority: "normal" });
-    load();
+    void load();
   }
 
   return (
@@ -48,8 +69,18 @@ function Suporte() {
       <section className="rounded-2xl border border-border bg-card p-4 shadow-card">
         <h2 className="mb-3 font-semibold">Abrir chamado</h2>
         <div className="space-y-3">
-          <div><Label>Assunto</Label><Input value={f.assunto} onChange={(e) => setF({ ...f, assunto: e.target.value })} /></div>
-          <div><Label>Mensagem</Label><Textarea rows={4} value={f.mensagem} onChange={(e) => setF({ ...f, mensagem: e.target.value })} /></div>
+          <div>
+            <Label>Assunto</Label>
+            <Input value={f.assunto} onChange={(e) => setF({ ...f, assunto: e.target.value })} />
+          </div>
+          <div>
+            <Label>Mensagem</Label>
+            <Textarea
+              rows={4}
+              value={f.mensagem}
+              onChange={(e) => setF({ ...f, mensagem: e.target.value })}
+            />
+          </div>
           <Button onClick={abrir}>Enviar</Button>
         </div>
       </section>
@@ -64,12 +95,19 @@ function Suporte() {
         ) : (
           <div className="space-y-2">
             {tickets.map((t) => (
-              <div key={t.id} className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 shadow-card">
+              <div
+                key={t.id}
+                className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 shadow-card"
+              >
                 <div>
                   <p className="font-semibold">{t.assunto}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(t.created_at).toLocaleString("pt-BR")}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(t.created_at).toLocaleString("pt-BR")}
+                  </p>
                 </div>
-                <Badge variant={t.status === "resolved" ? "default" : "secondary"}>{t.status}</Badge>
+                <Badge variant={t.status === "resolved" ? "default" : "secondary"}>
+                  {t.status}
+                </Badge>
               </div>
             ))}
           </div>

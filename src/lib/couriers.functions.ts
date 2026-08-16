@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { createClient } from "@supabase/supabase-js";
+import { isCourierApproved } from "@/lib/courier-approval";
 import type { Database } from "@/integrations/supabase/types";
 
 export type AvailableCourier = {
@@ -10,6 +11,12 @@ export type AvailableCourier = {
   lat: number | null;
   lng: number | null;
   last_seen: string | null;
+};
+
+type AvailableCourierRow = AvailableCourier & {
+  aprovacao: string | null;
+  kyc_status: string | null;
+  status: string | null;
 };
 
 export const listAvailableCouriers = createServerFn({ method: "POST" }).handler(
@@ -25,7 +32,8 @@ export const listAvailableCouriers = createServerFn({ method: "POST" }).handler(
       global: {
         fetch: (input, init) => {
           const h = new Headers(init?.headers);
-          if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+          if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`)
+            h.delete("Authorization");
           h.set("apikey", key);
           h.set("Authorization", `Bearer ${token}`);
           return fetch(input, { ...init, headers: h });
@@ -38,18 +46,30 @@ export const listAvailableCouriers = createServerFn({ method: "POST" }).handler(
     const userId = claims?.claims?.sub;
     if (!userId) return [];
 
-    const { data: roles } = await userClient.from("user_roles").select("role").eq("user_id", userId);
+    const { data: roles } = await userClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
     const allowed = (roles ?? []).some((r) => r.role === "admin" || r.role === "estabelecimento");
     if (!allowed) return [];
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("courier_profiles")
-      .select("user_id, veiculo, avaliacao, lat, lng, last_seen")
+      .select("user_id, veiculo, avaliacao, lat, lng, last_seen, aprovacao, kyc_status, status")
       .eq("status", "online")
       .not("lat", "is", null)
       .not("lng", "is", null);
     if (error) throw new Error(error.message);
-    return (data ?? []) as AvailableCourier[];
+    return ((data ?? []) as AvailableCourierRow[])
+      .filter((courier) => isCourierApproved(courier))
+      .map(({ user_id, veiculo, avaliacao, lat, lng, last_seen }) => ({
+        user_id,
+        veiculo,
+        avaliacao,
+        lat,
+        lng,
+        last_seen,
+      }));
   },
 );

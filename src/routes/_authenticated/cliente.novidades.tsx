@@ -33,7 +33,10 @@ async function fetchNovos(): Promise<Novo[]> {
 
 function NovidadesPage() {
   const navigate = useNavigate();
-  const { data: novos = [], isLoading: loadingNovos } = useQuery({ queryKey: ["novos_estabelecimentos"], queryFn: fetchNovos });
+  const { data: novos = [], isLoading: loadingNovos } = useQuery({
+    queryKey: ["novos_estabelecimentos"],
+    queryFn: fetchNovos,
+  });
 
   return (
     <div className="space-y-6 pb-4">
@@ -61,11 +64,15 @@ function NovidadesPage() {
                 Anúncio
               </span>
               <div className="absolute inset-y-0 left-0 flex max-w-[65%] flex-col justify-center gap-2 p-5 text-white sm:max-w-[55%] sm:p-6">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary sm:text-xs">Burger Master</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary sm:text-xs">
+                  Burger Master
+                </span>
                 <h3 className="text-xl font-extrabold leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] sm:text-2xl">
                   Combo Duplo por <span className="text-primary">R$ 29,90</span>
                 </h3>
-                <p className="text-xs opacity-90 sm:text-sm">Hambúrguer artesanal + batata + refri. Só hoje!</p>
+                <p className="text-xs opacity-90 sm:text-sm">
+                  Hambúrguer artesanal + batata + refri. Só hoje!
+                </p>
                 <div className="pt-1">
                   <span className="inline-flex items-center gap-1 rounded-full bg-primary px-3.5 py-1.5 text-xs font-bold text-primary-foreground shadow-lg shadow-primary/40">
                     Peça agora
@@ -100,12 +107,18 @@ function NovidadesPage() {
             {novos.map((e) => (
               <button
                 key={e.id}
-                onClick={() => navigate({ to: "/cliente/estabelecimento/$id", params: { id: e.id } })}
+                onClick={() =>
+                  navigate({ to: "/cliente/estabelecimento/$id", params: { id: e.id } })
+                }
                 className="group flex flex-col overflow-hidden rounded-2xl bg-card text-left shadow-sm ring-1 ring-border transition hover:shadow-md"
               >
                 <div className="relative h-24 w-full bg-muted">
                   {e.capa_url || e.logo_url ? (
-                    <img src={e.capa_url ?? e.logo_url ?? ""} alt={e.nome} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                    <img
+                      src={e.capa_url ?? e.logo_url ?? ""}
+                      alt={e.nome}
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-muted-foreground">
                       <Store className="h-6 w-6" />

@@ -19,7 +19,14 @@ type Estab = {
   avaliacao: number | null;
   is_open: boolean;
 };
-type Prod = { id: string; nome: string; descricao: string | null; foto_url: string | null; preco_cents: number; establishment_id: string };
+type Prod = {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  foto_url: string | null;
+  preco_cents: number;
+  establishment_id: string;
+};
 
 const fmt = (c: number) =>
   (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -42,7 +49,7 @@ function BuscarPage() {
         .select("cidade_ativa")
         .eq("id", auth.user.id)
         .maybeSingle();
-      setActiveCidade((data as any)?.cidade_ativa ?? null);
+      setActiveCidade((data as { cidade_ativa?: string | null } | null)?.cidade_ativa ?? null);
     })();
   }, []);
 
@@ -53,11 +60,18 @@ function BuscarPage() {
   }, [q, activeCidade]);
 
   async function run(term: string) {
-    if (term.length < 2) { setEstabs([]); setProds([]); setReviewCounts({}); return; }
+    if (term.length < 2) {
+      setEstabs([]);
+      setProds([]);
+      setReviewCounts({});
+      return;
+    }
     setLoading(true);
     let eq = supabase
       .from("establishments")
-      .select("id,nome,descricao,capa_url,taxa_entrega_cents,tempo_medio_min,avaliacao,is_open,cidade")
+      .select(
+        "id,nome,descricao,capa_url,taxa_entrega_cents,tempo_medio_min,avaliacao,is_open,cidade",
+      )
       .eq("status", "aprovado")
       .ilike("nome", `%${term}%`)
       .limit(20);
@@ -76,9 +90,12 @@ function BuscarPage() {
     setProds((p.data ?? []) as Prod[]);
     const ids = estabList.map((x) => x.id);
     if (ids.length) {
-      const { data: revs } = await supabase.from("public_reviews").select("establishment_id").in("establishment_id", ids);
+      const { data: revs } = await supabase
+        .from("public_reviews")
+        .select("establishment_id")
+        .in("establishment_id", ids);
       const rc: Record<string, number> = {};
-      (revs ?? []).forEach((r: any) => {
+      ((revs ?? []) as Array<{ establishment_id: string | null }>).forEach((r) => {
         if (r.establishment_id) rc[r.establishment_id] = (rc[r.establishment_id] ?? 0) + 1;
       });
       setReviewCounts(rc);
@@ -92,9 +109,17 @@ function BuscarPage() {
     if (sortBy === "relevancia") return estabs;
     const arr = [...estabs];
     if (sortBy === "rating") {
-      arr.sort((a, b) => (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)) || ((reviewCounts[b.id] ?? 0) - (reviewCounts[a.id] ?? 0)));
+      arr.sort(
+        (a, b) =>
+          Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0) ||
+          (reviewCounts[b.id] ?? 0) - (reviewCounts[a.id] ?? 0),
+      );
     } else {
-      arr.sort((a, b) => ((reviewCounts[b.id] ?? 0) - (reviewCounts[a.id] ?? 0)) || (Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0)));
+      arr.sort(
+        (a, b) =>
+          (reviewCounts[b.id] ?? 0) - (reviewCounts[a.id] ?? 0) ||
+          Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0),
+      );
     }
     return arr;
   }, [estabs, sortBy, reviewCounts]);
@@ -105,13 +130,25 @@ function BuscarPage() {
     <div className="space-y-4">
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Restaurantes, pratos, categorias..." className="pl-9" autoFocus />
+        <Input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Restaurantes, pratos, categorias..."
+          className="pl-9"
+          autoFocus
+        />
       </div>
 
-      {loading && <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>}
+      {loading && (
+        <div className="flex justify-center py-10">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        </div>
+      )}
 
       {!loading && q.length >= 2 && !hasResult && (
-        <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">Nada encontrado.</div>
+        <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+          Nada encontrado.
+        </div>
       )}
 
       {estabs.length > 0 && (
@@ -119,11 +156,13 @@ function BuscarPage() {
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-sm font-bold">Restaurantes</h2>
             <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
-              {([
-                ["relevancia", "Relevância"],
-                ["rating", "Melhor avaliados"],
-                ["reviews", "Mais avaliados"],
-              ] as const).map(([k, label]) => (
+              {(
+                [
+                  ["relevancia", "Relevância"],
+                  ["rating", "Melhor avaliados"],
+                  ["reviews", "Mais avaliados"],
+                ] as const
+              ).map(([k, label]) => (
                 <button
                   key={k}
                   onClick={() => setSortBy(k)}
@@ -140,18 +179,45 @@ function BuscarPage() {
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             {sortedEstabs.map((e) => (
-              <Link key={e.id} to="/cliente/estabelecimento/$id" params={{ id: e.id }} className="flex gap-3 rounded-2xl border border-border bg-card p-3">
+              <Link
+                key={e.id}
+                to="/cliente/estabelecimento/$id"
+                params={{ id: e.id }}
+                className="flex gap-3 rounded-2xl border border-border bg-card p-3"
+              >
                 <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-primary/20 to-primary/5">
-                  {e.capa_url && <img src={e.capa_url} alt="" className="h-full w-full object-cover" loading="lazy" />}
+                  {e.capa_url && (
+                    <img
+                      src={e.capa_url}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="truncate font-semibold">{e.nome}</p>
-                    {!e.is_open && <Badge variant="secondary" className="text-[10px]">Fechado</Badge>}
+                    {!e.is_open && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        Fechado
+                      </Badge>
+                    )}
                   </div>
                   <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    {e.avaliacao != null && <span className="flex items-center gap-1"><Star className="h-3 w-3 fill-primary text-primary" />{Number(e.avaliacao).toFixed(1)} <span className="text-muted-foreground">({reviewCounts[e.id] ?? 0})</span></span>}
-                    {e.tempo_medio_min && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{e.tempo_medio_min} min</span>}
+                    {e.avaliacao != null && (
+                      <span className="flex items-center gap-1">
+                        <Star className="h-3 w-3 fill-primary text-primary" />
+                        {Number(e.avaliacao).toFixed(1)}{" "}
+                        <span className="text-muted-foreground">({reviewCounts[e.id] ?? 0})</span>
+                      </span>
+                    )}
+                    {e.tempo_medio_min && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {e.tempo_medio_min} min
+                      </span>
+                    )}
                     <span>{e.taxa_entrega_cents === 0 ? "Grátis" : fmt(e.taxa_entrega_cents)}</span>
                   </div>
                 </div>
@@ -166,13 +232,29 @@ function BuscarPage() {
           <h2 className="text-sm font-bold">Pratos</h2>
           <div className="grid gap-2 sm:grid-cols-2">
             {prods.map((p) => (
-              <Link key={p.id} to="/cliente/estabelecimento/$id" params={{ id: p.establishment_id }} className="flex gap-3 rounded-2xl border border-border bg-card p-3">
+              <Link
+                key={p.id}
+                to="/cliente/estabelecimento/$id"
+                params={{ id: p.establishment_id }}
+                className="flex gap-3 rounded-2xl border border-border bg-card p-3"
+              >
                 <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-primary/20 to-primary/5">
-                  {p.foto_url && <img src={p.foto_url} alt="" className="h-full w-full object-cover" loading="lazy" />}
+                  {p.foto_url && (
+                    <img
+                      src={p.foto_url}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold">{p.nome}</p>
-                  {p.descricao && <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{p.descricao}</p>}
+                  {p.descricao && (
+                    <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                      {p.descricao}
+                    </p>
+                  )}
                   <p className="mt-1 text-sm font-bold text-primary">{fmt(p.preco_cents)}</p>
                 </div>
               </Link>

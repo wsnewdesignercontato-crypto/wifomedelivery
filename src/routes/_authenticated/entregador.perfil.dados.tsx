@@ -43,12 +43,32 @@ type FormState = {
 };
 
 const EMPTY: FormState = {
-  nome: "", foto_url: "", telefone: "", whatsapp: "", cpf: "", rg: "", nascimento: "",
-  cnh: "", cnh_categoria: "", cnh_validade: "",
-  pix_key: "", pix_tipo: "cpf",
-  banco_nome: "", banco_agencia: "", banco_conta: "", banco_tipo: "corrente", banco_titular: "",
-  contato_emergencia_nome: "", contato_emergencia_tel: "",
-  cep: "", rua: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "",
+  nome: "",
+  foto_url: "",
+  telefone: "",
+  whatsapp: "",
+  cpf: "",
+  rg: "",
+  nascimento: "",
+  cnh: "",
+  cnh_categoria: "",
+  cnh_validade: "",
+  pix_key: "",
+  pix_tipo: "cpf",
+  banco_nome: "",
+  banco_agencia: "",
+  banco_conta: "",
+  banco_tipo: "corrente",
+  banco_titular: "",
+  contato_emergencia_nome: "",
+  contato_emergencia_tel: "",
+  cep: "",
+  rua: "",
+  numero: "",
+  complemento: "",
+  bairro: "",
+  cidade: "",
+  estado: "",
 };
 
 const str = (v: unknown) => (typeof v === "string" ? v : "");
@@ -95,7 +115,11 @@ function Perfil() {
   const profileQ = useQuery({
     queryKey: ["profile", userId],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("nome, foto_url, telefone").eq("id", userId).maybeSingle();
+      const { data } = await supabase
+        .from("profiles")
+        .select("nome, foto_url, telefone")
+        .eq("id", userId)
+        .maybeSingle();
       return data;
     },
     enabled: !!userId,
@@ -145,9 +169,13 @@ function Perfil() {
     try {
       const ext = file.name.split(".").pop() || "jpg";
       const path = `${userId}/avatar-${Date.now()}.${ext}`;
-      const up = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+      const up = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, contentType: file.type });
       if (up.error) throw up.error;
-      const { data } = await supabase.storage.from("avatars").createSignedUrl(path, 60 * 60 * 24 * 365);
+      const { data } = await supabase.storage
+        .from("avatars")
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
       const url = data?.signedUrl ?? "";
       setF((s) => ({ ...s, foto_url: url }));
       toast.success("Foto enviada");
@@ -165,45 +193,51 @@ function Perfil() {
     setSaving(true);
     try {
       // Atualiza profiles (nome + foto + telefone)
-      const p = await supabase.from("profiles").update({
-        nome: f.nome.trim(),
-        foto_url: f.foto_url || null,
-        telefone: f.telefone || null,
-      }).eq("id", userId);
+      const p = await supabase
+        .from("profiles")
+        .update({
+          nome: f.nome.trim(),
+          foto_url: f.foto_url || null,
+          telefone: f.telefone || null,
+        })
+        .eq("id", userId);
       if (p.error) throw p.error;
 
       // Upsert courier_profiles com todos os demais campos
-      const c = await supabase.from("courier_profiles").upsert({
-        user_id: userId,
-        foto_url: f.foto_url || null,
-        telefone: f.telefone || null,
-        whatsapp: f.whatsapp || null,
-        cpf: f.cpf || null,
-        rg: f.rg || null,
-        nascimento: f.nascimento || null,
-        cnh: f.cnh || null,
-        cnh_categoria: f.cnh_categoria || null,
-        cnh_validade: f.cnh_validade || null,
-        pix_key: f.pix_key || null,
-        pix_tipo: f.pix_tipo || null,
-        banco_nome: f.banco_nome || null,
-        banco_agencia: f.banco_agencia || null,
-        banco_conta: f.banco_conta || null,
-        banco_tipo: f.banco_tipo || null,
-        banco_titular: f.banco_titular || null,
-        contato_emergencia_nome: f.contato_emergencia_nome || null,
-        contato_emergencia_tel: f.contato_emergencia_tel || null,
-        cidade_atuacao: f.cidade.trim() || null,
-        endereco: {
-          cep: f.cep || "",
-          rua: f.rua || "",
-          numero: f.numero || "",
-          complemento: f.complemento || "",
-          bairro: f.bairro || "",
-          cidade: f.cidade.trim() || "",
-          estado: f.estado.trim().toUpperCase() || "",
+      const c = await supabase.from("courier_profiles").upsert(
+        {
+          user_id: userId,
+          foto_url: f.foto_url || null,
+          telefone: f.telefone || null,
+          whatsapp: f.whatsapp || null,
+          cpf: f.cpf || null,
+          rg: f.rg || null,
+          nascimento: f.nascimento || null,
+          cnh: f.cnh || null,
+          cnh_categoria: f.cnh_categoria || null,
+          cnh_validade: f.cnh_validade || null,
+          pix_key: f.pix_key || null,
+          pix_tipo: f.pix_tipo || null,
+          banco_nome: f.banco_nome || null,
+          banco_agencia: f.banco_agencia || null,
+          banco_conta: f.banco_conta || null,
+          banco_tipo: f.banco_tipo || null,
+          banco_titular: f.banco_titular || null,
+          contato_emergencia_nome: f.contato_emergencia_nome || null,
+          contato_emergencia_tel: f.contato_emergencia_tel || null,
+          cidade_atuacao: f.cidade.trim() || null,
+          endereco: {
+            cep: f.cep || "",
+            rua: f.rua || "",
+            numero: f.numero || "",
+            complemento: f.complemento || "",
+            bairro: f.bairro || "",
+            cidade: f.cidade.trim() || "",
+            estado: f.estado.trim().toUpperCase() || "",
+          },
         },
-      }, { onConflict: "user_id" });
+        { onConflict: "user_id" },
+      );
       if (c.error) throw c.error;
 
       toast.success("Perfil atualizado com sucesso!");
@@ -219,15 +253,27 @@ function Perfil() {
   }
 
   if (isLoading || profileQ.isLoading) {
-    return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
   }
 
-  const initials = (f.nome || "EN").split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+  const initials = (f.nome || "EN")
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 pb-24">
       <div className="flex items-center gap-3">
-        <Link to="/entregador/perfil" className="rounded-full border border-border p-2 hover:bg-muted">
+        <Link
+          to="/entregador/perfil"
+          className="rounded-full border border-border p-2 hover:bg-muted"
+        >
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <h1 className="text-2xl font-black">Meus dados</h1>
@@ -237,12 +283,22 @@ function Perfil() {
       <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
         <div className="flex items-center gap-4">
           <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-xl font-black text-primary">
-            {f.foto_url ? <img src={f.foto_url} alt="" className="h-full w-full object-cover" /> : initials}
+            {f.foto_url ? (
+              <img src={f.foto_url} alt="" className="h-full w-full object-cover" />
+            ) : (
+              initials
+            )}
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold">Foto de perfil</p>
             <p className="text-xs text-muted-foreground">JPG ou PNG até 5MB</p>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleUpload}
+            />
             <Button
               size="sm"
               variant="outline"
@@ -250,7 +306,11 @@ function Perfil() {
               disabled={uploading}
               onClick={() => fileRef.current?.click()}
             >
-              {uploading ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Upload className="mr-2 h-3 w-3" />}
+              {uploading ? (
+                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+              ) : (
+                <Upload className="mr-2 h-3 w-3" />
+              )}
               {uploading ? "Enviando..." : "Trocar foto"}
             </Button>
           </div>
@@ -263,7 +323,12 @@ function Perfil() {
         <Field label="WhatsApp" value={f.whatsapp} onChange={(v) => setF({ ...f, whatsapp: v })} />
         <Field label="CPF" value={f.cpf} onChange={(v) => setF({ ...f, cpf: v })} />
         <Field label="RG" value={f.rg} onChange={(v) => setF({ ...f, rg: v })} />
-        <Field label="Data de nascimento" type="date" value={f.nascimento} onChange={(v) => setF({ ...f, nascimento: v })} />
+        <Field
+          label="Data de nascimento"
+          type="date"
+          value={f.nascimento}
+          onChange={(v) => setF({ ...f, nascimento: v })}
+        />
       </Section>
 
       <Section title="Endereço e cidade de atuação">
@@ -292,30 +357,79 @@ function Perfil() {
         </div>
         <Field label="Rua" value={f.rua} onChange={(v) => setF({ ...f, rua: v })} />
         <Field label="Número" value={f.numero} onChange={(v) => setF({ ...f, numero: v })} />
-        <Field label="Complemento" value={f.complemento} onChange={(v) => setF({ ...f, complemento: v })} />
+        <Field
+          label="Complemento"
+          value={f.complemento}
+          onChange={(v) => setF({ ...f, complemento: v })}
+        />
         <Field label="Bairro" value={f.bairro} onChange={(v) => setF({ ...f, bairro: v })} />
-        <Field label="Cidade (atuação)" value={f.cidade} onChange={(v) => setF({ ...f, cidade: v })} />
-        <Field label="Estado (UF)" value={f.estado} onChange={(v) => setF({ ...f, estado: v.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase() })} />
+        <Field
+          label="Cidade (atuação)"
+          value={f.cidade}
+          onChange={(v) => setF({ ...f, cidade: v })}
+        />
+        <Field
+          label="Estado (UF)"
+          value={f.estado}
+          onChange={(v) =>
+            setF({
+              ...f,
+              estado: v
+                .replace(/[^a-zA-Z]/g, "")
+                .slice(0, 2)
+                .toUpperCase(),
+            })
+          }
+        />
       </Section>
 
       <Section title="CNH">
         <Field label="Número" value={f.cnh} onChange={(v) => setF({ ...f, cnh: v })} />
-        <Field label="Categoria" value={f.cnh_categoria} onChange={(v) => setF({ ...f, cnh_categoria: v })} />
-        <Field label="Validade" type="date" value={f.cnh_validade} onChange={(v) => setF({ ...f, cnh_validade: v })} />
+        <Field
+          label="Categoria"
+          value={f.cnh_categoria}
+          onChange={(v) => setF({ ...f, cnh_categoria: v })}
+        />
+        <Field
+          label="Validade"
+          type="date"
+          value={f.cnh_validade}
+          onChange={(v) => setF({ ...f, cnh_validade: v })}
+        />
       </Section>
 
       <Section title="PIX e Banco">
         <Field label="Chave PIX" value={f.pix_key} onChange={(v) => setF({ ...f, pix_key: v })} />
         <Field label="Tipo PIX" value={f.pix_tipo} onChange={(v) => setF({ ...f, pix_tipo: v })} />
         <Field label="Banco" value={f.banco_nome} onChange={(v) => setF({ ...f, banco_nome: v })} />
-        <Field label="Agência" value={f.banco_agencia} onChange={(v) => setF({ ...f, banco_agencia: v })} />
-        <Field label="Conta" value={f.banco_conta} onChange={(v) => setF({ ...f, banco_conta: v })} />
-        <Field label="Titular" value={f.banco_titular} onChange={(v) => setF({ ...f, banco_titular: v })} />
+        <Field
+          label="Agência"
+          value={f.banco_agencia}
+          onChange={(v) => setF({ ...f, banco_agencia: v })}
+        />
+        <Field
+          label="Conta"
+          value={f.banco_conta}
+          onChange={(v) => setF({ ...f, banco_conta: v })}
+        />
+        <Field
+          label="Titular"
+          value={f.banco_titular}
+          onChange={(v) => setF({ ...f, banco_titular: v })}
+        />
       </Section>
 
       <Section title="Contato de emergência">
-        <Field label="Nome" value={f.contato_emergencia_nome} onChange={(v) => setF({ ...f, contato_emergencia_nome: v })} />
-        <Field label="Telefone" value={f.contato_emergencia_tel} onChange={(v) => setF({ ...f, contato_emergencia_tel: v })} />
+        <Field
+          label="Nome"
+          value={f.contato_emergencia_nome}
+          onChange={(v) => setF({ ...f, contato_emergencia_nome: v })}
+        />
+        <Field
+          label="Telefone"
+          value={f.contato_emergencia_tel}
+          onChange={(v) => setF({ ...f, contato_emergencia_tel: v })}
+        />
       </Section>
 
       <div className="sticky bottom-4 z-10">
@@ -336,6 +450,21 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     </section>
   );
 }
-function Field({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
-  return <div><Label className="mb-1 block text-xs">{label}</Label><Input type={type} value={value} onChange={(e) => onChange(e.target.value)} /></div>;
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+}) {
+  return (
+    <div>
+      <Label className="mb-1 block text-xs">{label}</Label>
+      <Input type={type} value={value} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
 }

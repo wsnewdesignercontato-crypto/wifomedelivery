@@ -28,7 +28,10 @@ export function CitySwitchCard({
           <MapPin className="h-5 w-5 text-primary-foreground" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">Você está em {cidade}{estado ? `, ${estado}` : ""}</p>
+          <p className="text-sm font-semibold">
+            Você está em {cidade}
+            {estado ? `, ${estado}` : ""}
+          </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {hasEstabs
               ? `Temos estabelecimentos por aqui! Quer ver o que tem em ${cidade}?`
@@ -43,12 +46,7 @@ export function CitySwitchCard({
               >
                 Sim, ver {cidade}
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 rounded-full"
-                onClick={onDismiss}
-              >
+              <Button size="sm" variant="outline" className="h-8 rounded-full" onClick={onDismiss}>
                 Não, continuar
               </Button>
             </div>

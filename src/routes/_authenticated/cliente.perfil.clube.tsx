@@ -18,7 +18,10 @@ function ClubePage() {
 
   return (
     <div className="space-y-5">
-      <Link to="/cliente/perfil" className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+      <Link
+        to="/cliente/perfil"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground"
+      >
         <ChevronLeft className="h-4 w-4" /> Voltar
       </Link>
 
@@ -50,11 +53,7 @@ function ClubePage() {
         })}
       </div>
 
-      <Button
-        className="w-full"
-        size="lg"
-        onClick={() => toast.info("Assinatura em breve!")}
-      >
+      <Button className="w-full" size="lg" onClick={() => toast.info("Assinatura em breve!")}>
         Assinar Clube WiFome
       </Button>
       <p className="text-center text-[11px] text-muted-foreground">

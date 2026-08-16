@@ -80,10 +80,18 @@ function AdminUsers() {
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Carregando…</td></tr>
+              <tr>
+                <td colSpan={4} className="p-6 text-center text-muted-foreground">
+                  Carregando…
+                </td>
+              </tr>
             )}
             {!isLoading && users.length === 0 && (
-              <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Nenhum usuário encontrado</td></tr>
+              <tr>
+                <td colSpan={4} className="p-6 text-center text-muted-foreground">
+                  Nenhum usuário encontrado
+                </td>
+              </tr>
             )}
             {users.map((u) => {
               const roles = u.roles as Role[];
@@ -92,11 +100,15 @@ function AdminUsers() {
                 <tr key={u.id} className="border-t">
                   <td className="p-3">
                     <div className="font-medium">{u.email}</div>
-                    {!u.confirmed && <div className="text-xs text-amber-600">E-mail não confirmado</div>}
+                    {!u.confirmed && (
+                      <div className="text-xs text-amber-600">E-mail não confirmado</div>
+                    )}
                   </td>
                   <td className="p-3">
                     <div className="flex flex-wrap gap-1">
-                      {roles.length === 0 && <span className="text-xs text-muted-foreground">nenhum</span>}
+                      {roles.length === 0 && (
+                        <span className="text-xs text-muted-foreground">nenhum</span>
+                      )}
                       {roles.map((r) => (
                         <Badge
                           key={r}

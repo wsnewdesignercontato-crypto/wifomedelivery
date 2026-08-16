@@ -3,18 +3,26 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const generateAdminInsights = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { question: string }) => data)
+  .validator((data: { question: string }) => data)
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await (context.supabase as unknown as { rpc: (n: string, p: unknown) => Promise<{ data: boolean }> }).rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    const { data: isAdmin } = await (
+      context.supabase as unknown as { rpc: (n: string, p: unknown) => Promise<{ data: boolean }> }
+    ).rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (!isAdmin) throw new Error("Forbidden");
 
     // Aggregate key metrics
     const since = new Date(Date.now() - 30 * 86400000).toISOString();
     const [orders, estabs, couriers, ledger] = await Promise.all([
-      context.supabase.from("orders").select("status,total_cents,created_at").gte("created_at", since),
+      context.supabase
+        .from("orders")
+        .select("status,total_cents,created_at")
+        .gte("created_at", since),
       context.supabase.from("establishments").select("id,nome,status,avaliacao"),
       context.supabase.from("courier_profiles").select("status"),
-      context.supabase.from("platform_ledger").select("platform_revenue_cents,gross_cents").gte("created_at", since),
+      context.supabase
+        .from("platform_ledger")
+        .select("platform_revenue_cents,gross_cents")
+        .gte("created_at", since),
     ]);
 
     const summary = {
@@ -37,8 +45,15 @@ export const generateAdminInsights = createServerFn({ method: "POST" })
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "Você é analista de operações do marketplace de delivery WiFome. Responda em português, direto e objetivo. Use os números fornecidos para gerar insights acionáveis (bullets curtos)." },
-          { role: "user", content: `Métricas atuais:\n${JSON.stringify(summary, null, 2)}\n\nPergunta do admin: ${data.question}` },
+          {
+            role: "system",
+            content:
+              "Você é analista de operações do marketplace de delivery WiFome. Responda em português, direto e objetivo. Use os números fornecidos para gerar insights acionáveis (bullets curtos).",
+          },
+          {
+            role: "user",
+            content: `Métricas atuais:\n${JSON.stringify(summary, null, 2)}\n\nPergunta do admin: ${data.question}`,
+          },
         ],
       }),
     });

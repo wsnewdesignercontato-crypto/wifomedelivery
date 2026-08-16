@@ -86,7 +86,6 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
     if (instalado) setVisible(false);
   }, [instalado]);
 
-
   // Aponta o manifest para o app do perfil atual
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -105,12 +104,16 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
     if (isStandalone()) {
       try {
         localStorage.setItem(instaladoKey(perfilAtivo), "1");
-      } catch {}
+      } catch {
+        // Ignore storage failures in private mode.
+      }
       return;
     }
     try {
       if (localStorage.getItem(instaladoKey(perfilAtivo)) === "1") return;
-    } catch {}
+    } catch {
+      // Ignore storage failures in private mode.
+    }
     if (recentlyDismissed()) return;
     // Nas telas de acesso já existe a seção "Baixe o aplicativo" — evita banner duplicado
     const path = window.location.pathname.toLowerCase();
@@ -139,7 +142,9 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
       try {
         localStorage.setItem(instaladoKey(perfilAtivo), "1");
         localStorage.removeItem(DISMISS_KEY);
-      } catch {}
+      } catch {
+        // Ignore storage failures in private mode.
+      }
     };
     window.addEventListener("appinstalled", onInstalled);
 
@@ -153,7 +158,9 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
     setVisible(false);
     try {
       localStorage.setItem(DISMISS_KEY, String(Date.now()));
-    } catch {}
+    } catch {
+      // Ignore storage failures in private mode.
+    }
   }
 
   async function install() {
@@ -197,16 +204,22 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
   if (!visible) return null;
 
   const themeClass =
-    perfilAtivo === "estabelecimento" ? "theme-estab" : perfilAtivo === "entregador" ? "theme-entregador" : "";
+    perfilAtivo === "estabelecimento"
+      ? "theme-estab"
+      : perfilAtivo === "entregador"
+        ? "theme-entregador"
+        : "";
 
   return (
     <>
       <div
         className={`${themeClass} pointer-events-none fixed inset-x-0 bottom-0 z-[60] mx-auto w-full max-w-lg px-3 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:pb-[calc(env(safe-area-inset-bottom)+0.75rem)] isolate`}
       >
-        <div ref={cardRef} className="pointer-events-auto rounded-2xl border border-primary/30 bg-card/95 p-4 shadow-xl backdrop-blur">
+        <div
+          ref={cardRef}
+          className="pointer-events-auto rounded-2xl border border-primary/30 bg-card/95 p-4 shadow-xl backdrop-blur"
+        >
           <div className="flex items-start gap-3">
-
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-brand">
               <Smartphone className="h-5 w-5" />
             </div>
@@ -241,10 +254,7 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
           onClick={() => setShowIOSHelp(false)}
         >
-          <div
-            className={themeClass}
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className={themeClass} onClick={(e) => e.stopPropagation()}>
             <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-xl">
               <div className="flex items-center gap-2">
                 <Smartphone className="h-5 w-5 text-primary" />
@@ -279,7 +289,8 @@ export function InstallAppPrompt({ perfil }: { perfil?: Perfil } = {}) {
                     3
                   </span>
                   <span>
-                    Toque em <span className="font-medium">Adicionar</span> — o {app.nome} fica na sua tela como um app.
+                    Toque em <span className="font-medium">Adicionar</span> — o {app.nome} fica na
+                    sua tela como um app.
                   </span>
                 </li>
               </ol>

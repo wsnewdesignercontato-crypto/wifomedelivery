@@ -70,9 +70,7 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
     const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
     link?.setAttribute("href", apps[perfilAtual].manifest);
 
-    let meta = document.querySelector<HTMLMetaElement>(
-      'meta[name="apple-mobile-web-app-title"]',
-    );
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="apple-mobile-web-app-title"]');
     if (!meta) {
       meta = document.createElement("meta");
       meta.setAttribute("name", "apple-mobile-web-app-title");

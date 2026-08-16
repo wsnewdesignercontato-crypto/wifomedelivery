@@ -1,18 +1,24 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Star, Clock, Heart, Plus, Minus, Loader2, Check, MessageSquare, ChevronDown } from "lucide-react";
+import {
+  ArrowLeft,
+  Star,
+  Clock,
+  Heart,
+  Plus,
+  Minus,
+  Loader2,
+  Check,
+  MessageSquare,
+  ChevronDown,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EstabReviewsPanel, ReviewForm } from "@/components/reviews";
 
 export const Route = createFileRoute("/_authenticated/cliente/estabelecimento/$id")({
@@ -96,7 +102,10 @@ function EstabelecimentoPage() {
   const [sel, setSel] = useState<Record<string, string[]>>({});
 
   const [openReview, setOpenReview] = useState(false);
-  const [pendingReview, setPendingReview] = useState<{ order_id: string; entregador_id: string | null } | null>(null);
+  const [pendingReview, setPendingReview] = useState<{
+    order_id: string;
+    entregador_id: string | null;
+  } | null>(null);
   const [reviewsBump, setReviewsBump] = useState(0);
 
   useEffect(() => {
@@ -110,15 +119,18 @@ function EstabelecimentoPage() {
         .eq("status", "delivered")
         .order("created_at", { ascending: false })
         .limit(10);
-      if (!orders?.length) { setPendingReview(null); return; }
+      if (!orders?.length) {
+        setPendingReview(null);
+        return;
+      }
       const ids = orders.map((o) => o.id);
-      const { data: revs } = await supabase
-        .from("reviews")
-        .select("order_id")
-        .in("order_id", ids);
+      const { data: revs } = await supabase.from("reviews").select("order_id").in("order_id", ids);
       const reviewed = new Set((revs ?? []).map((r) => r.order_id));
       const pending = orders.find((o) => !reviewed.has(o.id));
-      if (!pending) { setPendingReview(null); return; }
+      if (!pending) {
+        setPendingReview(null);
+        return;
+      }
       const { data: del } = await supabase
         .from("deliveries")
         .select("entregador_id")
@@ -128,16 +140,36 @@ function EstabelecimentoPage() {
     })();
   }, [user?.id, id, reviewsBump]);
 
-
   useEffect(() => {
     (async () => {
       setLoading(true);
       const [e, c, p, f, rc] = await Promise.all([
         supabase.from("establishments").select("*").eq("id", id).maybeSingle(),
-        supabase.from("menu_categories").select("id,nome,ordem").eq("establishment_id", id).eq("ativo", true).order("ordem"),
-        supabase.from("products").select("id,nome,descricao,foto_url,preco_cents,preco_promo_cents,disponivel,menu_category_id,destaque").eq("establishment_id", id).eq("disponivel", true).order("destaque", { ascending: false }).order("ordem"),
-        supabase.from("favorites").select("id").eq("user_id", user.id).eq("establishment_id", id).maybeSingle(),
-        supabase.from("public_reviews").select("id", { count: "exact", head: true }).eq("establishment_id", id),
+        supabase
+          .from("menu_categories")
+          .select("id,nome,ordem")
+          .eq("establishment_id", id)
+          .eq("ativo", true)
+          .order("ordem"),
+        supabase
+          .from("products")
+          .select(
+            "id,nome,descricao,foto_url,preco_cents,preco_promo_cents,disponivel,menu_category_id,destaque",
+          )
+          .eq("establishment_id", id)
+          .eq("disponivel", true)
+          .order("destaque", { ascending: false })
+          .order("ordem"),
+        supabase
+          .from("favorites")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("establishment_id", id)
+          .maybeSingle(),
+        supabase
+          .from("public_reviews")
+          .select("id", { count: "exact", head: true })
+          .eq("establishment_id", id),
       ]);
       setEstab(e.data as Estab | null);
       setCats((c.data ?? []) as MenuCat[]);
@@ -153,7 +185,9 @@ function EstabelecimentoPage() {
       await supabase.from("favorites").delete().eq("user_id", user.id).eq("establishment_id", id);
       setFav(false);
     } else {
-      const { error } = await supabase.from("favorites").insert({ user_id: user.id, establishment_id: id });
+      const { error } = await supabase
+        .from("favorites")
+        .insert({ user_id: user.id, establishment_id: id });
       if (error) toast.error("Falha ao favoritar");
       else setFav(true);
     }
@@ -169,15 +203,15 @@ function EstabelecimentoPage() {
     // Busca grupos vinculados ao produto + seus addons ativos
     const { data: pag } = await supabase
       .from("product_addon_groups")
-      .select("ordem,addon_group_id,addon_groups(id,nome,descricao,minimo,maximo,obrigatorio,selecao_multipla,ordem,ativo)")
+      .select(
+        "ordem,addon_group_id,addon_groups(id,nome,descricao,minimo,maximo,obrigatorio,selecao_multipla,ordem,ativo)",
+      )
       .eq("product_id", p.id)
       .order("ordem");
     type Row = {
       ordem: number;
       addon_group_id: string;
-      addon_groups:
-        | (Omit<AddonGroup, "addons"> & { ativo: boolean })
-        | null;
+      addon_groups: (Omit<AddonGroup, "addons"> & { ativo: boolean }) | null;
     };
     const rows = ((pag ?? []) as unknown as Row[]).filter(
       (r) => r.addon_groups && r.addon_groups.ativo,
@@ -246,7 +280,14 @@ function EstabelecimentoPage() {
       const ids = sel[g.id] ?? [];
       for (const aid of ids) {
         const a = g.addons.find((x) => x.id === aid);
-        if (a) out.push({ id: a.id, nome: a.nome, preco_extra_cents: a.preco_extra_cents, group_id: g.id, group_nome: g.nome });
+        if (a)
+          out.push({
+            id: a.id,
+            nome: a.nome,
+            preco_extra_cents: a.preco_extra_cents,
+            group_id: g.id,
+            group_nome: g.nome,
+          });
       }
     }
     return out;
@@ -268,7 +309,10 @@ function EstabelecimentoPage() {
 
   async function adicionar() {
     if (!openProd || !estab) return;
-    if (invalid) { toast.error(invalid); return; }
+    if (invalid) {
+      toast.error(invalid);
+      return;
+    }
     setSaving(true);
     // Bloqueia mistura de lojas
     const { data: existing } = await supabase
@@ -278,7 +322,10 @@ function EstabelecimentoPage() {
       .limit(1);
     if (existing && existing[0] && existing[0].establishment_id !== estab.id) {
       const ok = confirm("Você já tem itens de outra loja no carrinho. Substituir?");
-      if (!ok) { setSaving(false); return; }
+      if (!ok) {
+        setSaving(false);
+        return;
+      }
       await supabase.from("cart_items").delete().eq("user_id", user.id);
     }
     // Sempre insere linha nova quando há opcionais ou observações
@@ -293,8 +340,12 @@ function EstabelecimentoPage() {
         .eq("product_id", openProd.id)
         .maybeSingle();
       if (same && Array.isArray(same.addons) && (same.addons as unknown[]).length === 0) {
-        await supabase.from("cart_items").update({ quantidade: same.quantidade + qty }).eq("id", same.id);
-        setSaving(false); setOpenProd(null);
+        await supabase
+          .from("cart_items")
+          .update({ quantidade: same.quantidade + qty })
+          .eq("id", same.id);
+        setSaving(false);
+        setOpenProd(null);
         toast.success(`${openProd.nome} no carrinho`);
         return;
       }
@@ -315,14 +366,24 @@ function EstabelecimentoPage() {
   }
 
   if (loading) {
-    return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
   }
   if (!estab) {
-    return <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">Estabelecimento não encontrado.</div>;
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">
+        Estabelecimento não encontrado.
+      </div>
+    );
   }
 
   const q = busca.trim().toLowerCase();
-  const visiveis = prods.filter((p) => !q || p.nome.toLowerCase().includes(q) || (p.descricao ?? "").toLowerCase().includes(q));
+  const visiveis = prods.filter(
+    (p) => !q || p.nome.toLowerCase().includes(q) || (p.descricao ?? "").toLowerCase().includes(q),
+  );
   const semCat = visiveis.filter((p) => !p.menu_category_id);
 
   return (
@@ -336,10 +397,22 @@ function EstabelecimentoPage() {
         )}
         {/* Gradient overlay to make logo readable */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background via-background/60 to-transparent" />
-        <Button size="icon" variant="secondary" className="absolute left-3 top-3 rounded-full shadow-lg backdrop-blur" onClick={() => navigate({ to: "/cliente" })} aria-label="Voltar">
+        <Button
+          size="icon"
+          variant="secondary"
+          className="absolute left-3 top-3 rounded-full shadow-lg backdrop-blur"
+          onClick={() => navigate({ to: "/cliente" })}
+          aria-label="Voltar"
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <Button size="icon" variant="secondary" className="absolute right-3 top-3 rounded-full shadow-lg backdrop-blur" onClick={toggleFav} aria-label="Favoritar">
+        <Button
+          size="icon"
+          variant="secondary"
+          className="absolute right-3 top-3 rounded-full shadow-lg backdrop-blur"
+          onClick={toggleFav}
+          aria-label="Favoritar"
+        >
           <Heart className={`h-4 w-4 ${fav ? "fill-primary text-primary" : ""}`} />
         </Button>
       </div>
@@ -365,7 +438,9 @@ function EstabelecimentoPage() {
               Aberto agora
             </span>
           ) : (
-            <Badge variant="secondary" className="text-[11px]">Fechado agora</Badge>
+            <Badge variant="secondary" className="text-[11px]">
+              Fechado agora
+            </Badge>
           )}
         </div>
       </div>
@@ -377,21 +452,38 @@ function EstabelecimentoPage() {
           {estab.avaliacao != null && (
             <span className="flex items-center gap-1">
               <Star className="h-3 w-3 fill-primary text-primary" />
-              <span className="font-semibold text-foreground">{Number(estab.avaliacao).toFixed(1)}</span>
+              <span className="font-semibold text-foreground">
+                {Number(estab.avaliacao).toFixed(1)}
+              </span>
               <span className="text-muted-foreground">({reviewCount})</span>
             </span>
           )}
-          {estab.tempo_medio_min && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{estab.tempo_medio_min} min</span>}
-          <span>Entrega {estab.taxa_entrega_cents === 0 ? "grátis" : fmt(estab.taxa_entrega_cents)}</span>
+          {estab.tempo_medio_min && (
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {estab.tempo_medio_min} min
+            </span>
+          )}
+          <span>
+            Entrega {estab.taxa_entrega_cents === 0 ? "grátis" : fmt(estab.taxa_entrega_cents)}
+          </span>
           {estab.pedido_minimo_cents > 0 && <span>Mín. {fmt(estab.pedido_minimo_cents)}</span>}
         </div>
       </div>
 
-      <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar no cardápio" />
+      <Input
+        value={busca}
+        onChange={(e) => setBusca(e.target.value)}
+        placeholder="Buscar no cardápio"
+      />
 
       {(() => {
         const grupos = cats
-          .map((c) => ({ id: c.id, nome: c.nome, itens: visiveis.filter((p) => p.menu_category_id === c.id) }))
+          .map((c) => ({
+            id: c.id,
+            nome: c.nome,
+            itens: visiveis.filter((p) => p.menu_category_id === c.id),
+          }))
           .filter((g) => g.itens.length > 0);
         if (semCat.length > 0) grupos.push({ id: "__outros__", nome: "Outros", itens: semCat });
         const forceOpen = q.length > 0;
@@ -404,16 +496,29 @@ function EstabelecimentoPage() {
               const rest = g.itens.slice(1);
               const hasMore = rest.length > 0;
               return (
-                <section key={g.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+                <section
+                  key={g.id}
+                  className="overflow-hidden rounded-2xl border border-border bg-card shadow-card"
+                >
                   <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
                     <div className="flex items-center gap-2 min-w-0">
                       <h2 className="truncate text-base font-bold">{g.nome}</h2>
-                      <Badge variant={q ? "default" : "secondary"} className="shrink-0 text-[10px]">{q ? `${g.itens.length} encontrado${g.itens.length > 1 ? "s" : ""}` : g.itens.length}</Badge>
+                      <Badge variant={q ? "default" : "secondary"} className="shrink-0 text-[10px]">
+                        {q
+                          ? `${g.itens.length} encontrado${g.itens.length > 1 ? "s" : ""}`
+                          : g.itens.length}
+                      </Badge>
                     </div>
                   </div>
                   <div className="grid gap-2 border-t border-border/60 bg-background/40 p-3">
-                    {first && <ProdRow key={first.id} p={first} q={q} onClick={() => abrirProd(first)} />}
-                    {hasMore && isOpen && rest.map((p) => <ProdRow key={p.id} p={p} q={q} onClick={() => abrirProd(p)} />)}
+                    {first && (
+                      <ProdRow key={first.id} p={first} q={q} onClick={() => abrirProd(first)} />
+                    )}
+                    {hasMore &&
+                      isOpen &&
+                      rest.map((p) => (
+                        <ProdRow key={p.id} p={p} q={q} onClick={() => abrirProd(p)} />
+                      ))}
                     {hasMore && !forceOpen && (
                       <button
                         type="button"
@@ -422,7 +527,9 @@ function EstabelecimentoPage() {
                         aria-expanded={isOpen}
                       >
                         {isOpen ? "Recolher opções" : `Abrir mais opções (${rest.length})`}
-                        <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                        <ChevronDown
+                          className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                        />
                       </button>
                     )}
                   </div>
@@ -481,13 +588,16 @@ function EstabelecimentoPage() {
         </DialogContent>
       </Dialog>
 
-
       <Dialog open={!!openProd} onOpenChange={(o) => !o && setOpenProd(null)}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0">
           {openProd && (
             <div className="flex flex-col">
               {openProd.foto_url && (
-                <img src={openProd.foto_url} alt={openProd.nome} className="h-48 w-full object-cover" />
+                <img
+                  src={openProd.foto_url}
+                  alt={openProd.nome}
+                  className="h-48 w-full object-cover"
+                />
               )}
               <div className="space-y-4 p-5 pb-32">
                 <DialogHeader>
@@ -499,7 +609,9 @@ function EstabelecimentoPage() {
                 <div className="text-lg font-bold text-primary">
                   {fmt(precoBase)}
                   {openProd.preco_promo_cents != null && (
-                    <span className="ml-2 text-sm font-normal text-muted-foreground line-through">{fmt(openProd.preco_cents)}</span>
+                    <span className="ml-2 text-sm font-normal text-muted-foreground line-through">
+                      {fmt(openProd.preco_cents)}
+                    </span>
                   )}
                 </div>
 
@@ -509,30 +621,37 @@ function EstabelecimentoPage() {
                   </div>
                 )}
 
-                {!loadingGroups && groups.map((g) => {
-                  const cur = sel[g.id] ?? [];
-                  return (
-                    <AddonGroupBlock
-                      key={g.id}
-                      g={g}
-                      cur={cur}
-                      toggleAddon={toggleAddon}
-                    />
-                  );
-                })}
+                {!loadingGroups &&
+                  groups.map((g) => {
+                    const cur = sel[g.id] ?? [];
+                    return <AddonGroupBlock key={g.id} g={g} cur={cur} toggleAddon={toggleAddon} />;
+                  })}
 
                 <div>
                   <label className="text-xs font-medium">Alguma observação?</label>
-                  <Textarea value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Ex: sem cebola, ponto da carne, troco para..." maxLength={200} />
+                  <Textarea
+                    value={obs}
+                    onChange={(e) => setObs(e.target.value)}
+                    placeholder="Ex: sem cebola, ponto da carne, troco para..."
+                    maxLength={200}
+                  />
                 </div>
               </div>
 
               {/* Rodapé fixo */}
               <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-border bg-background p-4">
                 <div className="flex items-center gap-2">
-                  <Button size="icon" variant="outline" onClick={() => setQty(Math.max(1, qty - 1))}><Minus className="h-4 w-4" /></Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => setQty(Math.max(1, qty - 1))}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
                   <span className="w-6 text-center font-bold">{qty}</span>
-                  <Button size="icon" variant="outline" onClick={() => setQty(qty + 1)}><Plus className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="outline" onClick={() => setQty(qty + 1)}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 </div>
                 <Button
                   className="flex-1"
@@ -550,7 +669,11 @@ function EstabelecimentoPage() {
                 </Button>
               </div>
 
-              {!estab.is_open && <p className="px-4 pb-3 text-xs text-destructive">Loja fechada. Não é possível adicionar agora.</p>}
+              {!estab.is_open && (
+                <p className="px-4 pb-3 text-xs text-destructive">
+                  Loja fechada. Não é possível adicionar agora.
+                </p>
+              )}
               {invalid && estab.is_open && (
                 <p className="px-4 pb-3 text-xs text-muted-foreground">{invalid}</p>
               )}
@@ -570,31 +693,50 @@ function Highlight({ text, q }: { text: string; q: string }) {
     <>
       {parts.map((part, i) =>
         part.toLowerCase() === q.toLowerCase() ? (
-          <mark key={i} className="rounded bg-primary/25 px-0.5 text-foreground">{part}</mark>
+          <mark key={i} className="rounded bg-primary/25 px-0.5 text-foreground">
+            {part}
+          </mark>
         ) : (
           <span key={i}>{part}</span>
-        )
+        ),
       )}
     </>
   );
 }
 
 function ProdRow({ p, onClick, q = "" }: { p: Produto; onClick: () => void; q?: string }) {
-  const fmt2 = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const fmt2 = (c: number) =>
+    (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   return (
-    <button onClick={onClick} className="flex gap-3 rounded-2xl border border-border bg-card p-3 text-left transition hover:border-primary/40">
+    <button
+      onClick={onClick}
+      className="flex gap-3 rounded-2xl border border-border bg-card p-3 text-left transition hover:border-primary/40"
+    >
       <div className="flex-1">
-        <p className="font-semibold text-foreground"><Highlight text={p.nome} q={q} /></p>
-        {p.descricao && <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground"><Highlight text={p.descricao} q={q} /></p>}
+        <p className="font-semibold text-foreground">
+          <Highlight text={p.nome} q={q} />
+        </p>
+        {p.descricao && (
+          <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+            <Highlight text={p.descricao} q={q} />
+          </p>
+        )}
         <p className="mt-1 text-sm font-bold text-primary">
           {fmt2(p.preco_promo_cents ?? p.preco_cents)}
           {p.preco_promo_cents != null && (
-            <span className="ml-2 text-xs font-normal text-muted-foreground line-through">{fmt2(p.preco_cents)}</span>
+            <span className="ml-2 text-xs font-normal text-muted-foreground line-through">
+              {fmt2(p.preco_cents)}
+            </span>
           )}
         </p>
       </div>
       {p.foto_url ? (
-        <img src={p.foto_url} alt="" className="h-20 w-20 shrink-0 rounded-lg object-cover" loading="lazy" />
+        <img
+          src={p.foto_url}
+          alt=""
+          className="h-20 w-20 shrink-0 rounded-lg object-cover"
+          loading="lazy"
+        />
       ) : (
         <div className="h-20 w-20 shrink-0 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5" />
       )}
@@ -617,9 +759,7 @@ function AddonGroupBlock({
     .map((id) => g.addons.find((a) => a.id === id)?.nome)
     .filter(Boolean)
     .join(", ");
-  const okState = g.obrigatorio
-    ? cur.length >= Math.max(1, g.minimo)
-    : cur.length > 0;
+  const okState = g.obrigatorio ? cur.length >= Math.max(1, g.minimo) : cur.length > 0;
 
   return (
     <div className="overflow-hidden rounded-xl border border-border">

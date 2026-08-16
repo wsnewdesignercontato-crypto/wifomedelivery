@@ -1,7 +1,7 @@
 /* WiFome — service worker de mensagens (push).
    Não faz cache de app shell: serve apenas para notificações em segundo plano. */
 
-const ICON = "/__l5e/assets-v1/04de9be3-cb25-45df-bc8a-a3ea0c6bc931/wifome-logo.png";
+const ICON = "/wifome-logo.svg";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));

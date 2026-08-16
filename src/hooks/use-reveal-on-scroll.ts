@@ -64,7 +64,9 @@ export function useRevealOnScroll(selector = ".reveal") {
 
       // 3) Textos menores
       const smalls = Array.from(
-        document.querySelectorAll<HTMLElement>("h3, h4, section p, section li, section a.reveal-text"),
+        document.querySelectorAll<HTMLElement>(
+          "h3, h4, section p, section li, section a.reveal-text",
+        ),
       ).filter((el) => {
         if (el.dataset.revealBound) return false;
         if (el.closest("[data-no-reveal]")) return false;
@@ -136,12 +138,13 @@ export function useRevealOnScroll(selector = ".reveal") {
 
     const schedule = (mutations?: MutationRecord[]) => {
       if (running || scheduled) return;
-      
+
       // Se forem mutações, verifica se são apenas mudanças de visibilidade feitas por nós
       if (mutations && mutations.length > 0) {
-        const isSelf = mutations.every(m => 
-          m.type === 'attributes' && 
-          (m.attributeName === 'class' || m.attributeName?.startsWith('data-reveal'))
+        const isSelf = mutations.every(
+          (m) =>
+            m.type === "attributes" &&
+            (m.attributeName === "class" || m.attributeName?.startsWith("data-reveal")),
         );
         if (isSelf) return;
       }

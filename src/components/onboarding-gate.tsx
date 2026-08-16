@@ -99,12 +99,46 @@ export function OnboardingGate({
     // Realtime: qualquer alteração nas tabelas de cadastro do usuário re-verifica na hora
     const channel = supabase
       .channel(`onboarding-${role}-${userId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `id=eq.${userId}` }, () => check())
-      .on("postgres_changes", { event: "*", schema: "public", table: "addresses", filter: `user_id=eq.${userId}` }, () => check())
-      .on("postgres_changes", { event: "*", schema: "public", table: "courier_profiles", filter: `user_id=eq.${userId}` }, () => check())
-      .on("postgres_changes", { event: "*", schema: "public", table: "courier_vehicles", filter: `courier_id=eq.${userId}` }, () => check())
-      .on("postgres_changes", { event: "*", schema: "public", table: "courier_documents", filter: `courier_id=eq.${userId}` }, () => check())
-      .on("postgres_changes", { event: "*", schema: "public", table: "establishments", filter: `owner_id=eq.${userId}` }, () => check())
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "profiles", filter: `id=eq.${userId}` },
+        () => check(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "addresses", filter: `user_id=eq.${userId}` },
+        () => check(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "courier_profiles", filter: `user_id=eq.${userId}` },
+        () => check(),
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "courier_vehicles",
+          filter: `courier_id=eq.${userId}`,
+        },
+        () => check(),
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "courier_documents",
+          filter: `courier_id=eq.${userId}`,
+        },
+        () => check(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "establishments", filter: `owner_id=eq.${userId}` },
+        () => check(),
+      )
       .subscribe();
 
     return () => {
@@ -129,7 +163,11 @@ export function OnboardingGate({
     return (
       <WifomeLoader
         perfil={
-          role === "estabelecimento" ? "estabelecimento" : role === "entregador" ? "entregador" : "cliente"
+          role === "estabelecimento"
+            ? "estabelecimento"
+            : role === "entregador"
+              ? "entregador"
+              : "cliente"
         }
       />
     );
@@ -215,7 +253,7 @@ export function OnboardingGate({
         <Button
           size="lg"
           className="w-full gap-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 hover:from-primary hover:to-primary"
-          onClick={() => navigate({ to: state.redirect as any })}
+          onClick={() => navigate({ to: state.redirect as never })}
         >
           {ROLE_CTAS[role]} <ArrowRight className="h-4 w-4" />
         </Button>

@@ -88,7 +88,12 @@ export function OrderHistory({ orderId }: { orderId: string }) {
       .channel(`order-history-${orderId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "order_status_history", filter: `order_id=eq.${orderId}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "order_status_history",
+          filter: `order_id=eq.${orderId}`,
+        },
         (payload) => setRows((prev) => [...prev, payload.new as HistoryRow]),
       )
       .on(
@@ -123,7 +128,9 @@ export function OrderHistory({ orderId }: { orderId: string }) {
             <p className="font-semibold">Pedido cancelado</p>
           </div>
           {order.cancelled_at && (
-            <p className="mt-1 text-xs text-muted-foreground">Em {formatDate(order.cancelled_at)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Em {formatDate(order.cancelled_at)}
+            </p>
           )}
           {order.cancellation_reason && (
             <p className="mt-2 text-sm text-foreground">
@@ -131,7 +138,9 @@ export function OrderHistory({ orderId }: { orderId: string }) {
             </p>
           )}
           {order.cancelled_role && (
-            <p className="mt-1 text-xs text-muted-foreground">Cancelado por: {order.cancelled_role}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Cancelado por: {order.cancelled_role}
+            </p>
           )}
         </div>
       )}
@@ -142,16 +151,23 @@ export function OrderHistory({ orderId }: { orderId: string }) {
             {order.refund_status === "completed" ? (
               <CheckCircle2 className="h-4 w-4" />
             ) : (
-              <RefreshCw className={`h-4 w-4 ${order.refund_status === "processing" ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${order.refund_status === "processing" ? "animate-spin" : ""}`}
+              />
             )}
-            <p className="font-semibold">{REFUND_LABEL[order.refund_status] ?? order.refund_status}</p>
+            <p className="font-semibold">
+              {REFUND_LABEL[order.refund_status] ?? order.refund_status}
+            </p>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
             <Badge variant="secondary">
-              Valor: {formatCents(order.refund_amount_cents ?? 0)} de {formatCents(order.total_cents)}
+              Valor: {formatCents(order.refund_amount_cents ?? 0)} de{" "}
+              {formatCents(order.total_cents)}
             </Badge>
             {order.refunded_at && (
-              <span className="text-xs text-muted-foreground">Concluído em {formatDate(order.refunded_at)}</span>
+              <span className="text-xs text-muted-foreground">
+                Concluído em {formatDate(order.refunded_at)}
+              </span>
             )}
           </div>
         </div>
@@ -168,22 +184,29 @@ export function OrderHistory({ orderId }: { orderId: string }) {
             {rows.map((r) => {
               const isDelivered = r.to_status === "delivered";
               return (
-              <li key={r.id} className="relative">
-                <span className={`absolute -left-[27px] top-1.5 h-3 w-3 rounded-full ring-4 ring-background ${isDelivered ? "bg-success" : "bg-primary"}`} />
-                <p className={`text-sm font-medium ${isDelivered ? "text-success" : "text-foreground"}`}>
-                  {STATUS_LABEL[r.to_status] ?? r.to_status}
-                  {r.from_status && (
-                    <span className="ml-1 text-xs font-normal text-muted-foreground">
-                      (de {STATUS_LABEL[r.from_status] ?? r.from_status})
-                    </span>
+                <li key={r.id} className="relative">
+                  <span
+                    className={`absolute -left-[27px] top-1.5 h-3 w-3 rounded-full ring-4 ring-background ${isDelivered ? "bg-success" : "bg-primary"}`}
+                  />
+                  <p
+                    className={`text-sm font-medium ${isDelivered ? "text-success" : "text-foreground"}`}
+                  >
+                    {STATUS_LABEL[r.to_status] ?? r.to_status}
+                    {r.from_status && (
+                      <span className="ml-1 text-xs font-normal text-muted-foreground">
+                        (de {STATUS_LABEL[r.from_status] ?? r.from_status})
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{formatDate(r.created_at)}</p>
+                  {r.reason && (
+                    <p className="mt-1 rounded-md bg-muted px-2 py-1 text-xs text-foreground">
+                      Motivo: {r.reason}
+                    </p>
                   )}
-                </p>
-                <p className="text-xs text-muted-foreground">{formatDate(r.created_at)}</p>
-                {r.reason && (
-                  <p className="mt-1 rounded-md bg-muted px-2 py-1 text-xs text-foreground">Motivo: {r.reason}</p>
-                )}
-              </li>
-            );})}
+                </li>
+              );
+            })}
           </ol>
         )}
       </div>

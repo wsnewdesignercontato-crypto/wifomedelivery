@@ -32,19 +32,34 @@ function concat(...parts: Uint8Array[]): Uint8Array {
 }
 
 async function hmacSha256(key: Uint8Array, data: Uint8Array): Promise<Uint8Array> {
-  const k = await crypto.subtle.importKey("raw", key as BufferSource, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const k = await crypto.subtle.importKey(
+    "raw",
+    key as BufferSource,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
   return new Uint8Array(await crypto.subtle.sign("HMAC", k, data as BufferSource));
 }
 
 /** HKDF (extract + expand de um único bloco), suficiente para Web Push. */
-async function hkdf(salt: Uint8Array, ikm: Uint8Array, info: Uint8Array, length: number): Promise<Uint8Array> {
+async function hkdf(
+  salt: Uint8Array,
+  ikm: Uint8Array,
+  info: Uint8Array,
+  length: number,
+): Promise<Uint8Array> {
   const prk = await hmacSha256(salt, ikm);
   const okm = await hmacSha256(prk, concat(info, Uint8Array.of(1)));
   return okm.slice(0, length);
 }
 
 /** Criptografa o payload no formato aes128gcm para a inscrição informada. */
-async function encryptPayload(payload: string, p256dh: string, authSecret: string): Promise<Uint8Array> {
+async function encryptPayload(
+  payload: string,
+  p256dh: string,
+  authSecret: string,
+): Promise<Uint8Array> {
   const uaPublic = b64urlToBytes(p256dh);
   const auth = b64urlToBytes(authSecret);
 
@@ -71,10 +86,16 @@ async function encryptPayload(payload: string, p256dh: string, authSecret: strin
   const cek = await hkdf(salt, ikm, encoder.encode("Content-Encoding: aes128gcm\0"), 16);
   const nonce = await hkdf(salt, ikm, encoder.encode("Content-Encoding: nonce\0"), 12);
 
-  const aesKey = await crypto.subtle.importKey("raw", cek as BufferSource, "AES-GCM", false, ["encrypt"]);
+  const aesKey = await crypto.subtle.importKey("raw", cek as BufferSource, "AES-GCM", false, [
+    "encrypt",
+  ]);
   const plaintext = concat(encoder.encode(payload), Uint8Array.of(2)); // delimitador de registro
   const ciphertext = new Uint8Array(
-    await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce as BufferSource }, aesKey, plaintext as BufferSource),
+    await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: nonce as BufferSource },
+      aesKey,
+      plaintext as BufferSource,
+    ),
   );
 
   const recordSize = new Uint8Array(4);

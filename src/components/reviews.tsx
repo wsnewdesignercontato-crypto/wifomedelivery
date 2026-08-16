@@ -34,19 +34,13 @@ export function StarRating({
             disabled={readOnly}
             onClick={() => onChange?.(n)}
             className={
-              readOnly
-                ? "cursor-default"
-                : "cursor-pointer transition-transform hover:scale-110"
+              readOnly ? "cursor-default" : "cursor-pointer transition-transform hover:scale-110"
             }
             aria-label={`${n} estrela${n > 1 ? "s" : ""}`}
           >
             <Star
               style={{ width: size, height: size }}
-              className={
-                filled
-                  ? "fill-primary text-primary"
-                  : "text-muted-foreground/40"
-              }
+              className={filled ? "fill-primary text-primary" : "text-muted-foreground/40"}
             />
           </button>
         );
@@ -117,7 +111,11 @@ export function ReviewForm({
     });
     setEnviando(false);
     if (error) {
-      toast.error(error.message.includes("duplicate") ? "Você já avaliou este pedido" : "Não foi possível enviar a avaliação");
+      toast.error(
+        error.message.includes("duplicate")
+          ? "Você já avaliou este pedido"
+          : "Não foi possível enviar a avaliação",
+      );
       return;
     }
     toast.success("Obrigado pela sua avaliação!");
@@ -148,10 +146,7 @@ export function ReviewForm({
       />
 
       <label className="flex items-center gap-2 text-sm">
-        <Checkbox
-          checked={problema}
-          onCheckedChange={(v) => setProblema(v === true)}
-        />
+        <Checkbox checked={problema} onCheckedChange={(v) => setProblema(v === true)} />
         <span className="flex items-center gap-1">
           <MessageSquareWarning className="h-4 w-4 text-destructive" />
           Relatar um problema
@@ -204,13 +199,18 @@ export function EstabReviewsPanel({
   useEffect(() => {
     let active = true;
     (async () => {
-      const { data } = await (owner
-        ? supabase
-            .from("reviews")
-            .select("id,order_id,rating_loja,rating_entregador,comentario,problema_reportado,problema_descricao,created_at")
-        : supabase
-            .from("public_reviews")
-            .select("id,order_id,rating_loja,rating_entregador,comentario,problema_reportado,created_at")
+      const { data } = await (
+        owner
+          ? supabase
+              .from("reviews")
+              .select(
+                "id,order_id,rating_loja,rating_entregador,comentario,problema_reportado,problema_descricao,created_at",
+              )
+          : supabase
+              .from("public_reviews")
+              .select(
+                "id,order_id,rating_loja,rating_entregador,comentario,problema_reportado,created_at",
+              )
       )
         .eq("establishment_id", establishmentId)
         .order("created_at", { ascending: false })
@@ -244,9 +244,7 @@ export function EstabReviewsPanel({
   }, [establishmentId, owner]);
 
   const media =
-    reviews.length === 0
-      ? 0
-      : reviews.reduce((s, r) => s + r.rating_loja, 0) / reviews.length;
+    reviews.length === 0 ? 0 : reviews.reduce((s, r) => s + r.rating_loja, 0) / reviews.length;
   const problemas = reviews.filter((r) => r.problema_reportado).length;
 
   return (
@@ -255,9 +253,7 @@ export function EstabReviewsPanel({
         <div className="rounded-2xl border border-border bg-card p-4">
           <p className="text-xs text-muted-foreground">Média</p>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-foreground">
-              {media.toFixed(1)}
-            </span>
+            <span className="text-3xl font-black text-foreground">{media.toFixed(1)}</span>
             <Star className="h-5 w-5 fill-primary text-primary" />
           </div>
         </div>
@@ -282,19 +278,14 @@ export function EstabReviewsPanel({
       ) : (
         <div className="space-y-3">
           {reviews.map((r) => (
-            <div
-              key={r.id}
-              className="rounded-2xl border border-border bg-card p-4 shadow-card"
-            >
+            <div key={r.id} className="rounded-2xl border border-border bg-card p-4 shadow-card">
               <div className="flex items-center justify-between gap-3">
                 <StarRating value={r.rating_loja} readOnly size={16} />
                 <span className="text-xs text-muted-foreground">
                   {new Date(r.created_at).toLocaleString("pt-BR")}
                 </span>
               </div>
-              {r.comentario && (
-                <p className="mt-2 text-sm text-foreground">{r.comentario}</p>
-              )}
+              {r.comentario && <p className="mt-2 text-sm text-foreground">{r.comentario}</p>}
               {r.problema_reportado && (
                 <div className="mt-3 rounded-lg border border-destructive/40 bg-destructive/5 p-3">
                   <Badge variant="destructive" className="mb-1">

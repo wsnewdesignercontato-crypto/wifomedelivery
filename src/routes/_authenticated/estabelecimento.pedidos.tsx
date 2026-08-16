@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { OrderHistory } from "@/components/order-history";
+import { dispatchOrderDelivery } from "@/lib/delivery-dispatch";
 import {
   Bike,
   Clock3,
@@ -187,18 +188,44 @@ function PedidosPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estab?.id, estab?.printer_enabled, estab?.printer_auto]);
 
-  async function mudarStatus(id: string, novo: "accepted" | "preparing" | "ready") {
-    const { error } = await supabase.from("orders").update({ status: novo }).eq("id", id);
+  async function mudarStatus(order: Order, novo: "accepted" | "preparing" | "ready") {
+    const { error } = await supabase.from("orders").update({ status: novo }).eq("id", order.id);
     if (error) return toast.error("Falha ao atualizar");
-    if (novo === "ready" && estab) {
-      await supabase.from("deliveries").insert({
-        order_id: id,
-        status: "broadcasting",
-        valor_entrega_cents: estab.taxa_entrega_cents,
+    if (novo !== "ready") return toast.success("Status atualizado");
+    if (order.tipo_entrega === "pickup") return toast.success("Pedido pronto para retirada");
+    if (!estab) return toast.success("Pedido pronto");
+
+    try {
+      const result = await dispatchOrderDelivery({
+        orderId: order.id,
+        feeCents: estab.taxa_entrega_cents,
       });
-      await supabase.from("orders").update({ status: "waiting_courier" }).eq("id", id);
+      if (result === "exists") return toast.info("Ja existe uma corrida ativa para este pedido");
       toast.success("Corrida enviada aos entregadores");
-    } else toast.success("Status atualizado");
+    } catch (dispatchError) {
+      const message =
+        dispatchError instanceof Error ? dispatchError.message : "Falha ao chamar entregador";
+      toast.error(message);
+    }
+  }
+
+  async function confirmarRetirada(order: Order) {
+    const codigo = (prompt("Codigo de retirada de 4 digitos:") ?? "").trim();
+    if (!codigo) return;
+
+    const { error } = await supabase.rpc("confirm_pickup_order", {
+      p_order_id: order.id,
+      p_codigo: codigo,
+    });
+
+    if (error) {
+      toast.error("Nao foi possivel confirmar a retirada", {
+        description: error.message,
+      });
+      return;
+    }
+
+    toast.success("Retirada confirmada com sucesso");
   }
 
   async function cancelar(id: string) {
@@ -605,9 +632,16 @@ function PedidosPage() {
                 )}
                 <div className="mt-3 flex flex-wrap gap-2">
                   {step && (
-                    <Button size="sm" onClick={() => mudarStatus(o.id, step.next)}>
+                    <Button size="sm" onClick={() => mudarStatus(o, step.next)}>
                       {step.next === "ready" && <Bike className="mr-2 h-4 w-4" />}
-                      {step.label}
+                      {step.next === "ready" && o.tipo_entrega === "pickup"
+                        ? "Pronto para retirada"
+                        : step.label}
+                    </Button>
+                  )}
+                  {o.tipo_entrega === "pickup" && o.status === "ready" && (
+                    <Button size="sm" variant="secondary" onClick={() => confirmarRetirada(o)}>
+                      Confirmar retirada
                     </Button>
                   )}
                   <Button size="sm" variant="outline" onClick={() => imprimir(o.id)}>

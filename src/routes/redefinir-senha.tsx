@@ -12,10 +12,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { PasswordStrength } from "@/components/ui/password-strength";
 import { senhaForteSchema } from "@/lib/password-strength";
 
-
-const perfilSchema = z
-  .enum(["cliente", "estabelecimento", "entregador"])
-  .catch("cliente");
+const perfilSchema = z.enum(["cliente", "estabelecimento", "entregador"]).catch("cliente");
 
 export const Route = createFileRoute("/redefinir-senha")({
   validateSearch: z.object({ perfil: perfilSchema.optional() }),
@@ -42,7 +39,6 @@ export const Route = createFileRoute("/redefinir-senha")({
 
 const senhaSchema = senhaForteSchema;
 
-
 function ResetPasswordPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
@@ -59,7 +55,6 @@ function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [novaSenha, setNovaSenha] = useState("");
-
 
   useEffect(() => {
     let mounted = true;
@@ -111,7 +106,6 @@ function ResetPasswordPage() {
   function goToLogin() {
     navigate({ to: "/auth", search: { perfil }, replace: true });
   }
-
 
   return (
     <div className={`relative min-h-screen bg-background ${themeClass}`}>
@@ -188,12 +182,11 @@ function ResetPasswordPage() {
                 Fazer login com a nova senha
               </Button>
             </div>
-
           ) : !valid ? (
             <div className="space-y-4 text-center">
               <p className="text-sm text-muted-foreground">
-                Este link de recuperação é inválido ou expirou. Solicite um novo
-                link na tela de login.
+                Este link de recuperação é inválido ou expirou. Solicite um novo link na tela de
+                login.
               </p>
               <Button asChild className="w-full bg-gradient-brand text-primary-foreground">
                 <Link to="/auth" search={{ perfil }}>
@@ -232,11 +225,7 @@ function ResetPasswordPage() {
                 disabled={loading}
                 className="w-full bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95"
               >
-                {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Salvar nova senha"
-                )}
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar nova senha"}
               </Button>
             </form>
           )}

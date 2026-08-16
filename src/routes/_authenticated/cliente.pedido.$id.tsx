@@ -59,7 +59,7 @@ type Delivery = {
   lng: number | null;
 };
 
-const STAGES = [
+const DELIVERY_STAGES = [
   { key: "placed", label: "Pedido recebido" },
   { key: "accepted", label: "Aceito pela loja" },
   { key: "preparing", label: "Em preparo" },
@@ -68,6 +68,14 @@ const STAGES = [
   { key: "picked_up", label: "Coletado" },
   { key: "on_the_way", label: "A caminho" },
   { key: "delivered", label: "Entregue" },
+] as const;
+
+const PICKUP_STAGES = [
+  { key: "placed", label: "Pedido recebido" },
+  { key: "accepted", label: "Aceito pela loja" },
+  { key: "preparing", label: "Em preparo" },
+  { key: "ready", label: "Pronto para retirada" },
+  { key: "delivered", label: "Retirado na loja" },
 ] as const;
 
 const CANCELABLE = new Set(["placed", "accepted"]);
@@ -271,16 +279,17 @@ function PedidoPage() {
     );
   }
 
-  const stageIdx = STAGES.findIndex((s) => s.key === order.status);
+  const isPickup = order.tipo_entrega === "pickup";
+  const activeStages = isPickup ? PICKUP_STAGES : DELIVERY_STAGES;
+  const stageIdx = activeStages.findIndex((s) => s.key === order.status);
   const statusMeta = STATUS_META[order.status] ?? STATUS_META.accepted;
-  const progress = stageIdx >= 0 ? Math.round(((stageIdx + 1) / STAGES.length) * 100) : 100;
+  const progress = stageIdx >= 0 ? Math.round(((stageIdx + 1) / activeStages.length) * 100) : 100;
   const hasLiveCode =
     !!order.codigo_entrega && !["delivered", "cancelled", "refunded"].includes(order.status);
   const codeExpired = order.codigo_expira_em
     ? new Date(order.codigo_expira_em) < new Date()
     : false;
   const totalItems = items.reduce((sum, item) => sum + item.quantidade, 0);
-  const isPickup = order.tipo_entrega === "pickup";
 
   return (
     <div className="space-y-6">
@@ -422,7 +431,7 @@ function PedidoPage() {
                   Etapa atual
                 </p>
                 <p className="mt-1 font-bold text-foreground">
-                  {stageIdx >= 0 ? STAGES[stageIdx]?.label : statusMeta.label}
+                  {stageIdx >= 0 ? activeStages[stageIdx]?.label : statusMeta.label}
                 </p>
               </div>
               <div className="rounded-2xl border border-border/70 bg-background/70 p-3">
@@ -574,7 +583,7 @@ function PedidoPage() {
         ) : (
           <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
             <div className="space-y-3 rounded-[1.5rem] border border-border/70 bg-background/70 p-4">
-              {STAGES.map((s, i) => {
+              {activeStages.map((s, i) => {
                 const done = i < stageIdx;
                 const current = i === stageIdx;
                 return (
@@ -616,7 +625,7 @@ function PedidoPage() {
                 Destaque da etapa
               </p>
               <p className="mt-2 text-xl font-black text-foreground">
-                {stageIdx >= 0 ? STAGES[stageIdx]?.label : statusMeta.label}
+                {stageIdx >= 0 ? activeStages[stageIdx]?.label : statusMeta.label}
               </p>
               <p className="mt-2 text-sm text-muted-foreground">{statusMeta.copy}</p>
             </div>
