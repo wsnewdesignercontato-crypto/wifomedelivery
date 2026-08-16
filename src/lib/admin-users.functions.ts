@@ -38,14 +38,19 @@ export const listAppUsers = createServerFn({ method: "POST" })
       ? users.filter((u) => u.email?.toLowerCase().includes(data.search!.toLowerCase()))
       : users;
 
+    if (filtered.length === 0) {
+      return [];
+    }
+
     // Fetch roles for these users
-    const { data: roles } = await supabaseAdmin
+    const { data: roles, error: rolesError } = await supabaseAdmin
       .from("user_roles")
       .select("user_id, role")
       .in(
         "user_id",
         filtered.map((u) => u.id),
       );
+    if (rolesError) throw new Error(rolesError.message);
     const rolesByUser = new Map<string, string[]>();
     (roles ?? []).forEach((r) => {
       const arr = rolesByUser.get(r.user_id) ?? [];

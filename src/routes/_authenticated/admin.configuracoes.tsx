@@ -83,12 +83,6 @@ function ConfigPage() {
     setSaving(false);
     if (error) return toast.error("Falha ao salvar");
     toast.success("Configurações salvas");
-    await supabase.from("admin_audit_log").insert({
-      admin_id: uid,
-      action: "update_settings",
-      entity_type: "platform_settings",
-      entity_id: "1",
-    });
     qc.invalidateQueries({ queryKey: ["platform-settings"] });
   }
 

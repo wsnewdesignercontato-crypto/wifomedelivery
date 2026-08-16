@@ -426,7 +426,7 @@ function Corridas() {
         .from("delivery-proofs")
         .createSignedUrl(path, 60 * 60 * 24 * 30);
       prova_url = signed?.signedUrl ?? path;
-      metodo = "code+photo";
+      metodo = "photo";
     }
     // Confirma entrega atomicamente via RPC (atualiza deliveries + orders + libera repasse)
     const { error: rpcErr } = await supabase.rpc("courier_confirm_delivery", {
