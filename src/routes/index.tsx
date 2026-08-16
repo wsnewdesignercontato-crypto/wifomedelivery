@@ -196,7 +196,7 @@ function CategoriasRail() {
             Categorias em alta
           </span>
           <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-            O que vai chegar <span className="text-primary">hoje?</span>
+            O que vai chegar <span className="bg-gradient-brand bg-clip-text text-transparent">hoje?</span>
           </h2>
           <p className="mt-3 max-w-lg text-sm text-muted-foreground sm:text-base">
             Do salgado ao doce, do mercado à farmácia — tudo no mesmo app.
@@ -403,8 +403,7 @@ function LandingPage() {
               certo.
             </h1>
             <p className="reveal mt-6 max-w-md text-base text-white/70 sm:text-lg" style={{ ["--reveal-delay" as never]: "120ms" } as React.CSSProperties}>
-              Peça em minutos dos melhores restaurantes da sua região, acompanhe a entrega
-              no mapa e receba tudo quentinho na sua porta.
+              Tudo o que você ama, do seu jeito, no seu tempo. O delivery premium que conecta você aos melhores sabores da cidade.
             </p>
 
             <div className="reveal mt-8 flex flex-col gap-3 sm:flex-row" style={{ ["--reveal-delay" as never]: "220ms" } as React.CSSProperties}>
