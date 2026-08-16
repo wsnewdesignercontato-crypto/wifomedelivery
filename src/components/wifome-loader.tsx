@@ -7,9 +7,9 @@ export type LoaderPerfil = "cliente" | "estabelecimento" | "entregador";
 const STEP_MS = 1400;
 
 const STEPS = [
-  { icon: Sandwich, label: "🍔 Lanche sendo preparado" },
-  { icon: Store, label: "📦 Separando os suprimentos" },
-  { icon: Bike, label: "🛵 Entregador a caminho" },
+  { icon: Sandwich, label: "Pedido" },
+  { icon: Store, label: "Loja" },
+  { icon: Bike, label: "Entrega" },
 ] as const;
 
 export function detectPerfil(pathname?: string): LoaderPerfil {
