@@ -790,12 +790,20 @@ body {
   100% { opacity: 1; transform: scale(1); }
 }
 @keyframes loader-plup {
-  0% { transform: scale(0.9); }
-  45% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+  0%, 22%, 100% { opacity: 0.32; transform: translateY(0) scale(0.9); box-shadow: none; }
+  8% { opacity: 1; transform: translateY(-4px) scale(1.1); box-shadow: 0 0 18px color-mix(in srgb, currentColor 75%, transparent); }
+  14% { opacity: 0.78; transform: translateY(0) scale(1); box-shadow: 0 0 8px color-mix(in srgb, currentColor 35%, transparent); }
+}
+@keyframes loader-line-flow {
+  0%, 8% { opacity: 0; transform: scaleX(0); }
+  16% { opacity: 0.9; transform: scaleX(1); }
+  24%, 100% { opacity: 0; transform: scaleX(1); }
 }
 .animate-loader-logo-pop { animation: loader-logo-pop 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.animate-loader-plup { animation: loader-plup 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+.loader-step-icon { animation: loader-plup 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite both; will-change: transform, opacity; }
+.loader-step-line { animation: loader-line-flow 2.4s ease-in-out infinite both; will-change: transform, opacity; }
 @media (prefers-reduced-motion: reduce) {
-  .animate-loader-logo-pop, .animate-loader-plup { animation: none; }
+  .animate-loader-logo-pop { animation: none; }
+  .loader-step-icon { animation-duration: 3.6s; transform: none; }
+  .loader-step-line { animation-duration: 3.6s; }
 }
