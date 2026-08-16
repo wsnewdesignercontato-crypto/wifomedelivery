@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyEstab, fmt } from "@/hooks/use-my-estab";
@@ -9,9 +9,28 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { OrderHistory } from "@/components/order-history";
-import { Bike, ReceiptText, Printer, Phone, User, MapPin, Settings as SettingsIcon } from "lucide-react";
+import {
+  Bike,
+  Clock3,
+  DollarSign,
+  MapPin,
+  Phone,
+  Printer,
+  ReceiptText,
+  Settings as SettingsIcon,
+  Sparkles,
+  Store,
+  TrendingUp,
+  User,
+} from "lucide-react";
 import { printOrderReceipt, buildReceiptHtml } from "@/lib/print-receipt";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/pedidos")({
@@ -20,25 +39,64 @@ export const Route = createFileRoute("/_authenticated/estabelecimento/pedidos")(
 
 type Addon = { id?: string; nome: string; preco_extra_cents?: number; group_nome?: string };
 type Order = {
-  id: string; cliente_id: string; status: string; total_cents: number;
-  subtotal_cents: number; frete_cents: number; desconto_cents: number;
-  forma_pagamento: string; troco_para_cents: number | null; codigo_entrega: string | null;
-  observacoes: string | null; created_at: string;
-  endereco_entrega: { rua?: string; numero?: string | null; complemento?: string | null; bairro?: string | null; cidade?: string; estado?: string | null; cep?: string | null } | null;
+  id: string;
+  cliente_id: string;
+  status: string;
+  total_cents: number;
+  subtotal_cents: number;
+  frete_cents: number;
+  desconto_cents: number;
+  forma_pagamento: string;
+  troco_para_cents: number | null;
+  codigo_entrega: string | null;
+  observacoes: string | null;
+  created_at: string;
+  endereco_entrega: {
+    rua?: string;
+    numero?: string | null;
+    complemento?: string | null;
+    bairro?: string | null;
+    cidade?: string;
+    estado?: string | null;
+    cep?: string | null;
+  } | null;
   tipo_entrega: "delivery" | "pickup" | null;
-  cancellation_reason?: string | null; cancelled_role?: string | null;
-  refund_status?: string | null; refund_amount_cents?: number | null;
+  cancellation_reason?: string | null;
+  cancelled_role?: string | null;
+  refund_status?: string | null;
+  refund_amount_cents?: number | null;
 };
-type OrderItem = { id: string; order_id: string; nome_snapshot: string; quantidade: number; preco_unit_cents: number; observacoes: string | null; addons: Addon[] };
+type OrderItem = {
+  id: string;
+  order_id: string;
+  nome_snapshot: string;
+  quantidade: number;
+  preco_unit_cents: number;
+  observacoes: string | null;
+  addons: Addon[];
+};
 type Contact = { nome: string | null; telefone: string | null };
 
 const STATUS_LABEL: Record<string, string> = {
-  placed: "Novo", accepted: "Aceito", preparing: "Em preparo", ready: "Pronto",
-  waiting_courier: "Aguardando entregador", courier_assigned: "Entregador a caminho",
-  picked_up: "Coletado", on_the_way: "A caminho", arriving: "Chegando",
-  delivered: "Entregue", cancelled: "Cancelado", refunded: "Reembolsado",
+  placed: "Novo",
+  accepted: "Aceito",
+  preparing: "Em preparo",
+  ready: "Pronto",
+  waiting_courier: "Aguardando entregador",
+  courier_assigned: "Entregador a caminho",
+  picked_up: "Coletado",
+  on_the_way: "A caminho",
+  arriving: "Chegando",
+  delivered: "Entregue",
+  cancelled: "Cancelado",
+  refunded: "Reembolsado",
 };
-const PAY_LABEL: Record<string, string> = { pix: "PIX", cartao: "Cartão", dinheiro: "Dinheiro", carteira: "Carteira" };
+const PAY_LABEL: Record<string, string> = {
+  pix: "PIX",
+  cartao: "Cartão",
+  dinheiro: "Dinheiro",
+  carteira: "Carteira",
+};
 const TERMINAL = new Set(["delivered", "cancelled", "refunded"]);
 
 function PedidosPage() {
@@ -63,7 +121,9 @@ function PedidosPage() {
     if (!estab) return;
     const { data } = await supabase
       .from("orders")
-      .select("id,cliente_id,status,total_cents,subtotal_cents,frete_cents,desconto_cents,forma_pagamento,troco_para_cents,codigo_entrega,observacoes,created_at,endereco_entrega,tipo_entrega,cancellation_reason,cancelled_role,refund_status,refund_amount_cents")
+      .select(
+        "id,cliente_id,status,total_cents,subtotal_cents,frete_cents,desconto_cents,forma_pagamento,troco_para_cents,codigo_entrega,observacoes,created_at,endereco_entrega,tipo_entrega,cancellation_reason,cancelled_role,refund_status,refund_amount_cents",
+      )
       .eq("establishment_id", estab.id)
       .order("created_at", { ascending: false })
       .limit(80);
@@ -80,7 +140,12 @@ function PedidosPage() {
       });
       setItems(g);
       // Pré-carrega contatos dos pedidos ativos (não terminais) para a exibição.
-      list.filter((o) => !TERMINAL.has(o.status)).slice(0, 20).forEach((o) => { void loadContact(o.id); });
+      list
+        .filter((o) => !TERMINAL.has(o.status))
+        .slice(0, 20)
+        .forEach((o) => {
+          void loadContact(o.id);
+        });
     }
   }
 
@@ -89,14 +154,21 @@ function PedidosPage() {
     reload();
     const ch = supabase
       .channel("estab-pedidos-" + estab.id)
-      .on("postgres_changes",
-        { event: "*", schema: "public", table: "orders", filter: `establishment_id=eq.${estab.id}` },
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "orders",
+          filter: `establishment_id=eq.${estab.id}`,
+        },
         (payload) => {
           reload();
           toast.info("Pedido atualizado");
           // Auto-print em novos pedidos, se habilitado
           if (
-            estab.printer_enabled && estab.printer_auto &&
+            estab.printer_enabled &&
+            estab.printer_auto &&
             payload.eventType === "INSERT" &&
             (payload.new as { status?: string })?.status === "placed"
           ) {
@@ -106,9 +178,12 @@ function PedidosPage() {
               setTimeout(() => imprimir(oid), 800);
             }
           }
-        })
+        },
+      )
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      supabase.removeChannel(ch);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estab?.id, estab?.printer_enabled, estab?.printer_auto]);
 
@@ -117,7 +192,8 @@ function PedidosPage() {
     if (error) return toast.error("Falha ao atualizar");
     if (novo === "ready" && estab) {
       await supabase.from("deliveries").insert({
-        order_id: id, status: "broadcasting",
+        order_id: id,
+        status: "broadcasting",
         valor_entrega_cents: estab.taxa_entrega_cents,
       });
       await supabase.from("orders").update({ status: "waiting_courier" }).eq("id", id);
@@ -128,21 +204,33 @@ function PedidosPage() {
   async function cancelar(id: string) {
     const motivo = prompt("Motivo do cancelamento:") ?? "";
     if (!motivo.trim() || !estab) return;
-    const { error } = await supabase.from("orders").update({
-      status: "cancelled", cancellation_reason: motivo.trim(),
-      cancelled_by: estab.owner_id, cancelled_role: "estabelecimento",
-    }).eq("id", id);
-    if (error) toast.error("Falha ao cancelar"); else toast.success("Pedido cancelado");
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        status: "cancelled",
+        cancellation_reason: motivo.trim(),
+        cancelled_by: estab.owner_id,
+        cancelled_role: "estabelecimento",
+      })
+      .eq("id", id);
+    if (error) toast.error("Falha ao cancelar");
+    else toast.success("Pedido cancelado");
   }
 
   async function reembolsar(o: Order) {
     const s = prompt("Valor a reembolsar (R$):", (o.total_cents / 100).toFixed(2)) ?? "";
     const v = Math.round(parseFloat(s.replace(",", ".")) * 100);
     if (!Number.isFinite(v) || v <= 0 || v > o.total_cents) return toast.error("Valor inválido");
-    const { error } = await supabase.from("orders").update({
-      status: "refunded", refund_status: "completed", refund_amount_cents: v,
-    }).eq("id", o.id);
-    if (error) toast.error("Falha"); else toast.success("Reembolso registrado");
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        status: "refunded",
+        refund_status: "completed",
+        refund_amount_cents: v,
+      })
+      .eq("id", o.id);
+    if (error) toast.error("Falha");
+    else toast.success("Reembolso registrado");
   }
 
   async function imprimir(orderId: string) {
@@ -153,11 +241,17 @@ function PedidosPage() {
       const { data: o } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
       const { data: it } = await supabase.from("order_items").select("*").eq("order_id", orderId);
       if (!o || !it) return toast.error("Pedido não encontrado");
-      its = (it as unknown as OrderItem[]).map((r) => ({ ...r, addons: Array.isArray(r.addons) ? r.addons : [] }));
+      its = (it as unknown as OrderItem[]).map((r) => ({
+        ...r,
+        addons: Array.isArray(r.addons) ? r.addons : [],
+      }));
     }
     const contact = await loadContact(orderId);
     const ok = printOrderReceipt(
-      order ?? { ...(await supabase.from("orders").select("*").eq("id", orderId).single()).data } as unknown as Order,
+      order ??
+        ({
+          ...(await supabase.from("orders").select("*").eq("id", orderId).single()).data,
+        } as unknown as Order),
       its,
       { nome: estab.nome, telefone: estab.telefone, endereco: estab.endereco, cnpj: estab.cnpj },
       contact,
@@ -183,90 +277,307 @@ function PedidosPage() {
     { key: "cancelled", label: "Cancelados" },
   ];
   const lista = filter === "todos" ? orders : orders.filter((o) => o.status === filter);
+  const summary = useMemo(() => {
+    const ativos = orders.filter((o) => !TERMINAL.has(o.status)).length;
+    const novos = orders.filter((o) => o.status === "placed").length;
+    const prontos = orders.filter(
+      (o) => o.status === "ready" || o.status === "waiting_courier",
+    ).length;
+    const cancelados = orders.filter(
+      (o) => o.status === "cancelled" || o.status === "refunded",
+    ).length;
+    const receita = orders
+      .filter((o) => o.status === "delivered")
+      .reduce((sum, o) => sum + (o.total_cents ?? 0), 0);
+    return { ativos, novos, prontos, cancelados, receita };
+  }, [orders]);
+  const filtrosComContagem = FILTROS.map((f) => ({
+    ...f,
+    count: f.key === "todos" ? orders.length : orders.filter((o) => o.status === f.key).length,
+  }));
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      <section className="card-premium relative overflow-hidden border-none bg-gradient-to-br from-primary/12 via-white to-primary/5 p-5 dark:from-primary/15 dark:via-card dark:to-primary/10 sm:p-6">
+        <div className="absolute -left-10 top-0 h-36 w-36 rounded-full bg-primary/15 blur-3xl" />
+        <div className="absolute -right-10 bottom-0 h-44 w-44 rounded-full bg-primary/10 blur-3xl" />
+
+        <div className="relative grid gap-6 xl:grid-cols-[1.14fr_0.86fr] xl:items-start">
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className="bg-primary text-primary-foreground">
+                Central premium de pedidos
+              </Badge>
+              <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
+                Atualizacao em tempo real
+              </Badge>
+              <span className="text-xs font-semibold text-muted-foreground">
+                {estab?.nome ?? "Sua loja"}
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-muted-foreground">
+                Operacao viva para decidir rapido, imprimir melhor e manter a fila sob controle
+              </p>
+              <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+                Pedidos com leitura executiva e acao imediata.
+              </h1>
+              <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
+                Acompanhe o que entrou agora, o que precisa de preparo e o que ja esta pronto para
+                seguir com o entregador.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-4">
+              <div className="rounded-[1.4rem] border border-white/70 bg-white/85 p-4 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
+                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  <Store className="h-3.5 w-3.5" />
+                  Ativos
+                </p>
+                <p className="mt-2 text-2xl font-black text-foreground">{summary.ativos}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {summary.novos} aguardando resposta
+                </p>
+              </div>
+              <div className="rounded-[1.4rem] border border-white/70 bg-white/85 p-4 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
+                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  <Clock3 className="h-3.5 w-3.5" />
+                  Prontos
+                </p>
+                <p className="mt-2 text-2xl font-black text-foreground">{summary.prontos}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Fila pronta para expedicao</p>
+              </div>
+              <div className="rounded-[1.4rem] border border-white/70 bg-white/85 p-4 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
+                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  <DollarSign className="h-3.5 w-3.5" />
+                  Receita
+                </p>
+                <p className="mt-2 text-2xl font-black text-foreground">{fmt(summary.receita)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Pedidos entregues nesta lista</p>
+              </div>
+              <div className="rounded-[1.4rem] border border-white/70 bg-white/85 p-4 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
+                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  <TrendingUp className="h-3.5 w-3.5" />
+                  Risco
+                </p>
+                <p className="mt-2 text-2xl font-black text-foreground">{summary.cancelados}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Cancelados ou reembolsados</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[1.75rem] border border-white/70 bg-white/90 p-5 shadow-card backdrop-blur dark:border-border dark:bg-card/90">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.26em] text-muted-foreground">
+                  Painel rapido
+                </p>
+                <p className="mt-2 text-2xl font-black text-foreground">
+                  {lista.length} pedidos nesta visao
+                </p>
+              </div>
+              <div className="shrink-0">
+                <PrinterSettingsDialog />
+              </div>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  Filtro ativo
+                </p>
+                <p className="mt-1 font-bold text-foreground">
+                  {filtrosComContagem.find((f) => f.key === filter)?.label ?? "Todos"}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border/70 bg-background/70 p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  Destaque
+                </p>
+                <p className="mt-1 font-bold text-foreground">
+                  {summary.prontos > 0
+                    ? `${summary.prontos} prontos para despacho`
+                    : "Fila sob controle"}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 rounded-2xl border border-border/70 bg-background/70 p-3">
+              <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                <Sparkles className="h-3.5 w-3.5" />
+                Operacao premium
+              </p>
+              <p className="mt-1 text-sm font-semibold text-foreground">
+                Filtre, imprima, atualize status e acompanhe historico com menos ruido visual.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black tracking-tight">Central de pedidos</h1>
+          <h2 className="text-xl font-black tracking-tight">Fila detalhada</h2>
           <p className="text-sm text-muted-foreground">Atualização em tempo real.</p>
         </div>
-        <PrinterSettingsDialog />
       </div>
-      <div className="flex flex-wrap gap-2">
-        {FILTROS.map((f) => (
-          <Button key={f.key} size="sm" variant={filter === f.key ? "default" : "outline"} onClick={() => setFilter(f.key)}>
-            {f.label}
+      <div className="card-premium flex flex-wrap gap-2 border-none bg-gradient-to-br from-card to-muted/20 p-3">
+        {filtrosComContagem.map((f) => (
+          <Button
+            key={f.key}
+            size="sm"
+            variant={filter === f.key ? "default" : "outline"}
+            className={filter === f.key ? "rounded-full shadow-brand" : "rounded-full"}
+            onClick={() => setFilter(f.key)}
+          >
+            {f.label} ({f.count})
           </Button>
         ))}
       </div>
       {lista.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
+        <div className="card-premium rounded-[1.75rem] border-dashed p-10 text-center">
           <ReceiptText className="mx-auto h-10 w-10 text-muted-foreground" />
           <p className="mt-3 text-sm text-muted-foreground">Nenhum pedido nesta aba.</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {lista.map((o) => {
             const step = proxima(o.status);
             const isDelivered = o.status === "delivered";
-            const isProblem = o.status === "cancelled" || o.status === "refunded" || o.refund_status === "completed";
+            const isProblem =
+              o.status === "cancelled" ||
+              o.status === "refunded" ||
+              o.refund_status === "completed";
             const tone = isProblem
-              ? { card: "border-red-500/60 bg-red-500/5", badge: "bg-red-500 text-white hover:bg-red-500/90", value: "text-red-600 dark:text-red-400", accent: "before:bg-red-500" }
+              ? {
+                  card: "border-red-500/60 bg-red-500/5",
+                  badge: "bg-red-500 text-white hover:bg-red-500/90",
+                  value: "text-red-600 dark:text-red-400",
+                  accent: "before:bg-red-500",
+                }
               : isDelivered
-              ? { card: "border-emerald-500/60 bg-emerald-500/5", badge: "bg-emerald-500 text-white hover:bg-emerald-500/90", value: "text-emerald-600 dark:text-emerald-400", accent: "before:bg-emerald-500" }
-              : { card: "border-primary/50 bg-primary/5", badge: "bg-primary text-primary-foreground hover:bg-primary/90", value: "text-primary", accent: "before:bg-primary" };
+                ? {
+                    card: "border-emerald-500/60 bg-emerald-500/5",
+                    badge: "bg-emerald-500 text-white hover:bg-emerald-500/90",
+                    value: "text-emerald-600 dark:text-emerald-400",
+                    accent: "before:bg-emerald-500",
+                  }
+                : {
+                    card: "border-primary/50 bg-primary/5",
+                    badge: "bg-primary text-primary-foreground hover:bg-primary/90",
+                    value: "text-primary",
+                    accent: "before:bg-primary",
+                  };
             const contact = contacts[o.id];
             const addr = o.endereco_entrega;
             const enderecoStr = addr
-              ? [[addr.rua, addr.numero].filter(Boolean).join(", "), addr.complemento, addr.bairro, [addr.cidade, addr.estado].filter(Boolean).join("/"), addr.cep].filter(Boolean).join(" · ")
+              ? [
+                  [addr.rua, addr.numero].filter(Boolean).join(", "),
+                  addr.complemento,
+                  addr.bairro,
+                  [addr.cidade, addr.estado].filter(Boolean).join("/"),
+                  addr.cep,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")
               : null;
             return (
-              <div key={o.id} className={cn("relative overflow-hidden rounded-2xl border bg-card p-4 shadow-card transition", tone.card, "before:absolute before:left-0 before:top-0 before:h-full before:w-1.5", tone.accent)}>
+              <div
+                key={o.id}
+                className={cn(
+                  "card-premium relative overflow-hidden rounded-[1.75rem] border-none bg-gradient-to-br from-card to-muted/20 p-5 transition",
+                  tone.card,
+                  "before:absolute before:left-0 before:top-0 before:h-full before:w-1.5",
+                  tone.accent,
+                )}
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge className={tone.badge}>{STATUS_LABEL[o.status] ?? o.status}</Badge>
-                      <Badge variant="outline" className={o.tipo_entrega === "pickup" ? "border-amber-500/50 text-amber-600" : "border-primary/40 text-primary"}>
+                      <Badge
+                        variant="outline"
+                        className={
+                          o.tipo_entrega === "pickup"
+                            ? "border-amber-500/50 text-amber-600"
+                            : "border-primary/40 text-primary"
+                        }
+                      >
                         {o.tipo_entrega === "pickup" ? "🏪 Retirada" : "🛵 Entrega"}
                       </Badge>
-                      <Badge variant="secondary">{PAY_LABEL[o.forma_pagamento] ?? o.forma_pagamento}</Badge>
-                      {o.refund_status === "completed" && (<Badge className="bg-red-500/15 text-red-600 hover:bg-red-500/20 dark:text-red-400">Reembolso {fmt(o.refund_amount_cents ?? 0)}</Badge>)}
-                      <span className="text-xs text-muted-foreground">#{o.id.slice(0, 8).toUpperCase()} · {new Date(o.created_at).toLocaleTimeString("pt-BR")}</span>
+                      <Badge variant="secondary">
+                        {PAY_LABEL[o.forma_pagamento] ?? o.forma_pagamento}
+                      </Badge>
+                      {o.refund_status === "completed" && (
+                        <Badge className="bg-red-500/15 text-red-600 hover:bg-red-500/20 dark:text-red-400">
+                          Reembolso {fmt(o.refund_amount_cents ?? 0)}
+                        </Badge>
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        #{o.id.slice(0, 8).toUpperCase()} ·{" "}
+                        {new Date(o.created_at).toLocaleTimeString("pt-BR")}
+                      </span>
                     </div>
                   </div>
-                  <span className={cn("shrink-0 whitespace-nowrap font-bold", tone.value)}>{fmt(o.total_cents)}</span>
+                  <span className={cn("shrink-0 whitespace-nowrap font-bold", tone.value)}>
+                    {fmt(o.total_cents)}
+                  </span>
                 </div>
 
                 {/* Bloco cliente / endereço */}
                 <div className="mt-3 rounded-xl bg-muted/60 p-3 text-sm">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                    <span className="inline-flex items-center gap-1.5"><User className="h-3.5 w-3.5" /><span className="font-semibold">{contact?.nome ?? "Carregando..."}</span></span>
-                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground" title="Por privacidade, o WhatsApp do cliente fica visível apenas para o entregador designado.">
-                      <Phone className="h-3.5 w-3.5" />Contato via entregador
+                    <span className="inline-flex items-center gap-1.5">
+                      <User className="h-3.5 w-3.5" />
+                      <span className="font-semibold">{contact?.nome ?? "Carregando..."}</span>
+                    </span>
+                    <span
+                      className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+                      title="Por privacidade, o WhatsApp do cliente fica visível apenas para o entregador designado."
+                    >
+                      <Phone className="h-3.5 w-3.5" />
+                      Contato via entregador
                     </span>
                   </div>
                   <div className="mt-1 flex items-start gap-1.5 text-muted-foreground">
                     <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                    <span>{o.tipo_entrega === "pickup" ? "Cliente retira no local" : (enderecoStr ?? "—")}</span>
+                    <span>
+                      {o.tipo_entrega === "pickup"
+                        ? "Cliente retira no local"
+                        : (enderecoStr ?? "—")}
+                    </span>
                   </div>
-                  {o.troco_para_cents ? <div className="mt-1 text-xs">💵 Troco para <strong>{fmt(o.troco_para_cents)}</strong></div> : null}
+                  {o.troco_para_cents ? (
+                    <div className="mt-1 text-xs">
+                      💵 Troco para <strong>{fmt(o.troco_para_cents)}</strong>
+                    </div>
+                  ) : null}
                 </div>
-
 
                 {/* Itens com opcionais */}
                 <ul className="mt-3 space-y-2 text-sm">
                   {(items[o.id] ?? []).map((it) => (
-                    <li key={it.id} className="rounded-lg border border-border/60 bg-background/40 p-2">
+                    <li
+                      key={it.id}
+                      className="rounded-lg border border-border/60 bg-background/40 p-2"
+                    >
                       <div className="flex justify-between font-medium">
-                        <span>{it.quantidade}× {it.nome_snapshot}</span>
-                        <span className="text-muted-foreground">{fmt(it.preco_unit_cents * it.quantidade)}</span>
+                        <span>
+                          {it.quantidade}× {it.nome_snapshot}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {fmt(it.preco_unit_cents * it.quantidade)}
+                        </span>
                       </div>
                       {it.addons.length > 0 && (
                         <ul className="mt-1 space-y-0.5 pl-4 text-xs text-muted-foreground">
                           {it.addons.map((a, idx) => (
                             <li key={idx} className="flex justify-between">
-                              <span>+ {a.group_nome ? <span className="opacity-70">[{a.group_nome}]</span> : null} {a.nome}</span>
+                              <span>
+                                +{" "}
+                                {a.group_nome ? (
+                                  <span className="opacity-70">[{a.group_nome}]</span>
+                                ) : null}{" "}
+                                {a.nome}
+                              </span>
                               {a.preco_extra_cents ? <span>{fmt(a.preco_extra_cents)}</span> : null}
                             </li>
                           ))}
@@ -281,26 +592,59 @@ function PedidosPage() {
                   ))}
                 </ul>
 
-                {o.observacoes && (<p className="mt-2 rounded-lg bg-amber-500/10 p-2 text-xs text-amber-800 dark:text-amber-300"><strong>Observação do pedido:</strong> {o.observacoes}</p>)}
+                {o.observacoes && (
+                  <p className="mt-2 rounded-lg bg-amber-500/10 p-2 text-xs text-amber-800 dark:text-amber-300">
+                    <strong>Observação do pedido:</strong> {o.observacoes}
+                  </p>
+                )}
                 {o.status === "cancelled" && o.cancellation_reason && (
                   <p className="mt-2 rounded-lg bg-destructive/10 p-2 text-xs text-destructive">
-                    Cancelado{o.cancelled_role ? ` (${o.cancelled_role})` : ""}: {o.cancellation_reason}
+                    Cancelado{o.cancelled_role ? ` (${o.cancelled_role})` : ""}:{" "}
+                    {o.cancellation_reason}
                   </p>
                 )}
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {step && (<Button size="sm" onClick={() => mudarStatus(o.id, step.next)}>{step.next === "ready" && <Bike className="mr-2 h-4 w-4" />}{step.label}</Button>)}
-                  <Button size="sm" variant="outline" onClick={() => imprimir(o.id)}><Printer className="mr-2 h-4 w-4" />Imprimir</Button>
-                  {!TERMINAL.has(o.status) && (<Button size="sm" variant="outline" onClick={() => cancelar(o.id)}>Cancelar</Button>)}
-                  {(o.status === "cancelled" || o.status === "delivered") && o.refund_status !== "completed" && (
-                    <Button size="sm" variant="secondary" onClick={() => reembolsar(o)}>Reembolsar</Button>
+                  {step && (
+                    <Button size="sm" onClick={() => mudarStatus(o.id, step.next)}>
+                      {step.next === "ready" && <Bike className="mr-2 h-4 w-4" />}
+                      {step.label}
+                    </Button>
                   )}
-                  <Button size="sm" variant="ghost" className="ml-auto"
-                    onClick={() => setOpenHistory((p) => { const n = new Set(p); n.has(o.id) ? n.delete(o.id) : n.add(o.id); return n; })}>
+                  <Button size="sm" variant="outline" onClick={() => imprimir(o.id)}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Imprimir
+                  </Button>
+                  {!TERMINAL.has(o.status) && (
+                    <Button size="sm" variant="outline" onClick={() => cancelar(o.id)}>
+                      Cancelar
+                    </Button>
+                  )}
+                  {(o.status === "cancelled" || o.status === "delivered") &&
+                    o.refund_status !== "completed" && (
+                      <Button size="sm" variant="secondary" onClick={() => reembolsar(o)}>
+                        Reembolsar
+                      </Button>
+                    )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="ml-auto"
+                    onClick={() =>
+                      setOpenHistory((p) => {
+                        const n = new Set(p);
+                        if (n.has(o.id)) n.delete(o.id);
+                        else n.add(o.id);
+                        return n;
+                      })
+                    }
+                  >
                     {openHistory.has(o.id) ? "Ocultar histórico" : "Ver histórico"}
                   </Button>
                 </div>
                 {openHistory.has(o.id) && (
-                  <div className="mt-4 border-t border-border pt-4"><OrderHistory orderId={o.id} /></div>
+                  <div className="mt-4 border-t border-border pt-4">
+                    <OrderHistory orderId={o.id} />
+                  </div>
                 )}
               </div>
             );
@@ -325,7 +669,7 @@ function PrinterSettingsDialog() {
     setEnabled(!!estab.printer_enabled);
     setAuto(!!estab.printer_auto);
     setWidth(String(estab.printer_width_mm ?? 80));
-  }, [estab?.id, estab?.printer_enabled, estab?.printer_auto, estab?.printer_width_mm]);
+  }, [estab, estab?.id, estab?.printer_enabled, estab?.printer_auto, estab?.printer_width_mm]);
 
   function buildSample() {
     const w = parseInt(width) === 58 ? 58 : 80;
@@ -341,27 +685,37 @@ function PrinterSettingsDialog() {
       tipo_entrega: "delivery" as const,
       observacoes: "Sem cebola no lanche, por favor.",
       endereco_entrega: {
-        rua: "Rua das Flores", numero: "123", complemento: "Apto 42",
-        bairro: "Centro", cidade: "São Paulo", estado: "SP", cep: "01000-000",
+        rua: "Rua das Flores",
+        numero: "123",
+        complemento: "Apto 42",
+        bairro: "Centro",
+        cidade: "São Paulo",
+        estado: "SP",
+        cep: "01000-000",
       },
       troco_para_cents: 10000,
       codigo_entrega: "1234",
     };
     const sampleItems = [
-      { quantidade: 1, nome_snapshot: "X-Burger Duplo", preco_unit_cents: 2990,
+      {
+        quantidade: 1,
+        nome_snapshot: "X-Burger Duplo",
+        preco_unit_cents: 2990,
         observacoes: "Ponto da carne: bem passado",
         addons: [
           { nome: "Bacon extra", preco_extra_cents: 400, group_nome: "Adicionais" },
           { nome: "Queijo cheddar", preco_extra_cents: 300, group_nome: "Adicionais" },
           { nome: "Sem picles", group_nome: "Retirar" },
-        ] },
+        ],
+      },
       { quantidade: 2, nome_snapshot: "Coca-Cola 350ml", preco_unit_cents: 700 },
       { quantidade: 1, nome_snapshot: "Batata frita M", preco_unit_cents: 600 },
     ];
     const sampleEstab = {
       nome: estab?.nome || "Meu Estabelecimento",
-      telefone: (estab as any)?.telefone || null,
-      endereco: null, cnpj: null,
+      telefone: estab?.telefone ?? null,
+      endereco: null,
+      cnpj: null,
     };
     const sampleContact = { nome: "Cliente Teste", telefone: "(11) 99999-9999" };
     return buildReceiptHtml(sampleOrder, sampleItems, sampleEstab, sampleContact, w);
@@ -376,9 +730,14 @@ function PrinterSettingsDialog() {
     if (!estab) return;
     setSaving(true);
     const w = parseInt(width) === 58 ? 58 : 80;
-    const { error } = await supabase.from("establishments").update({
-      printer_enabled: enabled, printer_auto: auto, printer_width_mm: w,
-    }).eq("id", estab.id);
+    const { error } = await supabase
+      .from("establishments")
+      .update({
+        printer_enabled: enabled,
+        printer_auto: auto,
+        printer_width_mm: w,
+      })
+      .eq("id", estab.id);
     setSaving(false);
     if (error) return toast.error("Falha ao salvar");
     toast.success("Impressora configurada");
@@ -389,21 +748,33 @@ function PrinterSettingsDialog() {
     const html = buildSample();
     const w = window.open("", "_blank", "width=420,height=640");
     if (!w) return toast.error("Bloqueado pelo navegador. Permita pop-ups.");
-    w.document.open(); w.document.write(html); w.document.close();
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
     toast.success("Cupom de teste enviado para impressão");
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline"><Printer className="mr-2 h-4 w-4" />Impressora</Button>
+        <Button variant="outline">
+          <Printer className="mr-2 h-4 w-4" />
+          Impressora
+        </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle className="flex items-center gap-2"><SettingsIcon className="h-4 w-4" /> Impressão de pedidos</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <SettingsIcon className="h-4 w-4" /> Impressão de pedidos
+          </DialogTitle>
+        </DialogHeader>
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              O WiFome imprime em <strong>qualquer impressora instalada no seu computador ou celular</strong> (USB, rede ou Bluetooth). Basta que ela apareça na lista de impressoras do sistema. Para impressoras térmicas de 58/80mm, selecione a largura correta.
+              O WiFome imprime em{" "}
+              <strong>qualquer impressora instalada no seu computador ou celular</strong> (USB, rede
+              ou Bluetooth). Basta que ela apareça na lista de impressoras do sistema. Para
+              impressoras térmicas de 58/80mm, selecione a largura correta.
             </p>
             <div className="flex items-center justify-between rounded-xl border border-border p-3">
               <div>
@@ -415,7 +786,9 @@ function PrinterSettingsDialog() {
             <div className="flex items-center justify-between rounded-xl border border-border p-3">
               <div>
                 <p className="font-semibold text-sm">Impressão automática</p>
-                <p className="text-xs text-muted-foreground">Abre o cupom automaticamente quando entra um pedido novo.</p>
+                <p className="text-xs text-muted-foreground">
+                  Abre o cupom automaticamente quando entra um pedido novo.
+                </p>
               </div>
               <Switch checked={auto} onCheckedChange={setAuto} disabled={!enabled} />
             </div>
@@ -423,7 +796,13 @@ function PrinterSettingsDialog() {
               <Label>Largura do papel</Label>
               <div className="mt-1 flex gap-2">
                 {["58", "80"].map((v) => (
-                  <Button key={v} type="button" variant={width === v ? "default" : "outline"} size="sm" onClick={() => setWidth(v)}>
+                  <Button
+                    key={v}
+                    type="button"
+                    variant={width === v ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setWidth(v)}
+                  >
                     {v}mm
                   </Button>
                 ))}
@@ -434,7 +813,9 @@ function PrinterSettingsDialog() {
               <Button type="button" variant="outline" onClick={testarImpressao}>
                 <Printer className="mr-2 h-4 w-4" /> Testar impressão
               </Button>
-              <Button className="w-full" onClick={salvar} disabled={saving}>Salvar configurações</Button>
+              <Button className="w-full" onClick={salvar} disabled={saving}>
+                Salvar configurações
+              </Button>
             </div>
           </div>
           <div>
