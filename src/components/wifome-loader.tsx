@@ -7,9 +7,9 @@ export type LoaderPerfil = "cliente" | "estabelecimento" | "entregador";
 const STEP_MS = 1400;
 
 const STEPS = [
-  { icon: Sandwich, label: "🍔 Lanche sendo preparado" },
-  { icon: Store, label: "📦 Separando os suprimentos" },
-  { icon: Bike, label: "🛵 Entregador a caminho" },
+  { icon: Sandwich, label: "Pedido" },
+  { icon: Store, label: "Loja" },
+  { icon: Bike, label: "Entrega" },
 ] as const;
 
 export function detectPerfil(pathname?: string): LoaderPerfil {
@@ -80,25 +80,6 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
           );
         })}
       </div>
-      {!compact && (
-        <>
-          <p
-            key={step}
-            className="animate-fade-in text-xs font-medium text-primary-foreground/85 transition-opacity duration-500"
-          >
-            {STEPS[step].label}...
-          </p>
-          <span className="relative block h-0.5 w-32 overflow-hidden rounded-full bg-primary-foreground/15">
-            <span
-              className="absolute inset-y-0 left-0 rounded-full bg-primary-foreground/60 transition-all ease-linear"
-              style={{
-                width: `${((step + 1) / STEPS.length) * 100}%`,
-                transitionDuration: reduced ? "0ms" : `${STEP_MS}ms`,
-              }}
-            />
-          </span>
-        </>
-      )}
     </div>
   );
 }
