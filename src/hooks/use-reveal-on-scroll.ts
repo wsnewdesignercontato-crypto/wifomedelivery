@@ -140,8 +140,8 @@ export function useRevealOnScroll(selector = ".reveal") {
       // Se forem mutações, verifica se são apenas mudanças de visibilidade feitas por nós
       if (mutations && mutations.length > 0) {
         const isSelf = mutations.every(m => 
-          m.type === 'attributes' && 
-          (m.attributeName === 'class' || m.attributeName?.startsWith('data-reveal'))
+          (m.type === 'attributes' && (m.attributeName === 'class' || m.attributeName?.startsWith('data-reveal'))) ||
+          (m.type === 'childList' && Array.from(m.addedNodes).every(node => node instanceof HTMLElement && node.classList.contains('word')))
         );
         if (isSelf) return;
       }
