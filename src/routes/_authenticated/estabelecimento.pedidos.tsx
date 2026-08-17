@@ -390,9 +390,9 @@ function PedidosPage() {
               <div
                 key={o.id}
                 className={cn(
-                  "relative overflow-hidden rounded-2xl border bg-card p-4 shadow-card transition",
+                  "group relative overflow-hidden rounded-[2rem] border bg-card p-5 shadow-sm transition-all hover:shadow-xl",
                   tone.card,
-                  "before:absolute before:left-0 before:top-0 before:h-full before:w-1.5",
+                  "before:absolute before:left-0 before:top-0 before:h-full before:w-2",
                   tone.accent,
                 )}
               >
