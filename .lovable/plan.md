@@ -1,29 +1,36 @@
+---
+title: Plano de Sincronização e Auditoria WiFome
+date: 2026-08-17
+---
+
 # Plano de Sincronização e Auditoria WiFome
 
-Este plano visa garantir que os quatro módulos do WiFome (Landing, Cliente, Loja e Entregador) estejam sincronizados em termos de fluxos de dados, segurança e experiência do usuário.
+## Objetivo
+Resolver inconsistências entre o frontend e o banco de dados (RPCs ausentes), sincronizar fluxos de tempo real e auditar a segurança RLS para garantir que os 4 apps (Cliente, Loja, Entregador e Admin) funcionem de forma coesa e segura.
 
-## Fases de Implementação
+## 1. Fundação e Banco de Dados (Database Routines)
+- [x] Restaurar `confirm_pickup_order`: Criar RPC no banco para permitir que lojas confirmem entregas de retirada (Pickup).
+- [x] Restaurar `check_profile_complete`: Criar RPC para o `OnboardingGate` validar dados obrigatórios.
+- [x] Criar `set_active_city`: Permitir que o cliente atualize sua localização preferencial.
+- [ ] Verificar triggers de status: Garantir que a mudança de `delivery_status` para `delivered` dispare o `platform_ledger` corretamente.
+- [ ] Implementar `confirm_delivery_code`: Uma RPC segura para o entregador validar o código de 4 dígitos (atualmente feito no frontend, o que é menos seguro).
 
-### 1. Sincronização de Fluxo e Notificações (Realtime)
-* **Status do Pedido:** Revisar o `PedidoPage` (cliente) e `DashboardPage` (loja) para garantir que as assinaturas do Supabase Realtime estejam capturando todas as transições de status, especialmente do `placed` até `delivered`.
-* **Novas Corridas:** Validar o `NewRideOffer` no entregador para garantir que a lógica de geofencing e a sirene toquem instantaneamente quando um pedido entra em `broadcasting`.
-* **Chat:** Verificar se as notificações push e alertas visuais de novas mensagens estão funcionando nos três perfis.
+## 2. Realtime e Sincronização
+- [ ] **Cliente**: Otimizar inscrição no canal de pedidos para refletir mudanças de status instantaneamente no `cliente.pedido.$id.tsx`.
+- [ ] **Entregador**: Ajustar `new-ride-offer.tsx` para garantir que ofertas desapareçam imediatamente após serem aceitas por outros entregadores.
+- [ ] **Estabelecimento**: Sincronizar painel de novos pedidos com som de alerta persistente até a primeira interação.
 
-### 2. Auditoria de Segurança e RLS
-* **Permissões de Tabelas:** Executar uma varredura nas tabelas sensíveis (`orders`, `deliveries`, `platform_ledger`) para garantir que as políticas de RLS impeçam que um entregador veja dados de outro, ou que um cliente veja lucros da loja.
-* **Segurança de Código:** Validar que `codigo_entrega` e `cancellation_reason` só possam ser alterados pelos perfis corretos através de funções RPC ou políticas de `UPDATE` estritas.
+## 3. Segurança e RLS (Auditoria Profunda)
+- [ ] **Privacidade**: Garantir que o telefone do cliente só seja visível para o entregador/loja através da RPC `get_order_client_contact` (já existente, mas precisa de revisão de grants).
+- [ ] **Grants**: Executar bloco de `GRANT EXECUTE` em todas as RPCs públicas para o role `authenticated`.
+- [ ] **RLS**: Revisar políticas de `orders` e `deliveries` para evitar vazamento de coordenadas de GPS entre entregadores.
 
-### 3. Ajustes de UI/UX e Consistência Visual
-* **Logo e Branding:** Garantir que o `IFomeLogo` e os filtros de cor (Laranja/Vermelho/Verde) sejam aplicados consistentemente em todas as telas, incluindo modais e notificações.
-* **Onboarding:** Validar se o `OnboardingGate` está bloqueando corretamente o acesso a funções premium enquanto os dados obrigatórios não forem preenchidos nos 3 perfis.
-* **Consistência de Textos:** Revisar rótulos de botões e mensagens de sucesso/erro para que sigam o tom de voz premium do WiFome em todos os aplicativos.
-
-### 4. Correções de Performance e Mobile
-* **Debounce de Rolagem:** Revisar o `use-reveal-on-scroll.ts` para garantir que a rolagem em dispositivos móveis continue fluida mesmo com muitas animações.
-* **PWA:** Verificar se os 3 manifestos (`WiFome`, `WiLoja`, `WiMoto`) estão sendo detectados e sugeridos corretamente para instalação.
+## 4. UI/UX e Consistência Visual
+- [ ] **Loading**: Padronizar o `WifomeLoader` em todas as transições de rota pesadas.
+- [ ] **Mobile**: Ajustar comportamentos de "Pull to Refresh" que podem conflitar com o scroll premium em telas de listagem.
+- [ ] **Status**: Unificar cores de badges de status entre os 4 módulos (verde para entregue, laranja para em preparo, etc).
 
 ## Detalhes Técnicos
-
-* **Supabase Realtime:** Otimizar canais para reduzir o uso de banda, filtrando por ID de usuário ou estabelecimento diretamente na assinatura.
-* **CSS Global:** Padronizar as variáveis de cor oklch no `styles.css` para evitar variações cromáticas não planejadas entre as telas.
-* **RPCs:** Migrar lógicas complexas de validação de entrega para `SECURITY DEFINER` no banco de dados, protegendo contra manipulação no frontend.
+- Uso de `SECURITY DEFINER` em RPCs críticas para bypass de RLS controlado.
+- Otimização de filtros em `postgres_changes` para reduzir tráfego de rede.
+- Padronização de tratamento de erros no frontend para RPCs (ex: tratar `invalid_code`, `code_expired`).
