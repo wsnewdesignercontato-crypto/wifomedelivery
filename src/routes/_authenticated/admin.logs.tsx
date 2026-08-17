@@ -73,6 +73,12 @@ function LogsPage() {
               {(data ?? []).map((l) => (
                 <tr key={l.id} className="hover:bg-muted/30">
                   <td className="px-4 py-3 text-muted-foreground">{dateTime(l.created_at)}</td>
+                  <td className="px-4 py-3 font-medium">
+                    {l.admin_nome || "Sistema"}
+                    <span className="ml-2 text-[10px] text-muted-foreground font-mono">
+                      ({l.admin_id.slice(0, 6)})
+                    </span>
+                  </td>
                   <td className="px-4 py-3">
                     <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
                       {l.action}
