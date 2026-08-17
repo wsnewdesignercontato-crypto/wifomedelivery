@@ -345,43 +345,38 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
     evaluate();
     // Debounce para agrupar rajadas de eventos realtime
     let debounceT: ReturnType<typeof setTimeout> | null = null;
-    const scheduleEvaluate = () => {
+    const scheduleEvaluate = (payload: any) => {
+      // Se uma entrega que estamos vendo foi aceita ou cancelada, limpa a oferta imediatamente
+      if (payload.eventType === "UPDATE" || payload.eventType === "DELETE") {
+        const oldId = payload.old?.id || payload.new?.id;
+        if (oldId && (payload.new?.status !== 'broadcasting' || payload.eventType === "DELETE")) {
+          setOffer(prev => prev?.deliveryId === oldId ? null : prev);
+        }
+      }
+
       if (debounceT) clearTimeout(debounceT);
       debounceT = setTimeout(() => {
         debounceT = null;
         evaluate();
-      }, 400);
+      }, 300);
     };
+
     // Filtra por broadcasting para não receber updates irrelevantes do sistema todo
     const chBroadcast = supabase
       .channel("courier-offer-bcast-" + courier.user_id)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "deliveries", filter: "status=eq.broadcasting" },
+        { event: "*", schema: "public", table: "deliveries" },
         scheduleEvaluate,
       )
       .subscribe();
-    // Também precisamos reagir quando uma entrega do próprio entregador muda (aceita/finaliza)
-    const chMine = supabase
-      .channel("courier-offer-mine-" + courier.user_id)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "deliveries",
-          filter: `entregador_id=eq.${courier.user_id}`,
-        },
-        scheduleEvaluate,
-      )
-      .subscribe();
+
     // Fallback lento (60s) caso realtime caia
     const t = setInterval(evaluate, 60000);
     return () => {
       cancelled = true;
       if (debounceT) clearTimeout(debounceT);
       supabase.removeChannel(chBroadcast);
-      supabase.removeChannel(chMine);
       clearInterval(t);
     };
     // The polling lifecycle intentionally ignores nested courier/myPos object churn to avoid

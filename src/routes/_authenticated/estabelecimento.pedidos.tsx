@@ -208,19 +208,23 @@ function PedidosPage() {
     const codigo = (prompt("Código de retirada de 4 dígitos:") ?? "").trim();
     if (!codigo) return;
 
-    const { error } = await supabase.rpc("confirm_pickup_order" as any, {
+    // Confirma retirada atomicamente via RPC
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("confirm_pickup_order" as any, {
       p_order_id: order.id,
       p_codigo: codigo,
     });
 
-    if (error) {
+    const result = rpcRes as any;
+
+    if (rpcErr) {
       toast.error("Não foi possível confirmar a retirada", {
-        description: error.message,
+        description: rpcErr.message,
       });
       return;
     }
 
     toast.success("Retirada confirmada com sucesso");
+    reload();
   }
 
   async function cancelar(id: string) {
