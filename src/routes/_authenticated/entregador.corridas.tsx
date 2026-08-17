@@ -838,7 +838,7 @@ function Corridas() {
               return (
                 <div
                   key={d.id}
-                  className="rounded-2xl border-2 border-primary/60 bg-primary/5 p-4 shadow-card"
+                  className="group relative overflow-hidden rounded-[2rem] border-2 border-primary/30 bg-card p-5 shadow-sm transition-all hover:shadow-xl hover:border-primary/60"
                 >
                   <div className="flex items-start justify-between">
                     <div className="min-w-0">
@@ -865,8 +865,11 @@ function Corridas() {
                       {fmt(d.valor_entrega_cents)}
                     </span>
                   </div>
-                  <div className="mt-3">
-                    <Button className="w-full" onClick={() => aceitar(d)}>
+                  <div className="mt-4">
+                    <Button 
+                      className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20 transition-transform active:scale-95" 
+                      onClick={() => aceitar(d)}
+                    >
                       Aceitar corrida
                     </Button>
                   </div>

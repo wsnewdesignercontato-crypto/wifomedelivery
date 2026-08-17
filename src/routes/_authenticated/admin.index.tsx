@@ -179,6 +179,7 @@ async function fetchOverview() {
       estabsPendentes,
       entregadoresOnline,
       entregadoresTotal,
+      taxaConversao: month.length ? ((deliveredMonth.length / month.length) * 100).toFixed(1) : "0",
     },
     days,
     statusData,
@@ -299,9 +300,11 @@ function AdminDashboard() {
           loading={isLoading}
         />
         <KpiCard
-          label="Pedidos semana"
-          value={num(k?.pedidosSemana ?? 0)}
-          icon={Clock}
+          label="Conversão (mês)"
+          value={`${k?.taxaConversao ?? "0"}%`}
+          hint="Pedidos entregues / total"
+          icon={TrendingUp}
+          tone="primary"
           loading={isLoading}
         />
       </div>

@@ -345,7 +345,7 @@ function PedidosPage() {
           <p className="mt-3 text-sm text-muted-foreground">Nenhum pedido nesta aba.</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
           {lista.map((o) => {
             const step = proxima(o.status);
             const isDelivered = o.status === "delivered";
@@ -355,23 +355,23 @@ function PedidosPage() {
               o.refund_status === "completed";
             const tone = isProblem
               ? {
-                  card: "border-red-500/60 bg-red-500/5",
-                  badge: "bg-red-500 text-white hover:bg-red-500/90",
-                  value: "text-red-600 dark:text-red-400",
-                  accent: "before:bg-red-500",
+                  card: "border-destructive/30 bg-destructive/5 hover:border-destructive/50",
+                  badge: "bg-destructive text-destructive-foreground",
+                  value: "text-destructive",
+                  accent: "before:bg-destructive shadow-red-500/10",
                 }
               : isDelivered
                 ? {
-                    card: "border-emerald-500/60 bg-emerald-500/5",
-                    badge: "bg-emerald-500 text-white hover:bg-emerald-500/90",
-                    value: "text-emerald-600 dark:text-emerald-400",
-                    accent: "before:bg-emerald-500",
+                    card: "border-success/30 bg-success/5 hover:border-success/50",
+                    badge: "bg-success text-success-foreground",
+                    value: "text-success",
+                    accent: "before:bg-success shadow-emerald-500/10",
                   }
                 : {
-                    card: "border-primary/50 bg-primary/5",
-                    badge: "bg-primary text-primary-foreground hover:bg-primary/90",
+                    card: "border-primary/20 bg-card hover:border-primary/40",
+                    badge: "bg-primary text-primary-foreground",
                     value: "text-primary",
-                    accent: "before:bg-primary",
+                    accent: "before:bg-primary shadow-orange-500/10",
                   };
             const contact = contacts[o.id];
             const addr = o.endereco_entrega;
@@ -390,9 +390,9 @@ function PedidosPage() {
               <div
                 key={o.id}
                 className={cn(
-                  "relative overflow-hidden rounded-2xl border bg-card p-4 shadow-card transition",
+                  "group relative overflow-hidden rounded-[2rem] border bg-card p-5 shadow-sm transition-all hover:shadow-xl",
                   tone.card,
-                  "before:absolute before:left-0 before:top-0 before:h-full before:w-1.5",
+                  "before:absolute before:left-0 before:top-0 before:h-full before:w-2",
                   tone.accent,
                 )}
               >
@@ -510,9 +510,13 @@ function PedidosPage() {
                     {o.cancellation_reason}
                   </p>
                 )}
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap gap-2 pt-2 border-t border-border/40">
                   {step && (
-                    <Button size="sm" onClick={() => mudarStatus(o, step.next)}>
+                    <Button 
+                      size="sm" 
+                      onClick={() => mudarStatus(o, step.next)}
+                      className="h-10 px-4 rounded-xl shadow-lg shadow-primary/20 transition-transform active:scale-95"
+                    >
                       {step.next === "ready" && <Bike className="mr-2 h-4 w-4" />}
                       {step.next === "ready" && o.tipo_entrega === "pickup"
                         ? "Pronto para retirada"
@@ -520,16 +524,31 @@ function PedidosPage() {
                     </Button>
                   )}
                   {o.tipo_entrega === "pickup" && o.status === "ready" && (
-                    <Button size="sm" variant="secondary" onClick={() => confirmarRetirada(o)}>
+                    <Button 
+                      size="sm" 
+                      variant="secondary" 
+                      onClick={() => confirmarRetirada(o)}
+                      className="h-10 px-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white"
+                    >
                       Confirmar retirada
                     </Button>
                   )}
-                  <Button size="sm" variant="outline" onClick={() => imprimir(o.id)}>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => imprimir(o.id)}
+                    className="h-10 px-4 rounded-xl border-border bg-muted/20 hover:bg-muted"
+                  >
                     <Printer className="mr-2 h-4 w-4" />
                     Imprimir
                   </Button>
                   {!TERMINAL.has(o.status) && (
-                    <Button size="sm" variant="outline" onClick={() => cancelar(o.id)}>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={() => cancelar(o.id)}
+                      className="h-10 px-4 rounded-xl text-destructive hover:bg-destructive/10"
+                    >
                       Cancelar
                     </Button>
                   )}
