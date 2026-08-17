@@ -10,9 +10,8 @@ const STEPS = [
   { icon: Bike, label: "Entrega" },
 ] as const;
 
-const LOADER_CYCLE_SECONDS = 1.95;
-const LOADER_STEP_DELAY = LOADER_CYCLE_SECONDS / STEPS.length;
-const LOADER_LINE_OFFSET = LOADER_STEP_DELAY * 0.38;
+const LOADER_STEP_MS = 500;
+const LOADER_STEP_DELAY = LOADER_STEP_MS / 1000;
 
 export function detectPerfil(pathname?: string): LoaderPerfil {
   const path =
@@ -40,14 +39,13 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
         {STEPS.map((s, i) => {
           const Icon = s.icon;
           const delay = i * LOADER_STEP_DELAY;
-          const lineDelay = delay + LOADER_LINE_OFFSET;
 
           return (
             <div key={s.label} className="flex items-center gap-1.5 sm:gap-2">
               <div
                 className={[
                   size,
-                  "loader-step-icon relative grid place-items-center overflow-hidden rounded-full border border-primary-foreground/25 bg-primary-foreground/10 text-primary-foreground",
+                  "loader-step-icon relative grid place-items-center overflow-hidden rounded-full border border-primary-foreground/25 bg-primary-foreground/10 text-primary-foreground/35",
                 ].join(" ")}
                 style={{ animationDelay: `${delay}s` }}
               >
@@ -56,25 +54,15 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
                   className="loader-step-glow absolute inset-0 rounded-full"
                   style={{ animationDelay: `${delay}s` }}
                 />
-                <Icon size={icon} strokeWidth={2.2} />
+                <Icon className="relative z-10" size={icon} strokeWidth={2.2} />
               </div>
               {i < STEPS.length - 1 && (
                 <span
                   className={[
-                    "relative h-0.5 overflow-hidden rounded-full bg-primary-foreground/20",
+                    "h-0.5 rounded-full bg-primary-foreground/20",
                     compact ? "w-4" : "w-7 sm:w-9",
                   ].join(" ")}
-                >
-                  <span
-                    className="loader-step-line absolute inset-y-0 left-0 w-full origin-left rounded-full bg-primary-foreground/90"
-                    style={{ animationDelay: `${lineDelay}s` }}
-                  />
-                  <span
-                    aria-hidden
-                    className="loader-step-dot absolute top-1/2 left-0 size-2 -translate-y-1/2 rounded-full bg-primary-foreground"
-                    style={{ animationDelay: `${lineDelay}s` }}
-                  />
-                </span>
+                />
               )}
             </div>
           );

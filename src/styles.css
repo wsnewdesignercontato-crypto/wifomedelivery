@@ -789,37 +789,44 @@ body {
   60% { opacity: 1; transform: scale(1.06); }
   100% { opacity: 1; transform: scale(1); }
 }
-@keyframes loader-plup {
-  0%, 18%, 100% { opacity: 0.34; transform: translateY(0) scale(0.92); box-shadow: none; }
-  7% { opacity: 1; transform: translateY(-10px) scale(1.16); box-shadow: 0 0 24px color-mix(in srgb, currentColor 80%, transparent); }
-  12% { opacity: 1; transform: translateY(0) scale(1.02); box-shadow: 0 0 12px color-mix(in srgb, currentColor 45%, transparent); }
-  16% { opacity: 0.72; transform: translateY(-2px) scale(0.98); box-shadow: none; }
+@keyframes loader-step-activate {
+  0%, 26%, 100% {
+    opacity: 0.34;
+    transform: scale(1);
+    filter: brightness(0.92);
+    border-color: color-mix(in srgb, var(--primary-foreground) 24%, transparent);
+    background-color: color-mix(in srgb, var(--primary-foreground) 10%, transparent);
+    box-shadow: 0 0 0 transparent;
+  }
+  10%, 18% {
+    opacity: 1;
+    transform: scale(1.08);
+    filter: brightness(1.28);
+    border-color: color-mix(in srgb, var(--primary-foreground) 86%, transparent);
+    background-color: color-mix(in srgb, var(--primary-foreground) 22%, transparent);
+    box-shadow:
+      0 0 24px color-mix(in srgb, var(--primary-foreground) 40%, transparent),
+      0 0 10px color-mix(in srgb, var(--primary-foreground) 24%, transparent);
+  }
+  23% {
+    opacity: 0.54;
+    transform: scale(1.02);
+    filter: brightness(1.05);
+    border-color: color-mix(in srgb, var(--primary-foreground) 38%, transparent);
+    background-color: color-mix(in srgb, var(--primary-foreground) 14%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--primary-foreground) 14%, transparent);
+  }
 }
 @keyframes loader-glow-ring {
-  0%, 18%, 100% { opacity: 0; transform: scale(0.78); }
-  8% { opacity: 0.75; transform: scale(1.25); }
-  16% { opacity: 0; transform: scale(1.75); }
-}
-@keyframes loader-line-flow {
-  0%, 4%, 100% { opacity: 0.16; transform: scaleX(0.12); }
-  12% { opacity: 1; transform: scaleX(1); }
-  18% { opacity: 0.26; transform: scaleX(1); }
-}
-@keyframes loader-line-dot {
-  0%, 5%, 100% { opacity: 0; transform: translate(-20%, -50%) scale(0.7); }
-  10% { opacity: 1; transform: translate(25%, -50%) scale(1); }
-  16% { opacity: 0.95; transform: translate(85%, -50%) scale(1); }
-  20% { opacity: 0; transform: translate(130%, -50%) scale(0.8); }
+  0%, 28%, 100% { opacity: 0; transform: scale(0.94); }
+  12%, 18% { opacity: 0.9; transform: scale(1.24); }
+  24% { opacity: 0; transform: scale(1.38); }
 }
 .animate-loader-logo-pop { animation: loader-logo-pop 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.loader-step-icon { animation: loader-plup 1.95s cubic-bezier(0.22, 1, 0.36, 1) infinite both; will-change: transform, opacity; }
-.loader-step-glow { animation: loader-glow-ring 1.95s ease-out infinite both; background: radial-gradient(circle, color-mix(in srgb, var(--primary-foreground) 75%, transparent) 0%, transparent 68%); will-change: transform, opacity; }
-.loader-step-line { animation: loader-line-flow 1.95s ease-in-out infinite both; will-change: transform, opacity; }
-.loader-step-dot { animation: loader-line-dot 1.95s ease-in-out infinite both; box-shadow: 0 0 14px color-mix(in srgb, var(--primary-foreground) 85%, transparent); will-change: transform, opacity; }
+.loader-step-icon { animation: loader-step-activate 1.5s ease-in-out infinite both; will-change: transform, opacity, filter; }
+.loader-step-glow { animation: loader-glow-ring 1.5s ease-out infinite both; background: radial-gradient(circle, color-mix(in srgb, var(--primary-foreground) 80%, transparent) 0%, transparent 70%); will-change: transform, opacity; }
 @media (prefers-reduced-motion: reduce) {
   .animate-loader-logo-pop { animation: none; }
-  .loader-step-icon { animation-duration: 3.6s; transform: none; }
-  .loader-step-glow,
-  .loader-step-line,
-  .loader-step-dot { animation-duration: 3.6s; }
+  .loader-step-icon,
+  .loader-step-glow { animation-duration: 3s; }
 }
