@@ -11,6 +11,7 @@ export const Route = createFileRoute("/_authenticated/admin/logs")({
 type Log = {
   id: string;
   admin_id: string;
+  admin_nome: string | null;
   action: string;
   entity_type: string;
   entity_id: string | null;
@@ -19,8 +20,8 @@ type Log = {
 
 async function fetchLogs() {
   const { data, error } = await supabase
-    .from("admin_audit_log")
-    .select("id,admin_id,action,entity_type,entity_id,created_at")
+    .from("vw_admin_audit_logs" as any)
+    .select("id,admin_id,admin_nome,action,entity_type,entity_id,created_at")
     .order("created_at", { ascending: false })
     .limit(200);
   if (error) throw error;
