@@ -865,8 +865,11 @@ function Corridas() {
                       {fmt(d.valor_entrega_cents)}
                     </span>
                   </div>
-                  <div className="mt-3">
-                    <Button className="w-full" onClick={() => aceitar(d)}>
+                  <div className="mt-4">
+                    <Button 
+                      className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20 transition-transform active:scale-95" 
+                      onClick={() => aceitar(d)}
+                    >
                       Aceitar corrida
                     </Button>
                   </div>
