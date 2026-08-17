@@ -48,6 +48,7 @@ function LogsPage() {
             <thead className="bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Quando</th>
+                <th className="px-4 py-3">Admin</th>
                 <th className="px-4 py-3">Ação</th>
                 <th className="px-4 py-3">Entidade</th>
                 <th className="px-4 py-3">ID</th>
