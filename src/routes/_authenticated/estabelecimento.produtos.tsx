@@ -480,24 +480,225 @@ function ProdutoForm({
   }
 
   return (
-    <div className="grid gap-3 max-h-[75vh] overflow-y-auto pr-1">
-      <div>
-        <Label>Categoria</Label>
-        <Select
-          value={form.menu_category_id}
-          onValueChange={(v) => setForm({ ...form, menu_category_id: v })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Escolha a categoria primeiro" />
-          </SelectTrigger>
-          <SelectContent>
-            {cats.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.nome}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <div className="grid gap-4 max-h-[75vh] overflow-y-auto pr-2 custom-scrollbar">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Categoria</Label>
+          <Select
+            value={form.menu_category_id}
+            onValueChange={(v) => setForm({ ...form, menu_category_id: v })}
+          >
+            <SelectTrigger className="h-11 rounded-xl border-border bg-muted/30 focus:ring-primary/20">
+              <SelectValue placeholder="Escolha a categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              {cats.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</Label>
+          <div className="flex h-11 items-center justify-between rounded-xl border border-border bg-muted/30 px-4">
+            <span className="text-sm font-medium">{form.disponivel ? "Disponível para venda" : "Indisponível"}</span>
+            <Switch checked={form.disponivel} onCheckedChange={(v) => setForm({ ...form, disponivel: v })} />
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Nome do Produto</Label>
+        <Input
+          value={form.nome}
+          onChange={(e) => setForm({ ...form, nome: e.target.value })}
+          placeholder="Ex: X-Salada Artesanal"
+          className="h-11 rounded-xl border-border bg-muted/30 focus:ring-primary/20"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Preço Base</Label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">R$</span>
+            <Input
+              type="number"
+              step="0.01"
+              value={form.preco}
+              onChange={(e) => setForm({ ...form, preco: e.target.value })}
+              className="h-11 rounded-xl border-border bg-muted/30 pl-9 focus:ring-primary/20"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Preço Promo</Label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-500/70">R$</span>
+            <Input
+              type="number"
+              step="0.01"
+              value={form.preco_promo}
+              onChange={(e) => setForm({ ...form, preco_promo: e.target.value })}
+              className="h-11 rounded-xl border-border bg-muted/30 pl-9 text-emerald-600 focus:ring-emerald-500/20"
+              placeholder="Opcional"
+            />
+          </div>
+        </div>
+
+        <div className="col-span-2 md:col-span-1 space-y-2">
+          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Estoque</Label>
+          <Input
+            type="number"
+            value={form.estoque}
+            onChange={(e) => setForm({ ...form, estoque: e.target.value })}
+            placeholder="∞ Ilimitado"
+            className="h-11 rounded-xl border-border bg-muted/30 focus:ring-primary/20"
+          />
+        </div>
+      </div>
+
+      {kind !== "outro" && (
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-primary">
+              <Sparkles className="h-4 w-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">Configuração Inteligente: {KIND_LABEL[kind]}</span>
+            </div>
+          </div>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">{KIND_HINT[kind]}</p>
+          
+          <div className="flex flex-wrap gap-2 pt-1">
+            {addonTpl.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 rounded-lg border-primary/30 text-[11px] hover:bg-primary hover:text-white"
+                onClick={aplicarTemplateComplementos}
+                disabled={applyingTpl}
+              >
+                {applyingTpl ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Wand2 className="mr-1 h-3 w-3" />}
+                Importar Grupos de Complementos
+              </Button>
+            )}
+            {variantTpl.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 rounded-lg border-primary/30 text-[11px] hover:bg-primary hover:text-white"
+                onClick={aplicarTemplateVariacoes}
+              >
+                <Plus className="mr-1 h-3 w-3" /> Adicionar Tamanhos/Variações
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {extraDefs.length > 0 && (
+        <div className="grid grid-cols-2 gap-4 rounded-xl border border-border bg-muted/10 p-4">
+          {extraDefs.map((ed) => (
+            <div key={ed.key} className="space-y-2">
+              <Label className="text-[11px] font-bold uppercase text-muted-foreground">{ed.label}</Label>
+              <div className="relative">
+                <Input
+                  value={extras[ed.key] ?? ""}
+                  onChange={(e) => setExtras({ ...extras, [ed.key]: e.target.value })}
+                  placeholder={ed.placeholder}
+                  className="h-9 rounded-lg border-border bg-background text-sm"
+                />
+                {ed.suffix && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground">
+                    {ed.suffix}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Descrição</Label>
+        <Textarea
+          value={form.descricao}
+          onChange={(e) => setForm({ ...form, descricao: e.target.value })}
+          placeholder="Descreva os ingredientes, tamanho, etc."
+          className="min-h-[80px] rounded-xl border-border bg-muted/30 focus:ring-primary/20 resize-none"
+        />
+      </div>
+
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center justify-between border-b border-border pb-2">
+          <h3 className="text-sm font-bold flex items-center gap-2">
+            Variações <Badge variant="outline" className="text-[10px]">{variants.filter(v => !v._deleted).length}</Badge>
+          </h3>
+          <Button type="button" variant="ghost" size="sm" onClick={addVariant} className="h-8 text-xs text-primary">
+            <Plus className="mr-1 h-3 w-3" /> Nova variação
+          </Button>
+        </div>
+        
+        <div className="space-y-2">
+          {variants.filter((v) => !v._deleted).map((v, i) => {
+            const actualIdx = variants.indexOf(v);
+            return (
+              <div key={i} className="flex items-center gap-2 rounded-xl border border-border p-2 bg-muted/20">
+                <Input
+                  value={v.nome}
+                  onChange={(e) => updVariant(actualIdx, { nome: e.target.value })}
+                  placeholder="Ex: Grande"
+                  className="h-9 flex-1 bg-background text-sm border-none shadow-none focus-visible:ring-0"
+                />
+                <div className="relative w-24">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">R$</span>
+                  <Input
+                    type="number"
+                    value={(v.preco_cents / 100).toFixed(2)}
+                    onChange={(e) => updVariant(actualIdx, { preco_cents: Math.round(parseFloat(e.target.value) * 100) })}
+                    className="h-9 pl-7 bg-background text-sm border-none shadow-none focus-visible:ring-0"
+                  />
+                </div>
+                <Button size="icon" variant="ghost" onClick={() => delVariant(actualIdx)} className="h-8 w-8 text-destructive hover:bg-destructive/10">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="space-y-4 pt-2">
+        <h3 className="text-sm font-bold flex items-center gap-2 border-b border-border pb-2">
+          Grupos de Complementos <Badge variant="outline" className="text-[10px]">{selectedGroups.size}</Badge>
+        </h3>
+        <div className="grid grid-cols-2 gap-2 max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
+          {addonGroups.map((g) => (
+            <div
+              key={g.id}
+              onClick={() => toggleGroup(g.id)}
+              className={`flex cursor-pointer items-center justify-between rounded-xl border p-3 transition-all ${
+                selectedGroups.has(g.id)
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-muted/20 hover:border-primary/50"
+              }`}
+            >
+              <span className="text-xs font-medium truncate">{g.nome}</span>
+              {selectedGroups.has(g.id) && <Sparkles className="h-3 w-3 fill-primary" />}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <DialogFooter className="sticky bottom-0 bg-background pt-4 pb-2 border-t border-border mt-4">
+        <Button onClick={salvar} disabled={saving} className="w-full h-11 rounded-xl text-base font-bold shadow-lg shadow-primary/20">
+          {saving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Salvar Alterações"}
+        </Button>
+      </DialogFooter>
+
         {form.menu_category_id && (
           <div className="mt-2 flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
             <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
