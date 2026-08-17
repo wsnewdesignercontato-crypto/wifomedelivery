@@ -221,7 +221,7 @@ function ProdutosPage() {
                   
                   <div className="flex items-center gap-1">
                     {!p.disponivel && <Badge variant="secondary" className="bg-muted text-[10px] h-5 px-1.5 uppercase font-bold">Pausado</Badge>}
-                    {p.estoque !== null && p.estoque <= 5 && <Badge variant="destructive" className="text-[10px] h-5 px-1.5 font-bold">Baixo Estoque</Badge>}
+                    {p.estoque !== null && p.estoque !== undefined && p.estoque <= 5 && <Badge variant="destructive" className="text-[10px] h-5 px-1.5 font-bold">Baixo Estoque</Badge>}
                   </div>
                 </div>
               </div>
