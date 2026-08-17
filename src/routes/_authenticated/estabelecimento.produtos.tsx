@@ -129,7 +129,7 @@ function ProdutosPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black tracking-tight">Produtos</h1>
+          <h1 className="text-2xl font-black tracking-tight text-foreground">Produtos</h1>
           <p className="text-sm text-muted-foreground">{produtos.length} produtos cadastrados</p>
         </div>
         <Dialog open={openNew} onOpenChange={setOpenNew}>
@@ -138,18 +138,20 @@ function ProdutosPage() {
               <Plus className="mr-2 h-4 w-4" /> Novo produto
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Novo produto</DialogTitle>
+          <DialogContent className="max-w-2xl sm:max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl">
+            <DialogHeader className="p-6 pb-0">
+              <DialogTitle className="text-xl font-black">Adicionar Novo Produto</DialogTitle>
             </DialogHeader>
-            <ProdutoForm
-              cats={cats}
-              addonGroups={addonGroups}
-              onSaved={() => {
-                setOpenNew(false);
-                reload();
-              }}
-            />
+            <div className="p-6 pt-4 overflow-y-auto">
+              <ProdutoForm
+                cats={cats}
+                addonGroups={addonGroups}
+                onSaved={() => {
+                  setOpenNew(false);
+                  reload();
+                }}
+              />
+            </div>
           </DialogContent>
         </Dialog>
       </div>
@@ -181,48 +183,55 @@ function ProdutosPage() {
           Nenhum produto encontrado.
         </div>
       ) : (
-        <div className="grid gap-2 md:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-2">
           {filtrados.map((p) => (
             <div
               key={p.id}
-              className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-card"
+              className="group relative flex items-start gap-4 rounded-3xl border border-border bg-card p-4 shadow-sm hover:shadow-md transition-all hover:border-primary/20"
             >
-              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-muted">
-                {p.foto_url && (
-                  <img src={p.foto_url} alt={p.nome} className="h-full w-full object-cover" />
+              <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-muted shadow-inner">
+                {p.foto_url ? (
+                  <img src={p.foto_url} alt={p.nome} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                    <Sparkles className="h-8 w-8 opacity-20" />
+                  </div>
                 )}
               </div>
-              <div className="min-w-0 flex-1 basis-40">
-                <div className="flex items-center gap-2">
-                  <p className="truncate font-semibold">{p.nome}</p>
-                  {!p.disponivel && (
-                    <Badge variant="secondary" className="text-xs">
-                      Off
-                    </Badge>
-                  )}
-                  {p.estoque !== null && p.estoque !== undefined && p.estoque <= 5 && (
-                    <Badge variant="destructive" className="text-xs">
-                      Estoque {p.estoque}
-                    </Badge>
-                  )}
+              
+              <div className="min-w-0 flex-1 py-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h3 className="truncate font-bold text-foreground leading-tight group-hover:text-primary transition-colors">{p.nome}</h3>
+                    <p className="line-clamp-1 text-[11px] text-muted-foreground mt-0.5">
+                      {p.descricao?.replace(/\[\[extras:[^\]]+\]\]/g, "") || "Sem descrição"}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="font-semibold text-primary">{fmt(p.preco_cents)}</span>
-                  {p.preco_promo_cents && (
-                    <span className="text-xs text-emerald-500">{fmt(p.preco_promo_cents)}</span>
-                  )}
+                
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-lg font-black text-primary">{fmt(p.preco_cents)}</span>
+                    {p.preco_promo_cents && (
+                      <span className="text-xs font-medium text-emerald-500 line-through opacity-70">
+                        {fmt(p.preco_promo_cents)}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-1">
+                    {!p.disponivel && <Badge variant="secondary" className="bg-muted text-[10px] h-5 px-1.5 uppercase font-bold">Pausado</Badge>}
+                    {p.estoque !== null && p.estoque <= 5 && <Badge variant="destructive" className="text-[10px] h-5 px-1.5 font-bold">Baixo Estoque</Badge>}
+                  </div>
                 </div>
               </div>
-              <div className="ml-auto flex shrink-0 items-center gap-1">
-                <Switch checked={p.disponivel} onCheckedChange={() => toggle(p)} />
-                <Button size="icon" variant="ghost" onClick={() => setEditing(p)}>
+
+              <div className="absolute right-3 top-3 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-lg" onClick={() => setEditing(p)}>
                   <Pencil className="h-4 w-4" />
                 </Button>
-                <Button size="icon" variant="ghost" onClick={() => duplicar(p)}>
+                <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-lg" onClick={() => duplicar(p)}>
                   <Copy className="h-4 w-4" />
-                </Button>
-                <Button size="icon" variant="ghost" onClick={() => remover(p.id)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
             </div>
@@ -231,21 +240,23 @@ function ProdutosPage() {
       )}
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Editar produto</DialogTitle>
+        <DialogContent className="max-w-2xl sm:max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl">
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle className="text-xl font-black">Editar Produto</DialogTitle>
           </DialogHeader>
-          {editing && (
-            <ProdutoForm
-              cats={cats}
-              addonGroups={addonGroups}
-              produto={editing}
-              onSaved={() => {
-                setEditing(null);
-                reload();
-              }}
-            />
-          )}
+          <div className="p-6 pt-4 overflow-y-auto">
+            {editing && (
+              <ProdutoForm
+                cats={cats}
+                addonGroups={addonGroups}
+                produto={editing}
+                onSaved={() => {
+                  setEditing(null);
+                  reload();
+                }}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
@@ -316,7 +327,6 @@ function ProdutoForm({
       .then(({ data }) => {
         setVariants(((data ?? []) as Variant[]).map((v) => ({ ...v, _new: false })));
       });
-    // Parse extras from descricao trailing block  [[extras: k=v; ...]]
     const m = /\[\[extras:([^\]]+)\]\]/.exec(produto.descricao ?? "");
     if (m) {
       const obj: Record<string, string> = {};
@@ -343,7 +353,6 @@ function ProdutoForm({
     setApplyingTpl(true);
     const newIds: string[] = [];
     for (const tpl of addonTpl) {
-      // Reusar grupo existente com mesmo nome, senão criar
       const existing = addonGroups.find((g) => g.nome.toLowerCase() === tpl.nome.toLowerCase());
       let gid = existing?.id;
       if (!gid) {
@@ -407,7 +416,6 @@ function ProdutoForm({
   async function salvar() {
     if (!estab || !form.nome.trim() || !form.preco) return toast.error("Nome e preço obrigatórios");
     setSaving(true);
-    // Serializa extras dentro do descricao como bloco discreto no fim
     const descRaw = (form.descricao ?? "").replace(/\s*\[\[extras:[^\]]+\]\]\s*$/, "").trim();
     const extraEntries = Object.entries(extras).filter(([, v]) => (v ?? "").trim() !== "");
     const descFinal = extraEntries.length
@@ -449,7 +457,6 @@ function ProdutoForm({
       }));
       if (rows.length) await supabase.from("product_addon_groups").insert(rows);
 
-      // Variantes
       for (const v of variants) {
         if (v._deleted && v.id) {
           await supabase.from("product_variants").delete().eq("id", v.id);
@@ -480,7 +487,7 @@ function ProdutoForm({
   }
 
   return (
-    <div className="grid gap-4 max-h-[75vh] overflow-y-auto pr-2 custom-scrollbar">
+    <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Categoria</Label>
@@ -582,7 +589,7 @@ function ProdutoForm({
                 disabled={applyingTpl}
               >
                 {applyingTpl ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Wand2 className="mr-1 h-3 w-3" />}
-                Importar Grupos de Complementos
+                Importar Complementos
               </Button>
             )}
             {variantTpl.length > 0 && (
@@ -592,7 +599,7 @@ function ProdutoForm({
                 className="h-8 rounded-lg border-primary/30 text-[11px] hover:bg-primary hover:text-white"
                 onClick={aplicarTemplateVariacoes}
               >
-                <Plus className="mr-1 h-3 w-3" /> Adicionar Tamanhos/Variações
+                <Plus className="mr-1 h-3 w-3" /> Adicionar Variações
               </Button>
             )}
           </div>
@@ -625,16 +632,16 @@ function ProdutoForm({
       <div className="space-y-2">
         <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Descrição</Label>
         <Textarea
-          value={form.descricao}
+          value={form.descricao.replace(/\s*\[\[extras:[^\]]+\]\]\s*$/, "")}
           onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-          placeholder="Descreva os ingredientes, tamanho, etc."
+          placeholder="Ingredientes e detalhes..."
           className="min-h-[80px] rounded-xl border-border bg-muted/30 focus:ring-primary/20 resize-none"
         />
       </div>
 
       <div className="space-y-4 pt-2">
         <div className="flex items-center justify-between border-b border-border pb-2">
-          <h3 className="text-sm font-bold flex items-center gap-2">
+          <h3 className="text-sm font-bold flex items-center gap-2 text-foreground">
             Variações <Badge variant="outline" className="text-[10px]">{variants.filter(v => !v._deleted).length}</Badge>
           </h3>
           <Button type="button" variant="ghost" size="sm" onClick={addVariant} className="h-8 text-xs text-primary">
@@ -672,8 +679,8 @@ function ProdutoForm({
       </div>
 
       <div className="space-y-4 pt-2">
-        <h3 className="text-sm font-bold flex items-center gap-2 border-b border-border pb-2">
-          Grupos de Complementos <Badge variant="outline" className="text-[10px]">{selectedGroups.size}</Badge>
+        <h3 className="text-sm font-bold flex items-center gap-2 border-b border-border pb-2 text-foreground">
+          Complementos <Badge variant="outline" className="text-[10px]">{selectedGroups.size}</Badge>
         </h3>
         <div className="grid grid-cols-2 gap-2 max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
           {addonGroups.map((g) => (
@@ -693,254 +700,9 @@ function ProdutoForm({
         </div>
       </div>
 
-      <DialogFooter className="sticky bottom-0 bg-background pt-4 pb-2 border-t border-border mt-4">
-        <Button onClick={salvar} disabled={saving} className="w-full h-11 rounded-xl text-base font-bold shadow-lg shadow-primary/20">
-          {saving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Salvar Alterações"}
-        </Button>
-      </DialogFooter>
-
-        {form.menu_category_id && (
-          <div className="mt-2 flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
-            <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <div className="text-xs">
-              <p className="font-semibold text-primary">Modo: {KIND_LABEL[kind]}</p>
-              <p className="text-muted-foreground">{KIND_HINT[kind]}</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div>
-        <Label>Nome</Label>
-        <Input
-          value={form.nome}
-          onChange={(e) => setForm({ ...form, nome: e.target.value })}
-          placeholder={
-            kind === "bebida"
-              ? "Ex: Coca-Cola"
-              : kind === "lanche"
-                ? "Ex: X-Bacon Artesanal"
-                : kind === "pizza"
-                  ? "Ex: Pizza Calabresa"
-                  : "Nome do produto"
-          }
-        />
-      </div>
-      <div>
-        <Label>Descrição</Label>
-        <Textarea
-          value={form.descricao.replace(/\s*\[\[extras:[^\]]+\]\]\s*$/, "")}
-          onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-          placeholder={
-            kind === "lanche"
-              ? "Ingredientes, molhos, ponto sugerido..."
-              : kind === "bebida"
-                ? "Sabor, marca, embalagem..."
-                : "Descreva o produto"
-          }
-        />
-      </div>
-
-      {extraDefs.length > 0 && (
-        <div className="rounded-xl border border-border bg-muted/30 p-3">
-          <p className="mb-2 text-xs font-semibold text-muted-foreground">
-            Detalhes específicos de {KIND_LABEL[kind]}
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            {extraDefs.map((f) => (
-              <div key={f.key}>
-                <Label className="text-xs">
-                  {f.label}
-                  {f.suffix ? ` (${f.suffix})` : ""}
-                </Label>
-                <Input
-                  value={extras[f.key] ?? ""}
-                  onChange={(e) => setExtras((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                  placeholder={f.placeholder}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label>Preço (R$)</Label>
-          <Input value={form.preco} onChange={(e) => setForm({ ...form, preco: e.target.value })} />
-        </div>
-        <div>
-          <Label>Preço promo (R$)</Label>
-          <Input
-            value={form.preco_promo}
-            onChange={(e) => setForm({ ...form, preco_promo: e.target.value })}
-          />
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label>Tempo de preparo (min)</Label>
-          <Input value={form.tempo} onChange={(e) => setForm({ ...form, tempo: e.target.value })} />
-        </div>
-        <div>
-          <Label>Estoque</Label>
-          <Input
-            value={form.estoque}
-            onChange={(e) => setForm({ ...form, estoque: e.target.value })}
-            placeholder="Ilimitado"
-          />
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <Switch
-          checked={form.disponivel}
-          onCheckedChange={(v) => setForm({ ...form, disponivel: v })}
-        />
-        <span className="text-sm">Disponível para venda</span>
-      </div>
-      <div>
-        <Label>URL da foto</Label>
-        <Input
-          value={form.foto_url}
-          onChange={(e) => setForm({ ...form, foto_url: e.target.value })}
-        />
-      </div>
-
-      {variantTpl.length > 0 || variants.filter((v) => !v._deleted).length > 0 ? (
-        <div className="rounded-xl border border-border bg-card p-3">
-          <div className="mb-2 flex items-center justify-between">
-            <div>
-              <Label>
-                Variações{" "}
-                {kind === "bebida" ? "(tamanhos/volumes)" : kind === "pizza" ? "(tamanhos)" : ""}
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                {kind === "bebida"
-                  ? "Ex: Lata 350ml, Garrafa 600ml, 1L, 2L — cada um com seu preço"
-                  : kind === "pizza"
-                    ? "Ex: P, M, G, Família"
-                    : kind === "acai"
-                      ? "Ex: 300ml, 500ml, 700ml, 1L"
-                      : "Diferentes opções do mesmo produto"}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              {variantTpl.length > 0 && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  type="button"
-                  onClick={aplicarTemplateVariacoes}
-                >
-                  <Wand2 className="mr-1 h-3 w-3" /> Sugerir
-                </Button>
-              )}
-              <Button size="sm" variant="outline" type="button" onClick={addVariant}>
-                <Plus className="mr-1 h-3 w-3" /> Nova
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {variants.map((v, i) =>
-              v._deleted ? null : (
-                <div key={i} className="flex items-center gap-2">
-                  <Input
-                    className="flex-1"
-                    placeholder="Nome (ex: 350ml)"
-                    value={v.nome}
-                    onChange={(e) => updVariant(i, { nome: e.target.value })}
-                  />
-                  <Input
-                    className="w-28"
-                    placeholder="Preço R$"
-                    value={(v.preco_cents / 100).toFixed(2)}
-                    onChange={(e) =>
-                      updVariant(i, {
-                        preco_cents: Math.round(
-                          parseFloat(e.target.value.replace(",", ".") || "0") * 100,
-                        ),
-                      })
-                    }
-                  />
-                  <Switch checked={v.ativo} onCheckedChange={(a) => updVariant(i, { ativo: a })} />
-                  <Button size="icon" variant="ghost" type="button" onClick={() => delVariant(i)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              ),
-            )}
-            {variants.filter((v) => !v._deleted).length === 0 && (
-              <p className="text-xs text-muted-foreground">
-                Sem variações. Se o produto tem só 1 tamanho/preço, use o Preço acima.
-              </p>
-            )}
-          </div>
-        </div>
-      ) : null}
-
-      <div className="rounded-xl border border-border bg-card p-3">
-        <div className="mb-2 flex items-center justify-between">
-          <div>
-            <Label>Grupos de opcionais/adicionais</Label>
-            <p className="text-xs text-muted-foreground">
-              {kind === "lanche"
-                ? "Bacon, ovo, queijo extra, ponto da carne..."
-                : kind === "pizza"
-                  ? "Borda, massa, sabores extras..."
-                  : kind === "bebida"
-                    ? "Gelo, copo, canudo..."
-                    : "Marque os grupos que o cliente poderá escolher."}
-            </p>
-          </div>
-          {addonTpl.length > 0 && (
-            <Button
-              size="sm"
-              variant="outline"
-              type="button"
-              onClick={aplicarTemplateComplementos}
-              disabled={applyingTpl}
-            >
-              {applyingTpl ? (
-                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-              ) : (
-                <Wand2 className="mr-1 h-3 w-3" />
-              )}
-              Aplicar template {KIND_LABEL[kind]}
-            </Button>
-          )}
-        </div>
-        {addonGroups.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
-            Nenhum grupo cadastrado.{" "}
-            {addonTpl.length > 0
-              ? 'Clique em "Aplicar template" acima para criar automaticamente.'
-              : "Vá em Complementos e crie o primeiro."}
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {addonGroups.map((g) => {
-              const on = selectedGroups.has(g.id);
-              return (
-                <button
-                  type="button"
-                  key={g.id}
-                  onClick={() => toggleGroup(g.id)}
-                  className={`rounded-full border px-3 py-1.5 text-xs transition ${on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-muted"}`}
-                >
-                  {on ? "✓ " : ""}
-                  {g.nome}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <DialogFooter>
-        <Button onClick={salvar} disabled={saving}>
-          {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Salvar
-        </Button>
-      </DialogFooter>
+      <Button onClick={salvar} disabled={saving} className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20">
+        {saving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Salvar Alterações"}
+      </Button>
     </div>
   );
 }
