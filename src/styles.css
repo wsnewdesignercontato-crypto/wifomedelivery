@@ -255,12 +255,16 @@ body {
   --sidebar-ring: oklch(0.62 0.17 150);
   --accent: oklch(0.95 0.05 150);
   --accent-foreground: oklch(0.30 0.12 150);
+  --success: oklch(0.62 0.17 150);
+  --success-foreground: oklch(1 0 0);
 }
 :is(.dark) .theme-entregador {
   --sidebar-accent: oklch(0.25 0.05 150);
   --sidebar-accent-foreground: oklch(0.90 0.10 150);
   --accent: oklch(0.25 0.05 150);
   --accent-foreground: oklch(0.90 0.10 150);
+  --success: oklch(0.62 0.17 150);
+  --success-foreground: oklch(0.10 0.02 150);
 }
 
 
