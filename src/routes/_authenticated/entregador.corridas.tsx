@@ -838,7 +838,7 @@ function Corridas() {
               return (
                 <div
                   key={d.id}
-                  className="rounded-2xl border-2 border-primary/60 bg-primary/5 p-4 shadow-card"
+                  className="group relative overflow-hidden rounded-[2rem] border-2 border-primary/30 bg-card p-5 shadow-sm transition-all hover:shadow-xl hover:border-primary/60"
                 >
                   <div className="flex items-start justify-between">
                     <div className="min-w-0">
