@@ -19,13 +19,13 @@ type Log = {
 };
 
 async function fetchLogs() {
-  const { data, error } = await supabase
-    .from("vw_admin_audit_logs" as any)
+  const { data, error } = await (supabase as any)
+    .from("vw_admin_audit_logs")
     .select("id,admin_id,admin_nome,action,entity_type,entity_id,created_at")
     .order("created_at", { ascending: false })
     .limit(200);
   if (error) throw error;
-  return (data ?? []) as Log[];
+  return (data ?? []) as any as Log[];
 }
 
 function LogsPage() {
