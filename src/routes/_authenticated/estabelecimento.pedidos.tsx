@@ -345,7 +345,7 @@ function PedidosPage() {
           <p className="mt-3 text-sm text-muted-foreground">Nenhum pedido nesta aba.</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
           {lista.map((o) => {
             const step = proxima(o.status);
             const isDelivered = o.status === "delivered";
@@ -355,23 +355,23 @@ function PedidosPage() {
               o.refund_status === "completed";
             const tone = isProblem
               ? {
-                  card: "border-red-500/60 bg-red-500/5",
-                  badge: "bg-red-500 text-white hover:bg-red-500/90",
-                  value: "text-red-600 dark:text-red-400",
-                  accent: "before:bg-red-500",
+                  card: "border-destructive/30 bg-destructive/5 hover:border-destructive/50",
+                  badge: "bg-destructive text-destructive-foreground",
+                  value: "text-destructive",
+                  accent: "before:bg-destructive shadow-red-500/10",
                 }
               : isDelivered
                 ? {
-                    card: "border-emerald-500/60 bg-emerald-500/5",
-                    badge: "bg-emerald-500 text-white hover:bg-emerald-500/90",
-                    value: "text-emerald-600 dark:text-emerald-400",
-                    accent: "before:bg-emerald-500",
+                    card: "border-success/30 bg-success/5 hover:border-success/50",
+                    badge: "bg-success text-success-foreground",
+                    value: "text-success",
+                    accent: "before:bg-success shadow-emerald-500/10",
                   }
                 : {
-                    card: "border-primary/50 bg-primary/5",
-                    badge: "bg-primary text-primary-foreground hover:bg-primary/90",
+                    card: "border-primary/20 bg-card hover:border-primary/40",
+                    badge: "bg-primary text-primary-foreground",
                     value: "text-primary",
-                    accent: "before:bg-primary",
+                    accent: "before:bg-primary shadow-orange-500/10",
                   };
             const contact = contacts[o.id];
             const addr = o.endereco_entrega;
