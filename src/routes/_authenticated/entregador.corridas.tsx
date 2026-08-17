@@ -428,16 +428,19 @@ function Corridas() {
       prova_url = signed?.signedUrl ?? path;
       metodo = "photo";
     }
-    // Confirma entrega atomicamente via RPC (atualiza deliveries + orders + libera repasse)
-    const { error: rpcErr } = await supabase.rpc("courier_confirm_delivery", {
-      _order_id: ativa.order_id,
-      _codigo: parsed.data,
-      _prova_url: prova_url ?? undefined,
-      _metodo: metodo,
+    // Confirma entrega atomicamente via RPC
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("confirm_delivery_code" as any, {
+      p_order_id: ativa.order_id,
+      p_code: parsed.data,
+      p_prova_url: prova_url ?? undefined,
     });
-    if (rpcErr) {
+
+    const result = rpcRes as any;
+
+    if (rpcErr || (result && result.success === false)) {
       setAdvancing(false);
-      return toast.error("Falha ao finalizar", { description: rpcErr.message });
+      const errorMsg = rpcErr?.message || (result && result.error === 'invalid_code' ? 'Código incorreto' : 'Falha ao finalizar');
+      return toast.error(errorMsg);
     }
     await supabase
       .from("courier_profiles")
