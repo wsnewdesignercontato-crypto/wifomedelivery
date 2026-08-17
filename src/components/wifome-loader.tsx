@@ -10,6 +10,10 @@ const STEPS = [
   { icon: Bike, label: "Entrega" },
 ] as const;
 
+const LOADER_CYCLE_SECONDS = 1.95;
+const LOADER_STEP_DELAY = LOADER_CYCLE_SECONDS / STEPS.length;
+const LOADER_LINE_OFFSET = LOADER_STEP_DELAY * 0.38;
+
 export function detectPerfil(pathname?: string): LoaderPerfil {
   const path =
     pathname ??
@@ -27,7 +31,7 @@ function themeClassFor(perfil: LoaderPerfil) {
 
 /** Animação de carregamento: pedido → loja → entregador, em loop contínuo. */
 export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
-  const size = compact ? "size-7" : "size-9";
+  const size = compact ? "size-7" : "size-10";
   const icon = compact ? 14 : 18;
 
   return (
@@ -35,15 +39,23 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
       <div className="flex items-center gap-1.5 sm:gap-2">
         {STEPS.map((s, i) => {
           const Icon = s.icon;
+          const delay = i * LOADER_STEP_DELAY;
+          const lineDelay = delay + LOADER_LINE_OFFSET;
+
           return (
             <div key={s.label} className="flex items-center gap-1.5 sm:gap-2">
               <div
                 className={[
                   size,
-                  "loader-step-icon grid place-items-center rounded-xl border border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground",
+                  "loader-step-icon relative grid place-items-center overflow-hidden rounded-full border border-primary-foreground/25 bg-primary-foreground/10 text-primary-foreground",
                 ].join(" ")}
-                style={{ animationDelay: `${i * 0.32}s` }}
+                style={{ animationDelay: `${delay}s` }}
               >
+                <span
+                  aria-hidden
+                  className="loader-step-glow absolute inset-0 rounded-full"
+                  style={{ animationDelay: `${delay}s` }}
+                />
                 <Icon size={icon} strokeWidth={2.2} />
               </div>
               {i < STEPS.length - 1 && (
@@ -55,7 +67,12 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
                 >
                   <span
                     className="loader-step-line absolute inset-y-0 left-0 w-full origin-left rounded-full bg-primary-foreground/90"
-                    style={{ animationDelay: `${i * 0.32 + 0.12}s` }}
+                    style={{ animationDelay: `${lineDelay}s` }}
+                  />
+                  <span
+                    aria-hidden
+                    className="loader-step-dot absolute top-1/2 left-0 size-2 -translate-y-1/2 rounded-full bg-primary-foreground"
+                    style={{ animationDelay: `${lineDelay}s` }}
                   />
                 </span>
               )}
