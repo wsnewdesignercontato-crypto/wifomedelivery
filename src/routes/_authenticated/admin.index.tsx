@@ -179,6 +179,7 @@ async function fetchOverview() {
       estabsPendentes,
       entregadoresOnline,
       entregadoresTotal,
+      taxaConversao: month.length ? ((deliveredMonth.length / month.length) * 100).toFixed(1) : "0",
     },
     days,
     statusData,
