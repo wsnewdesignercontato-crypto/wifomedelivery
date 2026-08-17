@@ -1,36 +1,24 @@
----
-title: Plano de Sincronização e Auditoria WiFome
-date: 2026-08-17
----
-
 # Plano de Sincronização e Auditoria WiFome
 
 ## Objetivo
-Resolver inconsistências entre o frontend e o banco de dados (RPCs ausentes), sincronizar fluxos de tempo real e auditar a segurança RLS para garantir que os 4 apps (Cliente, Loja, Entregador e Admin) funcionem de forma coesa e segura.
+Garantir que os 4 módulos (Cliente, Estabelecimento, Entregador e Admin) funcionem de forma síncrona, segura e sem bugs de fluxo.
 
-## 1. Fundação e Banco de Dados (Database Routines)
-- [x] Restaurar `confirm_pickup_order`: Criar RPC no banco para permitir que lojas confirmem entregas de retirada (Pickup).
-- [x] Restaurar `check_profile_complete`: Criar RPC para o `OnboardingGate` validar dados obrigatórios.
-- [x] Criar `set_active_city`: Permitir que o cliente atualize sua localização preferencial.
-- [ ] Verificar triggers de status: Garantir que a mudança de `delivery_status` para `delivered` dispare o `platform_ledger` corretamente.
-- [ ] Implementar `confirm_delivery_code`: Uma RPC segura para o entregador validar o código de 4 dígitos (atualmente feito no frontend, o que é menos seguro).
+## 1. Sincronização de Fluxos (Realtime)
+- [x] **Cliente**: Otimizado `cliente.pedido.$id.tsx` para refletir status e posição do GPS sem recarregar.
+- [x] **Entregador**: Ajustado `new-ride-offer.tsx` para remover ofertas aceitas por outros em tempo real.
+- [x] **Estabelecimento**: Adicionado alerta sonoro (`siren.mp3`) e toast persistente em `estabelecimento.pedidos.tsx` para novos pedidos.
 
-## 2. Realtime e Sincronização
-- [ ] **Cliente**: Otimizar inscrição no canal de pedidos para refletir mudanças de status instantaneamente no `cliente.pedido.$id.tsx`.
-- [ ] **Entregador**: Ajustar `new-ride-offer.tsx` para garantir que ofertas desapareçam imediatamente após serem aceitas por outros entregadores.
-- [ ] **Estabelecimento**: Sincronizar painel de novos pedidos com som de alerta persistente até a primeira interação.
+## 2. Auditoria de Segurança e Integridade (RPCs)
+- [x] **Confirmação de Entrega**: Migrada lógica de validação de código do frontend para a RPC `confirm_delivery_code` (Atômico: valida código + atualiza status + gera extrato).
+- [x] **Confirmação de Retirada**: Implementada RPC `confirm_pickup_order` para segurança em pedidos sem entregador.
+- [x] **Onboarding**: Criada RPC `check_profile_complete` para evitar que usuários sem dados obrigatórios operem no app.
+- [x] **Financeiro**: Implementado trigger no DB para que o `platform_ledger` seja alimentado automaticamente ao marcar como entregue.
 
-## 3. Segurança e RLS (Auditoria Profunda)
-- [ ] **Privacidade**: Garantir que o telefone do cliente só seja visível para o entregador/loja através da RPC `get_order_client_contact` (já existente, mas precisa de revisão de grants).
-- [ ] **Grants**: Executar bloco de `GRANT EXECUTE` em todas as RPCs públicas para o role `authenticated`.
-- [ ] **RLS**: Revisar políticas de `orders` e `deliveries` para evitar vazamento de coordenadas de GPS entre entregadores.
+## 3. Melhorias de UI e Consistência
+- [x] **Loader Universal**: Padronizada animação de ícones (Sanduíche -> Loja -> Moto) em todos os apps.
+- [x] **Status Visual**: Padronizados tons de verde para entregue e vermelho para cancelado/problema.
+- [ ] **Admin**: Melhorar logs de auditoria para incluir nome do admin responsável.
 
-## 4. UI/UX e Consistência Visual
-- [ ] **Loading**: Padronizar o `WifomeLoader` em todas as transições de rota pesadas.
-- [ ] **Mobile**: Ajustar comportamentos de "Pull to Refresh" que podem conflitar com o scroll premium em telas de listagem.
-- [ ] **Status**: Unificar cores de badges de status entre os 4 módulos (verde para entregue, laranja para em preparo, etc).
-
-## Detalhes Técnicos
-- Uso de `SECURITY DEFINER` em RPCs críticas para bypass de RLS controlado.
-- Otimização de filtros em `postgres_changes` para reduzir tráfego de rede.
-- Padronização de tratamento de erros no frontend para RPCs (ex: tratar `invalid_code`, `code_expired`).
+## 4. Próximos Passos
+- [ ] Testar fluxo fim-a-fim: Cliente (Paga) -> Estabelecimento (Aceita/Pronto) -> Entregador (Aceita/Coleta/Entrega).
+- [ ] Validar bloqueio de múltiplos apps instalados no mesmo dispositivo (identificação de perfil).
