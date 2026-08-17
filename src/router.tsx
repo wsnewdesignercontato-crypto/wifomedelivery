@@ -12,7 +12,7 @@ export const getRouter = () => {
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
     defaultPendingMs: 120,
-    defaultPendingMinMs: 600,
+    defaultPendingMinMs: 1100,
     defaultPendingComponent: () => <WifomeLoader />,
   });
 

@@ -10,6 +10,8 @@ import { DATA_UPDATED_EVENT, PROFILE_UPDATED_EVENT } from "@/lib/app-refresh";
 
 type Role = "cliente" | "estabelecimento" | "entregador";
 
+const MIN_LOADER_MS = 1100;
+
 const FIELD_LABELS: Record<string, string> = {
   nome: "Nome completo",
   telefone: "Telefone / WhatsApp",
@@ -59,11 +61,19 @@ export function OnboardingGate({
     redirect: string;
   }>({ loading: true, complete: false, missing: [], redirect: "/" });
 
-  async function check() {
+  async function check(ensureMinLoader = false) {
+    const startedAt = ensureMinLoader ? Date.now() : 0;
     const { data, error } = await supabase.rpc("check_profile_complete", {
       _user_id: userId,
       _role: role,
     });
+    if (ensureMinLoader) {
+      const elapsed = Date.now() - startedAt;
+      const remaining = MIN_LOADER_MS - elapsed;
+      if (remaining > 0) {
+        await new Promise((resolve) => window.setTimeout(resolve, remaining));
+      }
+    }
     if (error) {
       // Em erro, libera para não travar o app
       setState({ loading: false, complete: true, missing: [], redirect: "/" });
@@ -85,7 +95,7 @@ export function OnboardingGate({
   }
 
   useEffect(() => {
-    check();
+    check(true);
     const onFocus = () => check();
     const onProfileUpdated = () => check();
     const onVisible = () => {
