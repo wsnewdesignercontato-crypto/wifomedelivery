@@ -300,9 +300,11 @@ function AdminDashboard() {
           loading={isLoading}
         />
         <KpiCard
-          label="Pedidos semana"
-          value={num(k?.pedidosSemana ?? 0)}
-          icon={Clock}
+          label="Conversão (mês)"
+          value={`${k?.taxaConversao ?? "0"}%`}
+          hint="Pedidos entregues / total"
+          icon={TrendingUp}
+          tone="primary"
           loading={isLoading}
         />
       </div>
