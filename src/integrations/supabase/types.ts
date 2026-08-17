@@ -3147,6 +3147,10 @@ export type Database = {
         Args: { _role: string; _user_id: string }
         Returns: Json
       }
+      confirm_pickup_order: {
+        Args: { p_codigo: string; p_order_id: string }
+        Returns: undefined
+      }
       courier_confirm_delivery:
         | {
             Args: {
