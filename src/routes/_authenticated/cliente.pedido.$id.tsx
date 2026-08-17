@@ -154,7 +154,10 @@ function PedidoPage() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "deliveries", filter: `order_id=eq.${id}` },
-        (p) => setDelivery(p.new as Delivery),
+        (p) => {
+          const next = p.new as Delivery;
+          setDelivery((prev) => (prev ? { ...prev, ...next } : next));
+        },
       )
       .on(
         "postgres_changes",
