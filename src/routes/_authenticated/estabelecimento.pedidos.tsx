@@ -208,7 +208,7 @@ function PedidosPage() {
     const codigo = (prompt("Código de retirada de 4 dígitos:") ?? "").trim();
     if (!codigo) return;
 
-    const { error } = await supabase.rpc("confirm_pickup_order", {
+    const { error } = await supabase.rpc("confirm_pickup_order" as any, {
       p_order_id: order.id,
       p_codigo: codigo,
     });
