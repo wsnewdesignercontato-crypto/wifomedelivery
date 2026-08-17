@@ -3131,6 +3131,18 @@ export type Database = {
           },
         ]
       }
+      vw_admin_audit_logs: {
+        Row: {
+          action: string | null
+          admin_id: string | null
+          admin_nome: string | null
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       apply_score_penalty: {
