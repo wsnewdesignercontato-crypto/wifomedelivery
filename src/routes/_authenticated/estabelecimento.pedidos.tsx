@@ -510,9 +510,13 @@ function PedidosPage() {
                     {o.cancellation_reason}
                   </p>
                 )}
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap gap-2 pt-2 border-t border-border/40">
                   {step && (
-                    <Button size="sm" onClick={() => mudarStatus(o, step.next)}>
+                    <Button 
+                      size="sm" 
+                      onClick={() => mudarStatus(o, step.next)}
+                      className="h-10 px-4 rounded-xl shadow-lg shadow-primary/20 transition-transform active:scale-95"
+                    >
                       {step.next === "ready" && <Bike className="mr-2 h-4 w-4" />}
                       {step.next === "ready" && o.tipo_entrega === "pickup"
                         ? "Pronto para retirada"
@@ -520,16 +524,31 @@ function PedidosPage() {
                     </Button>
                   )}
                   {o.tipo_entrega === "pickup" && o.status === "ready" && (
-                    <Button size="sm" variant="secondary" onClick={() => confirmarRetirada(o)}>
+                    <Button 
+                      size="sm" 
+                      variant="secondary" 
+                      onClick={() => confirmarRetirada(o)}
+                      className="h-10 px-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white"
+                    >
                       Confirmar retirada
                     </Button>
                   )}
-                  <Button size="sm" variant="outline" onClick={() => imprimir(o.id)}>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => imprimir(o.id)}
+                    className="h-10 px-4 rounded-xl border-border bg-muted/20 hover:bg-muted"
+                  >
                     <Printer className="mr-2 h-4 w-4" />
                     Imprimir
                   </Button>
                   {!TERMINAL.has(o.status) && (
-                    <Button size="sm" variant="outline" onClick={() => cancelar(o.id)}>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={() => cancelar(o.id)}
+                      className="h-10 px-4 rounded-xl text-destructive hover:bg-destructive/10"
+                    >
                       Cancelar
                     </Button>
                   )}
