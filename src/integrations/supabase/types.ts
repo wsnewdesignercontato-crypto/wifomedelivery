@@ -3180,10 +3180,12 @@ export type Database = {
         Args: { p_order_id: string }
         Returns: string
       }
-      set_active_city: {
-        Args: { _cidade: string; _estado: string }
-        Returns: undefined
-      }
+      set_active_city:
+        | { Args: { _cidade: string; _estado: string }; Returns: undefined }
+        | {
+            Args: { _city: string; _state: string; _user_id: string }
+            Returns: undefined
+          }
       vehicle_requires_plate: { Args: { _tipo: string }; Returns: boolean }
     }
     Enums: {
