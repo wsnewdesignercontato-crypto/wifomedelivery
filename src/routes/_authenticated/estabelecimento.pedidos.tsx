@@ -165,9 +165,9 @@ function PedidosPage() {
             toast.info("Novo pedido recebido! 🔔", {
               description: "Confira a lista de pedidos.",
             });
-            // Tenta disparar o som de alerta (pode precisar de interação prévia)
+            // Tenta disparar o som de alerta
             try {
-              const audio = new Audio("https://id-preview--4ccbda4a-b6b0-4276-b674-bf97c7913045.lovable.app/siren.mp3");
+              const audio = new Audio("/siren.mp3");
               audio.play();
             } catch (e) {
               console.warn("Autoplay bloqueado");
