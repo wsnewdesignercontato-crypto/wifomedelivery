@@ -3,6 +3,14 @@ import { WithdrawalHistory } from "@/components/withdrawal-history";
 import { useMyEstab } from "@/hooks/use-my-estab";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/saques")({
+  head: () => ({ meta: [
+    { title: "Loja — Saques | PedeTrem" },
+    { name: "description", content: "PedeTrem: loja, saques." },
+    { property: "og:title", content: "Loja — Saques | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: loja, saques." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: SaquesEstab,
 });
 

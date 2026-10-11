@@ -30,6 +30,14 @@ import {
 import { printOrderReceipt, buildReceiptHtml } from "@/lib/print-receipt";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/pedidos")({
+  head: () => ({ meta: [
+    { title: "Loja — Pedidos | PedeTrem" },
+    { name: "description", content: "PedeTrem: loja, pedidos." },
+    { property: "og:title", content: "Loja — Pedidos | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: loja, pedidos." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: PedidosPage,
 });
 
@@ -704,7 +712,7 @@ function PrinterSettingsDialog() {
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              O WiFome imprime em{" "}
+              O PedeTrem imprime em{" "}
               <strong>qualquer impressora instalada no seu computador ou celular</strong> (USB, rede
               ou Bluetooth). Basta que ela apareça na lista de impressoras do sistema. Para
               impressoras térmicas de 58/80mm, selecione a largura correta.

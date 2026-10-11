@@ -5,6 +5,14 @@ import { toast } from "sonner";
 import clubeBanner from "@/assets/clube-wifome-banner-hd.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/clube")({
+  head: () => ({ meta: [
+    { title: "Cliente — Perfil — Clube | PedeTrem" },
+    { name: "description", content: "PedeTrem: cliente, perfil, clube." },
+    { property: "og:title", content: "Cliente — Perfil — Clube | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: cliente, perfil, clube." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: ClubePage,
 });
 
@@ -28,7 +36,7 @@ function ClubePage() {
       <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-3xl shadow-xl ring-1 ring-white/10">
         <img
           src={clubeBanner.url}
-          alt="Clube WiFome — assine e economize em cada pedido"
+          alt="Clube PedeTrem — assine e economize em cada pedido"
           className="block h-auto w-full select-none"
           draggable={false}
           loading="eager"
@@ -54,7 +62,7 @@ function ClubePage() {
       </div>
 
       <Button className="w-full" size="lg" onClick={() => toast.info("Assinatura em breve!")}>
-        Assinar Clube WiFome
+        Assinar Clube PedeTrem
       </Button>
       <p className="text-center text-[11px] text-muted-foreground">
         Cancele a qualquer momento. Sem multa.

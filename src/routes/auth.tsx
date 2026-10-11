@@ -28,17 +28,19 @@ export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Entrar no WiFome — Acesse sua conta" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "Entrar no PedeTrem — Acesse sua conta" },
       {
         name: "description",
         content:
-          "Acesse sua conta WiFome ou cadastre-se como cliente, estabelecimento ou entregador. Peça, gerencie pedidos ou faça entregas em minutos.",
+          "Acesse sua conta PedeTrem ou cadastre-se como cliente, estabelecimento ou entregador. Peça, gerencie pedidos ou faça entregas em minutos.",
       },
-      { property: "og:title", content: "Entrar no WiFome — Acesse sua conta" },
+      { property: "og:title", content: "Entrar no PedeTrem — Acesse sua conta" },
       {
         property: "og:description",
         content:
-          "Faça login ou crie sua conta WiFome para pedir comida, gerenciar seu restaurante ou trabalhar como entregador.",
+          "Faça login ou crie sua conta PedeTrem para pedir comida, gerenciar seu restaurante ou trabalhar como entregador.",
       },
       { property: "og:url", content: "https://wifomedelivery.lovable.app/auth" },
     ],
@@ -204,7 +206,7 @@ function AuthPage() {
     }
     setEmailSalvo(parsed.data.email);
     if (data.session) {
-      toast.success("Conta criada! Bem-vindo ao WiFome.");
+      toast.success("Conta criada! Bem-vindo ao PedeTrem.");
       navigate({ to: "/app", search: { perfil }, replace: true });
       return;
     }
@@ -293,7 +295,7 @@ function AuthPage() {
               <MailCheck className="mx-auto h-12 w-12 text-primary" />
 
               <h2 className="text-lg font-bold text-foreground">
-                {modo === "confirmar-email" ? "Bem-vindo ao WiFome! 🎉" : "Link enviado!"}
+                {modo === "confirmar-email" ? "Bem-vindo ao PedeTrem! 🎉" : "Link enviado!"}
               </h2>
               <p className="text-sm text-muted-foreground">
                 {modo === "confirmar-email" ? (

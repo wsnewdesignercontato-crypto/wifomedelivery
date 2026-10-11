@@ -17,6 +17,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { CreditCard, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/entregador/perfil/pagamento")({
+  head: () => ({ meta: [
+    { title: "Entregador — Perfil — Pagamento | PedeTrem" },
+    { name: "description", content: "PedeTrem: entregador, perfil, pagamento." },
+    { property: "og:title", content: "Entregador — Perfil — Pagamento | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: entregador, perfil, pagamento." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Pagamento,
 });
 

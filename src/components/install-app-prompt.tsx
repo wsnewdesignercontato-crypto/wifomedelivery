@@ -11,18 +11,18 @@ type Perfil = "cliente" | "estabelecimento" | "entregador";
 
 const perfilApp: Record<Perfil, { nome: string; manifest: string; descricao: string }> = {
   cliente: {
-    nome: "WiFome Cliente",
-    manifest: "/manifest-cliente.webmanifest?v=2",
+    nome: "PedeTrem Cliente",
+    manifest: "/manifest-cliente.webmanifest?v=3",
     descricao: "Peça e acompanhe suas entregas direto da tela inicial.",
   },
   estabelecimento: {
-    nome: "WiFome Estabelecimento",
-    manifest: "/manifest-estabelecimento.webmanifest?v=2",
+    nome: "PedeTrem Estabelecimento",
+    manifest: "/manifest-estabelecimento.webmanifest?v=3",
     descricao: "Receba pedidos com alerta sonoro e gerencie sua loja como um app.",
   },
   entregador: {
-    nome: "WiFome Entregador",
-    manifest: "/manifest-entregador.webmanifest?v=2",
+    nome: "PedeTrem Entregador",
+    manifest: "/manifest-entregador.webmanifest?v=3",
     descricao: "Receba corridas na tela e acompanhe seus ganhos como um app.",
   },
 };

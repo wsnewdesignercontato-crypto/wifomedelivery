@@ -1,22 +1,32 @@
 {
-  "name": "WiFome",
-  "short_name": "WiFome",
-  "description": "Peça comida e acompanhe suas entregas em tempo real no WiFome.",
+  "name": "PedeTrem Cliente",
+  "short_name": "PedeTrem",
+  "description": "Peça comida e acompanhe suas entregas em tempo real no PedeTrem.",
   "start_url": "/auth?perfil=cliente",
   "scope": "/",
   "id": "/wifome-cliente",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0B0B0F",
-  "theme_color": "#FF6B00",
+  "theme_color": "#E10B17",
   "lang": "pt-BR",
-  "categories": ["food", "shopping", "lifestyle"],
+  "categories": [
+    "food",
+    "shopping",
+    "lifestyle"
+  ],
   "icons": [
     {
-      "src": "/wifome-logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "src": "/pedetrem-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pedetrem-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "prefer_related_applications": false,

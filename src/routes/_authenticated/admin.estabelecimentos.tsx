@@ -9,6 +9,14 @@ import { Button } from "@/components/ui/button";
 import { brl } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/estabelecimentos")({
+  head: () => ({ meta: [
+    { title: "Admin — Estabelecimentos | PedeTrem" },
+    { name: "description", content: "PedeTrem: admin, estabelecimentos." },
+    { property: "og:title", content: "Admin — Estabelecimentos | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: admin, estabelecimentos." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: EstabsPage,
 });
 

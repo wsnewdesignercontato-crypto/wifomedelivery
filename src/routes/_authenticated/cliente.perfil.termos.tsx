@@ -2,13 +2,21 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronLeft, FileText, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/termos")({
+  head: () => ({ meta: [
+    { title: "Cliente — Perfil — Termos | PedeTrem" },
+    { name: "description", content: "PedeTrem: cliente, perfil, termos." },
+    { property: "og:title", content: "Cliente — Perfil — Termos | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: cliente, perfil, termos." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: TermosPage,
 });
 
 const DOCS = [
   {
     title: "Termos de uso",
-    desc: "Regras para usar o aplicativo WiFome",
+    desc: "Regras para usar o aplicativo PedeTrem",
     href: "https://wifome.com.br/termos",
   },
   {
@@ -67,7 +75,7 @@ function TermosPage() {
       </div>
 
       <p className="text-center text-[11px] text-muted-foreground">
-        © {new Date().getFullYear()} WiFome. Todos os direitos reservados.
+        © {new Date().getFullYear()} PedeTrem. Todos os direitos reservados.
       </p>
     </div>
   );

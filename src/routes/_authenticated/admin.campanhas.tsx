@@ -17,6 +17,14 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/campanhas")({
+  head: () => ({ meta: [
+    { title: "Admin — Campanhas | PedeTrem" },
+    { name: "description", content: "PedeTrem: admin, campanhas." },
+    { property: "og:title", content: "Admin — Campanhas | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: admin, campanhas." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: CampanhasPage,
 });
 

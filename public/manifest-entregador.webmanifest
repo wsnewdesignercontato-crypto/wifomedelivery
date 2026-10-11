@@ -1,22 +1,32 @@
 {
-  "name": "WiMoto",
-  "short_name": "WiMoto",
-  "description": "Receba corridas, faça entregas e acompanhe seus ganhos no WiFome.",
+  "name": "PedeTrem Entregador",
+  "short_name": "PedeTrem",
+  "description": "Receba corridas, faça entregas e acompanhe seus ganhos no PedeTrem.",
   "start_url": "/auth?perfil=entregador",
   "scope": "/",
   "id": "/wifome-entregador",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0B0B0F",
-  "theme_color": "#3FA845",
+  "theme_color": "#E10B17",
   "lang": "pt-BR",
-  "categories": ["business", "navigation", "productivity"],
+  "categories": [
+    "business",
+    "navigation",
+    "productivity"
+  ],
   "icons": [
     {
-      "src": "/wifome-logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "src": "/pedetrem-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pedetrem-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "prefer_related_applications": false,

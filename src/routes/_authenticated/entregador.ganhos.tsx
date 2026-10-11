@@ -5,6 +5,14 @@ import { useMyCourier, fmt } from "@/hooks/use-courier";
 import { DollarSign, Package, TrendingUp, Timer } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/entregador/ganhos")({
+  head: () => ({ meta: [
+    { title: "Entregador — Ganhos | PedeTrem" },
+    { name: "description", content: "PedeTrem: entregador, ganhos." },
+    { property: "og:title", content: "Entregador — Ganhos | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: entregador, ganhos." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Ganhos,
 });
 

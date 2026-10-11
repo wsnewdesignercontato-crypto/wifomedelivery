@@ -42,6 +42,14 @@ import { SOSButton } from "@/components/sos-button";
 import { canCourierAccessRides, getCourierApprovalLabel } from "@/lib/courier-approval";
 
 export const Route = createFileRoute("/_authenticated/entregador/corridas")({
+  head: () => ({ meta: [
+    { title: "Entregador — Corridas | PedeTrem" },
+    { name: "description", content: "PedeTrem: entregador, corridas." },
+    { property: "og:title", content: "Entregador — Corridas | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: entregador, corridas." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Corridas,
 });
 
@@ -1001,7 +1009,7 @@ function Corridas() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Reportar problema</DialogTitle>
-            <DialogDescription>Gera um protocolo para o suporte WiFome analisar.</DialogDescription>
+            <DialogDescription>Gera um protocolo para o suporte PedeTrem analisar.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2 text-sm">

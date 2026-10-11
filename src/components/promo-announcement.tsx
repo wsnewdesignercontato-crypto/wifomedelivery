@@ -18,7 +18,7 @@ export const PROMO_ART: Record<PromoAudience, string> = {
 };
 
 export const PROMO_LABEL: Record<PromoAudience, string> = {
-  cliente: "Oferta WiFome",
+  cliente: "Oferta PedeTrem",
   estabelecimento: "Novidade para parceiros",
   entregador: "Aviso para entregadores",
 };

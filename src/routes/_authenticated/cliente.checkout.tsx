@@ -13,6 +13,14 @@ import { placeOrder } from "@/lib/checkout.functions";
 const searchSchema = z.object({ cupom: z.string().optional() });
 
 export const Route = createFileRoute("/_authenticated/cliente/checkout")({
+  head: () => ({ meta: [
+    { title: "Cliente — Finalizar pedido | PedeTrem" },
+    { name: "description", content: "PedeTrem: cliente, finalizar pedido." },
+    { property: "og:title", content: "Cliente — Finalizar pedido | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: cliente, finalizar pedido." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   validateSearch: searchSchema,
   component: CheckoutPage,
 });
@@ -40,7 +48,7 @@ const PAYS: { key: Pay; label: string; Icon: typeof QrCode }[] = [
   { key: "pix", label: "Pix", Icon: QrCode },
   { key: "cartao", label: "Cartão na entrega", Icon: CreditCard },
   { key: "dinheiro", label: "Dinheiro", Icon: Banknote },
-  { key: "carteira", label: "Carteira WiFome", Icon: Wallet },
+  { key: "carteira", label: "Carteira PedeTrem", Icon: Wallet },
 ];
 
 function CheckoutPage() {

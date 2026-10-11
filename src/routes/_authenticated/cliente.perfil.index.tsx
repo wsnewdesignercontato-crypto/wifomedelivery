@@ -20,6 +20,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/")({
+  head: () => ({ meta: [
+    { title: "Cliente — Perfil — Início | PedeTrem" },
+    { name: "description", content: "PedeTrem: cliente, perfil, início." },
+    { property: "og:title", content: "Cliente — Perfil — Início | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: cliente, perfil, início." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: PerfilHub,
 });
 
@@ -63,11 +71,11 @@ const GROUPS: Array<{
     ],
   },
   {
-    title: "Vantagens WiFome",
+    title: "Vantagens PedeTrem",
     items: [
       {
         to: "/cliente/perfil/clube",
-        label: "Clube WiFome",
+        label: "Clube PedeTrem",
         desc: "Assinatura com fretes grátis",
         icon: Crown,
         accent: true,
@@ -109,7 +117,7 @@ const GROUPS: Array<{
       {
         to: "/cliente/perfil/termos",
         label: "Termos e privacidade",
-        desc: "Políticas do WiFome",
+        desc: "Políticas do PedeTrem",
         icon: FileText,
       },
     ],
@@ -169,7 +177,7 @@ function PerfilHub() {
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           ) : (
             <>
-              <p className="truncate font-bold">{profile?.nome || "Cliente WiFome"}</p>
+              <p className="truncate font-bold">{profile?.nome || "Cliente PedeTrem"}</p>
               <p className="truncate text-xs text-muted-foreground">{user.email}</p>
               {profile?.telefone && (
                 <p className="truncate text-xs text-muted-foreground">{profile.telefone}</p>
@@ -236,7 +244,7 @@ function PerfilHub() {
       {/* Versão */}
       <div className="flex flex-col items-center gap-1 pt-2 text-center">
         <div className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
-          <Shield className="h-3 w-3" /> WiFome
+          <Shield className="h-3 w-3" /> PedeTrem
         </div>
         <p className="text-[11px] text-muted-foreground">Versão {APP_VERSION}</p>
       </div>

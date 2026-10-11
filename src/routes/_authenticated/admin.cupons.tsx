@@ -16,7 +16,15 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { fmtBRL } from "@/lib/format";
 
-export const Route = createFileRoute("/_authenticated/admin/cupons")({ component: CuponsPage });
+export const Route = createFileRoute("/_authenticated/admin/cupons")({
+  head: () => ({ meta: [
+    { title: "Admin — Cupons | PedeTrem" },
+    { name: "description", content: "PedeTrem: admin, cupons." },
+    { property: "og:title", content: "Admin — Cupons | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: admin, cupons." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }), component: CuponsPage });
 
 type Coupon = {
   id: string;

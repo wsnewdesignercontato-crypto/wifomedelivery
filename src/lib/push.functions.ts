@@ -61,7 +61,7 @@ export const sendTestPush = createServerFn({ method: "POST" })
         const status = await sendWebPush(
           { endpoint: s.endpoint, p256dh: s.p256dh, auth: s.auth },
           {
-            title: "WiFome — notificação de teste",
+            title: "PedeTrem — notificação de teste",
             body: "Se você está vendo isto, os alertas no celular estão funcionando! Toque para abrir o app.",
             url: "/app",
             tag: "wifome-teste",

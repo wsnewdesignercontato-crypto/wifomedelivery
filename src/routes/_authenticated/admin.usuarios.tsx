@@ -10,6 +10,14 @@ import { Shield, ShieldOff, Search } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/usuarios")({
+  head: () => ({ meta: [
+    { title: "Admin — Usuários | PedeTrem" },
+    { name: "description", content: "PedeTrem: admin, usuários." },
+    { property: "og:title", content: "Admin — Usuários | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: admin, usuários." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AdminUsers,
 });
 

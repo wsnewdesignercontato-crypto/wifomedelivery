@@ -48,7 +48,7 @@ export const generateAdminInsights = createServerFn({ method: "POST" })
           {
             role: "system",
             content:
-              "Você é analista de operações do marketplace de delivery WiFome. Responda em português, direto e objetivo. Use os números fornecidos para gerar insights acionáveis (bullets curtos).",
+              "Você é analista de operações do marketplace de delivery PedeTrem. Responda em português, direto e objetivo. Use os números fornecidos para gerar insights acionáveis (bullets curtos).",
           },
           {
             role: "user",

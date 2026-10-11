@@ -28,6 +28,14 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin/anuncios")({
+  head: () => ({ meta: [
+    { title: "Admin — Anúncios | PedeTrem" },
+    { name: "description", content: "PedeTrem: admin, anúncios." },
+    { property: "og:title", content: "Admin — Anúncios | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: admin, anúncios." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AnunciosPage,
 });
 

@@ -26,6 +26,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { PushToggleCard } from "@/components/push-toggle-card";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/configuracoes")({
+  head: () => ({ meta: [
+    { title: "Loja — Configurações | PedeTrem" },
+    { name: "description", content: "PedeTrem: loja, configurações." },
+    { property: "og:title", content: "Loja — Configurações | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: loja, configurações." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: ConfigPage,
 });
 

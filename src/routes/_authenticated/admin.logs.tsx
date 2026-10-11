@@ -5,6 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { dateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/logs")({
+  head: () => ({ meta: [
+    { title: "Admin — Auditoria | PedeTrem" },
+    { name: "description", content: "PedeTrem: admin, auditoria." },
+    { property: "og:title", content: "Admin — Auditoria | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: admin, auditoria." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: LogsPage,
 });
 

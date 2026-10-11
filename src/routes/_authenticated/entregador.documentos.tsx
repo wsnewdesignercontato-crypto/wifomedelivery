@@ -17,6 +17,14 @@ import {
 } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/entregador/documentos")({
+  head: () => ({ meta: [
+    { title: "Entregador — Documentos | PedeTrem" },
+    { name: "description", content: "PedeTrem: entregador, documentos." },
+    { property: "og:title", content: "Entregador — Documentos | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: entregador, documentos." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Docs,
 });
 

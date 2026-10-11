@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useEffect, useState } from "react";
 import { Sandwich, Store, Bike } from "lucide-react";
+import { IFomeLogo } from "@/components/ifome-logo";
 
 export type LoaderPerfil = "cliente" | "estabelecimento" | "entregador";
 
@@ -72,7 +73,7 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
   );
 }
 
-/** Tela cheia na cor do perfil (laranja/vermelho/verde) com a marca WiFome. */
+/** Tela cheia na cor do perfil (laranja/vermelho/verde) com a marca PedeTrem. */
 export function WifomeLoader({ perfil, message }: { perfil?: LoaderPerfil; message?: string }) {
   const [resolved, setResolved] = useState<LoaderPerfil>(perfil ?? "cliente");
 
@@ -92,9 +93,7 @@ export function WifomeLoader({ perfil, message }: { perfil?: LoaderPerfil; messa
       aria-label="Carregando"
     >
       <div className="animate-loader-logo-pop text-center">
-        <span className="text-4xl font-extrabold tracking-tight text-primary-foreground sm:text-5xl">
-          WiFome
-        </span>
+        <IFomeLogo size="lg" showWord={false} />
         <p className="mt-1 text-xs font-semibold uppercase tracking-[0.25em] text-primary-foreground/70">
           {resolved === "estabelecimento"
             ? "Estabelecimento"

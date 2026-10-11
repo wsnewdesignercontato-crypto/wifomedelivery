@@ -269,7 +269,7 @@ export function OnboardingGate({
         </Button>
 
         <p className="mt-4 text-center text-xs text-muted-foreground">
-          Esses dados são obrigatórios para usar o WiFome com segurança.
+          Esses dados são obrigatórios para usar o PedeTrem com segurança.
         </p>
       </div>
     </div>

@@ -29,6 +29,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { IFomeLogo } from "@/components/ifome-logo";
 
 type NavItem = {
   to: string;
@@ -85,11 +86,9 @@ export function AdminShell() {
       >
         <div className="flex h-16 items-center justify-between border-b border-border px-5">
           <Link to="/admin" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-orange-600 text-primary-foreground shadow-brand">
-              <Shield className="h-4 w-4" />
-            </div>
+            <IFomeLogo size="sm" showWord={false} />
             <div className="leading-tight">
-              <div className="text-sm font-bold text-foreground">WiFome</div>
+              <div className="text-sm font-bold text-foreground">PedeTrem</div>
               <div className="text-[10px] font-medium uppercase tracking-widest text-primary">
                 Admin
               </div>
@@ -108,7 +107,7 @@ export function AdminShell() {
             for (const it of navItems) {
               const g = it.group ?? "";
               if (!groups.has(g)) groups.set(g, []);
-              groups.get(g)!.push(it);
+               groups.get(g)?.push(it);
             }
             return Array.from(groups.entries()).map(([group, items], gi) => (
               <div key={group || "root"} className={gi > 0 ? "mt-5" : ""}>

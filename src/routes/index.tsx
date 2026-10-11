@@ -43,17 +43,19 @@ import perfilEntregador from "@/assets/perfil-entregador.png";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "WiFome — Delivery em tempo real" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { title: "PedeTrem — Delivery em tempo real" },
       {
         name: "description",
         content:
-          "Peça comida dos seus restaurantes favoritos, acompanhe a entrega ao vivo e trabalhe como parceiro WiFome. Cliente, estabelecimento e entregador em um único app.",
+          "Peça comida dos seus restaurantes favoritos, acompanhe a entrega ao vivo e trabalhe como parceiro PedeTrem. Cliente, estabelecimento e entregador em um único app.",
       },
-      { property: "og:title", content: "WiFome — Delivery em tempo real" },
+      { property: "og:title", content: "PedeTrem — Delivery em tempo real" },
       {
         property: "og:description",
         content:
-          "Peça comida dos restaurantes próximos, acompanhe a entrega ao vivo e ganhe dinheiro entregando com o WiFome.",
+          "Peça comida dos restaurantes próximos, acompanhe a entrega ao vivo e ganhe dinheiro entregando com o PedeTrem.",
       },
       { property: "og:url", content: "https://wifomedelivery.lovable.app/" },
     ],
@@ -65,9 +67,9 @@ export const Route = createFileRoute("/")({
           "@context": "https://schema.org",
           "@type": "Service",
           serviceType: "Food delivery",
-          provider: { "@type": "Organization", name: "WiFome" },
+          provider: { "@type": "Organization", name: "PedeTrem" },
           areaServed: { "@type": "Country", name: "Brasil" },
-          name: "WiFome — Delivery de comida em tempo real",
+          name: "PedeTrem — Delivery de comida em tempo real",
           description:
             "Aplicativo de delivery que conecta clientes, restaurantes e entregadores com rastreamento em tempo real.",
         }),
@@ -164,7 +166,7 @@ const perfis = [
     key: "estabelecimento",
     tag: "Tenha um",
     highlight: "estabelecimento",
-    descricao: "Gerencie seu cardápio, receba pedidos e aumente suas vendas no WiFome.",
+    descricao: "Gerencie seu cardápio, receba pedidos e aumente suas vendas no PedeTrem.",
     Icon: Store,
     mockup: perfilEstabelecimento,
     to: "/auth" as const,
@@ -330,7 +332,7 @@ function LandingPage() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:h-20 sm:px-6">
           <IFomeLogo
             size="md"
-            className="min-w-0 [&_span]:text-white [&_span]:text-base sm:[&_span]:text-xl"
+            className="min-w-0 [&_.brand-name]:text-primary-foreground [&_.brand-name]:text-base sm:[&_.brand-name]:text-xl"
           />
           <nav className="hidden items-center gap-8 lg:flex">
             {navLinks.map((l) => (
@@ -423,16 +425,16 @@ function LandingPage() {
         />
         <div
           className="pointer-events-none absolute -bottom-32 left-1/2 h-[560px] w-[900px] -translate-x-1/2 rounded-full opacity-40 blur-3xl"
-          style={{ background: "radial-gradient(closest-side, #FF6B00, transparent)" }}
+          style={{ background: "var(--brand-radial)" }}
         />
 
         <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-6 pb-20 pt-16 sm:pb-28 lg:grid-cols-2 lg:pb-32 lg:pt-24">
           {/* Copy */}
           <div className="max-w-xl">
             <h1 className="reveal text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
-              Sua fome
+              PedeTrem
               <br />
-              tem <span className="bg-gradient-brand bg-clip-text text-transparent">endereço</span>
+              Sua fome tem <span className="bg-gradient-brand bg-clip-text text-transparent">endereço</span>
               <br />
               certo.
             </h1>
@@ -507,11 +509,11 @@ function LandingPage() {
           >
             <div
               className="animate-glow-pulse pointer-events-none absolute inset-0 mx-auto h-full w-[80%] rounded-full opacity-60 blur-3xl"
-              style={{ background: "radial-gradient(closest-side, #FF6B00, transparent)" }}
+              style={{ background: "var(--brand-radial)" }}
             />
             <img
               src={trackingPhones}
-              alt="Aplicativo WiFome"
+              alt="Aplicativo PedeTrem"
               width={480}
               height={880}
               className="animate-float-phone relative w-[280px] drop-shadow-2xl sm:w-[340px] lg:w-[400px]"
@@ -541,7 +543,7 @@ function LandingPage() {
               Escolha o seu <span className="text-primary">papel</span>
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
-              Pedir, vender ou entregar — o WiFome foi desenhado para você começar em minutos e
+              Pedir, vender ou entregar — o PedeTrem foi desenhado para você começar em minutos e
               crescer com a gente.
             </p>
           </div>
@@ -642,7 +644,7 @@ function LandingPage() {
         />
 
         <div className="relative mx-auto max-w-5xl px-6">
-          <div className="reveal mx-auto max-w-3xl rounded-[2.5rem] border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/[0.07] to-transparent p-8 text-center shadow-[0_0_60px_-20px_rgba(255,107,0,0.35)] backdrop-blur-sm sm:p-12 lg:p-16">
+          <div className="reveal mx-auto max-w-3xl rounded-[2.5rem] border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/[0.07] to-transparent p-8 text-center shadow-[0_0_60px_-20px_var(--brand-neon)] backdrop-blur-sm sm:p-12 lg:p-16">
             {/* badge */}
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/15 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-primary">
               <Percent className="h-3.5 w-3.5" />
@@ -798,7 +800,7 @@ function LandingPage() {
           className="pointer-events-none absolute inset-0 opacity-[0.07]"
           style={{
             backgroundImage:
-              "linear-gradient(rgba(255,107,0,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,107,0,0.15) 1px, transparent 1px)",
+              "linear-gradient(var(--brand-neon-soft) 1px, transparent 1px), linear-gradient(90deg, var(--brand-neon-soft) 1px, transparent 1px)",
             backgroundSize: "64px 64px",
           }}
         />
@@ -825,7 +827,7 @@ function LandingPage() {
           className="pointer-events-none absolute left-0 right-0 top-1/2 h-px -translate-y-1/2"
           style={{
             background:
-              "linear-gradient(90deg, transparent 0%, rgba(255,107,0,0.35) 20%, rgba(255,107,0,0.55) 50%, rgba(255,107,0,0.35) 80%, transparent 100%)",
+              "linear-gradient(90deg, transparent 0%, var(--brand-neon) 20%, var(--brand-neon-strong) 50%, var(--brand-neon) 80%, transparent 100%)",
             boxShadow: "0 0 40px 2px rgba(255,107,0,0.25), 0 0 80px 8px rgba(255,107,0,0.12)",
           }}
         />
@@ -834,7 +836,7 @@ function LandingPage() {
           <div className="reveal mb-12 text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
               <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-              Por que o WiFome
+              Por que o PedeTrem
             </span>
             <h2 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
               Feito pra você <span className="text-primary">amar</span>
@@ -856,7 +858,7 @@ function LandingPage() {
                 />
 
                 {/* Ícone centralizado no topo */}
-                <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-primary/40 bg-primary/5 text-primary transition-all duration-500 group-hover:border-primary group-hover:bg-primary/15 group-hover:shadow-[0_0_20px_-2px_rgba(255,107,0,0.55)]">
+                <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-primary/40 bg-primary/5 text-primary transition-all duration-500 group-hover:border-primary group-hover:bg-primary/15 group-hover:shadow-[0_0_20px_-2px_var(--brand-neon-strong)]">
                   <Icon className="h-6 w-6" strokeWidth={1.5} />
                 </div>
 
@@ -921,7 +923,7 @@ function LandingPage() {
         </div>
         <div className="border-t border-white/20">
           <p className="mx-auto max-w-7xl px-6 py-5 text-center text-xs text-white/80">
-            © {new Date().getFullYear()} WiFome. Todos os direitos reservados.
+            © {new Date().getFullYear()} PedeTrem. Todos os direitos reservados.
           </p>
         </div>
       </footer>

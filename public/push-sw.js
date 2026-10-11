@@ -1,7 +1,7 @@
-/* WiFome — service worker de mensagens (push).
+/* PedeTrem — service worker de mensagens (push).
    Não faz cache de app shell: serve apenas para notificações em segundo plano. */
 
-const ICON = "/wifome-logo.svg";
+const ICON = "/pedetrem-icon-192.png";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
@@ -11,10 +11,10 @@ self.addEventListener("push", (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch {
-    data = { title: "WiFome", body: event.data ? event.data.text() : "" };
+    data = { title: "PedeTrem", body: event.data ? event.data.text() : "" };
   }
 
-  const title = data.title || "WiFome";
+  const title = data.title || "PedeTrem";
   const options = {
     body: data.body || "",
     icon: ICON,

@@ -19,16 +19,16 @@ export const Route = createFileRoute("/redefinir-senha")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Redefinir senha — WiFome" },
+      { title: "Redefinir senha — PedeTrem" },
       {
         name: "description",
         content:
-          "Crie uma nova senha para sua conta WiFome e volte a acessar o app de cliente, estabelecimento ou entregador.",
+          "Crie uma nova senha para sua conta PedeTrem e volte a acessar o app de cliente, estabelecimento ou entregador.",
       },
-      { property: "og:title", content: "Redefinir senha — WiFome" },
+      { property: "og:title", content: "Redefinir senha — PedeTrem" },
       {
         property: "og:description",
-        content: "Defina uma nova senha para sua conta WiFome com segurança.",
+        content: "Defina uma nova senha para sua conta PedeTrem com segurança.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

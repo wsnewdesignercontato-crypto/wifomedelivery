@@ -17,6 +17,14 @@ import { Bike, Car, Zap, Star, MapPin, Send, RefreshCw, User2 } from "lucide-rea
 import { dispatchOrderDelivery } from "@/lib/delivery-dispatch";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/entrega")({
+  head: () => ({ meta: [
+    { title: "Loja — Entrega | PedeTrem" },
+    { name: "description", content: "PedeTrem: loja, entrega." },
+    { property: "og:title", content: "Loja — Entrega | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: loja, entrega." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: EntregaPage,
 });
 
