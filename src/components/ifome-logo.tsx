@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
-
-const BRAND_LOGO_URL = "/wifome-logo.svg";
+import logoAsset from "@/assets/pedetrem-logo-circle.png.asset.json";
 
 interface Props {
   className?: string;
@@ -10,32 +9,26 @@ interface Props {
 }
 
 const sizes = {
-  sm: { box: "h-8 w-8", text: "text-lg" },
-  md: { box: "h-10 w-10", text: "text-2xl" },
-  lg: { box: "h-14 w-14", text: "text-3xl" },
+  sm: { box: "h-10 w-10", text: "text-lg" },
+  md: { box: "h-14 w-14", text: "text-2xl" },
+  lg: { box: "h-28 w-28", text: "text-3xl" },
 };
 
-const perfilFilter: Record<"cliente" | "estabelecimento" | "entregador", string> = {
-  cliente: "",
-  estabelecimento: "hue-rotate(-18deg) saturate(1.35) brightness(1)",
-  entregador: "hue-rotate(92deg) saturate(0.95) brightness(0.95)",
-};
-
-export function IFomeLogo({ className, size = "md", showWord = true, perfil = "cliente" }: Props) {
+export function IFomeLogo({ className, size = "md", showWord = true }: Props) {
   const s = sizes[size];
-  const filter = perfilFilter[perfil];
   return (
     <div className={cn("inline-flex shrink-0 items-center gap-2.5", className)}>
       <img
-        src={BRAND_LOGO_URL}
-        alt="WiFome"
-        style={filter ? { filter } : undefined}
-        className={cn("object-contain rounded-xl shadow-brand", s.box)}
+        src={logoAsset.url}
+        alt="PedeTrem"
+        width={355}
+        height={352}
+        className={cn("shrink-0 rounded-full object-contain shadow-brand", s.box)}
       />
 
       {showWord && (
-        <span className={cn("whitespace-nowrap font-black tracking-tight text-foreground", s.text)}>
-          Wi<span className="text-primary">Fome</span>
+        <span className={cn("brand-name whitespace-nowrap font-black text-foreground", s.text)}>
+          Pede<span className="brand-name-accent">Trem</span>
         </span>
       )}
     </div>
