@@ -73,7 +73,7 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
   );
 }
 
-/** Tela cheia na cor do perfil (laranja/vermelho/verde) com a marca WiFome. */
+/** Tela cheia na cor do perfil (laranja/vermelho/verde) com a marca PedeTrem. */
 export function WifomeLoader({ perfil, message }: { perfil?: LoaderPerfil; message?: string }) {
   const [resolved, setResolved] = useState<LoaderPerfil>(perfil ?? "cliente");
 

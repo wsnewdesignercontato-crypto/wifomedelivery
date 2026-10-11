@@ -70,7 +70,7 @@ export function ClienteShell({ user }: Ctx) {
 
   return (
     <div className="min-h-screen bg-background pb-24 lg:pb-0">
-      {/* Premium orange header — WiFome style */}
+      {/* Premium orange header — PedeTrem style */}
       <header className="sticky top-0 z-40 bg-gradient-brand text-primary-foreground shadow-lg">
         {/* Top row: brand + (desktop nav) + actions */}
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 pt-3 lg:pt-4">

@@ -19,7 +19,7 @@ import { InstallAppPrompt } from "@/components/install-app-prompt";
 
 import { IFomeLogo } from "@/components/ifome-logo";
 
-const BRAND_LOGO_URL = "/wifome-logo.svg";
+const BRAND_LOGO_URL = "/pedetrem-icon-512.png";
 
 function NotFoundComponent() {
   return (
@@ -87,15 +87,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "WiFome — Peça em minutos, receba em casa" },
+      { title: "PedeTrem — Peça em minutos, receba em casa" },
       {
         name: "description",
         content:
-          "WiFome é a plataforma de delivery que conecta clientes, restaurantes e entregadores em tempo real. Peça sua comida favorita e acompanhe cada etapa.",
+          "PedeTrem é a plataforma de delivery que conecta clientes, restaurantes e entregadores em tempo real. Peça sua comida favorita e acompanhe cada etapa.",
       },
-      { name: "theme-color", content: "#FF6B00" },
-      { property: "og:site_name", content: "WiFome" },
-      { property: "og:title", content: "WiFome — Delivery em tempo real" },
+      { name: "theme-color", content: "#E10B17" },
+      { property: "og:site_name", content: "PedeTrem" },
+      { property: "og:title", content: "PedeTrem — Delivery em tempo real" },
       {
         property: "og:description",
         content:
@@ -105,12 +105,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-title", content: "WiFome" },
+      { name: "apple-mobile-web-app-title", content: "PedeTrem" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/svg+xml", href: BRAND_LOGO_URL },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
       { rel: "apple-touch-icon", href: BRAND_LOGO_URL },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -126,7 +126,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
-          name: "WiFome",
+          name: "PedeTrem",
           url: "https://wifomedelivery.lovable.app",
           logo: `https://wifomedelivery.lovable.app${BRAND_LOGO_URL}`,
           description:
@@ -138,7 +138,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
-          name: "WiFome",
+          name: "PedeTrem",
           url: "https://wifomedelivery.lovable.app",
         }),
       },

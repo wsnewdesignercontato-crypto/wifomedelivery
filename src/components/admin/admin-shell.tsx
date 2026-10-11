@@ -88,7 +88,7 @@ export function AdminShell() {
           <Link to="/admin" className="flex items-center gap-2">
             <IFomeLogo size="sm" showWord={false} />
             <div className="leading-tight">
-              <div className="text-sm font-bold text-foreground">WiFome</div>
+              <div className="text-sm font-bold text-foreground">PedeTrem</div>
               <div className="text-[10px] font-medium uppercase tracking-widest text-primary">
                 Admin
               </div>

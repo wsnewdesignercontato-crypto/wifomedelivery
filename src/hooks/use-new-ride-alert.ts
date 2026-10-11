@@ -86,7 +86,7 @@ function nativeNotify() {
   try {
     if (typeof Notification === "undefined") return;
     if (Notification.permission === "granted") {
-      const n = new Notification("🛵 Nova corrida WiFome!", {
+      const n = new Notification("🛵 Nova corrida PedeTrem!", {
         body: "Toque para aceitar antes de outro entregador.",
         tag: "wifome-ride",
         requireInteraction: true,

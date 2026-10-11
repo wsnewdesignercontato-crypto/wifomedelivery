@@ -25,26 +25,26 @@ const STEPS: Record<"ios" | "android" | "desktop", Record<Kind, string[]>> = {
     push: [
       "Abra os Ajustes do iPhone",
       "Toque em Notificações",
-      "Escolha o navegador (Safari/Chrome) ou o app WiFome instalado",
+      "Escolha o navegador (Safari/Chrome) ou o app PedeTrem instalado",
       "Ative Permitir notificações",
     ],
     location: [
       "Abra os Ajustes do iPhone",
       "Toque em Privacidade e Segurança → Serviços de Localização",
-      "Escolha o navegador (Safari/Chrome) ou o app WiFome",
+      "Escolha o navegador (Safari/Chrome) ou o app PedeTrem",
       "Selecione Ao usar o app e ative Localização precisa",
     ],
   },
   android: {
     push: [
       "Abra as Configurações do Android",
-      "Toque em Apps → seu navegador (ou WiFome)",
+      "Toque em Apps → seu navegador (ou PedeTrem)",
       "Entre em Notificações e ative-as",
       "Volte ao app e ligue o interruptor de novo",
     ],
     location: [
       "Abra as Configurações do Android",
-      "Toque em Apps → seu navegador (ou WiFome) → Permissões",
+      "Toque em Apps → seu navegador (ou PedeTrem) → Permissões",
       "Em Localização escolha Permitir ao usar o app",
       "Ative também a Localização precisa",
     ],

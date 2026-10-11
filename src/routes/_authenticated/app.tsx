@@ -140,7 +140,7 @@ function AppDispatcher() {
       <div className="mx-auto max-w-2xl px-4 py-10">
         <IFomeLogo size="md" className="mx-auto" />
         <h1 className="mt-6 text-center text-2xl font-bold text-foreground">
-          Como quer usar o WiFome?
+          Como quer usar o PedeTrem?
         </h1>
         <p className="mt-1 text-center text-sm text-muted-foreground">
           Você pode ativar mais de um perfil e alternar entre eles quando quiser.

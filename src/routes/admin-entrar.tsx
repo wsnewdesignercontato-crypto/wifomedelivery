@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ShieldCheck, Lock } from "lucide-react";
+import { IFomeLogo } from "@/components/ifome-logo";
+import { Lock } from "lucide-react";
 
 export const Route = createFileRoute("/admin-entrar")({
   head: () => ({
     meta: [
-      { title: "WiFome Admin — Acesso Master" },
+      { title: "PedeTrem Admin — Acesso Master" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -57,10 +58,8 @@ function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-950 via-black to-zinc-900 p-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-[0_0_40px_rgba(255,107,0,0.4)] mb-4">
-            <ShieldCheck className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-white">WiFome Admin</h1>
+          <IFomeLogo size="lg" showWord={false} className="mb-4" />
+          <h1 className="text-3xl font-bold text-white">PedeTrem Admin</h1>
           <p className="text-sm text-zinc-400 mt-2">Painel Master da Plataforma</p>
         </div>
 
@@ -68,7 +67,7 @@ function AdminLogin() {
           onSubmit={onSubmit}
           className="rounded-2xl border border-zinc-800 bg-zinc-900/60 backdrop-blur p-6 space-y-4 shadow-2xl"
         >
-          <div className="flex items-center gap-2 text-xs text-orange-400 mb-2">
+          <div className="flex items-center gap-2 text-xs text-primary mb-2">
             <Lock className="h-3.5 w-3.5" />
             Acesso restrito a administradores
           </div>
@@ -84,7 +83,7 @@ function AdminLogin() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="bg-zinc-950 border-zinc-800 text-white"
-              placeholder="admin@wifome.dev"
+              placeholder="Seu e-mail de administrador"
             />
           </div>
 
@@ -106,14 +105,14 @@ function AdminLogin() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold"
+            className="w-full bg-gradient-brand text-primary-foreground font-semibold"
           >
             {loading ? "Entrando..." : "Entrar no painel master"}
           </Button>
 
           <p className="text-xs text-zinc-500 text-center pt-2">
             Não é administrador?{" "}
-            <a href="/auth" className="text-orange-400 hover:underline">
+            <a href="/auth" className="text-primary hover:underline">
               Ir para o app
             </a>
           </p>

@@ -78,7 +78,7 @@ export function SOSButton({
             </DialogTitle>
             <DialogDescription>
               Só use em caso real de emergência. Sua localização e dados serão enviados
-              imediatamente para a central WiFome.
+              imediatamente para a central PedeTrem.
             </DialogDescription>
           </DialogHeader>
 

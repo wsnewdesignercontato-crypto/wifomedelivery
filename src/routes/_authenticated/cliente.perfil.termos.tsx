@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_authenticated/cliente/perfil/termos")({
 const DOCS = [
   {
     title: "Termos de uso",
-    desc: "Regras para usar o aplicativo WiFome",
+    desc: "Regras para usar o aplicativo PedeTrem",
     href: "https://wifome.com.br/termos",
   },
   {
@@ -67,7 +67,7 @@ function TermosPage() {
       </div>
 
       <p className="text-center text-[11px] text-muted-foreground">
-        © {new Date().getFullYear()} WiFome. Todos os direitos reservados.
+        © {new Date().getFullYear()} PedeTrem. Todos os direitos reservados.
       </p>
     </div>
   );

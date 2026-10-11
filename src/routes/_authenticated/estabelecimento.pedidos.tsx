@@ -704,7 +704,7 @@ function PrinterSettingsDialog() {
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              O WiFome imprime em{" "}
+              O PedeTrem imprime em{" "}
               <strong>qualquer impressora instalada no seu computador ou celular</strong> (USB, rede
               ou Bluetooth). Basta que ela apareça na lista de impressoras do sistema. Para
               impressoras térmicas de 58/80mm, selecione a largura correta.

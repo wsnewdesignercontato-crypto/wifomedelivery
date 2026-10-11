@@ -1,3 +1,7 @@
+@import "tailwindcss" source(none);
+@import "tw-animate-css";
+@source "../src";
+
 #lovable-badge {
   display: none !important;
 }
@@ -21,15 +25,12 @@ body {
   background-color: oklch(var(--background));
 }
 
-@import "tailwindcss" source(none);
-@source "../src";
-@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 /*
- * iFome design system
- * Brand: laranja #FF6B00, branco, cinzas claros, preto para textos.
+ * PedeTrem design system
+ * Brand: vermelho em degradê, branco, cinzas claros, preto para textos.
  * Todos os valores em oklch.
  */
 
@@ -51,6 +52,7 @@ body {
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-glow: var(--primary-glow);
+  --color-brand-lettering: var(--brand-lettering);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -89,6 +91,11 @@ body {
 
 :root {
   --radius: 0.75rem;
+  --brand-lettering: oklch(0.63 0.25 27);
+  --brand-neon: color-mix(in oklab, var(--brand-lettering) 35%, transparent);
+  --brand-neon-strong: color-mix(in oklab, var(--brand-lettering) 55%, transparent);
+  --brand-neon-soft: color-mix(in oklab, var(--brand-lettering) 15%, transparent);
+  --brand-radial: radial-gradient(closest-side, var(--primary), transparent);
 
   --background: oklch(1 0 0);
   --foreground: oklch(0.15 0.01 260);
@@ -99,10 +106,10 @@ body {
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.15 0.01 260);
 
-  /* Laranja iFome #FF6B00 */
-  --primary: oklch(0.685 0.204 47);
+  /* Vermelho PedeTrem */
+  --primary: oklch(0.58 0.235 27);
   --primary-foreground: oklch(1 0 0);
-  --primary-glow: oklch(0.78 0.18 58);
+  --primary-glow: oklch(0.47 0.19 25);
 
   --secondary: oklch(0.97 0.005 260);
   --secondary-foreground: oklch(0.20 0.02 260);
@@ -110,8 +117,8 @@ body {
   --muted: oklch(0.965 0.005 260);
   --muted-foreground: oklch(0.50 0.02 260);
 
-  --accent: oklch(0.965 0.03 55);
-  --accent-foreground: oklch(0.30 0.15 40);
+  --accent: oklch(0.965 0.03 27);
+  --accent-foreground: oklch(0.30 0.15 27);
 
   --destructive: oklch(0.577 0.245 27);
   --destructive-foreground: oklch(1 0 0);
@@ -124,9 +131,9 @@ body {
 
   --border: oklch(0.92 0.005 260);
   --input: oklch(0.92 0.005 260);
-  --ring: oklch(0.685 0.204 47);
+  --ring: oklch(0.58 0.235 27);
 
-  --chart-1: oklch(0.685 0.204 47);
+  --chart-1: oklch(0.58 0.235 27);
   --chart-2: oklch(0.72 0.17 155);
   --chart-3: oklch(0.60 0.15 245);
   --chart-4: oklch(0.78 0.18 85);
@@ -134,12 +141,12 @@ body {
 
   --sidebar: oklch(0.985 0.003 260);
   --sidebar-foreground: oklch(0.20 0.01 260);
-  --sidebar-primary: oklch(0.685 0.204 47);
+  --sidebar-primary: oklch(0.58 0.235 27);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.95 0.02 55);
-  --sidebar-accent-foreground: oklch(0.30 0.15 40);
+  --sidebar-accent: oklch(0.95 0.02 27);
+  --sidebar-accent-foreground: oklch(0.30 0.15 27);
   --sidebar-border: oklch(0.92 0.005 260);
-  --sidebar-ring: oklch(0.685 0.204 47);
+  --sidebar-ring: oklch(0.58 0.235 27);
 }
 
 .dark {
@@ -152,9 +159,9 @@ body {
   --popover: oklch(0.19 0.012 260);
   --popover-foreground: oklch(0.98 0.005 260);
 
-  --primary: oklch(0.73 0.20 50);
-  --primary-foreground: oklch(0.15 0.02 40);
-  --primary-glow: oklch(0.82 0.17 60);
+  --primary: oklch(0.65 0.235 27);
+  --primary-foreground: oklch(1 0 0);
+  --primary-glow: oklch(0.49 0.20 25);
 
   --secondary: oklch(0.25 0.01 260);
   --secondary-foreground: oklch(0.98 0.005 260);
@@ -162,8 +169,8 @@ body {
   --muted: oklch(0.23 0.01 260);
   --muted-foreground: oklch(0.68 0.02 260);
 
-  --accent: oklch(0.27 0.05 50);
-  --accent-foreground: oklch(0.90 0.10 60);
+  --accent: oklch(0.27 0.05 27);
+  --accent-foreground: oklch(0.90 0.10 27);
 
   --destructive: oklch(0.65 0.22 25);
   --destructive-foreground: oklch(0.98 0.005 260);
@@ -176,9 +183,9 @@ body {
 
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.73 0.20 50);
+  --ring: oklch(0.65 0.235 27);
 
-  --chart-1: oklch(0.73 0.20 50);
+  --chart-1: oklch(0.65 0.235 27);
   --chart-2: oklch(0.72 0.17 155);
   --chart-3: oklch(0.65 0.15 245);
   --chart-4: oklch(0.78 0.18 85);
@@ -186,31 +193,31 @@ body {
 
   --sidebar: oklch(0.17 0.012 260);
   --sidebar-foreground: oklch(0.98 0.005 260);
-  --sidebar-primary: oklch(0.73 0.20 50);
-  --sidebar-primary-foreground: oklch(0.15 0.02 40);
+  --sidebar-primary: oklch(0.65 0.235 27);
+  --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.25 0.03 50);
-  --sidebar-accent-foreground: oklch(0.90 0.10 60);
+  --sidebar-accent-foreground: oklch(0.90 0.10 27);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.73 0.20 50);
+  --sidebar-ring: oklch(0.65 0.235 27);
 }
 
 /* ============= Theme scopes ============= */
-/* Cliente — laranja da marca (reseta temas herdados) */
+/* Cliente — vermelho da marca (reseta temas herdados) */
 .theme-cliente {
-  --primary: oklch(0.685 0.204 47);
+  --primary: oklch(0.58 0.235 27);
   --primary-foreground: oklch(1 0 0);
-  --primary-glow: oklch(0.78 0.18 58);
-  --ring: oklch(0.685 0.204 47);
-  --accent: oklch(0.965 0.03 55);
-  --accent-foreground: oklch(0.30 0.15 40);
+  --primary-glow: oklch(0.47 0.19 25);
+  --ring: oklch(0.58 0.235 27);
+  --accent: oklch(0.965 0.03 27);
+  --accent-foreground: oklch(0.30 0.15 27);
 }
 :is(.dark) .theme-cliente {
-  --primary: oklch(0.73 0.20 50);
-  --primary-foreground: oklch(0.15 0.02 40);
-  --primary-glow: oklch(0.82 0.17 60);
-  --ring: oklch(0.73 0.20 50);
-  --accent: oklch(0.27 0.05 50);
-  --accent-foreground: oklch(0.90 0.10 60);
+  --primary: oklch(0.65 0.235 27);
+  --primary-foreground: oklch(1 0 0);
+  --primary-glow: oklch(0.49 0.20 25);
+  --ring: oklch(0.65 0.235 27);
+  --accent: oklch(0.27 0.05 27);
+  --accent-foreground: oklch(0.90 0.10 27);
 }
 
 /* Estabelecimento — vermelho vivo da logo (#ED1C24) */
@@ -791,7 +798,7 @@ body {
 }
 .skip-link:focus { top: 0.5rem; }
 
-/* WiFome loader */
+/* PedeTrem loader */
 @keyframes loader-logo-pop {
   0% { opacity: 0; transform: scale(0.86); }
   60% { opacity: 1; transform: scale(1.06); }
@@ -838,3 +845,5 @@ body {
   .loader-step-icon,
   .loader-step-glow { animation-duration: 3s; }
 }
+
+.brand-name-accent { color: var(--brand-lettering) !important; }

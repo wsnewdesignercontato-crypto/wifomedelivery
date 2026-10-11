@@ -137,7 +137,7 @@ ${order.desconto_cents ? `<div class="row"><span>Desconto</span><span>-${fmt(ord
 <div class="row big"><span>TOTAL</span><span>${fmt(order.total_cents)}</span></div>
 ${order.observacoes ? `<div class="sep"></div><div><strong>Observações do pedido:</strong><br>${escapeHtml(order.observacoes)}</div>` : ""}
 <div class="sep"></div>
-<div class="center muted">WiFome · Bom trabalho!</div>
+<div class="center muted">PedeTrem · Bom trabalho!</div>
 <script>window.addEventListener('load', () => setTimeout(() => window.print(), 200));</script>
 </body></html>`;
 }

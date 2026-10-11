@@ -96,7 +96,7 @@ const GROUPS = [
       {
         to: "/entregador/suporte",
         label: "Ajuda e suporte",
-        desc: "Fale com o time WiFome",
+        desc: "Fale com o time PedeTrem",
         icon: HelpCircle,
       },
     ],
@@ -144,7 +144,7 @@ function PerfilHub() {
           ? "bg-red-500 text-white"
           : "bg-muted text-muted-foreground";
 
-  const nome = profileQ.data?.nome?.trim() || "Entregador WiFome";
+  const nome = profileQ.data?.nome?.trim() || "Entregador PedeTrem";
   const foto = courier?.foto_url || profileQ.data?.foto_url || "";
   const telefone = courier?.telefone || profileQ.data?.telefone || "—";
   const initials =
@@ -248,7 +248,7 @@ function PerfilHub() {
 
       <div className="flex flex-col items-center gap-1 pt-2 text-center">
         <div className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
-          <Shield className="h-3 w-3" /> WiFome Entregador
+          <Shield className="h-3 w-3" /> PedeTrem Entregador
         </div>
         <p className="text-[11px] text-muted-foreground">Versão {APP_VERSION}</p>
       </div>

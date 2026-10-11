@@ -73,7 +73,7 @@ function NotifPage() {
         <Bell className="h-5 w-5 text-primary" /> Notificações
       </h1>
       <p className="text-sm text-muted-foreground">
-        Escolha como o WiFome pode te avisar sobre pedidos, promoções e novidades.
+        Escolha como o PedeTrem pode te avisar sobre pedidos, promoções e novidades.
       </p>
 
       <PushToggleCard />

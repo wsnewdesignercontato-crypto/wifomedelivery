@@ -1001,7 +1001,7 @@ function Corridas() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Reportar problema</DialogTitle>
-            <DialogDescription>Gera um protocolo para o suporte WiFome analisar.</DialogDescription>
+            <DialogDescription>Gera um protocolo para o suporte PedeTrem analisar.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2 text-sm">

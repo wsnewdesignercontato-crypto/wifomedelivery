@@ -40,7 +40,7 @@ const PAYS: { key: Pay; label: string; Icon: typeof QrCode }[] = [
   { key: "pix", label: "Pix", Icon: QrCode },
   { key: "cartao", label: "Cartão na entrega", Icon: CreditCard },
   { key: "dinheiro", label: "Dinheiro", Icon: Banknote },
-  { key: "carteira", label: "Carteira WiFome", Icon: Wallet },
+  { key: "carteira", label: "Carteira PedeTrem", Icon: Wallet },
 ];
 
 function CheckoutPage() {
