@@ -13,6 +13,14 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_authenticated/app")({
+  head: () => ({ meta: [
+    { title: "Escolher perfil | PedeTrem" },
+    { name: "description", content: "PedeTrem: escolher perfil." },
+    { property: "og:title", content: "Escolher perfil | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: escolher perfil." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   validateSearch: searchSchema,
   component: AppDispatcher,
 });

@@ -18,6 +18,14 @@ import {
 import { Plus, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/complementos")({
+  head: () => ({ meta: [
+    { title: "Loja — Complementos | PedeTrem" },
+    { name: "description", content: "PedeTrem: loja, complementos." },
+    { property: "og:title", content: "Loja — Complementos | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: loja, complementos." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: ComplementosPage,
 });
 

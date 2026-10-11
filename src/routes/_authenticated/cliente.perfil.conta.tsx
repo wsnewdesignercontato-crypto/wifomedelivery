@@ -9,6 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/conta")({
+  head: () => ({ meta: [
+    { title: "Cliente — Perfil — Conta | PedeTrem" },
+    { name: "description", content: "PedeTrem: cliente, perfil, conta." },
+    { property: "og:title", content: "Cliente — Perfil — Conta | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: cliente, perfil, conta." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: ContaPage,
 });
 

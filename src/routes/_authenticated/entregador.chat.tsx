@@ -2,6 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { MessageSquare } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/entregador/chat")({
+  head: () => ({ meta: [
+    { title: "Entregador — Chat | PedeTrem" },
+    { name: "description", content: "PedeTrem: entregador, chat." },
+    { property: "og:title", content: "Entregador — Chat | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: entregador, chat." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Chat,
 });
 

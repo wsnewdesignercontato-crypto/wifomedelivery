@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button";
 import { dateShort } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/avaliacoes")({
+  head: () => ({ meta: [
+    { title: "Admin — Avaliações | PedeTrem" },
+    { name: "description", content: "PedeTrem: admin, avaliações." },
+    { property: "og:title", content: "Admin — Avaliações | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: admin, avaliações." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AvaliacoesPage,
 });
 

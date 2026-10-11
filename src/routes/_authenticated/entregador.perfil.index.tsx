@@ -26,6 +26,14 @@ import { LocationToggleCard } from "@/components/location-toggle-card";
 import { getKycLabel, normalizeReviewStatus } from "@/lib/courier-approval";
 
 export const Route = createFileRoute("/_authenticated/entregador/perfil/")({
+  head: () => ({ meta: [
+    { title: "Entregador — Perfil — Início | PedeTrem" },
+    { name: "description", content: "PedeTrem: entregador, perfil, início." },
+    { property: "og:title", content: "Entregador — Perfil — Início | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: entregador, perfil, início." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: PerfilHub,
 });
 

@@ -35,6 +35,14 @@ import {
 } from "@/lib/category-templates";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/produtos")({
+  head: () => ({ meta: [
+    { title: "Loja — Produtos | PedeTrem" },
+    { name: "description", content: "PedeTrem: loja, produtos." },
+    { property: "og:title", content: "Loja — Produtos | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: loja, produtos." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: ProdutosPage,
 });
 

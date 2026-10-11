@@ -17,6 +17,14 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/entregador/carteira")({
+  head: () => ({ meta: [
+    { title: "Entregador — Carteira | PedeTrem" },
+    { name: "description", content: "PedeTrem: entregador, carteira." },
+    { property: "og:title", content: "Entregador — Carteira | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: entregador, carteira." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Carteira,
 });
 

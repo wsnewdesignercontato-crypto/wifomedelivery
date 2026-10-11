@@ -10,6 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/_authenticated/admin/configuracoes")({
+  head: () => ({ meta: [
+    { title: "Admin — Configurações | PedeTrem" },
+    { name: "description", content: "PedeTrem: admin, configurações." },
+    { property: "og:title", content: "Admin — Configurações | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: admin, configurações." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: ConfigPage,
 });
 

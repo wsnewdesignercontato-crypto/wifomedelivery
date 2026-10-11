@@ -30,6 +30,14 @@ import {
 import { printOrderReceipt, buildReceiptHtml } from "@/lib/print-receipt";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/pedidos")({
+  head: () => ({ meta: [
+    { title: "Loja — Pedidos | PedeTrem" },
+    { name: "description", content: "PedeTrem: loja, pedidos." },
+    { property: "og:title", content: "Loja — Pedidos | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: loja, pedidos." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: PedidosPage,
 });
 

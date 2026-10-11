@@ -8,6 +8,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AdRotator } from "@/components/cliente/ad-rotator";
 
 export const Route = createFileRoute("/_authenticated/cliente/novidades")({
+  head: () => ({ meta: [
+    { title: "Cliente — Novidades | PedeTrem" },
+    { name: "description", content: "PedeTrem: cliente, novidades." },
+    { property: "og:title", content: "Cliente — Novidades | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: cliente, novidades." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: NovidadesPage,
 });
 

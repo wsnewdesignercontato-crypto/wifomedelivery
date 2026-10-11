@@ -15,7 +15,15 @@ import { Plus, Trash2, Upload, Loader2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/admin/banners")({ component: BannersPage });
+export const Route = createFileRoute("/_authenticated/admin/banners")({
+  head: () => ({ meta: [
+    { title: "Admin — Banners | PedeTrem" },
+    { name: "description", content: "PedeTrem: admin, banners." },
+    { property: "og:title", content: "Admin — Banners | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: admin, banners." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }), component: BannersPage });
 
 type Banner = {
   id: string;

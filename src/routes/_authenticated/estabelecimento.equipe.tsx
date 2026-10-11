@@ -18,6 +18,14 @@ import {
 import { Plus, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/equipe")({
+  head: () => ({ meta: [
+    { title: "Loja — Equipe | PedeTrem" },
+    { name: "description", content: "PedeTrem: loja, equipe." },
+    { property: "og:title", content: "Loja — Equipe | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: loja, equipe." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: EquipePage,
 });
 

@@ -10,6 +10,14 @@ import { useMyCourier } from "@/hooks/use-courier";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/entregador/perfil/dados")({
+  head: () => ({ meta: [
+    { title: "Entregador — Perfil — Dados pessoais | PedeTrem" },
+    { name: "description", content: "PedeTrem: entregador, perfil, dados pessoais." },
+    { property: "og:title", content: "Entregador — Perfil — Dados pessoais | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: entregador, perfil, dados pessoais." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Perfil,
 });
 

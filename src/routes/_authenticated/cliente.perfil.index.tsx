@@ -20,6 +20,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/")({
+  head: () => ({ meta: [
+    { title: "Cliente — Perfil — Início | PedeTrem" },
+    { name: "description", content: "PedeTrem: cliente, perfil, início." },
+    { property: "og:title", content: "Cliente — Perfil — Início | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: cliente, perfil, início." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: PerfilHub,
 });
 

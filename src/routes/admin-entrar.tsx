@@ -11,7 +11,12 @@ import { Lock } from "lucide-react";
 export const Route = createFileRoute("/admin-entrar")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "PedeTrem Admin — Acesso Master" },
+      { name: "description", content: "Acesso administrativo da plataforma PedeTrem." },
+      { property: "og:title", content: "PedeTrem Admin — Acesso Master" },
+      { property: "og:description", content: "Acesso administrativo da plataforma PedeTrem." },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),

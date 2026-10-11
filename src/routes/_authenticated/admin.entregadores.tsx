@@ -10,6 +10,14 @@ import { Badge } from "@/components/ui/badge";
 import { getKycLabel, isCourierApproved, normalizeReviewStatus } from "@/lib/courier-approval";
 
 export const Route = createFileRoute("/_authenticated/admin/entregadores")({
+  head: () => ({ meta: [
+    { title: "Admin — Entregadores | PedeTrem" },
+    { name: "description", content: "PedeTrem: admin, entregadores." },
+    { property: "og:title", content: "Admin — Entregadores | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: admin, entregadores." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: EntregadoresPage,
 });
 

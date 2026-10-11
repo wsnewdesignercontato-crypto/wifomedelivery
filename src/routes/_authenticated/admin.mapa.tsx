@@ -7,7 +7,15 @@ import { useServerFn } from "@tanstack/react-start";
 import { geocodeMissingEstablishments } from "@/lib/admin-map.functions";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/admin/mapa")({ component: MapaPage });
+export const Route = createFileRoute("/_authenticated/admin/mapa")({
+  head: () => ({ meta: [
+    { title: "Admin — Mapa ao vivo | PedeTrem" },
+    { name: "description", content: "PedeTrem: admin, mapa ao vivo." },
+    { property: "og:title", content: "Admin — Mapa ao vivo | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: admin, mapa ao vivo." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }), component: MapaPage });
 
 const LiveMap = lazy(() => import("@/components/admin/live-map"));
 

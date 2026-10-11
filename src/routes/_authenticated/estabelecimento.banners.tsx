@@ -18,6 +18,14 @@ import {
 import { Plus, Trash2, Upload, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/banners")({
+  head: () => ({ meta: [
+    { title: "Loja — Banners | PedeTrem" },
+    { name: "description", content: "PedeTrem: loja, banners." },
+    { property: "og:title", content: "Loja — Banners | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: loja, banners." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: BannersPage,
 });
 

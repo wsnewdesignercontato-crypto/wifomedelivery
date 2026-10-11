@@ -5,6 +5,14 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/recompensas")({
+  head: () => ({ meta: [
+    { title: "Cliente — Perfil — Recompensas | PedeTrem" },
+    { name: "description", content: "PedeTrem: cliente, perfil, recompensas." },
+    { property: "og:title", content: "Cliente — Perfil — Recompensas | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: cliente, perfil, recompensas." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: RecompensasPage,
 });
 

@@ -2,6 +2,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronLeft, FileText, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/termos")({
+  head: () => ({ meta: [
+    { title: "Cliente — Perfil — Termos | PedeTrem" },
+    { name: "description", content: "PedeTrem: cliente, perfil, termos." },
+    { property: "og:title", content: "Cliente — Perfil — Termos | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: cliente, perfil, termos." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: TermosPage,
 });
 

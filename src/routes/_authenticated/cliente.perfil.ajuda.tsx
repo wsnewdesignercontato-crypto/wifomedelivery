@@ -3,6 +3,14 @@ import { ChevronLeft, HelpCircle, MessageCircle, Mail, Phone, ChevronDown } from
 import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/ajuda")({
+  head: () => ({ meta: [
+    { title: "Cliente — Perfil — Ajuda | PedeTrem" },
+    { name: "description", content: "PedeTrem: cliente, perfil, ajuda." },
+    { property: "og:title", content: "Cliente — Perfil — Ajuda | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: cliente, perfil, ajuda." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AjudaPage,
 });
 

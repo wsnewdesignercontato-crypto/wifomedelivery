@@ -6,6 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/cliente/favoritos")({
+  head: () => ({ meta: [
+    { title: "Cliente — Favoritos | PedeTrem" },
+    { name: "description", content: "PedeTrem: cliente, favoritos." },
+    { property: "og:title", content: "Cliente — Favoritos | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: cliente, favoritos." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: FavoritosPage,
 });
 

@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/relatorios")({
+  head: () => ({ meta: [
+    { title: "Loja — Relatórios | PedeTrem" },
+    { name: "description", content: "PedeTrem: loja, relatórios." },
+    { property: "og:title", content: "Loja — Relatórios | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: loja, relatórios." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: RelatoriosPage,
 });
 

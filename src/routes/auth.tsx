@@ -28,6 +28,8 @@ export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Entrar no PedeTrem — Acesse sua conta" },
       {
         name: "description",

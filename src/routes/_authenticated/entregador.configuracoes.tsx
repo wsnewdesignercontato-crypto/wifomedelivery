@@ -28,6 +28,14 @@ import { LocationToggleCard } from "@/components/location-toggle-card";
 import { playSiren } from "@/hooks/use-new-ride-alert";
 
 export const Route = createFileRoute("/_authenticated/entregador/configuracoes")({
+  head: () => ({ meta: [
+    { title: "Entregador — Configurações | PedeTrem" },
+    { name: "description", content: "PedeTrem: entregador, configurações." },
+    { property: "og:title", content: "Entregador — Configurações | PedeTrem" },
+    { property: "og:description", content: "PedeTrem: entregador, configurações." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Cfg,
 });
 
