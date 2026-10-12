@@ -86,3 +86,5 @@ Somente depois de verificar login, Google Maps, IA e push no destino, publique/p
 Em caso de regressão, restaure um deployment verificado pela Vercel ou reverta os commits por novos commits Git. Preserve o histórico publicado. Mantenha o banco e as credenciais existentes; não aplique migrations em massa nem recrie usuários. Ao encerrar a migração, desconecte a edição/sincronização no painel Lovable e retire a publicação antiga após a validação de produção.
 
 O lint do repositório já tinha erros de formatação e usos de `any` antes da migração. Registre seu resultado separadamente dos testes e do build; revise os arquivos alterados sem reformatação geral do produto.
+
+O lockfile resolve TanStack Start 1.168.60 e seu `start-server-core` 1.169.39, corrigidos para [CVE-2026-102989](https://github.com/TanStack/router/security/advisories/GHSA-qx66-fv34-fjm8). A suíte verifica as versões efetivamente instaladas. Atualizações devem preservar essas correções e manter o Router alinhado à versão usada pelo Start.
