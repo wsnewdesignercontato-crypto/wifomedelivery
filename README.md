@@ -32,6 +32,8 @@ Antes de iniciar um servidor conectado aos serviços de produção, confira o pr
 
 Nunca publique `.env`, `.env.local`, `.vercel` ou credenciais. Preserve o projeto Supabase existente e ajuste seus endereços permitidos de autenticação ao domínio verificado.
 
+Antes de enviar o código, execute `vercel deploy --dry --json` e grave o resultado em um arquivo local ignorado. Valide esse arquivo com `node scripts/check-deploy-inputs.mjs CAMINHO-DO-JSON`. O `.vercelignore` exclui arquivos de ambiente, credenciais locais e materiais de execução do upload, além da proteção do Git.
+
 ## Google Maps
 
 Use credenciais de um projeto Google Cloud que você administra, com Maps JavaScript API e Geocoding API habilitadas. Configure `VITE_GOOGLE_MAPS_API_KEY` para o mapa no navegador, restringindo essa chave aos domínios do aplicativo. Configure `GOOGLE_MAPS_API_KEY` separadamente no servidor para geocoding. A chave de servidor não é enviada ao navegador.
@@ -40,7 +42,7 @@ A detecção de cidade passa por uma função autenticada do aplicativo. Falhas 
 
 ## IA administrativa
 
-O painel administrativo usa o Vercel AI Gateway com `google/gemini-3-flash`; `AI_GATEWAY_MODEL` permite selecionar outro modelo disponível. Na Vercel, a autenticação usa o token OIDC do deployment. Para execução local, configure `AI_GATEWAY_API_KEY` somente no ambiente de servidor. Habilite o Gateway no time responsável pelo projeto e confira seu saldo e limites.
+O painel administrativo usa o Vercel AI Gateway com `google/gemini-3-flash`; `AI_GATEWAY_MODEL` permite selecionar outro modelo disponível. Na Vercel, a autenticação obtém o token OIDC da requisição usando `@vercel/oidc`, sem guardar um token de build no servidor. Para execução local, use o token obtido por `vercel env pull` ou configure `AI_GATEWAY_API_KEY` somente no ambiente de servidor. Habilite o Gateway no time responsável pelo projeto e confira seu saldo e limites. A conta pode precisar cadastrar um cartão para liberar os créditos gratuitos; faça essa configuração diretamente no painel.
 
 A função mantém a autorização de administrador e envia as métricas agregadas já usadas pelo painel. Erros do provedor geram uma mensagem controlada, sem expor credenciais.
 

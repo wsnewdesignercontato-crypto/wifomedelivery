@@ -5,6 +5,8 @@ import { generateOperationsInsight } from "../src/lib/ai-gateway.server.ts";
 const token = "isolated-gateway-test-token";
 const summary = { periodo: "30 dias", total_pedidos: 10 };
 const response = { choices: [{ message: { content: "Reduza os pedidos cancelados." } }] };
+const oidcToken = (id) =>
+  `${Buffer.from('{"alg":"RS256"}').toString("base64url")}.${Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600, jti: id })).toString("base64url")}.synthetic-test-signature`;
 
 test("insights use the Vercel endpoint, configured model and aggregate metrics", async () => {
   const result = await generateOperationsInsight("Como melhorar?", summary, {
@@ -89,13 +91,14 @@ test("deployment OIDC and environment model are supported without an API key", a
     ]),
   );
   delete process.env.AI_GATEWAY_API_KEY;
-  process.env.VERCEL_OIDC_TOKEN = token;
+  const localOidcToken = oidcToken("local");
+  process.env.VERCEL_OIDC_TOKEN = localOidcToken;
   process.env.AI_GATEWAY_MODEL = "google/gemini-3-flash";
   try {
     assert.equal(
       await generateOperationsInsight("Pergunta", summary, {
         fetch: async (_, init) => {
-          assert.equal(init.headers.Authorization, `Bearer ${token}`);
+          assert.equal(init.headers.Authorization, `Bearer ${localOidcToken}`);
           assert.equal(JSON.parse(init.body).model, process.env.AI_GATEWAY_MODEL);
           return Response.json(response);
         },
@@ -107,5 +110,64 @@ test("deployment OIDC and environment model are supported without an API key", a
       if (value === undefined) delete process.env[name];
       else process.env[name] = value;
     }
+  }
+});
+
+test("runtime request context supplies OIDC without an environment token and refreshes each request", async () => {
+  const symbol = Symbol.for("@vercel/request-context");
+  const previousContext = globalThis[symbol];
+  const previousKey = process.env.AI_GATEWAY_API_KEY;
+  const previousOidc = process.env.VERCEL_OIDC_TOKEN;
+  delete process.env.AI_GATEWAY_API_KEY;
+  delete process.env.VERCEL_OIDC_TOKEN;
+  let requestToken = oidcToken("request-one");
+  globalThis[symbol] = { get: () => ({ headers: { "x-vercel-oidc-token": requestToken } }) };
+  try {
+    for (const id of ["request-one", "request-two"]) {
+      requestToken = oidcToken(id);
+      assert.equal(
+        await generateOperationsInsight("Pergunta", summary, {
+          fetch: async (_, init) => {
+            assert.equal(init.headers.Authorization, `Bearer ${requestToken}`);
+            return Response.json(response);
+          },
+        }),
+        "Reduza os pedidos cancelados.",
+      );
+      // A warm process may retain an old environment copy; the next request must win.
+      process.env.VERCEL_OIDC_TOKEN = oidcToken("stale-environment");
+    }
+  } finally {
+    if (previousContext === undefined) delete globalThis[symbol];
+    else globalThis[symbol] = previousContext;
+    if (previousKey === undefined) delete process.env.AI_GATEWAY_API_KEY;
+    else process.env.AI_GATEWAY_API_KEY = previousKey;
+    if (previousOidc === undefined) delete process.env.VERCEL_OIDC_TOKEN;
+    else process.env.VERCEL_OIDC_TOKEN = previousOidc;
+  }
+});
+
+test("an explicit API key takes precedence without accessing request OIDC", async () => {
+  const symbol = Symbol.for("@vercel/request-context");
+  const previousContext = globalThis[symbol];
+  globalThis[symbol] = {
+    get: () => {
+      throw new Error("OIDC must not be accessed");
+    },
+  };
+  try {
+    assert.equal(
+      await generateOperationsInsight("Pergunta", summary, {
+        token,
+        fetch: async (_, init) => {
+          assert.equal(init.headers.Authorization, `Bearer ${token}`);
+          return Response.json(response);
+        },
+      }),
+      "Reduza os pedidos cancelados.",
+    );
+  } finally {
+    if (previousContext === undefined) delete globalThis[symbol];
+    else globalThis[symbol] = previousContext;
   }
 });

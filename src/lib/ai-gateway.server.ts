@@ -1,3 +1,5 @@
+import { getVercelOidcToken } from "@vercel/oidc";
+
 type GatewayOptions = { token?: string; model?: string; fetch?: typeof fetch };
 type GatewayResponse = { choices?: Array<{ message?: { content?: unknown } }> };
 
@@ -6,8 +8,14 @@ export async function generateOperationsInsight(
   summary: Record<string, unknown>,
   options: GatewayOptions = {},
 ): Promise<string> {
-  const token =
-    options.token ?? (process.env.AI_GATEWAY_API_KEY?.trim() || process.env.VERCEL_OIDC_TOKEN);
+  let token = options.token ?? process.env.AI_GATEWAY_API_KEY?.trim();
+  if (options.token === undefined && !token) {
+    try {
+      token = await getVercelOidcToken();
+    } catch {
+      return "IA não configurada. Configure a autenticação do AI Gateway.";
+    }
+  }
   if (!token?.trim()) return "IA não configurada. Configure a autenticação do AI Gateway.";
   const model =
     options.model?.trim() || process.env.AI_GATEWAY_MODEL?.trim() || "google/gemini-3-flash";
