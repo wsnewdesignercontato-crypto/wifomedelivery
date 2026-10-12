@@ -63,7 +63,7 @@ Em `src/lib/admin-map.functions.ts`, acessar a API Google Geocoding diretamente 
 
 Em `src/hooks/use-city-detection.ts`, remover o gateway Lovable e usar o geocoding do Google em um handler do servidor, preservando a detecção por geolocalização e o comportamento de falha já esperado pela tela. A chave de servidor não é enviada ao navegador. Evitar introduzir novas chamadas a serviços públicos sem limites ou políticas de uso verificadas.
 
-Em `src/lib/admin-ai.functions.ts`, substituir `LOVABLE_API_KEY` e `ai.gateway.lovable.dev` pelo Vercel AI Gateway. Manter o modelo Google equivalente, se disponível no catálogo atual; caso o modelo existente tenha sido retirado, selecionar seu sucessor verificado e registrar a decisão. Tratar indisponibilidade, credenciais ausentes e respostas inválidas sem expor segredos.
+Em `src/lib/admin-ai.functions.ts`, substituir `LOVABLE_API_KEY` e `ai.gateway.lovable.dev` pelo Vercel AI Gateway. O catálogo consultado em 12 de outubro de 2026 contém `google/gemini-3-flash`, que será o modelo padrão correspondente à variante preview usada no código atual. Permitir configuração por `AI_GATEWAY_MODEL`. Usar a API compatível de chat com autenticação por `AI_GATEWAY_API_KEY` ou identidade OIDC da Vercel. Tratar indisponibilidade, credenciais ausentes e respostas inválidas sem expor segredos.
 
 ## URLs públicas, observabilidade e notificações
 
@@ -89,7 +89,7 @@ Não solicitar chaves secretas pelo chat, imprimir valores no terminal, gravá-l
 
 A conexão Supabase disponível lista somente o projeto “Nobre Eventos” e retornou erro de permissão para `qoafjtzfxogopevbqhll`. O navegador abriu a página de login do Supabase. Para ajustes administrativos do banco atual, é necessário conectar a conta que tenha acesso a esse projeto ou disponibilizar uma sessão autenticada no painel.
 
-A conexão Vercel está autenticada no time `nobremarcasrm-3813s-projects`, ID `team_HPryP7i6vMXYwzuqmtl3ZiJD`. Não retornou projetos existentes. Confirmar o destino com o usuário antes de criar o projeto, pois o nome da conta não identifica por si só a conta desejada para esta migração.
+A conexão Vercel está autenticada no time `nobremarcasrm-3813s-projects`, ID `team_HPryP7i6vMXYwzuqmtl3ZiJD`. Não retornou projetos existentes. O usuário confirmou explicitamente esse time como destino da publicação em 12 de outubro de 2026.
 
 O projeto proposto na Vercel se chama `wifomedelivery`. Seu domínio padrão pode servir para a primeira validação. Um domínio próprio só será configurado quando o usuário informar o domínio e houver acesso à administração correspondente.
 
