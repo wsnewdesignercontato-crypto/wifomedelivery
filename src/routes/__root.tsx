@@ -17,6 +17,7 @@ import { LiveRefresh } from "@/components/live-refresh";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
 
 import { IFomeLogo } from "@/components/ifome-logo";
+import { APP_URL } from "@/lib/app-config";
 
 const BRAND_LOGO_URL = "/pedetrem-icon-512.png";
 
@@ -123,8 +124,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@context": "https://schema.org",
           "@type": "Organization",
           name: "PedeTrem",
-          url: "https://wifomedelivery.lovable.app",
-          logo: `https://wifomedelivery.lovable.app${BRAND_LOGO_URL}`,
+          url: APP_URL,
+          logo: `${APP_URL}${BRAND_LOGO_URL}`,
           description:
             "Plataforma de delivery que conecta clientes, restaurantes e entregadores em tempo real.",
         }),
@@ -135,7 +136,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@context": "https://schema.org",
           "@type": "WebSite",
           name: "PedeTrem",
-          url: "https://wifomedelivery.lovable.app",
+          url: APP_URL,
         }),
       },
     ],
