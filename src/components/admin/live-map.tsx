@@ -16,10 +16,7 @@ type Estab = {
   cidade: string | null;
 };
 
-const BROWSER_KEY = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as
-  string | undefined;
-const TRACKING_ID = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as
-  string | undefined;
+const BROWSER_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
 
 declare global {
   interface Window {
@@ -43,7 +40,6 @@ function loadGoogleMaps(): Promise<void> {
       loading: "async",
       callback: "__wifomeInitMap",
     });
-    if (TRACKING_ID) params.set("channel", TRACKING_ID);
     s.src = `https://maps.googleapis.com/maps/api/js?${params.toString()}`;
     s.async = true;
     s.defer = true;

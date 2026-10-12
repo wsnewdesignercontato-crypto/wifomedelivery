@@ -31,3 +31,9 @@ Para verificar o formato de build da Vercel localmente, defina `NITRO_PRESET=ver
 Antes de iniciar um servidor conectado aos serviços de produção, confira o projeto vinculado e as variáveis necessárias ao fluxo. Os comandos de deploy, configuração do Supabase e retirada da hospedagem anterior estão detalhados no plano de migração em `docs/superpowers/plans/2026-10-12-vercel-supabase.md`.
 
 Nunca publique `.env`, `.env.local`, `.vercel` ou credenciais. Preserve o projeto Supabase existente e ajuste seus endereços permitidos de autenticação ao domínio verificado.
+
+## Google Maps
+
+Use credenciais de um projeto Google Cloud que você administra, com Maps JavaScript API e Geocoding API habilitadas. Configure `VITE_GOOGLE_MAPS_API_KEY` para o mapa no navegador, restringindo essa chave aos domínios do aplicativo. Configure `GOOGLE_MAPS_API_KEY` separadamente no servidor para geocoding. A chave de servidor não é enviada ao navegador.
+
+A detecção de cidade passa por uma função autenticada do aplicativo. Falhas do provedor deixam a localização automática indisponível e permitem continuar usando a cidade selecionada.

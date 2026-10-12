@@ -9,34 +9,6 @@ type EstabRow = {
   estado: string | null;
 };
 
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
-
-async function geocodeOne(query: string): Promise<{ lat: number; lng: number } | null> {
-  const lovableKey = process.env.LOVABLE_API_KEY;
-  const gmapsKey = process.env.GOOGLE_MAPS_API_KEY;
-  if (!lovableKey || !gmapsKey) return null;
-  const url = `${GATEWAY_URL}/maps/api/geocode/json?address=${encodeURIComponent(query)}&region=br&language=pt-BR`;
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${lovableKey}`,
-      "X-Connection-Api-Key": gmapsKey,
-    },
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    console.error(`Google Geocoding failed [${res.status}]: ${body}`);
-    return null;
-  }
-  const json = (await res.json()) as {
-    status: string;
-    results?: Array<{ geometry?: { location?: { lat: number; lng: number } } }>;
-  };
-  if (json.status !== "OK" || !json.results?.length) return null;
-  const loc = json.results[0].geometry?.location;
-  if (!loc || !Number.isFinite(loc.lat) || !Number.isFinite(loc.lng)) return null;
-  return { lat: loc.lat, lng: loc.lng };
-}
-
 export const geocodeMissingEstablishments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -47,6 +19,8 @@ export const geocodeMissingEstablishments = createServerFn({ method: "POST" })
       .eq("role", "admin")
       .maybeSingle();
     if (!roleRow) throw new Error("Forbidden");
+
+    const { geocodeAddress } = await import("@/lib/geocoding.server");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -65,9 +39,9 @@ export const geocodeMissingEstablishments = createServerFn({ method: "POST" })
       const parts = [e.endereco, e.cidade, e.estado, "Brasil"].filter(Boolean).join(", ");
       const primary = parts.trim();
       const fallback = [e.cidade, e.estado, "Brasil"].filter(Boolean).join(", ").trim();
-      let coords = primary ? await geocodeOne(primary) : null;
+      let coords = primary ? await geocodeAddress(primary) : null;
       if (!coords && fallback && fallback !== primary) {
-        coords = await geocodeOne(fallback);
+        coords = await geocodeAddress(fallback);
       }
       if (!coords) {
         fails.push({
