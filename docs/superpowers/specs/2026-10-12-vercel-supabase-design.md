@@ -91,6 +91,8 @@ A conexão Supabase disponível lista somente o projeto “Nobre Eventos” e re
 
 A conexão Vercel está autenticada no time `nobremarcasrm-3813s-projects`, ID `team_HPryP7i6vMXYwzuqmtl3ZiJD`. Não retornou projetos existentes. O usuário confirmou explicitamente esse time como destino da publicação em 12 de outubro de 2026.
 
+Durante a execução, o usuário corrigiu a conta de login para `wsnewdesignercontato@gmail.com` e escolheu explicitamente publicar nessa conta, substituindo o destino Nobre. O projeto criado é `wsnewdesignercontato-6856/wifomedelivery`, time `team_Yn1cspiVDGVrd05ytRtmyMze`, ID `prj_W25oUTDeJ8ygGbngzNBtB8JAxIYZ`. O login CLI da migração foi isolado para preservar a conta previamente autenticada.
+
 O projeto proposto na Vercel se chama `wifomedelivery`. Seu domínio padrão pode servir para a primeira validação. Um domínio próprio só será configurado quando o usuário informar o domínio e houver acesso à administração correspondente.
 
 O trabalho local de código pode avançar após as revisões exigidas do desenho e do plano. A publicação validada depende de acesso ao time Vercel escolhido e às credenciais de servidor, mapas e IA. Ajustes administrativos no Supabase dependem do acesso ao projeto correto.

@@ -20,7 +20,7 @@
 - Usar Node.js 24 e preservar as versões de produto existentes, exceto quando uma incompatibilidade comprovada exigir ajuste pontual.
 - A versão ativa não deve depender de assets, scripts ou serviços hospedados pela Lovable.
 - A recuperação não envolve force push, rebase ou alteração de commits publicados.
-- Time Vercel autorizado: `team_HPryP7i6vMXYwzuqmtl3ZiJD`, slug `nobremarcasrm-3813s-projects`; projeto `wifomedelivery`.
+- Destino Vercel atualizado pelo usuário durante a execução: conta `wsnewdesignercontato@gmail.com`, slug `wsnewdesignercontato-6856`, time `team_Yn1cspiVDGVrd05ytRtmyMze`; projeto `wifomedelivery` (`prj_W25oUTDeJ8ygGbngzNBtB8JAxIYZ`). Essa escolha substitui o destino Nobre inicialmente aprovado.
 - Executar alterações administrativas no Supabase somente após confirmar acesso ao projeto correto. A conexão atual retornou erro de permissão.
 
 ## Review Focus

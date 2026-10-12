@@ -51,3 +51,36 @@ Configure `VITE_APP_URL` e `APP_URL` com a mesma origem pública em cada ambient
 No projeto Supabase existente, ajuste Site URL e Redirect URLs somente depois de confirmar o domínio de destino. Verifique o trigger de notificações aplicado e atualize o segredo Vault `push_dispatch_base_url` para a origem de produção. O trigger seguro chama `/api/internal/push-dispatch` com o segredo `push_dispatch_secret`, que deve corresponder a `PUSH_DISPATCH_SECRET` da Vercel. Preserve o par VAPID e configure `SUPABASE_SERVICE_ROLE_KEY` apenas no servidor. Não reaplique todo o histórico de migrations.
 
 Permissões de notificações e inscrições Web Push pertencem a cada origem. Após mudar de domínio, os usuários precisam permitir notificações e se inscrever no novo endereço. Os IDs dos aplicativos e os nomes de armazenamento permanecem preservados.
+
+## Operação e recuperação
+
+O projeto autorizado é `wsnewdesignercontato-6856/wifomedelivery`, ID `prj_W25oUTDeJ8ygGbngzNBtB8JAxIYZ`. O banco continua em `qoafjtzfxogopevbqhll`; não crie outro banco para publicar o frontend. Confira a conta com `vercel whoami` antes de vincular ou publicar:
+
+```sh
+vercel link --yes --scope wsnewdesignercontato-6856 --project wifomedelivery
+vercel env pull .env.local --yes
+npm run test
+npm run typecheck
+npm run build
+vercel deploy
+```
+
+Use o preview para confirmar `/`, `/auth`, `/sitemap.xml`, `/robots.txt`, os manifests e as imagens:
+
+```sh
+node scripts/smoke-migration.mjs https://SEU-PREVIEW.vercel.app
+```
+
+Em previews protegidos, use as credenciais temporárias do projeto vinculado, preservando a proteção:
+
+```sh
+node --env-file=.env.local scripts/smoke-migration.mjs https://SEU-PREVIEW.vercel.app --vercel
+```
+
+Somente depois de verificar login, Google Maps, IA e push no destino, publique/promova a produção e atualize os callbacks Supabase para o domínio de produção confirmado. Confira a origem de produção, configure `APP_URL` e `VITE_APP_URL` nesse ambiente e faça novo build quando alterar essas variáveis. Preserve a publicação anterior até confirmar os fluxos e recuperar acesso a todos os serviços.
+
+`npm run preview -- --port 3000` executa o build Node local e lê `.env` e `.env.local`. Para reverificar o output Vercel, defina `NITRO_PRESET=vercel` e execute o build. Confira `.vercel/output/config.json` e a função SSR. A instalação usa apenas o registro público npm e os assets de marca pertencem ao repositório.
+
+Em caso de regressão, restaure um deployment verificado pela Vercel ou reverta os commits por novos commits Git. Preserve o histórico publicado. Mantenha o banco e as credenciais existentes; não aplique migrations em massa nem recrie usuários. Ao encerrar a migração, desconecte a edição/sincronização no painel Lovable e retire a publicação antiga após a validação de produção.
+
+O lint do repositório já tinha erros de formatação e usos de `any` antes da migração. Registre seu resultado separadamente dos testes e do build; revise os arquivos alterados sem reformatação geral do produto.
