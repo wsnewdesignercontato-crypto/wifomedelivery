@@ -36,29 +36,7 @@ export const generateAdminInsights = createServerFn({ method: "POST" })
       entregadores_online: couriers.data?.filter((c) => c.status === "online").length ?? 0,
     };
 
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) return { insight: "LOVABLE_API_KEY não configurada.", summary };
-
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content:
-              "Você é analista de operações do marketplace de delivery PedeTrem. Responda em português, direto e objetivo. Use os números fornecidos para gerar insights acionáveis (bullets curtos).",
-          },
-          {
-            role: "user",
-            content: `Métricas atuais:\n${JSON.stringify(summary, null, 2)}\n\nPergunta do admin: ${data.question}`,
-          },
-        ],
-      }),
-    });
-    if (!res.ok) return { insight: `Falha IA: ${res.status}`, summary };
-    const j = await res.json();
-    const insight = j?.choices?.[0]?.message?.content ?? "Sem resposta.";
+    const { generateOperationsInsight } = await import("@/lib/ai-gateway.server");
+    const insight = await generateOperationsInsight(data.question, summary);
     return { insight, summary };
   });

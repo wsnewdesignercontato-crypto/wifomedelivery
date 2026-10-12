@@ -37,3 +37,9 @@ Nunca publique `.env`, `.env.local`, `.vercel` ou credenciais. Preserve o projet
 Use credenciais de um projeto Google Cloud que você administra, com Maps JavaScript API e Geocoding API habilitadas. Configure `VITE_GOOGLE_MAPS_API_KEY` para o mapa no navegador, restringindo essa chave aos domínios do aplicativo. Configure `GOOGLE_MAPS_API_KEY` separadamente no servidor para geocoding. A chave de servidor não é enviada ao navegador.
 
 A detecção de cidade passa por uma função autenticada do aplicativo. Falhas do provedor deixam a localização automática indisponível e permitem continuar usando a cidade selecionada.
+
+## IA administrativa
+
+O painel administrativo usa o Vercel AI Gateway com `google/gemini-3-flash`; `AI_GATEWAY_MODEL` permite selecionar outro modelo disponível. Na Vercel, a autenticação usa o token OIDC do deployment. Para execução local, configure `AI_GATEWAY_API_KEY` somente no ambiente de servidor. Habilite o Gateway no time responsável pelo projeto e confira seu saldo e limites.
+
+A função mantém a autorização de administrador e envia as métricas agregadas já usadas pelo painel. Erros do provedor geram uma mensagem controlada, sem expor credenciais.
