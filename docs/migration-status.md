@@ -1,10 +1,12 @@
-# Estado da migração — 12 de outubro de 2026
+# Estado da migração — 13 de outubro de 2026
 
 A migração está em andamento. O código independente está publicado em preview na Vercel; a ativação de produção depende das configurações e verificações abaixo.
 
 - Conta Vercel verificada pela API: `wsnewdesignercontato@gmail.com`, identificador `wsnewdesignercontato-6856`.
 - Projeto: `wifomedelivery`, ID `prj_W25oUTDeJ8ygGbngzNBtB8JAxIYZ`.
+- Integração Git conectada a `wsnewdesignercontato-crypto/wifomedelivery`, com produção na branch `main`. [PR #1 em rascunho](https://github.com/wsnewdesignercontato-crypto/wifomedelivery/pull/1); a branch `main` permanece sem as mudanças da migração.
 - [Preview protegido](https://wifomedelivery-cjv7xfdto-wsnewdesignercontato-6856.vercel.app), deployment `dpl_CSbREU2Y3SqHy6n5up228uNfyoKa`, código do commit `b1eaefa`.
+- Domínio padrão confirmado no projeto: `wifomedelivery.vercel.app`. `APP_URL` e `VITE_APP_URL` estão configuradas para essa origem somente em Production; previews preservam suas próprias origens.
 - Banco preservado: `qoafjtzfxogopevbqhll`. Nenhuma alteração SQL ou de dados foi executada.
 - Branch de trabalho: `codex/migrate-vercel-supabase`.
 
@@ -19,13 +21,15 @@ A migração está em andamento. O código independente está publicado em previ
 
 O checker Node de HTTP encontrou encerramentos intermitentes de conexão com imagens grandes no preview. As verificações completas pelo CLI Vercel confirmaram status 200, tipos e tamanhos de todas as 13 respostas. O checker local passou nas 13 verificações.
 
+O registro de produção `dpl_uy3qTJYh8zq4h8mvmZFG6XbTHqrG` está em `ERROR/BLOCKED_PACKAGE`, por usar o Start original vulnerável. O preview acima contém a correção já verificada. Não houve promoção desse preview nem ativação bem-sucedida de produção.
+
 ## Etapas necessárias para produção
 
-1. Concluir o login no painel Supabase com `wsnewdesignercontato@gmail.com` e confirmar acesso ao banco indicado. A aba conectada ainda informa que a senha é necessária.
+1. Disponibilizar a sessão Supabase de `wsnewdesignercontato@gmail.com` no navegador conectado ou na conexão Supabase deste ambiente e confirmar acesso ao banco indicado. O usuário informou que entrou e viu o projeto, mas o Chrome conectado ainda redireciona para login; a conexão Supabase continua listando somente outro projeto, “Nobre Eventos”.
 2. Configurar credenciais privadas na Vercel pelo canal seguro: chave administrativa do Supabase, chave própria de geocoding Google, segredo de dispatch e chave VAPID privada original. Configurar também a chave pública própria do Maps. A chave VAPID pública original e o assunto de contato já estão configurados.
 3. Liberar o AI Gateway na conta Vercel. O teste com dados fictícios retornou HTTP 403 informando a exigência de cartão cadastrado para liberar os créditos gratuitos; nenhuma configuração de pagamento foi alterada.
 4. Verificar sessões, recuperação de senha, os quatro perfis, Google Maps, IA, realtime e push no destino. Dispatch atualmente retorna 503 por falta da configuração privada; a rejeição 401 e a entrega push ainda precisam ser verificadas.
-5. Confirmar o domínio de produção, ajustar Site URL/Redirect URLs e o Vault de dispatch no Supabase, configurar a origem pública e publicar/promover o deployment verificado.
-6. Conectar o repositório ao projeto Vercel e concluir a integração Git. Retirar a sincronização e a publicação Lovable depois que os fluxos de produção estiverem verificados.
+5. Ajustar Site URL/Redirect URLs e o Vault de dispatch no Supabase para o domínio de produção confirmado e publicar/promover o deployment verificado. As origens públicas de produção já estão configuradas na Vercel.
+6. Concluir a integração da branch de migração após as verificações. Retirar a sincronização e a publicação Lovable depois que os fluxos de produção estiverem verificados.
 
 Configure segredos diretamente no painel ou CLI autorizado, nunca em mensagens, commits ou nesta documentação. As contas previamente autenticadas no computador foram preservadas.
