@@ -7,7 +7,8 @@ A migração está em andamento. O código independente está publicado em previ
 - Integração Git conectada a `wsnewdesignercontato-crypto/wifomedelivery`, com produção na branch `main`. [PR #1 em rascunho](https://github.com/wsnewdesignercontato-crypto/wifomedelivery/pull/1); a branch `main` permanece sem as mudanças da migração.
 - [Preview protegido](https://wifomedelivery-cjv7xfdto-wsnewdesignercontato-6856.vercel.app), deployment `dpl_CSbREU2Y3SqHy6n5up228uNfyoKa`, código do commit `b1eaefa`.
 - Domínio padrão confirmado no projeto: `wifomedelivery.vercel.app`. `APP_URL` e `VITE_APP_URL` estão configuradas para essa origem somente em Production; previews preservam suas próprias origens.
-- Banco preservado: `qoafjtzfxogopevbqhll`. Nenhuma alteração SQL ou de dados foi executada.
+- Banco ainda configurado no aplicativo: `qoafjtzfxogopevbqhll`. Nenhuma tabela ou dado do aplicativo foi alterado.
+- Login Supabase pelo CLI concluído no perfil `wifomedelivery-ws`. O projeto acessível é `wifome`, ref `nsvgfagjezdduatmbsqq`. A consulta de catálogo nesse destino encontrou zero tabelas públicas do aplicativo, zero usuários Auth e zero buckets Storage. A origem dos dados precisa ser localizada antes de trocar a conexão.
 - Branch de trabalho: `codex/migrate-vercel-supabase`.
 
 ## Verificações concluídas
@@ -25,7 +26,7 @@ O registro de produção `dpl_uy3qTJYh8zq4h8mvmZFG6XbTHqrG` está em `ERROR/BLOC
 
 ## Etapas necessárias para produção
 
-1. Disponibilizar a sessão Supabase de `wsnewdesignercontato@gmail.com` no navegador conectado ou na conexão Supabase deste ambiente e confirmar acesso ao banco indicado. O usuário informou que entrou e viu o projeto, mas o Chrome conectado ainda redireciona para login; a conexão Supabase continua listando somente outro projeto, “Nobre Eventos”.
+1. Localizar os dados atuais do banco `qoafjtzfxogopevbqhll`, ou confirmar que ainda não há dados cadastrados, para preparar o projeto `wifome` identificado pelo login CLI. O usuário inicialmente afirmou que esse projeto continha os dados, mas a consulta de catálogo mostrou que está vazio. A conexão do aplicativo permanece no banco anterior enquanto essa diferença é esclarecida. Não reaplicar migrations nem recriar usuários em um banco com dados existentes.
 2. Configurar credenciais privadas na Vercel pelo canal seguro: chave administrativa do Supabase, chave própria de geocoding Google, segredo de dispatch e chave VAPID privada original. Configurar também a chave pública própria do Maps. A chave VAPID pública original e o assunto de contato já estão configurados.
 3. Liberar o AI Gateway na conta Vercel. O teste com dados fictícios retornou HTTP 403 informando a exigência de cartão cadastrado para liberar os créditos gratuitos; nenhuma configuração de pagamento foi alterada.
 4. Verificar sessões, recuperação de senha, os quatro perfis, Google Maps, IA, realtime e push no destino. Dispatch atualmente retorna 503 por falta da configuração privada; a rejeição 401 e a entrega push ainda precisam ser verificadas.
