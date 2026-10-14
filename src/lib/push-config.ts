@@ -1,6 +1,6 @@
 /** Chave pública VAPID (pode ficar no frontend por definição do protocolo Web Push). */
 export const VAPID_PUBLIC_KEY =
-  "BFz8xQKr51hH74Xdm4aKCCuXszqU9O9KwtttRODy1L8ejVCI2marV2T4Es2q1Ao5eh0dKIbHerNBgIheur-2Ud0";
+  "BFSIvClNp-ABqbioYKVKln3FEZFRAhxnxV-VAlWqC2gYkub3Fh6SITtOlQ-xsiPL-R0KWddoaG9od-yqzaK8ugE";
 
 export const PUSH_SW_URL = "/push-sw.js";
 

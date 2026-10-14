@@ -116,3 +116,19 @@
 ## Método recomendado
 
 Execução nativa: o agente principal implementa as tarefas nesta sessão e realiza uma revisão final independente antes da publicação. As tarefas compartilham configuração, autenticação e URLs, por isso a execução sequencial reduz conflito e repetição. A alternativa é execução por agentes com revisão a cada tarefa, escolhida explicitamente pelo usuário.
+
+### Extensão da Task 6: destino vazio confirmado
+
+Decisão do usuário: os três cadastros são descartáveis; iniciar no Supabase próprio `wifome/nsvgfagjezdduatmbsqq`. O histórico original de 79 migrations permanece intacto.
+
+- [x] Reconstruir e verificar localmente o schema, removendo apenas a concessão ao UUID de teste antigo e corrigindo uma conversão de enum na cópia local.
+- [x] Testar restauração com permissões padrão equivalentes às do destino; restaurar ACLs de funções/tabelas/colunas sem alterar defaults do provedor.
+- [x] Aplicar initializer transacional com bloqueio de destino não vazio; verificar 51 tabelas, 637 colunas, 47 funções do app, RLS, Auth, quatro buckets privados e 17 tabelas realtime.
+- [x] Corrigir acesso ao log administrativo e restringir RPC legado de cidade por ID arbitrário, preservando a chamada autenticada usada pelo app.
+- [x] Configurar na Vercel a conexão pública do novo projeto e segredos apenas no servidor. Configurar par VAPID novo, sem tocar no sistema antigo.
+- [x] Ajustar somente Site URL/Redirect URLs do Auth; preservar confirmação de e-mail, MFA, frequência e tamanho de OTP.
+- [x] Registrar histórico correspondente ao snapshot para impedir reaplicação das migrations antigas.
+- [ ] Validar novo preview, Vault/dispatch e cadastro/login reais.
+- [ ] Configurar credenciais próprias Google Maps e habilitar AI Gateway; verificar fluxos antes da produção e retirada da Lovable.
+
+Procedimento e limites do initializer: `supabase/bootstrap/README.md`.

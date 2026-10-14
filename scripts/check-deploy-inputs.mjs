@@ -8,8 +8,10 @@ const data = JSON.parse(text.slice(text.indexOf("{")));
 assert.ok(Array.isArray(data.files) && data.files.length > 0, "Lista de arquivos ausente.");
 const sensitive = data.files
   .map((file) => (typeof file === "string" ? file : file.path || file.name || ""))
-  .filter((path) =>
-    /(^|[\\/])(?:\.superpowers|\.env(?:\.|$)|\.git|auth\.json)(?:[\\/]|$|\.)/.test(path),
+  .filter(
+    (path) =>
+      /(^|[\\/])(?:\.superpowers|\.env(?:\.|$)|\.git|auth\.json)(?:[\\/]|$|\.)/.test(path) ||
+      /(^|[\\/])supabase[\\/]\.temp(?:[\\/]|$)/.test(path),
   );
 assert.equal(sensitive.length, 0, "Arquivos privados aparecem no upload. Confira .vercelignore.");
 console.log(

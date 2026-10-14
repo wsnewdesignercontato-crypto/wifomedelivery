@@ -50,13 +50,13 @@ A função mantém a autorização de administrador e envia as métricas agregad
 
 Configure `VITE_APP_URL` e `APP_URL` com a mesma origem pública em cada ambiente. Sem uma origem explícita, o build usa `VERCEL_URL` com HTTPS; localmente usa `http://localhost:3000`. Canonical, Open Graph, JSON-LD, sitemap e robots compartilham essa origem. Os retornos de cadastro e recuperação de senha usam o domínio aberto pelo usuário, que precisa estar permitido no Supabase Auth.
 
-No projeto Supabase existente, ajuste Site URL e Redirect URLs somente depois de confirmar o domínio de destino. Verifique o trigger de notificações aplicado e atualize o segredo Vault `push_dispatch_base_url` para a origem de produção. O trigger seguro chama `/api/internal/push-dispatch` com o segredo `push_dispatch_secret`, que deve corresponder a `PUSH_DISPATCH_SECRET` da Vercel. Preserve o par VAPID e configure `SUPABASE_SERVICE_ROLE_KEY` apenas no servidor. Não reaplique todo o histórico de migrations.
+No projeto Supabase existente, ajuste Site URL e Redirect URLs somente depois de confirmar o domínio de destino. Verifique o trigger de notificações aplicado e atualize o segredo Vault `push_dispatch_base_url` para a origem de produção. O trigger seguro chama `/api/internal/push-dispatch` com o segredo `push_dispatch_secret`, que deve corresponder a `PUSH_DISPATCH_SECRET` da Vercel. Para destinos com inscrições existentes, preserve o par VAPID. No novo projeto vazio, foi configurado um par próprio. Configure `SUPABASE_SERVICE_ROLE_KEY` apenas no servidor. Não reaplique todo o histórico de migrations.
 
 Permissões de notificações e inscrições Web Push pertencem a cada origem. Após mudar de domínio, os usuários precisam permitir notificações e se inscrever no novo endereço. Os IDs dos aplicativos e os nomes de armazenamento permanecem preservados.
 
 ## Operação e recuperação
 
-O projeto autorizado é `wsnewdesignercontato-6856/wifomedelivery`, ID `prj_W25oUTDeJ8ygGbngzNBtB8JAxIYZ`. O banco continua em `qoafjtzfxogopevbqhll`; não crie outro banco para publicar o frontend. Confira a conta com `vercel whoami` antes de vincular ou publicar:
+O projeto autorizado é `wsnewdesignercontato-6856/wifomedelivery`, ID `prj_W25oUTDeJ8ygGbngzNBtB8JAxIYZ`. O banco de destino é o projeto próprio `wifome`, ref `nsvgfagjezdduatmbsqq`. O usuário autorizou começar vazio e recriar os três cadastros de teste; o banco anterior não foi alterado. A inicialização verificada está documentada em `supabase/bootstrap/README.md`. Confira a conta com `vercel whoami` antes de vincular ou publicar:
 
 ```sh
 vercel link --yes --scope wsnewdesignercontato-6856 --project wifomedelivery

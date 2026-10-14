@@ -116,3 +116,7 @@ Manter o deploy anterior disponível até validar o destino. Se a validação fa
 - [Hospedagem e saída da Lovable](https://docs.lovable.dev/tips-tricks/deployment-hosting-ownership).
 - [URLs de retorno do Supabase Auth](https://supabase.com/docs/guides/auth/redirect-urls).
 - [Vercel AI Gateway](https://vercel.com/docs/ai-gateway).
+
+## Atualização autorizada do destino — 14 de outubro de 2026
+
+O usuário confirmou que os três cadastros anteriores são testes e podem ser recriados. O destino autorizado é o projeto existente `wifome`, ref `nsvgfagjezdduatmbsqq`, da conta `wsnewdesignercontato@gmail.com`; o catálogo estava vazio. A estrutura foi reconstruída a partir do histórico e inicializada nesse projeto. Nenhum usuário ou dado do banco anterior foi copiado ou excluído. O novo destino recebe chaves próprias de push, pois não tem inscrições existentes. O objetivo, os quatro perfis e a identidade visual continuam os mesmos.

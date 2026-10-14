@@ -20,3 +20,7 @@ node_modules/
 # Review and development material is not required by the app build.
 docs/
 tests/
+supabase/.temp
+supabase/.temp/**
+supabase/bootstrap/tests
+supabase/bootstrap/tests/**
