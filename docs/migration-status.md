@@ -1,6 +1,6 @@
 # Estado da migração — 14 de outubro de 2026
 
-A migração está em andamento. O código independente está publicado em preview na Vercel; a ativação de produção depende das configurações e verificações abaixo.
+A migração está em andamento. O destino Supabase próprio foi inicializado e verificado; os três cadastros anteriores eram testes descartáveis. O código independente está publicado em preview na Vercel; a ativação de produção depende das configurações e verificações abaixo.
 
 - Conta Vercel verificada pela API: `wsnewdesignercontato@gmail.com`, identificador `wsnewdesignercontato-6856`.
 - Projeto: `wifomedelivery`, ID `prj_W25oUTDeJ8ygGbngzNBtB8JAxIYZ`.
@@ -9,6 +9,8 @@ A migração está em andamento. O código independente está publicado em previ
 - Domínio padrão confirmado no projeto: `wifomedelivery.vercel.app`. `APP_URL` e `VITE_APP_URL` estão configuradas para essa origem somente em Production; previews preservam suas próprias origens.
 - Banco de destino: `wifome/nsvgfagjezdduatmbsqq`. A conexão nova e a chave administrativa de servidor estão configuradas na Vercel; um novo deployment ainda precisa incorporar esses valores. O banco anterior não foi alterado.
 - Login Supabase pelo CLI concluído no perfil `wifomedelivery-ws`. O usuário confirmou que os três cadastros antigos são testes e podem ser recriados. O destino próprio estava vazio e recebeu a estrutura verificada do app, sem copiar usuários ou dados antigos.
+- O preview novo `dpl_DertyMZKnqMZDvbVi1rcBBKicf8y` foi bloqueado por autoria Git sem permissão no time. A identidade de login Vercel continua sendo WS; novos commits usam o e-mail WS confirmado pelo usuário, sem reescrever os commits anteriores.
+- O usuário pediu mapas gratuitos como alternativa ao Google e adiou a configuração da IA. O desenho do mapa gratuito está em avaliação para preservar a navegação do entregador.
 - Branch de trabalho: `codex/migrate-vercel-supabase`.
 
 ## Verificações concluídas
@@ -29,7 +31,7 @@ O registro de produção `dpl_uy3qTJYh8zq4h8mvmZFG6XbTHqrG` está em `ERROR/BLOC
 ## Etapas necessárias para produção
 
 1. Publicar e verificar o novo preview conectado a `wifome`. Estrutura, Auth callbacks, histórico de 80 versões e Vault de dispatch já foram configurados. Snapshot e testes estão em `supabase/bootstrap/`; não reaplicar o histórico antigo.
-2. Configurar as chaves próprias Google de Maps e geocoding na Vercel. A chave administrativa Supabase, o segredo de dispatch e o novo par VAPID já estão configurados para o destino vazio; não há assinaturas antigas nele.
+2. Definir e implementar a alternativa gratuita de mapas solicitada pelo usuário. A chave administrativa Supabase, o segredo de dispatch e o novo par VAPID já estão configurados para o destino vazio; não há assinaturas antigas nele.
 3. Liberar o AI Gateway na conta Vercel. O teste com dados fictícios retornou HTTP 403 informando a exigência de cartão cadastrado para liberar os créditos gratuitos; nenhuma configuração de pagamento foi alterada.
 4. Verificar sessões, recuperação de senha, os quatro perfis, Google Maps, IA, realtime e push no destino. Dispatch atualmente retorna 503 por falta da configuração privada; a rejeição 401 e a entrega push ainda precisam ser verificadas.
 5. Verificar o deployment com as configurações novas e publicar/promover somente após validar os fluxos. Site URL/Redirect URLs e Vault já apontam à produção confirmada; MFA, confirmação de e-mail e parâmetros de OTP foram preservados.
