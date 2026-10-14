@@ -81,7 +81,7 @@ Em previews protegidos, use as credenciais temporárias do projeto vinculado, pr
 node --env-file=.env.local scripts/smoke-migration.mjs https://SEU-PREVIEW.vercel.app --vercel
 ```
 
-Somente depois de verificar login, Google Maps, IA e push no destino, publique/promova a produção e atualize os callbacks Supabase para o domínio de produção confirmado. Confira a origem de produção, configure `APP_URL` e `VITE_APP_URL` nesse ambiente e faça novo build quando alterar essas variáveis. Preserve a publicação anterior até confirmar os fluxos e recuperar acesso a todos os serviços.
+Depois de verificar login, mapas gratuitos e os fluxos ativos no destino, publique/promova a produção e atualize os callbacks Supabase para o domínio de produção confirmado. Confira a origem de produção, configure `APP_URL` e `VITE_APP_URL` nesse ambiente e faça novo build quando alterar essas variáveis. Preserve a publicação anterior até confirmar os fluxos e recuperar acesso a todos os serviços.
 
 `npm run preview -- --port 3000` executa o build Node local e lê `.env` e `.env.local`. Para reverificar o output Vercel, defina `NITRO_PRESET=vercel` e execute o build. Confira `.vercel/output/config.json` e a função SSR. A instalação usa apenas o registro público npm e os assets de marca pertencem ao repositório.
 

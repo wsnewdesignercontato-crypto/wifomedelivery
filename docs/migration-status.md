@@ -5,19 +5,19 @@ A migração está em andamento. O destino Supabase próprio foi inicializado e 
 - Conta Vercel verificada pela API: `wsnewdesignercontato@gmail.com`, identificador `wsnewdesignercontato-6856`.
 - Projeto: `wifomedelivery`, ID `prj_W25oUTDeJ8ygGbngzNBtB8JAxIYZ`.
 - Integração Git conectada a `wsnewdesignercontato-crypto/wifomedelivery`, com produção na branch `main`. [PR #1 em rascunho](https://github.com/wsnewdesignercontato-crypto/wifomedelivery/pull/1); a branch `main` permanece sem as mudanças da migração.
-- [Preview protegido](https://wifomedelivery-cjv7xfdto-wsnewdesignercontato-6856.vercel.app), deployment `dpl_CSbREU2Y3SqHy6n5up228uNfyoKa`, código do commit `b1eaefa`.
+- [Preview protegido conectado a wifome](https://wifomedelivery-g2tbygo1g-wsnewdesignercontato-6856.vercel.app), deployment `dpl_zDHr4wdFkjfBbgXS8NP6wKbKXDNv`, código `c7d91c2`. O mapa gratuito está verificado localmente e aguarda novo deployment.
 - Domínio padrão confirmado no projeto: `wifomedelivery.vercel.app`. `APP_URL` e `VITE_APP_URL` estão configuradas para essa origem somente em Production; previews preservam suas próprias origens.
 - Banco de destino: `wifome/nsvgfagjezdduatmbsqq`. A conexão nova e a chave administrativa de servidor estão configuradas na Vercel; um novo deployment ainda precisa incorporar esses valores. O banco anterior não foi alterado.
 - Login Supabase pelo CLI concluído no perfil `wifomedelivery-ws`. O usuário confirmou que os três cadastros antigos são testes e podem ser recriados. O destino próprio estava vazio e recebeu a estrutura verificada do app, sem copiar usuários ou dados antigos.
 - O preview novo `dpl_DertyMZKnqMZDvbVi1rcBBKicf8y` foi bloqueado por autoria Git sem permissão no time. A identidade de login Vercel continua sendo WS; novos commits usam o e-mail WS confirmado pelo usuário, sem reescrever os commits anteriores.
-- O usuário pediu mapas gratuitos como alternativa ao Google e adiou a configuração da IA. O desenho do mapa gratuito está em avaliação para preservar a navegação do entregador.
+- Mapa gratuito aprovado: OpenStreetMap/Leaflet dentro do aplicativo, GPS externo sem API. Verificado no painel local com um marcador temporário do Supabase e créditos visíveis; cinco testes do helper, suíte total 52, tipos e builds Node/Vercel passaram. IA e geocoding opcional ficam para depois.
 - Branch de trabalho: `codex/migrate-vercel-supabase`.
 
 ## Verificações concluídas
 
 - Inicialização local e remota aprovada: 51 tabelas com RLS, 637 colunas, 47 funções do app, quatro buckets privados, trigger Auth e 17 relações realtime. As 9.705 permissões de funções/tabelas/colunas coincidiram com a reconstrução original antes do endurecimento adicional. Defaults do provedor preservados.
 - Testes de isolamento de clientes e logs administrativos passaram local e remotamente, com fixtures revertidas. A view administrativa agora respeita RLS; RPC legado de cidade por ID e funções internas foram restringidos. O advisor continua sinalizando `public_reviews`, que preserva uma projeção pública intencional, e funções autenticadas autorizadas no corpo.
-- 47 testes, TypeScript e builds Node/Vercel aprovados. Revisão independente concluída; a correção de OIDC foi verificada com o SDK real.
+- 52 testes, TypeScript e builds Node/Vercel aprovados. Revisão independente concluída; a correção de OIDC foi verificada com o SDK real.
 - Versões corrigidas para CVE-2026-102989 instaladas: Start 1.168.60 e server-core 1.169.39; Router alinhado em 1.170.41. IDs, caminhos e pais das rotas preservados.
 - 13 endpoints HTTP verificados pelo CLI Vercel autenticado: páginas públicas, sitemap, robots, manifest e oito imagens. As imagens mantêm seus tamanhos originais e a origem pública está correta.
 - Funções de cidade e IA rejeitam chamadas sem sessão. O transporte RPC retorna o erro de autenticação serializado.
@@ -30,10 +30,10 @@ O registro de produção `dpl_uy3qTJYh8zq4h8mvmZFG6XbTHqrG` está em `ERROR/BLOC
 
 ## Etapas necessárias para produção
 
-1. Publicar e verificar o novo preview conectado a `wifome`. Estrutura, Auth callbacks, histórico de 80 versões e Vault de dispatch já foram configurados. Snapshot e testes estão em `supabase/bootstrap/`; não reaplicar o histórico antigo.
-2. Definir e implementar a alternativa gratuita de mapas solicitada pelo usuário. A chave administrativa Supabase, o segredo de dispatch e o novo par VAPID já estão configurados para o destino vazio; não há assinaturas antigas nele.
-3. Liberar o AI Gateway na conta Vercel. O teste com dados fictícios retornou HTTP 403 informando a exigência de cartão cadastrado para liberar os créditos gratuitos; nenhuma configuração de pagamento foi alterada.
-4. Verificar sessões, recuperação de senha, os quatro perfis, Google Maps, IA, realtime e push no destino. Dispatch atualmente retorna 503 por falta da configuração privada; a rejeição 401 e a entrega push ainda precisam ser verificadas.
+1. Publicar o preview com o mapa gratuito e verificar a produção. O preview anterior já passou nos 13 endpoints, no RPC administrativo com Supabase próprio, na negação de acesso a clientes e no dispatch push (401 incorreto/200 autorizado sem assinaturas).
+2. Confirmar o mapa gratuito no destino e o cadastro real inicial. As credenciais privadas Supabase, dispatch e VAPID JWK estão configuradas; assinatura VAPID e payload criptografado foram verificados sem enviar notificações a dispositivos.
+3. IA adiada pelo usuário. O AI Gateway permanece sem liberação de faturamento; nenhuma configuração de pagamento foi alterada. O geocoding automático também é opcional; a seleção manual de cidade continua disponível.
+4. Verificar cadastro/confirmação de e-mail, recuperação e operação dos quatro perfis no domínio final. Login administrativo e mapa integrado passaram no navegador local; cliente/admin passaram na API e RLS. A entrega push em dispositivo e o fluxo completo de pedido ainda não foram testados.
 5. Verificar o deployment com as configurações novas e publicar/promover somente após validar os fluxos. Site URL/Redirect URLs e Vault já apontam à produção confirmada; MFA, confirmação de e-mail e parâmetros de OTP foram preservados.
 6. Concluir a integração da branch de migração após as verificações. Retirar a sincronização e a publicação Lovable depois que os fluxos de produção estiverem verificados.
 
