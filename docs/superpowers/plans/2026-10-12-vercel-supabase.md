@@ -128,8 +128,9 @@ Decisão do usuário: os três cadastros são descartáveis; iniciar no Supabase
 - [x] Configurar na Vercel a conexão pública do novo projeto e segredos apenas no servidor. Configurar par VAPID novo, sem tocar no sistema antigo.
 - [x] Ajustar somente Site URL/Redirect URLs do Auth; preservar confirmação de e-mail, MFA, frequência e tamanho de OTP.
 - [x] Registrar histórico correspondente ao snapshot para impedir reaplicação das migrations antigas.
-- [ ] Validar novo preview, Vault/dispatch e cadastro/login reais.
-- [ ] Configurar credenciais próprias Google Maps e habilitar AI Gateway; verificar fluxos antes da produção e retirada da Lovable.
+- [x] Validar novo preview e Vault/dispatch: `47f73f2`, 13 endpoints e RPC/dispatch autorizado/rejeitado passaram. Login de teste e mapa no navegador local passaram; fixtures temporárias removidas após saída global.
+- [ ] Configurar SMTP e validar cadastro/confirmação/recuperação reais. O usuário pediu opção gratuita sem domínio próprio; Gmail SMTP preparado em `docs/free-email-setup.md`, aguardando entrada direta da senha de app pelo proprietário.
+- [ ] Validar fluxos restantes antes da produção e retirada da Lovable. Credenciais Google Maps e IA foram adiadas por decisão do usuário; não bloqueiam o mapa gratuito aprovado abaixo.
 
 Procedimento e limites do initializer: `supabase/bootstrap/README.md`.
 

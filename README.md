@@ -52,6 +52,8 @@ A função mantém a autorização de administrador e envia as métricas agregad
 
 Configure `VITE_APP_URL` e `APP_URL` com a mesma origem pública em cada ambiente. Sem uma origem explícita, o build usa `VERCEL_URL` com HTTPS; localmente usa `http://localhost:3000`. Canonical, Open Graph, JSON-LD, sitemap e robots compartilham essa origem. Os retornos de cadastro e recuperação de senha usam o domínio aberto pelo usuário, que precisa estar permitido no Supabase Auth.
 
+Cadastro e recuperação para clientes externos precisam de SMTP próprio no Supabase Auth. Para começar sem domínio próprio, consulte a [configuração inicial com Gmail](docs/free-email-setup.md). A senha de app é inserida diretamente no Supabase, nunca no frontend, na Vercel ou no Git. A configuração e a entrega de e-mails ainda aguardam validação.
+
 No projeto Supabase existente, ajuste Site URL e Redirect URLs somente depois de confirmar o domínio de destino. Verifique o trigger de notificações aplicado e atualize o segredo Vault `push_dispatch_base_url` para a origem de produção. O trigger seguro chama `/api/internal/push-dispatch` com o segredo `push_dispatch_secret`, que deve corresponder a `PUSH_DISPATCH_SECRET` da Vercel. Para destinos com inscrições existentes, preserve o par VAPID. No novo projeto vazio, foi configurado um par próprio. Configure `SUPABASE_SERVICE_ROLE_KEY` apenas no servidor. Não reaplique todo o histórico de migrations.
 
 Permissões de notificações e inscrições Web Push pertencem a cada origem. Após mudar de domínio, os usuários precisam permitir notificações e se inscrever no novo endereço. Os IDs dos aplicativos e os nomes de armazenamento permanecem preservados.
