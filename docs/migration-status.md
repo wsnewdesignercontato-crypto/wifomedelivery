@@ -12,7 +12,7 @@ A migração está em andamento. O destino Supabase próprio foi inicializado e 
 - O preview novo `dpl_DertyMZKnqMZDvbVi1rcBBKicf8y` foi bloqueado por autoria Git sem permissão no time. A identidade de login Vercel continua sendo WS; novos commits usam o e-mail WS confirmado pelo usuário, sem reescrever os commits anteriores.
 - Mapa gratuito aprovado: OpenStreetMap/Leaflet dentro do aplicativo, GPS externo sem API. Verificado no painel local com um marcador temporário do Supabase e créditos visíveis; cinco testes do helper, suíte total 52, tipos e builds Node/Vercel passaram. IA e geocoding opcional ficam para depois.
 - Branch de trabalho: `codex/migrate-vercel-supabase`.
-- O usuário não possui domínio ou SMTP e pediu uma opção gratuita. SMTP Gmail sugerido para o início; [configuração preparada](free-email-setup.md), aguardando criação e entrada da senha de app diretamente pelo proprietário nos painéis Google/Supabase. Nenhum SMTP foi ativado ou testado ainda.
+- O usuário não possui domínio ou SMTP e escolheu Brevo gratuita, substituindo a sugestão Gmail. [Configuração preparada](free-email-setup.md): 300 envios/dia e conexão SMTP no Supabase, com verificação do remetente e entrada direta da chave pelo proprietário. Conta/liberação SMTP e entrega ainda aguardam validação; nenhum SMTP foi ativado ou testado.
 
 ## Verificações concluídas
 
@@ -33,7 +33,7 @@ O registro de produção `dpl_uy3qTJYh8zq4h8mvmZFG6XbTHqrG` está em `ERROR/BLOC
 
 ## Etapas necessárias para produção
 
-1. Configurar e testar SMTP para cadastro/confirmação e recuperação de clientes externos. O SMTP padrão é restrito à equipe; a opção Gmail gratuita está documentada, mas falta a credencial criada pelo proprietário.
+1. Configurar e testar Brevo SMTP para cadastro/confirmação e recuperação de clientes externos. O SMTP padrão é restrito à equipe; a opção Brevo gratuita está documentada, mas faltam a conta/remetente liberados e a credencial criada pelo proprietário.
 2. Concluir o cadastro real inicial e verificar o domínio de produção. Mapa gratuito e preview passaram nos 13 endpoints, RPC administrativo, negação de acesso a clientes e dispatch push (401 incorreto/200 autorizado sem assinaturas). As credenciais privadas Supabase, dispatch e VAPID JWK estão configuradas; assinatura VAPID e payload criptografado foram verificados sem enviar notificações a dispositivos.
 3. IA adiada pelo usuário. O AI Gateway permanece sem liberação de faturamento; nenhuma configuração de pagamento foi alterada. O geocoding automático também é opcional; a seleção manual de cidade continua disponível.
 4. Verificar cadastro/confirmação de e-mail, recuperação e operação dos quatro perfis no domínio final. Login administrativo e mapa integrado passaram no navegador local; cliente/admin passaram na API e RLS. A entrega push em dispositivo e o fluxo completo de pedido ainda não foram testados.
