@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -18,7 +18,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { canCourierAccessRides } from "@/lib/courier-approval";
-import { loadGoogleMaps, haversineKm } from "@/lib/google-maps-loader";
+import OpenStreetMap, { type MapMarker } from "@/components/open-street-map";
+import { deliveryPoint, haversineKm, navigationUrl, validMapPoint } from "@/lib/map-utils";
 import { ensureRingtoneUnlocked, startRideRingtone, stopRideRingtone } from "@/lib/ride-ringtone";
 import type { Courier } from "@/hooks/use-courier";
 
@@ -30,8 +31,8 @@ type Offer = {
   formaPagamento: string;
   pickup: { lat: number; lng: number; nome: string; endereco: string | null };
   dropoff: {
-    lat: number;
-    lng: number;
+    lat: number | null;
+    lng: number | null;
     endereco: string;
     bairro: string | null;
     complemento: string | null;
@@ -39,7 +40,7 @@ type Offer = {
   };
   cliente: { nome: string; telefone: string | null };
   distanciaColeta: number | null;
-  distanciaEntrega: number;
+  distanciaEntrega: number | null;
   observacoes: string | null;
 };
 
@@ -111,43 +112,6 @@ function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: numb
   return Math.round(haversineKm(a, b) * 10) / 10;
 }
 
-async function geocode(
-  address: string,
-  nearPickup?: { lat: number; lng: number },
-): Promise<{ lat: number; lng: number } | null> {
-  try {
-    const geocoder = new google.maps.Geocoder();
-    const bounds = nearPickup
-      ? new google.maps.LatLngBounds(
-          { lat: nearPickup.lat - 0.35, lng: nearPickup.lng - 0.35 },
-          { lat: nearPickup.lat + 0.35, lng: nearPickup.lng + 0.35 },
-        )
-      : undefined;
-    const res = await geocoder.geocode({
-      address,
-      region: "br",
-      bounds,
-      componentRestrictions: { country: "BR" },
-    });
-    const candidates = (res.results ?? [])
-      .map((r) => r.geometry?.location)
-      .filter(Boolean)
-      .map((loc) => ({ lat: loc!.lat(), lng: loc!.lng() }))
-      .filter((p) => inBrazilBounds(p.lat, p.lng));
-
-    if (!candidates.length) return null;
-    if (!nearPickup) return candidates[0];
-
-    const closest = candidates
-      .map((p) => ({ ...p, km: distanceKm(nearPickup, p) }))
-      .sort((a, b) => a.km - b.km)[0];
-
-    return closest && closest.km <= MAX_DELIVERY_DISTANCE_KM ? closest : null;
-  } catch {
-    return null;
-  }
-}
-
 function fmtBrl(cents: number) {
   return ((cents ?? 0) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
@@ -167,11 +131,6 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
   const [accepting, setAccepting] = useState(false);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
   const [myPos, setMyPos] = useState<{ lat: number; lng: number } | null>(null);
-  const mapDivRef = useRef<HTMLDivElement | null>(null);
-  const mapObjRef = useRef<google.maps.Map | null>(null);
-  const myMarkerRef = useRef<google.maps.Marker | null>(null);
-  const routeLineRef = useRef<google.maps.Polyline | null>(null);
-
   // Captura localização do entregador em tempo real
   useEffect(() => {
     if (!enabled || typeof navigator === "undefined" || !navigator.geolocation) return;
@@ -276,37 +235,10 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         estado: typedEstab.estado,
       });
 
-      let dropLat = Number(endereco.lat);
-      let dropLng = Number(endereco.lng);
-      const hasTrustedDropoff =
-        Number.isFinite(dropLat) && Number.isFinite(dropLng) && inBrazilBounds(dropLat, dropLng);
-      const storedDropoffKm = hasTrustedDropoff
-        ? distanceKm(pickup, { lat: dropLat, lng: dropLng })
-        : Infinity;
-
-      if (!hasTrustedDropoff || storedDropoffKm > MAX_DELIVERY_DISTANCE_KM) {
-        // Sem lat/lng confiáveis: geocodifica o endereço real do cliente com bias BR e perto da loja.
-        try {
-          await loadGoogleMaps();
-        } catch {
-          // Geocode abaixo ainda tenta resolver a rota sem preload explicito.
-        }
-        const geo = await geocode(enderecoFmt, pickup);
-        if (!geo) {
-          console.warn(
-            "[NewRideOffer] Não foi possível localizar endereço de entrega com segurança",
-            { order: typedOrder.id },
-          );
-          setOffer(null);
-          return;
-        }
-        dropLat = geo.lat;
-        dropLng = geo.lng;
-      }
-
+      const storedPoint = deliveryPoint(endereco);
       const dropoff = {
-        lat: dropLat,
-        lng: dropLng,
+        lat: storedPoint?.lat ?? null,
+        lng: storedPoint?.lng ?? null,
         endereco: enderecoFmt,
         bairro: endereco.bairro ?? null,
         complemento: endereco.complemento ?? null,
@@ -314,10 +246,10 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
       };
 
       const distanciaColeta = myPos ? distanceKm(myPos, pickup) : null;
-      const distanciaEntrega = distanceKm(pickup, dropoff);
+      const distanciaEntrega = storedPoint ? distanceKm(pickup, storedPoint) : null;
 
       // Sanity: nenhuma entrega real ultrapassa o limite entre loja e cliente.
-      if (distanciaEntrega > MAX_DELIVERY_DISTANCE_KM) {
+      if (distanciaEntrega != null && distanciaEntrega > MAX_DELIVERY_DISTANCE_KM) {
         console.warn("[NewRideOffer] Distância entrega irreal, provavelmente geocode incorreto", {
           estab: typedEstab.id,
           distanciaEntrega,
@@ -345,12 +277,16 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
     evaluate();
     // Debounce para agrupar rajadas de eventos realtime
     let debounceT: ReturnType<typeof setTimeout> | null = null;
-    const scheduleEvaluate = (payload: any) => {
+    const scheduleEvaluate = (payload: {
+      eventType: string;
+      old: Record<string, unknown>;
+      new: Record<string, unknown>;
+    }) => {
       // Se uma entrega que estamos vendo foi aceita ou cancelada, limpa a oferta imediatamente
       if (payload.eventType === "UPDATE" || payload.eventType === "DELETE") {
         const oldId = payload.old?.id || payload.new?.id;
-        if (oldId && (payload.new?.status !== 'broadcasting' || payload.eventType === "DELETE")) {
-          setOffer(prev => prev?.deliveryId === oldId ? null : prev);
+        if (oldId && (payload.new?.status !== "broadcasting" || payload.eventType === "DELETE")) {
+          setOffer((prev) => (prev?.deliveryId === oldId ? null : prev));
         }
       }
 
@@ -391,140 +327,21 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
     dismissedIds,
   ]);
 
-  // Renderiza mapa quando a oferta abre (uma vez por oferta)
-  useEffect(() => {
-    if (!offer) return;
-    let cancel = false;
-    loadGoogleMaps()
-      .then(async () => {
-        if (cancel || !mapDivRef.current) return;
-        const map = new google.maps.Map(mapDivRef.current, {
-          center: offer.pickup,
-          zoom: 13,
-          disableDefaultUI: true,
-          gestureHandling: "cooperative",
-          clickableIcons: false,
-          styles: [
-            { featureType: "poi", stylers: [{ visibility: "off" }] },
-            { featureType: "transit", stylers: [{ visibility: "off" }] },
-          ],
-        });
-        mapObjRef.current = map;
-
-        new google.maps.Marker({
-          map,
-          position: offer.pickup,
-          title: offer.pickup.nome,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: "#10B981",
-            fillOpacity: 1,
-            strokeColor: "#fff",
-            strokeWeight: 3,
-          },
-          label: { text: "A", color: "#fff", fontWeight: "700", fontSize: "11px" },
-        });
-        new google.maps.Marker({
-          map,
-          position: offer.dropoff,
-          title: "Cliente",
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: "#EF4444",
-            fillOpacity: 1,
-            strokeColor: "#fff",
-            strokeWeight: 3,
-          },
-          label: { text: "B", color: "#fff", fontWeight: "700", fontSize: "11px" },
-        });
-        myMarkerRef.current = new google.maps.Marker({
-          map,
-          position: myPos ?? offer.pickup,
-          visible: !!myPos,
-          title: "Você",
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 7,
-            fillColor: "#3B82F6",
-            fillOpacity: 1,
-            strokeColor: "#fff",
-            strokeWeight: 3,
-          },
-        });
-        // Linha viva entregador → loja (atualizada com watchPosition)
-        routeLineRef.current = new google.maps.Polyline({
-          map,
-          path: myPos ? [myPos, offer.pickup] : [offer.pickup, offer.pickup],
-          strokeColor: "#3B82F6",
-          strokeOpacity: 0.85,
-          strokeWeight: 4,
-          icons: [
-            {
-              icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 },
-              offset: "0",
-              repeat: "12px",
-            },
-          ],
-        });
-
-        // Rota real da loja → cliente pelas ruas
-        try {
-          const ds = new google.maps.DirectionsService();
-          const dr = new google.maps.DirectionsRenderer({
-            map,
-            suppressMarkers: true,
-            preserveViewport: true,
-            polylineOptions: { strokeColor: "#FF6B00", strokeOpacity: 0.95, strokeWeight: 5 },
-          });
-          const res = await ds.route({
-            origin: offer.pickup,
-            destination: offer.dropoff,
-            travelMode: google.maps.TravelMode.DRIVING,
-          });
-          dr.setDirections(res);
-        } catch {
-          // Fallback: linha reta laranja
-          new google.maps.Polyline({
-            map,
-            path: [offer.pickup, offer.dropoff],
-            strokeColor: "#FF6B00",
-            strokeOpacity: 0.9,
-            strokeWeight: 4,
-          });
-        }
-
-        const bounds = new google.maps.LatLngBounds();
-        bounds.extend(offer.pickup);
-        bounds.extend(offer.dropoff);
-        if (myPos) bounds.extend(myPos);
-        map.fitBounds(bounds, 60);
-      })
-      .catch(() => {});
-    return () => {
-      cancel = true;
-      myMarkerRef.current = null;
-      routeLineRef.current = null;
-      mapObjRef.current = null;
-    };
-    // The map instance is intentionally recreated only when the delivery offer changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [offer?.deliveryId]);
-
-  // Atualiza posição do entregador e rota conforme ele se move
-  useEffect(() => {
-    if (!offer || !myPos) return;
-    if (myMarkerRef.current) {
-      myMarkerRef.current.setPosition(myPos);
-      myMarkerRef.current.setVisible(true);
-    }
-    if (routeLineRef.current) {
-      routeLineRef.current.setPath([myPos, offer.pickup]);
-    }
-    // The route line only depends on the current offer identity plus the latest GPS position.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myPos, offer?.deliveryId]);
+  const offerMarkers = useMemo<MapMarker[]>(() => {
+    if (!offer) return [];
+    const points: MapMarker[] = [
+      { id: "pickup", ...offer.pickup, title: "A · " + offer.pickup.nome, color: "#10B981" },
+    ];
+    if (validMapPoint(offer.dropoff))
+      points.push({
+        id: "dropoff",
+        lat: offer.dropoff.lat,
+        lng: offer.dropoff.lng,
+        title: "B · Entrega",
+        color: "#EF4444",
+      });
+    return points;
+  }, [offer]);
 
   // Toque contínuo enquanto a oferta estiver na tela (para ao aceitar/recusar/ser pega)
   useEffect(() => {
@@ -596,7 +413,10 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myPos, offer?.deliveryId, offer?.distanciaColeta]);
 
-  const totalKm = offer ? (distanciaColetaLive ?? 0) + offer.distanciaEntrega : 0;
+  const totalKm =
+    offer?.distanciaEntrega != null && distanciaColetaLive != null
+      ? distanciaColetaLive + offer.distanciaEntrega
+      : null;
   const eta = estMin(distanciaColetaLive);
 
   return (
@@ -633,7 +453,14 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         </div>
 
         {/* Mapa */}
-        <div ref={mapDivRef} className="h-52 w-full bg-muted" />
+        <div className="h-52 w-full bg-muted">
+          {offer && (
+            <OpenStreetMap key={offer.deliveryId} markers={offerMarkers} userLocation={myPos} />
+          )}
+        </div>
+        <p className="px-4 pt-2 text-xs text-muted-foreground">
+          Distâncias aproximadas em linha reta. Abra o GPS para navegar pelas ruas.
+        </p>
 
         {/* Valores em destaque */}
         <div className="grid grid-cols-3 divide-x divide-border border-b border-border bg-card">
@@ -679,7 +506,9 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
               <div>
                 <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase text-muted-foreground">
                   <MapPin className="h-3 w-3" /> Entrega
-                  <span className="text-foreground">· {fmtKm(offer?.distanciaEntrega ?? 0)}</span>
+                  <span className="text-foreground">
+                    · {fmtKm(offer?.distanciaEntrega ?? null)}
+                  </span>
                 </p>
                 <p className="flex items-center gap-1.5 text-sm font-bold">
                   <User className="h-3.5 w-3.5 text-primary shrink-0" />
@@ -733,6 +562,29 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
             </div>
           )}
         </div>
+
+        {offer && (
+          <div className="grid grid-cols-2 gap-2 px-3 pb-3">
+            <Button variant="outline" asChild>
+              <a
+                href={navigationUrl(`${offer.pickup.lat},${offer.pickup.lng}`)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Navigation className="h-4 w-4" /> GPS coleta
+              </a>
+            </Button>
+            <Button variant="outline" asChild>
+              <a
+                href={navigationUrl(offer.dropoff.endereco)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Navigation className="h-4 w-4" /> GPS entrega
+              </a>
+            </Button>
+          </div>
+        )}
 
         {/* Ações */}
         <div className="grid grid-cols-[auto_1fr] gap-2 border-t border-border bg-card p-3">

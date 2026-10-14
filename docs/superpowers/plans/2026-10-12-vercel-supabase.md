@@ -132,3 +132,7 @@ Decisão do usuário: os três cadastros são descartáveis; iniciar no Supabase
 - [ ] Configurar credenciais próprias Google Maps e habilitar AI Gateway; verificar fluxos antes da produção e retirada da Lovable.
 
 Procedimento e limites do initializer: `supabase/bootstrap/README.md`.
+
+### Ajuste aprovado: mapa gratuito
+
+O usuário escolheu OpenStreetMap dentro do app e navegação externa gratuita. Alteração limitada aos mapas existentes: Leaflet com tiles OSM e créditos visíveis, marcadores/coordenadas salvas e botões Google Maps URLs sem API. Remover o SDK Google do navegador. Preservar cálculo de distância aproximada e regras de aceite; endereço sem coordenadas continua disponível para GPS externo, sem coordenadas inventadas. A geocodificação opcional e a IA podem ser configuradas depois. Verificar SSR, mapa/markers, links, ausência de chamadas ao SDK Google, testes, tipos, build e preview.

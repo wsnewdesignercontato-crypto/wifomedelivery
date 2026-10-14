@@ -34,11 +34,13 @@ Nunca publique `.env`, `.env.local`, `.vercel` ou credenciais. Preserve o projet
 
 Antes de enviar o código, execute `vercel deploy --dry --json` e grave o resultado em um arquivo local ignorado. Valide esse arquivo com `node scripts/check-deploy-inputs.mjs CAMINHO-DO-JSON`. O `.vercelignore` exclui arquivos de ambiente, credenciais locais e materiais de execução do upload, além da proteção do Git.
 
-## Google Maps
+## Mapas gratuitos e navegação
 
-Use credenciais de um projeto Google Cloud que você administra, com Maps JavaScript API e Geocoding API habilitadas. Configure `VITE_GOOGLE_MAPS_API_KEY` para o mapa no navegador, restringindo essa chave aos domínios do aplicativo. Configure `GOOGLE_MAPS_API_KEY` separadamente no servidor para geocoding. A chave de servidor não é enviada ao navegador.
+Os mapas internos usam Leaflet e OpenStreetMap, sem chave Google ou cobrança por API. Exibem ruas, lojas, entregadores e localização com as coordenadas salvas. Os créditos OpenStreetMap permanecem visíveis. Os servidores públicos têm capacidade limitada: use apenas os tiles da área aberta, respeite o cache do navegador e não implemente download em massa ou modo offline. [Política de uso](https://operations.osmfoundation.org/policies/tiles/).
 
-A detecção de cidade passa por uma função autenticada do aplicativo. Falhas do provedor deixam a localização automática indisponível e permitem continuar usando a cidade selecionada.
+Os botões GPS coleta/GPS entrega abrem Google Maps para navegação externa; esses links não precisam de chave de API. As distâncias no app são estimativas em linha reta. Sem coordenadas da entrega, o app preserva o endereço e abre o GPS, sem gerar um marcador ou uma distância fictícios. Não há geocodificação automática de endereços privados pelo servidor público Nominatim.
+
+`VITE_MAP_TILE_URL` e `VITE_MAP_ATTRIBUTION` permitem trocar o provedor de tiles e seus créditos. A seleção manual de cidade funciona sem Google. O geocoding de endereços/cidade já existente permanece opcional com `GOOGLE_MAPS_API_KEY`, para configurar depois; os mapas não dependem dele.
 
 ## IA administrativa
 
