@@ -4,8 +4,8 @@ A migração está em andamento. O destino Supabase próprio foi inicializado e 
 
 - Conta Vercel verificada pela API: `wsnewdesignercontato@gmail.com`, identificador `wsnewdesignercontato-6856`.
 - Projeto: `wifomedelivery`, ID `prj_W25oUTDeJ8ygGbngzNBtB8JAxIYZ`.
-- [Produção pública — PedeTrem](https://pedetrem.vercel.app): deployment `dpl_BHixB7Gexwq4QfZUQyqLYeYbmhx3`, commit `6b1eb9c`, estado `READY`, framework TanStack Start, build de 32 segundos. Build de produção criado sem domínio, testado e promovido; o alias novo foi confirmado apontando para esse deployment. Publicação manual da branch de migração, sem merge em `main`. O primeiro release independente foi `0030238`/`dpl_uVi8mH7MJ3ffp15QP3WXN4YbvJuR`.
-- Integração Git conectada a `wsnewdesignercontato-crypto/wifomedelivery`, com produção na branch `main`. [PR #1 em rascunho](https://github.com/wsnewdesignercontato-crypto/wifomedelivery/pull/1); a branch `main` permanece sem as mudanças da migração.
+- [Produção pública — PedeTrem](https://pedetrem.vercel.app): release da integração em `main` verificado no deployment `dpl_6royTGUT1P4sRGHKuTyK9CjjakTb`, commit `b2e8f02`, estado `READY`, framework TanStack Start, build de 29 segundos. Alias canônico confirmado, 13 endpoints e integridade dos assets aprovados; zero entradas de erro nos 15 minutos consultados. Atualizações posteriores de documentação podem gerar novos deployments automáticos. O primeiro release independente foi `0030238`/`dpl_uVi8mH7MJ3ffp15QP3WXN4YbvJuR`.
+- Integração Git conectada a `wsnewdesignercontato-crypto/wifomedelivery`, com produção na branch `main`. [PR #1 integrado](https://github.com/wsnewdesignercontato-crypto/wifomedelivery/pull/1) por merge normal `b2e8f02`, preservando o histórico publicado. O deploy automático dessa integração foi concluído e verificado.
 - [Preview protegido com mapa gratuito e wifome](https://wifomedelivery-qdnd4fgkb-wsnewdesignercontato-6856.vercel.app), deployment `dpl_x5hXLnFsesJx2Vmxxw3itDSpaDxf`, commit `47f73f2` (código do mapa `111cc59`). Deployment pronto e verificações HTTP/RPC concluídas.
 - [Preview protegido com a preparação Brevo](https://wifomedelivery-nme4q28rc-wsnewdesignercontato-6856.vercel.app), deployment `dpl_BHPYQwzDC9GTmSJovmaLtNj96q7Q`, commit `abe6a44`. Pronto, com 13 endpoints HTTP verificados, três ações administrativas recusando acesso anônimo e hook desativado retornando 503. A estrutura privada Brevo já está aplicada no banco remoto; falta configurar a chave real pelo admin.
 - Novo domínio solicitado para combinar com PedeTrem: `pedetrem.vercel.app`, verificado e público. `APP_URL` e `VITE_APP_URL` usam essa origem somente em Production; previews preservam suas próprias origens. `wifomedelivery.vercel.app` continua como alias compatível. O nome interno do projeto Vercel permanece `wifomedelivery`.
@@ -43,7 +43,7 @@ A migração está em andamento. O destino Supabase próprio foi inicializado e 
 
 O checker Node de HTTP encontrou encerramentos intermitentes de conexão com imagens grandes no preview. As verificações completas pelo CLI Vercel confirmaram status 200, tipos e tamanhos de todas as 13 respostas. O checker local passou nas 13 verificações.
 
-O registro anterior `dpl_uy3qTJYh8zq4h8mvmZFG6XbTHqrG` permanece no histórico em `ERROR/BLOCKED_PACKAGE`, por usar o Start original vulnerável. A produção ativa é `dpl_BHixB7Gexwq4QfZUQyqLYeYbmhx3`, com a versão corrigida e verificada.
+O registro anterior `dpl_uy3qTJYh8zq4h8mvmZFG6XbTHqrG` permanece no histórico em `ERROR/BLOCKED_PACKAGE`, por usar o Start original vulnerável. A produção atual deriva da branch `main`, com a versão corrigida; o release de integração verificado é `dpl_6royTGUT1P4sRGHKuTyK9CjjakTb`.
 
 ## Pendências operacionais e encerramento da migração
 
@@ -52,6 +52,6 @@ O registro anterior `dpl_uy3qTJYh8zq4h8mvmZFG6XbTHqrG` permanece no histórico e
 3. IA adiada pelo usuário. O AI Gateway permanece sem liberação de faturamento; nenhuma configuração de pagamento foi alterada. O geocoding automático também é opcional; a seleção manual de cidade continua disponível.
 4. Cadastro e confirmação do proprietário concluídos. Pedido de entrega fictício passou em produção, com checkout e resultado final no navegador e etapas intermediárias nas sessões reais de loja/entregador. Painel admin conferido em produção. Ainda faltam recuperação/envio de e-mail pela Brevo e push em dispositivo; não houve pagamento online nem entrega física.
 5. Publicação e endereços Auth/Vault de `pedetrem.vercel.app` concluídos e verificados. MFA, confirmação de e-mail, parâmetros de OTP e demais configurações Auth foram preservados. Concluir os testes de ponta a ponta após configurar o provedor real de e-mails.
-6. Concluir a integração da branch de migração após as verificações. Retirar a sincronização e a publicação Lovable depois que os fluxos de produção estiverem verificados.
+6. Integração da branch e deploy automático de `main` concluídos. Retirar a sincronização e a publicação Lovable: o navegador disponível está na tela de login, e o acesso do proprietário foi solicitado. Não houve exclusão de projeto nem alteração de outros repositórios.
 
 Configure segredos diretamente no painel ou CLI autorizado, nunca em mensagens, commits ou nesta documentação. As contas previamente autenticadas no computador foram preservadas.
