@@ -129,7 +129,7 @@ Decisão do usuário: os três cadastros são descartáveis; iniciar no Supabase
 - [x] Ajustar somente Site URL/Redirect URLs do Auth; preservar confirmação de e-mail, MFA, frequência e tamanho de OTP.
 - [x] Registrar histórico correspondente ao snapshot para impedir reaplicação das migrations antigas.
 - [x] Validar novo preview e Vault/dispatch: `47f73f2`, 13 endpoints e RPC/dispatch autorizado/rejeitado passaram. Login de teste e mapa no navegador local passaram; fixtures temporárias removidas após saída global.
-- [ ] Configurar SMTP e validar cadastro/confirmação/recuperação reais. O usuário escolheu Brevo gratuita; preparação em `docs/free-email-setup.md`, aguardando conta/remetente liberados e entrada direta da chave SMTP pelo proprietário.
+- [ ] Aplicar a migration da integração Brevo no Supabase remoto após renovar a sessão CLI. Tela admin e backend foram implementados, com Vault privado, teste para o próprio admin e Auth Hook assinado preparado; validação local concluída. O usuário aprovou inserir a chave API no admin, substituindo SMTP. Conta/remetente, chave real, ativação e entrega de cadastro/recuperação continuam pendentes; guia em `docs/free-email-setup.md`.
 - [ ] Validar fluxos restantes antes da produção e retirada da Lovable. Credenciais Google Maps e IA foram adiadas por decisão do usuário; não bloqueiam o mapa gratuito aprovado abaixo.
 
 Procedimento e limites do initializer: `supabase/bootstrap/README.md`.

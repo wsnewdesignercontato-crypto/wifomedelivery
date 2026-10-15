@@ -24,3 +24,5 @@ supabase/.temp
 supabase/.temp/**
 supabase/bootstrap/tests
 supabase/bootstrap/tests/**
+supabase/tests
+supabase/tests/**

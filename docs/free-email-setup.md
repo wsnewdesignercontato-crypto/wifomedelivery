@@ -1,38 +1,37 @@
-# E-mails de cadastro e recuperação com Brevo
+# Brevo no painel administrativo
 
-O usuário escolheu Brevo no plano gratuito, substituindo a sugestão anterior de Gmail SMTP. A conexão é feita no Supabase Auth e mantém os templates de autenticação do aplicativo. A criação/liberação da conta, a verificação do remetente e a chave SMTP ainda estão pendentes; nenhum envio pela Brevo foi testado.
+O usuário aprovou configurar a **chave API** em **Admin → Configurações → Integrações · Brevo**. Esse fluxo substitui a preparação anterior com SMTP: o administrador não precisa informar host, porta ou senha SMTP.
 
-## Conta e remetente
+A tela e o backend foram verificados em banco local isolado. A migration `20261014215702_brevo_admin_integration.sql` ainda precisa ser aplicada no Supabase próprio `nsvgfagjezdduatmbsqq`: o login CLI deixou de ser aceito e foi solicitada nova autenticação ao proprietário. Não houve envio real nem ativação do Auth Hook remoto.
 
-1. Entre na conta Brevo pretendida ou [crie uma conta gratuita](https://onboarding.brevo.com/account/register). Use `wsnewdesignercontato@gmail.com` caso esteja criando a conta para este projeto; faça login, definição de senha, verificação e aceite dos termos diretamente no navegador.
-2. Em [Remetentes](https://app.brevo.com/senders), cadastre o nome `PedeTrem` e o e-mail `wsnewdesignercontato@gmail.com`. Confirme o endereço com o código enviado pela Brevo, diretamente no painel. [Instruções oficiais](https://help.brevo.com/hc/en-us/articles/208836149).
-3. Como ainda não há domínio próprio, a Brevo documenta uma substituição temporária do endereço de remetente por um endereço compatível da plataforma. O destinatário pode ver um domínio da Brevo em vez de `gmail.com`. Não tente autenticar `gmail.com` nem `vercel.app`, que não são domínios administrados pelo usuário. Quando houver domínio próprio, autentique-o e revise o remetente. [Comportamento documentado](https://help.brevo.com/hc/en-us/articles/14925263522578).
-4. Confirme que os e-mails transacionais/SMTP estão liberados na conta. Se a Brevo exigir revisão ou ativação, conclua essa etapa antes de substituir um SMTP em funcionamento.
+## Configuração pelo administrador
 
-## Conectar ao Supabase
+1. Entre ou [crie uma conta Brevo gratuita](https://onboarding.brevo.com/account/register), usando `wsnewdesignercontato@gmail.com` para este projeto, conforme escolha do proprietário.
+2. Em [Remetentes](https://app.brevo.com/senders), cadastre `PedeTrem` com o endereço pretendido e confirme a verificação diretamente no painel. Sem domínio próprio, a Brevo pode substituir o endereço exibido por um domínio da plataforma. [Remetentes](https://help.brevo.com/hc/en-us/articles/208836149), [substituição de domínio](https://help.brevo.com/hc/en-us/articles/14925263522578).
+3. Abra **Configurações → SMTP e API → API** na Brevo e crie uma chave API para o aplicativo. A chave SMTP e a senha da conta não servem neste campo.
+4. No admin, cole a chave em **Chave API da Brevo**, confirme nome/e-mail do remetente e clique **Salvar Brevo**. O campo fica vazio após salvar: a chave não é devolvida ao navegador. Deixe em branco nas próximas alterações para mantê-la.
+5. Clique **Enviar teste para meu e-mail**. O destinatário é sempre o e-mail confirmado da sessão administrativa. Há intervalo mínimo de 60 segundos entre tentativas. A aceitação pela API não garante entrega: confira caixa de entrada, spam e logs da Brevo.
 
-1. Abra [Brevo / SMTP e API](https://app.brevo.com/settings/keys/smtp). Copie o valor específico de **Login SMTP** mostrado na sua conta. Ele pode ser diferente do e-mail de login, inclusive no formato `[ID]@smtp-brevo.com`.
-2. Gere uma **chave SMTP** chamada `Wifome Supabase`, variante padrão. Use a chave SMTP no campo senha, não uma chave API nem a senha da conta Brevo. [Credenciais SMTP](https://help.brevo.com/hc/en-us/articles/7924908994450), [gerenciamento de chaves](https://help.brevo.com/hc/en-us/articles/7959631848850).
-3. No [Supabase wifome / SMTP](https://supabase.com/dashboard/project/nsvgfagjezdduatmbsqq/auth/smtp), ative SMTP personalizado e configure:
+Alterações do remetente ou da chave exigem novo teste. A tela informa separadamente a conexão testada e a ativação do envio automático. Não envie chaves, senhas ou códigos pelo chat ou Git.
 
-| Campo | Valor |
-| --- | --- |
-| E-mail do remetente | `wsnewdesignercontato@gmail.com`, verificado na Brevo |
-| Nome do remetente | `PedeTrem` |
-| Host | `smtp-relay.brevo.com` |
-| Porta | `587` |
-| Usuário | Login SMTP exibido pela Brevo |
-| Senha | Chave SMTP criada na Brevo |
+O plano gratuito inclui 300 envios por dia, sem acumular cota não usada. Mensagens transacionais podem ficar em fila ao atingir a cota. [Limites oficiais](https://help.brevo.com/hc/en-us/articles/208580669).
 
-Host, credenciais e portas foram conferidos na documentação oficial de [SMTP Brevo](https://help.brevo.com/hc/en-us/articles/7924908994450) e [portas SMTP](https://help.brevo.com/hc/en-us/articles/10905415650322).
+## Ativação operacional do envio automático
 
-4. Cole a chave somente no painel Supabase e salve. Não envie chaves, senhas ou códigos pelo chat, pelo Git ou em documentação. A chave não deve virar uma variável `VITE_*` nem ser configurada na Vercel para os e-mails do Supabase Auth.
-5. Confirme a entrega de um cadastro e de uma recuperação de senha em uma caixa controlada pelo proprietário, usando o aplicativo. Verifique também o remetente real recebido, os links, o retorno ao app e os logs transacionais da Brevo. Esses testes permanecem pendentes.
+Esta é uma configuração única da infraestrutura; a chave Brevo continua sendo gerenciada pelo admin do aplicativo.
 
-## Limites e operação
+1. Após renovar o login, confira a identidade/projeto e aplique **somente** a migration nova em `nsvgfagjezdduatmbsqq`. O histórico anterior já foi inicializado: não reaplicar o bootstrap nem as migrations antigas. Execute `supabase/tests/brevo.sql` para verificar permissões, preservação de chave, cooldown e deduplicação, com rollback dos dados de teste.
+2. Publique a versão validada na Vercel e confirme o endpoint HTTPS `/api/auth/send-email` no domínio final, com frontend/servidor no mesmo banco.
+3. Cadastre e teste a chave pelo admin. No Supabase, configure **Authentication → Hooks → Send Email → HTTP**, URL `https://wifomedelivery.vercel.app/api/auth/send-email`. O hook substitui SMTP; não precisa de um token de gerenciamento Supabase na aplicação. Não usar preview protegido. [Send Email Hook](https://supabase.com/docs/guides/auth/auth-hooks/send-email-hook).
+4. Crie o segredo de assinatura do hook e guarde o mesmo valor no Supabase e na variável privada Vercel `AUTH_EMAIL_HOOK_SECRET`. O backend aceita `v1,whsec_...`. Configure `AUTH_EMAIL_HOOK_ENABLED=true` somente junto com a ativação efetiva do hook, após testar a chave/remetente. Faça novo deployment para carregar essas variáveis quando necessário. Não imprimir o segredo.
+5. Mantenha provedor de e-mail e confirmação de cadastro habilitados. Verifique cadastro, recuperação e retorno ao domínio final com uma conta do proprietário. Os links passam pelo endpoint de verificação Supabase. O backend permite as origens exatas de `APP_URL` e do deployment atual `VERCEL_URL`; outros domínios/previews exigem revisar essa lista e os Redirect URLs Supabase.
 
-O plano gratuito Brevo inclui 300 envios por dia, sem acumular a cota não utilizada; campanhas e e-mails transacionais compartilham essa capacidade. Ao atingir a cota, e-mails transacionais podem ficar em fila e atrasar a confirmação ou recuperação. [Limites oficiais](https://help.brevo.com/hc/en-us/articles/208580669).
+Enquanto o hook estiver desativado, o Supabase mantém o envio SMTP existente. Não ativar antes de ter chave/remetente testados e endpoint público funcional. Se habilitado sem configuração ou com assinatura inválida, o endpoint recusa o envio. Para retornar ao transporte anterior, desative o Send Email Hook no Supabase e a flag privada do servidor; preserve a chave criptografada.
 
-O Supabase documenta um limite inicial separado de 30 mensagens por hora ao habilitar SMTP próprio, ajustável no painel. A cota de 300/dia da Brevo continua valendo. O SMTP padrão Supabase é restrito à equipe; a confirmação de e-mail permanece ativa. [Documentação Supabase](https://supabase.com/docs/guides/auth/auth-smtp).
+## Proteção e validação
 
-Depois de salvar SMTP no painel, preservar esses valores ao sincronizar `config.toml` pelo CLI: não executar um push de configuração antiga que desative ou sobrescreva o SMTP. Nunca imprimir a chave durante comparação de configurações. A Brevo pode desativar chaves inativas ou expiradas; acompanhar avisos e renovar diretamente nos painéis quando necessário.
+A chave fica criptografada no Vault. Tabelas internas em `brevo_private` têm RLS e nenhum acesso de `anon`/`authenticated`. Os sete RPCs aceitam apenas `service_role`; o servidor verifica conta confirmada e papel admin antes de ler status, salvar ou testar. Respostas do painel contêm somente metadados. [Vault](https://supabase.com/docs/guides/database/vault).
+
+O Auth Hook valida assinatura Standard Webhooks e timestamp antes de acessar credenciais, limita o corpo e não registra tokens ou endereços. A deduplicação guarda ID/hash/estado com lease e retenção limitada, sem corpo do e-mail. Cada mensagem usa UUID determinístico para a idempotência Brevo, incluindo reconhecimento de requisições já aceitas. [Idempotência Brevo](https://developers.brevo.com/docs/heterogenous-versions-batch-emails).
+
+Testes locais: ACL/privacidade no banco; RPC real com negação a cliente/anônimo e chave oculta; formulário no navegador e envio com provedor **simulado**, sem mensagens externas. Ainda faltam aplicar a migration remota, configurar chave real e verificar entrega/ativação em produção.

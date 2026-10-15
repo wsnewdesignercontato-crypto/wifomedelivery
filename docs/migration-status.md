@@ -12,7 +12,7 @@ A migração está em andamento. O destino Supabase próprio foi inicializado e 
 - O preview novo `dpl_DertyMZKnqMZDvbVi1rcBBKicf8y` foi bloqueado por autoria Git sem permissão no time. A identidade de login Vercel continua sendo WS; novos commits usam o e-mail WS confirmado pelo usuário, sem reescrever os commits anteriores.
 - Mapa gratuito aprovado: OpenStreetMap/Leaflet dentro do aplicativo, GPS externo sem API. Verificado no painel local com um marcador temporário do Supabase e créditos visíveis; cinco testes do helper, suíte total 52, tipos e builds Node/Vercel passaram. IA e geocoding opcional ficam para depois.
 - Branch de trabalho: `codex/migrate-vercel-supabase`.
-- O usuário não possui domínio ou SMTP e escolheu Brevo gratuita, substituindo a sugestão Gmail. [Configuração preparada](free-email-setup.md): 300 envios/dia e conexão SMTP no Supabase, com verificação do remetente e entrada direta da chave pelo proprietário. Conta/liberação SMTP e entrega ainda aguardam validação; nenhum SMTP foi ativado ou testado.
+- O usuário escolheu Brevo gratuita e aprovou cadastrar a **chave API pelo admin**. A seção foi implementada em Configurações, com Vault privado, chave oculta, teste para o próprio administrador e status separado da ativação automática. [Preparação e ativação](free-email-setup.md). A migration nova foi validada localmente; a aplicação remota aguarda renovação do login CLI. Não houve envio real nem ativação do Auth Hook remoto.
 
 ## Verificações concluídas
 
@@ -24,6 +24,7 @@ A migração está em andamento. O destino Supabase próprio foi inicializado e 
 - Funções de cidade e IA rejeitam chamadas sem sessão. O transporte RPC retorna o erro de autenticação serializado.
 - No preview com mapa gratuito, cliente foi impedido de chamar RPC administrativo de mapa e IA; o administrador acessou o Supabase próprio pelo servidor. Dispatch rejeitou segredo incorreto (401) e aceitou o configurado (200, zero envios). A IA não foi chamada e nenhuma notificação real foi enviada.
 - As duas contas Auth e a loja temporária criadas para verificação foram removidas após saída global das sessões. Perfis e papéis associados ficaram ausentes; o projeto próprio voltou a zero usuários Auth. Nenhum cadastro antigo foi excluído.
+- Brevo: 24 testes de configuração/provedor/hook, ACL/privacidade/cooldown/revisões/deduplicação no PostgreSQL local e três ações reais do servidor com negação a clientes/anônimos. Formulário, chave oculta, salvamento e teste com provedor simulado passaram no navegador local. Revisão independente apontou formato UUID e reconhecimento de repetição no provedor; ambos corrigidos com testes RED/GREEN. Suíte total: 76 testes.
 - Arquivos de ambiente e credenciais locais excluídos do upload; verificação real do coletor aprovada. Bundle público verificado sem credenciais de servidor ou endpoints Lovable.
 - Lint dos arquivos alterados aprovado. O lint geral ainda tem dívida preexistente: 3510 erros e 8 avisos na execução registrada.
 
@@ -33,7 +34,7 @@ O registro de produção `dpl_uy3qTJYh8zq4h8mvmZFG6XbTHqrG` está em `ERROR/BLOC
 
 ## Etapas necessárias para produção
 
-1. Configurar e testar Brevo SMTP para cadastro/confirmação e recuperação de clientes externos. O SMTP padrão é restrito à equipe; a opção Brevo gratuita está documentada, mas faltam a conta/remetente liberados e a credencial criada pelo proprietário.
+1. Renovar a sessão CLI e aplicar somente a migration `20261014215702_brevo_admin_integration.sql` em `nsvgfagjezdduatmbsqq`, verificando permissões. O proprietário precisa criar/liberar a conta Brevo, verificar o remetente e inserir a chave API no admin. Depois do teste real, concluir a configuração única do Send Email Hook assinado no Supabase/Vercel, conforme o guia. Nada disso foi ativado remotamente ainda.
 2. Concluir o cadastro real inicial e verificar o domínio de produção. Mapa gratuito e preview passaram nos 13 endpoints, RPC administrativo, negação de acesso a clientes e dispatch push (401 incorreto/200 autorizado sem assinaturas). As credenciais privadas Supabase, dispatch e VAPID JWK estão configuradas; assinatura VAPID e payload criptografado foram verificados sem enviar notificações a dispositivos.
 3. IA adiada pelo usuário. O AI Gateway permanece sem liberação de faturamento; nenhuma configuração de pagamento foi alterada. O geocoding automático também é opcional; a seleção manual de cidade continua disponível.
 4. Verificar cadastro/confirmação de e-mail, recuperação e operação dos quatro perfis no domínio final. Login administrativo e mapa integrado passaram no navegador local; cliente/admin passaram na API e RLS. A entrega push em dispositivo e o fluxo completo de pedido ainda não foram testados.
