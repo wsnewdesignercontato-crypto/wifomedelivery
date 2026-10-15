@@ -34,6 +34,17 @@ Antes de iniciar um servidor conectado aos serviços de produção, confira o pr
 
 Nunca publique `.env`, `.env.local`, `.vercel` ou credenciais. Preserve o projeto Supabase existente e ajuste seus endereços permitidos de autenticação ao domínio verificado.
 
+## Supabase CLI no Windows
+
+Na pasta deste repositório, use o arquivo de perfil para manter a credencial WS separada. `--profile` recebe o caminho do YAML, não um apelido de conta. O arquivo contém somente os endpoints oficiais; o token fica no armazenamento de credenciais do Windows.
+
+```powershell
+$wifomeProfile = (Resolve-Path -LiteralPath '.\supabase\profiles\wifome-ws.yaml').Path
+npx.cmd --yes supabase@2.111.0 --profile "$wifomeProfile" --agent no projects list
+```
+
+Se precisar autenticar, use o mesmo caminho absoluto com `login --name wifomedelivery-ws --no-browser`, abra o link na conta WS e digite o código somente no terminal. Confirme o projeto `wifome/nsvgfagjezdduatmbsqq` antes de qualquer alteração remota. Estar autenticado não vincula automaticamente a pasta ao banco; não execute comandos `--linked` sem conferir o projeto local.
+
 Antes de enviar o código, execute `vercel deploy --dry --json` e grave o resultado em um arquivo local ignorado. Valide esse arquivo com `node scripts/check-deploy-inputs.mjs CAMINHO-DO-JSON`. O `.vercelignore` exclui arquivos de ambiente, credenciais locais e materiais de execução do upload, além da proteção do Git.
 
 ## Mapas gratuitos e navegação
