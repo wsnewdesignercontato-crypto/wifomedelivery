@@ -1,0 +1,28 @@
+# Local credentials and execution artifacts must never be uploaded.
+.env*
+.superpowers
+.superpowers/**
+.codex
+.codex/**
+.git
+.git/**
+.vercel
+.vercel/**
+.output
+.output/**
+.nitro
+.nitro/**
+.tanstack
+.tanstack/**
+node_modules/
+*.log
+
+# Review and development material is not required by the app build.
+docs/
+tests/
+supabase/.temp
+supabase/.temp/**
+supabase/bootstrap/tests
+supabase/bootstrap/tests/**
+supabase/tests
+supabase/tests/**

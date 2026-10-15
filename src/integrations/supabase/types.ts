@@ -3145,6 +3145,16 @@ export type Database = {
       }
     }
     Functions: {
+      brevo_settings_get: { Args: Record<PropertyKey, never>; Returns: Json }
+      brevo_credentials_get: { Args: Record<PropertyKey, never>; Returns: Json }
+      brevo_settings_save: {
+        Args: { _sender_name: string; _sender_email: string; _api_key?: string | null }
+        Returns: undefined
+      }
+      brevo_test_reserve: { Args: Record<PropertyKey, never>; Returns: Json }
+      brevo_test_complete: { Args: { _revision: string; _success: boolean }; Returns: undefined }
+      brevo_hook_claim: { Args: { _request_id: string; _payload_hash: string }; Returns: string }
+      brevo_hook_complete: { Args: { _request_id: string; _payload_hash: string }; Returns: undefined }
       apply_score_penalty: {
         Args: {
           _entity_id: string

@@ -22,6 +22,7 @@ import {
   User,
 } from "lucide-react";
 import { IFomeLogo } from "@/components/ifome-logo";
+import { APP_URL } from "@/lib/app-config";
 import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -57,9 +58,9 @@ export const Route = createFileRoute("/")({
         content:
           "Peça comida dos restaurantes próximos, acompanhe a entrega ao vivo e ganhe dinheiro entregando com o PedeTrem.",
       },
-      { property: "og:url", content: "https://wifomedelivery.lovable.app/" },
+      { property: "og:url", content: `${APP_URL}/` },
     ],
-    links: [{ rel: "canonical", href: "https://wifomedelivery.lovable.app/" }],
+    links: [{ rel: "canonical", href: `${APP_URL}/` }],
     scripts: [
       {
         type: "application/ld+json",
@@ -434,7 +435,8 @@ function LandingPage() {
             <h1 className="reveal text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
               PedeTrem
               <br />
-              Sua fome tem <span className="bg-gradient-brand bg-clip-text text-transparent">endereço</span>
+              Sua fome tem{" "}
+              <span className="bg-gradient-brand bg-clip-text text-transparent">endereço</span>
               <br />
               certo.
             </h1>

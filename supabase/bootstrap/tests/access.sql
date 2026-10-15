@@ -1,0 +1,13 @@
+﻿BEGIN;
+INSERT INTO auth.users(id,aud,role,email,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) VALUES ('00000000-0000-4000-8000-000000000011','authenticated','authenticated','migration-admin@example.invalid','{}','{}',now(),now()),('00000000-0000-4000-8000-000000000012','authenticated','authenticated','migration-client@example.invalid','{}','{}',now(),now());
+INSERT INTO public.user_roles(user_id,role) VALUES ('00000000-0000-4000-8000-000000000011','admin');
+INSERT INTO public.admin_audit_log(admin_id,action,entity_type,entity_id) VALUES ('00000000-0000-4000-8000-000000000011','migration-check','migration','00000000-0000-4000-8000-000000000012');
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000012","role":"authenticated"}',true);
+DO $$ BEGIN IF (SELECT count(*) FROM public.vw_admin_audit_logs) <> 0 THEN RAISE EXCEPTION 'Customer can read administrative audit'; END IF; END $$;
+SELECT set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-000000000011","role":"authenticated"}',true);
+DO $$ BEGIN IF (SELECT count(*) FROM public.vw_admin_audit_logs) <> 1 THEN RAISE EXCEPTION 'Admin audit unavailable'; END IF; END $$;
+RESET ROLE;
+DO $$ BEGIN IF has_function_privilege('anon','public.set_active_city(uuid,text,text)','EXECUTE') OR has_function_privilege('authenticated','public.set_active_city(uuid,text,text)','EXECUTE') THEN RAISE EXCEPTION 'Cross-user city RPC exposed'; END IF; END $$;
+ROLLBACK;
+SELECT 'audit isolation and internal RPC contracts passed; fixtures rolled back' result;

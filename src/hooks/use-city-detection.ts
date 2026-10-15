@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { reverseGeocodeCity } from "@/lib/location.functions";
 
 type Detected = {
   cidade: string;
@@ -8,31 +9,7 @@ type Detected = {
   hasEstabsHere: boolean;
 } | null;
 
-type GoogleAddressComponent = {
-  long_name?: string;
-  short_name?: string;
-  types?: string[];
-};
-
-type GoogleGeocodeResponse = {
-  results?: Array<{
-    address_components?: GoogleAddressComponent[];
-  }>;
-};
-
-type NominatimResponse = {
-  address?: {
-    city?: string;
-    town?: string;
-    village?: string;
-    municipality?: string;
-    state_code?: string;
-    state?: string;
-  };
-};
-
 const SESSION_KEY = "wifome:city-detected-once";
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
 
 function norm(s: string | null | undefined) {
   return (s ?? "")
@@ -47,35 +24,7 @@ async function reverseGeocode(
   lng: number,
 ): Promise<{ cidade: string; estado: string } | null> {
   try {
-    const lovableKey = import.meta.env.VITE_LOVABLE_API_KEY;
-    // Use gateway com key do Google Maps (não precisamos passar a browser key aqui — usaremos Nominatim como fallback)
-    if (lovableKey) {
-      const res = await fetch(
-        `${GATEWAY_URL}/maps/api/geocode/json?latlng=${lat},${lng}&language=pt-BR&region=br`,
-        { headers: { Authorization: `Bearer ${lovableKey}` } },
-      );
-      if (res.ok) {
-        const data = (await res.json()) as GoogleGeocodeResponse;
-        const comps = data.results?.[0]?.address_components ?? [];
-        const cidade =
-          comps.find((c) => c.types?.includes("administrative_area_level_2"))?.long_name ??
-          comps.find((c) => c.types?.includes("locality"))?.long_name ??
-          "";
-        const estado =
-          comps.find((c) => c.types?.includes("administrative_area_level_1"))?.short_name ?? "";
-        if (cidade) return { cidade, estado };
-      }
-    }
-    // Fallback Nominatim
-    const r = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=pt-BR`,
-    );
-    if (!r.ok) return null;
-    const d = (await r.json()) as NominatimResponse;
-    const cidade =
-      d?.address?.city ?? d?.address?.town ?? d?.address?.village ?? d?.address?.municipality ?? "";
-    const estado = (d?.address?.state_code ?? d?.address?.state ?? "").slice(0, 2).toUpperCase();
-    return cidade ? { cidade, estado } : null;
+    return await reverseGeocodeCity({ data: { lat, lng } });
   } catch {
     return null;
   }

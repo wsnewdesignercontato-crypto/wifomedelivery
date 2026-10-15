@@ -1,15 +1,15 @@
-<!-- LOVABLE:BEGIN -->
-> [!IMPORTANT]
-> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
-> published git history — force pushing, or rebasing/amending/squashing commits
-> that are already pushed — as it rewrites history on Lovable's side and the
-> user will likely lose their project history.
->
-> Commits you push to the connected branch sync back to Lovable and show up in
-> the editor, so keep the branch in a working state.
-<!-- LOVABLE:END -->
+# PedeTrem / wifomedelivery
+
+## Platform
+
+- Target hosting: Vercel, using TanStack Start and Nitro.
+- Backend: the existing Supabase project. Preserve its data, authentication, storage and realtime configuration.
+- Keep credentials in ignored local files and private server environment variables. Never expose administrative keys through VITE-prefixed variables.
+- Preserve published Git history. Do not force-push, rebase, amend or squash commits that are already pushed.
+- Validate the new production deployment before retiring the old hosting or disconnecting its synchronization.
 
 ## Branding
+
 - Render the supplied brand asset through the shared logo component without profile-specific color filters, so every profile preserves the approved artwork.
 - Keep existing installation IDs, storage keys, API identifiers, and deployed URLs stable during visual rebrands to preserve sessions and installed apps.
-- Derive public favicon and installation icons from the same supplied artwork; use the CDN asset pointer for in-app logo rendering.
+- Derive public favicon and installation icons from the same supplied artwork; use the local asset pointer for in-app logo rendering.

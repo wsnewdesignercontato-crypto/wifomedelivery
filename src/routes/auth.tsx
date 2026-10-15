@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { PasswordStrength } from "@/components/ui/password-strength";
 import { senhaForteSchema } from "@/lib/password-strength";
+import { APP_URL } from "@/lib/app-config";
 
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -42,9 +43,9 @@ export const Route = createFileRoute("/auth")({
         content:
           "Faça login ou crie sua conta PedeTrem para pedir comida, gerenciar seu restaurante ou trabalhar como entregador.",
       },
-      { property: "og:url", content: "https://wifomedelivery.lovable.app/auth" },
+      { property: "og:url", content: `${APP_URL}/auth` },
     ],
-    links: [{ rel: "canonical", href: "https://wifomedelivery.lovable.app/auth" }],
+    links: [{ rel: "canonical", href: `${APP_URL}/auth` }],
   }),
   component: AuthPage,
 });

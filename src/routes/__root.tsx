@@ -7,10 +7,9 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthSync } from "@/components/auth-sync";
@@ -18,6 +17,7 @@ import { LiveRefresh } from "@/components/live-refresh";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
 
 import { IFomeLogo } from "@/components/ifome-logo";
+import { APP_URL } from "@/lib/app-config";
 
 const BRAND_LOGO_URL = "/pedetrem-icon-512.png";
 
@@ -44,12 +44,9 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -127,8 +124,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@context": "https://schema.org",
           "@type": "Organization",
           name: "PedeTrem",
-          url: "https://wifomedelivery.lovable.app",
-          logo: `https://wifomedelivery.lovable.app${BRAND_LOGO_URL}`,
+          url: APP_URL,
+          logo: `${APP_URL}${BRAND_LOGO_URL}`,
           description:
             "Plataforma de delivery que conecta clientes, restaurantes e entregadores em tempo real.",
         }),
@@ -139,7 +136,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@context": "https://schema.org",
           "@type": "WebSite",
           name: "PedeTrem",
-          url: "https://wifomedelivery.lovable.app",
+          url: APP_URL,
         }),
       },
     ],

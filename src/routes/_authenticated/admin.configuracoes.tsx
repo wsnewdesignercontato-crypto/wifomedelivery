@@ -8,16 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { BrevoSettings } from "@/components/admin/brevo-settings";
 
 export const Route = createFileRoute("/_authenticated/admin/configuracoes")({
-  head: () => ({ meta: [
-    { title: "Admin — Configurações | PedeTrem" },
-    { name: "description", content: "PedeTrem: admin, configurações." },
-    { property: "og:title", content: "Admin — Configurações | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: admin, configurações." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Admin — Configurações | PedeTrem" },
+      { name: "description", content: "PedeTrem: admin, configurações." },
+      { property: "og:title", content: "Admin — Configurações | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: admin, configurações." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: ConfigPage,
 });
 
@@ -106,6 +109,8 @@ function ConfigPage() {
         </h1>
         <p className="text-sm text-muted-foreground">Regras globais da plataforma.</p>
       </div>
+
+      <BrevoSettings />
 
       <div className="max-w-2xl space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div>
