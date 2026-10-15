@@ -66,4 +66,3 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.check_profile_complete(uuid, text) TO authenticated;
-
