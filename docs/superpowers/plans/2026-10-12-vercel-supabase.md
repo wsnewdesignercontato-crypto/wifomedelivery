@@ -106,10 +106,11 @@
 
 - [ ] Executar a suíte completa com `npm run test`, `npm run typecheck`, `npm run lint`, `npm run build` e build Nitro para Vercel. Relatar separadamente problemas preexistentes que ainda estejam presentes, sem afirmar que passaram.
 - [ ] Verificar diff e staging, lockfile, origens públicas e bundle do cliente. Procurar credenciais de servidor por nomes e por valores lidos em memória, imprimindo somente o nome do problema caso haja vazamento.
-- [ ] Publicar preview na conta autorizada e executar o smoke HTTP. Usar o caminho oficial de acesso autenticado se o preview estiver protegido, sem desativar proteção por conveniência.
+- [x] Publicar preview na conta autorizada e executar o smoke HTTP. Usar o caminho oficial de acesso autenticado se o preview estiver protegido, sem desativar proteção por conveniência.
 - [ ] Verificar pelo navegador página inicial, assets, login e os perfis disponíveis com sessão autorizada. Para checkout e notificações, usar somente dados de teste que o usuário tenha autorizado; registrar o que não puder ser verificado por falta de sessão/credencial.
-- [ ] Executar revisão completa da mudança conforme o método escolhido pelo usuário e corrigir problemas encontrados. Repetir testes afetados por correções.
-- [ ] Promover/publicar a produção validada. Confirmar o endereço público, a comunicação com Supabase e as integrações Google/IA/push. Manter o domínio padrão até o usuário indicar um domínio próprio.
+- [x] Executar revisão completa da mudança conforme o método escolhido pelo usuário e corrigir problemas encontrados. Repetir testes afetados por correções.
+- [x] Promover/publicar a produção validada. Autorização explícita do usuário em 15/10 para publicar mantendo Brevo para configuração posterior. Build de produção `0030238`, deployment `dpl_uVi8mH7MJ3ffp15QP3WXN4YbvJuR`, testado e promovido a `https://wifomedelivery.vercel.app`; 13 endpoints e acesso servidor/Supabase passaram. Domínio padrão preservado.
+- [ ] Concluir confirmação/recuperação por e-mail, operação dos quatro perfis, pedido completo e push em dispositivo no domínio final. IA e geocoding opcional adiados pelo usuário; mapa gratuito já verificado. Publicação não representa aprovação desses fluxos ainda pendentes.
 - [ ] Desconectar a edição/sincronização Lovable e retirar a publicação antiga somente quando os fluxos do destino estiverem verificados e houver acesso aos controles correspondentes. Preservar os dados e histórico; quando um controle não estiver acessível, registrar a ação exata restante e o motivo.
 - [ ] Entregar URL de produção, branch/commits, resultados dos testes e qualquer pendência comprovada. Commit final da documentação: `docs: document independent Vercel and Supabase operation`.
 
@@ -131,7 +132,7 @@ Decisão do usuário: os três cadastros são descartáveis; iniciar no Supabase
 - [x] Validar novo preview e Vault/dispatch: `47f73f2`, 13 endpoints e RPC/dispatch autorizado/rejeitado passaram. Login de teste e mapa no navegador local passaram; fixtures temporárias removidas após saída global.
 - [x] Aplicar a migration da integração Brevo no Supabase remoto após renovar a sessão CLI. Dry-run confirmou somente a migration nova; versão `20261014215702` aplicada e registrada, total 81. Testes SQL remotos passaram com rollback das fixtures. Tela admin e backend foram implementados, com Vault privado, teste para o próprio admin e Auth Hook assinado preparado; validação local concluída. O usuário aprovou inserir a chave API no admin, substituindo SMTP.
 - [ ] Configurar conta/remetente e chave real Brevo pelo admin, ativar o hook e verificar entrega de cadastro/recuperação no domínio final; guia em `docs/free-email-setup.md`.
-- [ ] Validar fluxos restantes antes da produção e retirada da Lovable. Credenciais Google Maps e IA foram adiadas por decisão do usuário; não bloqueiam o mapa gratuito aprovado abaixo.
+- [ ] Validar fluxos restantes antes da retirada da Lovable. Produção publicada por autorização posterior do usuário, com configuração real de e-mail ainda pendente. Credenciais Google Maps e IA foram adiadas por decisão do usuário; não bloqueiam o mapa gratuito aprovado abaixo.
 
 Procedimento e limites do initializer: `supabase/bootstrap/README.md`.
 
