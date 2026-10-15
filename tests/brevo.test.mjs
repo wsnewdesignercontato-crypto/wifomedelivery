@@ -201,7 +201,7 @@ test("branded auth emails include the public logo, responsive layout and readabl
 test("security notifications are branded informational messages and do not invent confirmation links", () => {
   for (const action of ["password_changed_notification", "email_changed_notification"]) {
     const [email] = buildAuthEmails(
-      { user: event.user, email_data: { email_action_type: action } },
+      { user: event.user, email_data: { email_action_type: action, old_email: "old@example.com" } },
       sender,
       "https://nsvgfagjezdduatmbsqq.supabase.co",
       origins,
@@ -231,4 +231,26 @@ test("email change with secure confirmation disabled only addresses the new emai
   assert.equal(emails.length, 1);
   assert.equal(emails[0].to[0].email, "new@example.com");
   assert.ok(emails[0].htmlContent.includes("token=new-hash"));
+});
+
+test("email change security notices go to the previous address, never an address from user metadata", () => {
+  const payload = {
+    user: { email: "new@example.com", user_metadata: { old_email: "attacker@example.com" } },
+    email_data: { email_action_type: "email_changed_notification", old_email: "owner@example.com" },
+  };
+  const [email] = buildAuthEmails(
+    payload,
+    sender,
+    "https://nsvgfagjezdduatmbsqq.supabase.co",
+    origins,
+  );
+  assert.equal(email.to[0].email, "owner@example.com");
+  assert.throws(() =>
+    buildAuthEmails(
+      { ...payload, email_data: { email_action_type: "email_changed_notification" } },
+      sender,
+      "https://nsvgfagjezdduatmbsqq.supabase.co",
+      origins,
+    ),
+  );
 });

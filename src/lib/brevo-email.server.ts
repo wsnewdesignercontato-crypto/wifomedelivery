@@ -165,7 +165,10 @@ export function buildAuthEmails(
     throw new Error("Origem de autenticação inválida.");
   }
   const redirect = new URL(
-    typeof data.redirect_to === "string" && data.redirect_to
+    !notification &&
+      action !== "reauthentication" &&
+      typeof data.redirect_to === "string" &&
+      data.redirect_to
       ? data.redirect_to
       : allowedOrigins[0] + "/auth",
   );
@@ -215,10 +218,10 @@ export function buildAuthEmails(
 <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${escapeHtml(details.preheader)}</div>
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f4f5f7"><tr><td align="center" style="padding:32px 12px;">
 <!--[if mso]><table role="presentation" width="600" align="center"><tr><td><![endif]-->
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;background:#ffffff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;table-layout:fixed;background:#ffffff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;">
 <tr><td height="6" bgcolor="#dc2626" style="font-size:0;line-height:6px;">&nbsp;</td></tr>
 <tr><td align="center" style="padding:30px 24px 22px;"><img src="${logo}" alt="PedeTrem" width="88" height="88" style="display:block;width:88px;height:88px;border:0;border-radius:50%;"><p style="margin:14px 0 0;font-size:22px;line-height:28px;font-weight:bold;color:#991b1b;">PedeTrem</p><p style="margin:5px 0 0;font-size:11px;line-height:18px;letter-spacing:2px;color:#6b7280;">SUA CONTA, COM SEGURANÇA</p></td></tr>
-<tr><td style="padding:10px 28px 30px;"><h1 style="margin:0 0 18px;font-size:27px;line-height:35px;font-weight:bold;color:#202124;">${title}</h1><p style="margin:0 0 20px;font-size:16px;line-height:26px;color:#4b5563;">${escapeHtml(details.intro)}</p>${content}
+<tr><td style="padding:10px 28px 30px;"><h1 style="margin:0 0 18px;font-size:27px;line-height:35px;font-weight:bold;overflow-wrap:break-word;color:#202124;">${title}</h1><p style="margin:0 0 20px;font-size:16px;line-height:26px;color:#4b5563;">${escapeHtml(details.intro)}</p>${content}
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td style="padding:16px 18px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;"><p style="margin:0;font-size:13px;line-height:21px;color:#6b7280;">${escapeHtml(safety)}</p></td></tr></table>
 <p style="margin:24px 0 0;font-size:14px;line-height:22px;color:#4b5563;">Até já,<br><strong>Equipe PedeTrem</strong></p></td></tr>
 <tr><td align="center" style="padding:20px 24px;border-top:1px solid #e5e7eb;background:#fafafa;"><p style="margin:0;font-size:12px;line-height:20px;color:#6b7280;">Mensagem automática de segurança da sua conta.<br>Enviada por ${escapeHtml(sender.name)}. Você não precisa responder.</p></td></tr></table>
@@ -233,6 +236,10 @@ export function buildAuthEmails(
     if (data.token_hash_new) messages.push(makeEmail(user.email, data.token_hash_new));
     messages.push(makeEmail(user.new_email, data.token_hash));
     return messages;
+  }
+  if (action === "email_changed_notification") {
+    if (!validEmail(data.old_email)) throw new Error("E-mail anterior inválido.");
+    return [makeEmail(data.old_email, undefined)];
   }
   return [makeEmail(user.email, data.token_hash)];
 }

@@ -11,7 +11,13 @@ export const Route = createFileRoute("/api/auth/send-email")({
           appUrl: process.env.APP_URL,
           vercelUrl: process.env.VERCEL_URL,
         });
-        const allowedOrigins = [appUrl];
+        // Keep the project's previously published production aliases working too.
+        const allowedOrigins = [
+          appUrl,
+          "https://pedetrem.vercel.app",
+          "https://wifomedelivery.vercel.app",
+          "https://wifomedelivery-wsnewdesignercontato-6856.vercel.app",
+        ];
         if (process.env.VERCEL_URL) allowedOrigins.push(`https://${process.env.VERCEL_URL}`);
         return handleBrevoAuthHook(request, {
           secret:
