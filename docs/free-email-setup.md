@@ -1,3 +1,5 @@
+> Atualização de 15/10/2026: envio automático ativado na produção com modelos da marca. Consulte [E-mails de autenticação PedeTrem](branded-auth-emails.md). As etapas e pendências abaixo registram a preparação anterior.
+
 # Brevo no painel administrativo
 
 O usuário aprovou configurar a **chave API** em **Admin → Configurações → Integrações · Brevo**. Esse fluxo substitui a preparação anterior com SMTP: o administrador não precisa informar host, porta ou senha SMTP.
