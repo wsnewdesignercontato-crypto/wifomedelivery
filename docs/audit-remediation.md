@@ -4,7 +4,7 @@ Base examinada: `e6add399ef73029739c101ea7cf1e69675e2984f`.
 
 ## Situação
 
-Implementação e verificações locais concluídas. **Não aplicada no banco remoto nem publicada.** O GitHub não tinha autenticação de escrita, a conexão Vercel exigia autenticação e o Supabase conectado não listava o destino `wifome/nsvgfagjezdduatmbsqq`. Não houve alteração em projetos de outras contas.
+Publicado em https://pedetrem.vercel.app, com ambas as migrations aplicadas no Supabase correto e commit funcional 744a7c6 na main. Consulte [o registro de publicação](production-audit-release-2026-10-15.md) para evidências e pendências. As limitações locais abaixo registram a etapa anterior à publicação.
 
 ## Mudanças por achado
 
