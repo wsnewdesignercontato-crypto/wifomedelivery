@@ -2,7 +2,7 @@
 
 Aplicação React e TanStack Start com SSR e funções de servidor. A Vercel hospeda o aplicativo; o Supabase mantém banco, autenticação, arquivos e realtime.
 
-Produção: [wifomedelivery.vercel.app](https://wifomedelivery.vercel.app). Estado das integrações e verificações em [migration-status.md](docs/migration-status.md).
+Produção: [pedetrem.vercel.app](https://pedetrem.vercel.app). Estado das integrações e verificações em [migration-status.md](docs/migration-status.md).
 
 ## Desenvolvimento
 
