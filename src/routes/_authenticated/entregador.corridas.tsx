@@ -42,14 +42,16 @@ import { SOSButton } from "@/components/sos-button";
 import { canCourierAccessRides, getCourierApprovalLabel } from "@/lib/courier-approval";
 
 export const Route = createFileRoute("/_authenticated/entregador/corridas")({
-  head: () => ({ meta: [
-    { title: "Entregador — Corridas | PedeTrem" },
-    { name: "description", content: "PedeTrem: entregador, corridas." },
-    { property: "og:title", content: "Entregador — Corridas | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: entregador, corridas." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Entregador — Corridas | PedeTrem" },
+      { name: "description", content: "PedeTrem: entregador, corridas." },
+      { property: "og:title", content: "Entregador — Corridas | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: entregador, corridas." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Corridas,
 });
 
@@ -281,11 +283,16 @@ function Corridas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courier?.user_id, courier?.aprovacao, courier?.kyc_status]);
 
+  const activeId = ativa?.id;
+  const activeOrderId = ativa?.order_id;
+  const activeStatus = ativa?.status;
+  const courierId = courier?.user_id;
   useEffect(() => {
     const shouldTrack =
-      ativa &&
-      ["to_store", "at_store", "picked_up", "to_customer", "at_customer"].includes(ativa.status);
-    if (!shouldTrack || !courier || !("geolocation" in navigator)) {
+      activeId &&
+      activeStatus &&
+      ["to_store", "at_store", "picked_up", "to_customer", "at_customer"].includes(activeStatus);
+    if (!shouldTrack || !courierId || !("geolocation" in navigator)) {
       if (watchIdRef.current != null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
@@ -300,10 +307,10 @@ function Corridas() {
         lastSent = now;
         const { latitude: lat, longitude: lng, accuracy, heading, speed } = pos.coords;
         await Promise.all([
-          supabase.from("deliveries").update({ lat, lng }).eq("id", ativa!.id),
+          supabase.from("deliveries").update({ lat, lng }).eq("id", activeId!),
           supabase.from("tracking_points").insert({
-            courier_id: courier.user_id,
-            order_id: ativa!.order_id,
+            courier_id: courierId,
+            order_id: activeOrderId!,
             lat,
             lng,
             accuracy: accuracy ?? null,
@@ -313,7 +320,7 @@ function Corridas() {
           supabase
             .from("courier_profiles")
             .update({ lat, lng, last_seen: new Date().toISOString() })
-            .eq("user_id", courier.user_id),
+            .eq("user_id", courierId),
         ]);
       },
       (err) => console.warn("GPS error", err),
@@ -325,7 +332,7 @@ function Corridas() {
         watchIdRef.current = null;
       }
     };
-  }, [ativa?.id, ativa?.status, courier?.user_id]);
+  }, [activeId, activeOrderId, activeStatus, courierId]);
 
   async function aceitar(d: Delivery) {
     if (!courier) return;
@@ -437,17 +444,19 @@ function Corridas() {
       metodo = "photo";
     }
     // Confirma entrega atomicamente via RPC
-    const { data: rpcRes, error: rpcErr } = await supabase.rpc("confirm_delivery_code" as any, {
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("confirm_delivery_code", {
       p_order_id: ativa.order_id,
       p_code: parsed.data,
       p_prova_url: prova_url ?? undefined,
     });
 
-    const result = rpcRes as any;
+    const result = rpcRes && typeof rpcRes === "object" && !Array.isArray(rpcRes) ? rpcRes : null;
 
     if (rpcErr || (result && result.success === false)) {
       setAdvancing(false);
-      const errorMsg = rpcErr?.message || (result && result.error === 'invalid_code' ? 'Código incorreto' : 'Falha ao finalizar');
+      const errorMsg =
+        rpcErr?.message ||
+        (result && result.error === "invalid_code" ? "Código incorreto" : "Falha ao finalizar");
       return toast.error(errorMsg);
     }
     await supabase
@@ -874,8 +883,8 @@ function Corridas() {
                     </span>
                   </div>
                   <div className="mt-4">
-                    <Button 
-                      className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20 transition-transform active:scale-95" 
+                    <Button
+                      className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20 transition-transform active:scale-95"
                       onClick={() => aceitar(d)}
                     >
                       Aceitar corrida
@@ -1009,7 +1018,9 @@ function Corridas() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Reportar problema</DialogTitle>
-            <DialogDescription>Gera um protocolo para o suporte PedeTrem analisar.</DialogDescription>
+            <DialogDescription>
+              Gera um protocolo para o suporte PedeTrem analisar.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2 text-sm">

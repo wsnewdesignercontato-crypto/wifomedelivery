@@ -30,14 +30,16 @@ import {
 import { printOrderReceipt, buildReceiptHtml } from "@/lib/print-receipt";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/pedidos")({
-  head: () => ({ meta: [
-    { title: "Loja — Pedidos | PedeTrem" },
-    { name: "description", content: "PedeTrem: loja, pedidos." },
-    { property: "og:title", content: "Loja — Pedidos | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: loja, pedidos." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Loja — Pedidos | PedeTrem" },
+      { name: "description", content: "PedeTrem: loja, pedidos." },
+      { property: "og:title", content: "Loja — Pedidos | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: loja, pedidos." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: PedidosPage,
 });
 
@@ -168,7 +170,7 @@ function PedidosPage() {
         },
         (payload) => {
           reload();
-          
+
           if (payload.eventType === "INSERT") {
             toast.info("Novo pedido recebido! 🔔", {
               description: "Confira a lista de pedidos.",
@@ -231,12 +233,10 @@ function PedidosPage() {
     if (!codigo) return;
 
     // Confirma retirada atomicamente via RPC
-    const { data: rpcRes, error: rpcErr } = await supabase.rpc("confirm_pickup_order" as any, {
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("confirm_pickup_order", {
       p_order_id: order.id,
       p_codigo: codigo,
     });
-
-    const result = rpcRes as any;
 
     if (rpcErr) {
       toast.error("Não foi possível confirmar a retirada", {
@@ -520,8 +520,8 @@ function PedidosPage() {
                 )}
                 <div className="mt-4 flex flex-wrap gap-2 pt-2 border-t border-border/40">
                   {step && (
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       onClick={() => mudarStatus(o, step.next)}
                       className="h-10 px-4 rounded-xl shadow-lg shadow-primary/20 transition-transform active:scale-95"
                     >
@@ -532,18 +532,18 @@ function PedidosPage() {
                     </Button>
                   )}
                   {o.tipo_entrega === "pickup" && o.status === "ready" && (
-                    <Button 
-                      size="sm" 
-                      variant="secondary" 
+                    <Button
+                      size="sm"
+                      variant="secondary"
                       onClick={() => confirmarRetirada(o)}
                       className="h-10 px-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white"
                     >
                       Confirmar retirada
                     </Button>
                   )}
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
+                  <Button
+                    size="sm"
+                    variant="outline"
                     onClick={() => imprimir(o.id)}
                     className="h-10 px-4 rounded-xl border-border bg-muted/20 hover:bg-muted"
                   >
@@ -551,9 +551,9 @@ function PedidosPage() {
                     Imprimir
                   </Button>
                   {!TERMINAL.has(o.status) && (
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       onClick={() => cancelar(o.id)}
                       className="h-10 px-4 rounded-xl text-destructive hover:bg-destructive/10"
                     >
@@ -605,12 +605,14 @@ function PrinterSettingsDialog() {
   const [saving, setSaving] = useState(false);
   const [previewHtml, setPreviewHtml] = useState<string>("");
 
+  const printerEnabled = estab?.printer_enabled;
+  const printerAuto = estab?.printer_auto;
+  const printerWidth = estab?.printer_width_mm;
   useEffect(() => {
-    if (!estab) return;
-    setEnabled(!!estab.printer_enabled);
-    setAuto(!!estab.printer_auto);
-    setWidth(String(estab.printer_width_mm ?? 80));
-  }, [estab?.id, estab?.printer_enabled, estab?.printer_auto, estab?.printer_width_mm]);
+    setEnabled(!!printerEnabled);
+    setAuto(!!printerAuto);
+    setWidth(String(printerWidth ?? 80));
+  }, [printerEnabled, printerAuto, printerWidth]);
 
   function buildSample() {
     const w = parseInt(width) === 58 ? 58 : 80;

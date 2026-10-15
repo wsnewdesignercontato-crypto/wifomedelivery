@@ -5,14 +5,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { dateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/logs")({
-  head: () => ({ meta: [
-    { title: "Admin — Auditoria | PedeTrem" },
-    { name: "description", content: "PedeTrem: admin, auditoria." },
-    { property: "og:title", content: "Admin — Auditoria | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: admin, auditoria." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Admin — Auditoria | PedeTrem" },
+      { name: "description", content: "PedeTrem: admin, auditoria." },
+      { property: "og:title", content: "Admin — Auditoria | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: admin, auditoria." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: LogsPage,
 });
 
@@ -27,13 +29,13 @@ type Log = {
 };
 
 async function fetchLogs() {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("vw_admin_audit_logs")
     .select("id,admin_id,admin_nome,action,entity_type,entity_id,created_at")
     .order("created_at", { ascending: false })
     .limit(200);
   if (error) throw error;
-  return (data ?? []) as any as Log[];
+  return (data ?? []) as unknown as Log[];
 }
 
 function LogsPage() {

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Wallet, ArrowUpRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,14 +17,16 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/entregador/carteira")({
-  head: () => ({ meta: [
-    { title: "Entregador — Carteira | PedeTrem" },
-    { name: "description", content: "PedeTrem: entregador, carteira." },
-    { property: "og:title", content: "Entregador — Carteira | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: entregador, carteira." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Entregador — Carteira | PedeTrem" },
+      { name: "description", content: "PedeTrem: entregador, carteira." },
+      { property: "og:title", content: "Entregador — Carteira | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: entregador, carteira." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Carteira,
 });
 
@@ -54,27 +56,28 @@ function Carteira() {
     .reduce((s, l) => s + l.courier_payout_cents, 0);
   const total = ledger.reduce((s, l) => s + l.courier_payout_cents, 0);
 
-  async function load() {
-    if (!courier) return;
+  const courierId = courier?.user_id;
+  const load = useCallback(async () => {
+    if (!courierId) return;
     const { data: l } = await supabase
       .from("platform_ledger")
       .select("id,courier_payout_cents,status,created_at")
-      .eq("courier_id", courier.user_id)
+      .eq("courier_id", courierId)
       .order("created_at", { ascending: false })
       .limit(100);
     setLedger((l ?? []) as Ledger[]);
     const { data: w } = await supabase
       .from("courier_withdrawals")
       .select("id,valor_cents,metodo,status,created_at")
-      .eq("courier_id", courier.user_id)
+      .eq("courier_id", courierId)
       .order("created_at", { ascending: false })
       .limit(50);
     setWithdrawals((w ?? []) as Withdrawal[]);
-  }
+  }, [courierId]);
 
   useEffect(() => {
     load();
-  }, [courier]);
+  }, [load]);
 
   async function solicitar() {
     if (!courier) return;

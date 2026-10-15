@@ -16,13 +16,16 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedClienteRouteImport } from './routes/_authenticated/cliente'
 import { Route as AuthenticatedEntregadorRouteImport } from './routes/_authenticated/entregador'
+import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
 import { Route as AuthenticatedEstabelecimentoRouteImport } from './routes/_authenticated/estabelecimento'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminAnunciosRouteImport } from './routes/_authenticated/admin.anuncios'
@@ -137,6 +140,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
   id: '/redefinir-senha',
   path: '/redefinir-senha',
@@ -150,6 +158,11 @@ const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -170,6 +183,11 @@ const AuthenticatedClienteRoute = AuthenticatedClienteRouteImport.update({
 const AuthenticatedEntregadorRoute = AuthenticatedEntregadorRouteImport.update({
   id: '/entregador',
   path: '/entregador',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEquipeRoute = AuthenticatedEquipeRouteImport.update({
+  id: '/equipe',
+  path: '/equipe',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedEstabelecimentoRoute =
@@ -648,13 +666,16 @@ export interface FileRoutesByFullPath {
   '/cadastro': typeof CadastroRoute
   '/entrar': typeof EntrarRoute
   '/login': typeof LoginRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/termos': typeof TermosRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/app': typeof AuthenticatedAppRoute
   '/cliente': typeof AuthenticatedClienteRouteWithChildren
   '/entregador': typeof AuthenticatedEntregadorRouteWithChildren
+  '/equipe': typeof AuthenticatedEquipeRoute
   '/estabelecimento': typeof AuthenticatedEstabelecimentoRouteWithChildren
   '/admin/anuncios': typeof AuthenticatedAdminAnunciosRoute
   '/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
@@ -742,10 +763,13 @@ export interface FileRoutesByTo {
   '/cadastro': typeof CadastroRoute
   '/entrar': typeof EntrarRoute
   '/login': typeof LoginRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/termos': typeof TermosRoute
   '/app': typeof AuthenticatedAppRoute
+  '/equipe': typeof AuthenticatedEquipeRoute
   '/admin/anuncios': typeof AuthenticatedAdminAnunciosRoute
   '/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
@@ -834,13 +858,16 @@ export interface FileRoutesById {
   '/cadastro': typeof CadastroRoute
   '/entrar': typeof EntrarRoute
   '/login': typeof LoginRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/termos': typeof TermosRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/cliente': typeof AuthenticatedClienteRouteWithChildren
   '/_authenticated/entregador': typeof AuthenticatedEntregadorRouteWithChildren
+  '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
   '/_authenticated/estabelecimento': typeof AuthenticatedEstabelecimentoRouteWithChildren
   '/_authenticated/admin/anuncios': typeof AuthenticatedAdminAnunciosRoute
   '/_authenticated/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
@@ -930,13 +957,16 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/entrar'
     | '/login'
+    | '/privacidade'
     | '/redefinir-senha'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/termos'
     | '/admin'
     | '/app'
     | '/cliente'
     | '/entregador'
+    | '/equipe'
     | '/estabelecimento'
     | '/admin/anuncios'
     | '/admin/avaliacoes'
@@ -1024,10 +1054,13 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/entrar'
     | '/login'
+    | '/privacidade'
     | '/redefinir-senha'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/termos'
     | '/app'
+    | '/equipe'
     | '/admin/anuncios'
     | '/admin/avaliacoes'
     | '/admin/banners'
@@ -1115,13 +1148,16 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/entrar'
     | '/login'
+    | '/privacidade'
     | '/redefinir-senha'
     | '/robots.txt'
     | '/sitemap.xml'
+    | '/termos'
     | '/_authenticated/admin'
     | '/_authenticated/app'
     | '/_authenticated/cliente'
     | '/_authenticated/entregador'
+    | '/_authenticated/equipe'
     | '/_authenticated/estabelecimento'
     | '/_authenticated/admin/anuncios'
     | '/_authenticated/admin/avaliacoes'
@@ -1211,9 +1247,11 @@ export interface RootRouteChildren {
   CadastroRoute: typeof CadastroRoute
   EntrarRoute: typeof EntrarRoute
   LoginRoute: typeof LoginRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TermosRoute: typeof TermosRoute
   ApiAuthSendEmailRoute: typeof ApiAuthSendEmailRoute
   ApiInternalPushDispatchRoute: typeof ApiInternalPushDispatchRoute
 }
@@ -1269,6 +1307,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/redefinir-senha': {
       id: '/redefinir-senha'
       path: '/redefinir-senha'
@@ -1288,6 +1333,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
@@ -1316,6 +1368,13 @@ declare module '@tanstack/react-router' {
       path: '/entregador'
       fullPath: '/entregador'
       preLoaderRoute: typeof AuthenticatedEntregadorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/equipe': {
+      id: '/_authenticated/equipe'
+      path: '/equipe'
+      fullPath: '/equipe'
+      preLoaderRoute: typeof AuthenticatedEquipeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/estabelecimento': {
@@ -2107,6 +2166,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedClienteRoute: typeof AuthenticatedClienteRouteWithChildren
   AuthenticatedEntregadorRoute: typeof AuthenticatedEntregadorRouteWithChildren
+  AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
   AuthenticatedEstabelecimentoRoute: typeof AuthenticatedEstabelecimentoRouteWithChildren
 }
 
@@ -2115,6 +2175,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedClienteRoute: AuthenticatedClienteRouteWithChildren,
   AuthenticatedEntregadorRoute: AuthenticatedEntregadorRouteWithChildren,
+  AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
   AuthenticatedEstabelecimentoRoute:
     AuthenticatedEstabelecimentoRouteWithChildren,
 }
@@ -2130,9 +2191,11 @@ const rootRouteChildren: RootRouteChildren = {
   CadastroRoute: CadastroRoute,
   EntrarRoute: EntrarRoute,
   LoginRoute: LoginRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TermosRoute: TermosRoute,
   ApiAuthSendEmailRoute: ApiAuthSendEmailRoute,
   ApiInternalPushDispatchRoute: ApiInternalPushDispatchRoute,
 }

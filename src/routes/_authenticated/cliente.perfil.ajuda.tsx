@@ -1,16 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronLeft, HelpCircle, MessageCircle, Mail, Phone, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { ChevronLeft, HelpCircle, ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/ajuda")({
-  head: () => ({ meta: [
-    { title: "Cliente — Perfil — Ajuda | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, perfil, ajuda." },
-    { property: "og:title", content: "Cliente — Perfil — Ajuda | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, perfil, ajuda." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Perfil — Ajuda | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, perfil, ajuda." },
+      { property: "og:title", content: "Cliente — Perfil — Ajuda | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, perfil, ajuda." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AjudaPage,
 });
 
@@ -21,7 +27,7 @@ const FAQS = [
   },
   {
     q: "Posso cancelar um pedido?",
-    a: "Sim, enquanto a loja ainda não aceitou. Após o aceite, entre em contato com o suporte.",
+    a: "As ações disponíveis aparecem no pedido conforme sua etapa. Para solicitar ajuda após o aceite, registre uma solicitação abaixo.",
   },
   {
     q: "Como funciona o código de entrega?",
@@ -29,12 +35,53 @@ const FAQS = [
   },
   {
     q: "Como pedir reembolso?",
-    a: "Abra o pedido finalizado, toque em Ajuda com este pedido e escolha a opção de reembolso.",
+    a: "Registre uma solicitação abaixo com o número do pedido. A equipe poderá avaliar o atendimento e o pagamento realizado.",
   },
 ];
 
 function AjudaPage() {
   const [open, setOpen] = useState<number | null>(0);
+  const { user } = Route.useRouteContext();
+  const [assunto, setAssunto] = useState("");
+  const [sending, setSending] = useState(false);
+  const [tickets, setTickets] = useState<{ id: string; assunto: string; status: string }[]>([]);
+  useEffect(() => {
+    let active = true;
+    supabase
+      .from("support_tickets")
+      .select("id,assunto,status")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20)
+      .then(({ data, error }) => {
+        if (active) {
+          if (error) toast.error("Não foi possível carregar as solicitações");
+          else setTickets(data ?? []);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [user.id]);
+  async function send() {
+    if (sending || !assunto.trim()) return;
+    setSending(true);
+    try {
+      const { data, error } = await supabase
+        .from("support_tickets")
+        .insert({ user_id: user.id, assunto: assunto.trim() })
+        .select("id,assunto,status")
+        .single();
+      if (error || !data) throw new Error("Não foi possível registrar a solicitação");
+      setTickets((prev) => [data, ...prev]);
+      setAssunto("");
+      toast.success("Solicitação registrada. A equipe poderá consultá-la no suporte.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha no atendimento");
+    } finally {
+      setSending(false);
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -48,31 +95,39 @@ function AjudaPage() {
         <HelpCircle className="h-5 w-5 text-primary" /> Ajuda e suporte
       </h1>
 
-      <div className="grid grid-cols-3 gap-2">
-        <a
-          href="https://wa.me/5500000000000"
-          target="_blank"
-          rel="noreferrer"
-          className="flex flex-col items-center gap-1 rounded-2xl border border-border bg-card p-3 text-center hover:bg-muted/50"
-        >
-          <MessageCircle className="h-5 w-5 text-primary" />
-          <span className="text-xs font-semibold">Chat</span>
-        </a>
-        <a
-          href="mailto:suporte@wifome.com.br"
-          className="flex flex-col items-center gap-1 rounded-2xl border border-border bg-card p-3 text-center hover:bg-muted/50"
-        >
-          <Mail className="h-5 w-5 text-primary" />
-          <span className="text-xs font-semibold">E-mail</span>
-        </a>
-        <a
-          href="tel:+5508000000000"
-          className="flex flex-col items-center gap-1 rounded-2xl border border-border bg-card p-3 text-center hover:bg-muted/50"
-        >
-          <Phone className="h-5 w-5 text-primary" />
-          <span className="text-xs font-semibold">Telefone</span>
-        </a>
-      </div>
+      <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
+        <h2 className="font-semibold">Falar com a equipe</h2>
+        <p className="text-sm text-muted-foreground">
+          Registre uma dúvida sobre o pedido, sua conta ou seus dados. Não inclua senhas ou códigos
+          de autenticação.
+        </p>
+        <label htmlFor="support-subject" className="block text-sm">
+          Sua solicitação
+        </label>
+        <Textarea
+          id="support-subject"
+          value={assunto}
+          onChange={(e) => setAssunto(e.target.value)}
+          maxLength={500}
+          placeholder="Descreva o que precisa, incluindo o número do pedido se houver."
+        />
+        <Button disabled={sending || !assunto.trim()} onClick={() => void send()}>
+          {sending ? "Registrando…" : "Registrar solicitação"}
+        </Button>
+        <h3 className="pt-2 text-sm font-semibold">Minhas solicitações</h3>
+        {tickets.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhuma solicitação registrada.</p>
+        ) : (
+          tickets.map((t) => (
+            <div key={t.id} className="border-t py-2 text-sm">
+              <p>{t.assunto}</p>
+              <p className="text-xs text-muted-foreground">
+                Protocolo {t.id.slice(0, 8)} · {t.status}
+              </p>
+            </div>
+          ))
+        )}
+      </section>
 
       <section className="space-y-2">
         <h2 className="px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
