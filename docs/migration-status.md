@@ -1,4 +1,4 @@
-# Estado da migração — 14 de outubro de 2026
+# Estado da migração — 15 de outubro de 2026
 
 A migração está em andamento. O destino Supabase próprio foi inicializado e verificado; os três cadastros anteriores eram testes descartáveis. O código independente está publicado em preview na Vercel; a ativação de produção depende das configurações e verificações abaixo.
 
@@ -6,6 +6,7 @@ A migração está em andamento. O destino Supabase próprio foi inicializado e 
 - Projeto: `wifomedelivery`, ID `prj_W25oUTDeJ8ygGbngzNBtB8JAxIYZ`.
 - Integração Git conectada a `wsnewdesignercontato-crypto/wifomedelivery`, com produção na branch `main`. [PR #1 em rascunho](https://github.com/wsnewdesignercontato-crypto/wifomedelivery/pull/1); a branch `main` permanece sem as mudanças da migração.
 - [Preview protegido com mapa gratuito e wifome](https://wifomedelivery-qdnd4fgkb-wsnewdesignercontato-6856.vercel.app), deployment `dpl_x5hXLnFsesJx2Vmxxw3itDSpaDxf`, commit `47f73f2` (código do mapa `111cc59`). Deployment pronto e verificações HTTP/RPC concluídas.
+- [Preview protegido com a preparação Brevo](https://wifomedelivery-nme4q28rc-wsnewdesignercontato-6856.vercel.app), deployment `dpl_BHPYQwzDC9GTmSJovmaLtNj96q7Q`, commit `abe6a44`. Pronto, com 13 endpoints HTTP verificados, três ações administrativas recusando acesso anônimo e hook desativado retornando 503. A persistência Brevo remota depende da migration pendente.
 - Domínio padrão confirmado no projeto: `wifomedelivery.vercel.app`. `APP_URL` e `VITE_APP_URL` estão configuradas para essa origem somente em Production; previews preservam suas próprias origens.
 - Banco de destino: `wifome/nsvgfagjezdduatmbsqq`. A conexão nova e a chave administrativa de servidor estão configuradas e foram usadas pelo preview acima. O banco anterior não foi alterado.
 - Login Supabase pelo CLI concluído no perfil `wifomedelivery-ws`. O usuário confirmou que os três cadastros antigos são testes e podem ser recriados. O destino próprio estava vazio e recebeu a estrutura verificada do app, sem copiar usuários ou dados antigos.
@@ -13,6 +14,7 @@ A migração está em andamento. O destino Supabase próprio foi inicializado e 
 - Mapa gratuito aprovado: OpenStreetMap/Leaflet dentro do aplicativo, GPS externo sem API. Verificado no painel local com um marcador temporário do Supabase e créditos visíveis; cinco testes do helper, suíte total 52, tipos e builds Node/Vercel passaram. IA e geocoding opcional ficam para depois.
 - Branch de trabalho: `codex/migrate-vercel-supabase`.
 - O usuário escolheu Brevo gratuita e aprovou cadastrar a **chave API pelo admin**. A seção foi implementada em Configurações, com Vault privado, chave oculta, teste para o próprio administrador e status separado da ativação automática. [Preparação e ativação](free-email-setup.md). A migration nova foi validada localmente; a aplicação remota aguarda renovação do login CLI. Não houve envio real nem ativação do Auth Hook remoto.
+- O proprietário confirmou que concluiu novo login em outro computador, no terminal `C:\frontend-iapro360-work`. Essa autenticação não altera as credenciais deste ambiente, cujo CLI continua recebendo `Invalid access token`. A aplicação remota pode prosseguir pelo terminal já autenticado, após confirmar o projeto e preparar os comandos específicos.
 
 ## Verificações concluídas
 
