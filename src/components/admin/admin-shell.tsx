@@ -107,7 +107,7 @@ export function AdminShell() {
             for (const it of navItems) {
               const g = it.group ?? "";
               if (!groups.has(g)) groups.set(g, []);
-               groups.get(g)?.push(it);
+              groups.get(g)?.push(it);
             }
             return Array.from(groups.entries()).map(([group, items], gi) => (
               <div key={group || "root"} className={gi > 0 ? "mt-5" : ""}>

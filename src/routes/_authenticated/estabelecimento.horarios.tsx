@@ -8,14 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/horarios")({
-  head: () => ({ meta: [
-    { title: "Loja — Horários | PedeTrem" },
-    { name: "description", content: "PedeTrem: loja, horários." },
-    { property: "og:title", content: "Loja — Horários | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: loja, horários." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Loja — Horários | PedeTrem" },
+      { name: "description", content: "PedeTrem: loja, horários." },
+      { property: "og:title", content: "Loja — Horários | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: loja, horários." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: HorariosPage,
 });
 

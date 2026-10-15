@@ -7,14 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/cliente/pedidos")({
-  head: () => ({ meta: [
-    { title: "Cliente — Pedidos | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, pedidos." },
-    { property: "og:title", content: "Cliente — Pedidos | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, pedidos." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Pedidos | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, pedidos." },
+      { property: "og:title", content: "Cliente — Pedidos | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, pedidos." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: PedidosPage,
 });
 

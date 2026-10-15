@@ -8,14 +8,16 @@ import { Button } from "@/components/ui/button";
 import { useMemo, useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/admin/financeiro")({
-  head: () => ({ meta: [
-    { title: "Admin — Financeiro | PedeTrem" },
-    { name: "description", content: "PedeTrem: admin, financeiro." },
-    { property: "og:title", content: "Admin — Financeiro | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: admin, financeiro." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Admin — Financeiro | PedeTrem" },
+      { name: "description", content: "PedeTrem: admin, financeiro." },
+      { property: "og:title", content: "Admin — Financeiro | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: admin, financeiro." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: FinanceiroPage,
 });
 

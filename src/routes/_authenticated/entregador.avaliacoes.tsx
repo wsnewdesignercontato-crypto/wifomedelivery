@@ -6,14 +6,16 @@ import { Star } from "lucide-react";
 import { useMyCourier } from "@/hooks/use-courier";
 
 export const Route = createFileRoute("/_authenticated/entregador/avaliacoes")({
-  head: () => ({ meta: [
-    { title: "Entregador — Avaliações | PedeTrem" },
-    { name: "description", content: "PedeTrem: entregador, avaliações." },
-    { property: "og:title", content: "Entregador — Avaliações | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: entregador, avaliações." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Entregador — Avaliações | PedeTrem" },
+      { name: "description", content: "PedeTrem: entregador, avaliações." },
+      { property: "og:title", content: "Entregador — Avaliações | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: entregador, avaliações." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Avaliacoes,
 });
 

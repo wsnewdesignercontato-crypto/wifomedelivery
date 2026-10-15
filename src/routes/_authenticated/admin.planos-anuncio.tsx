@@ -20,14 +20,16 @@ import {
 import { brl } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/planos-anuncio")({
-  head: () => ({ meta: [
-    { title: "Admin — Planos de anúncio | PedeTrem" },
-    { name: "description", content: "PedeTrem: admin, planos de anúncio." },
-    { property: "og:title", content: "Admin — Planos de anúncio | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: admin, planos de anúncio." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Admin — Planos de anúncio | PedeTrem" },
+      { name: "description", content: "PedeTrem: admin, planos de anúncio." },
+      { property: "og:title", content: "Admin — Planos de anúncio | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: admin, planos de anúncio." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: PlanosPage,
 });
 

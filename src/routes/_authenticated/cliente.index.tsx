@@ -30,14 +30,16 @@ import { useCityDetection } from "@/hooks/use-city-detection";
 import { CitySwitchCard } from "@/components/cliente/city-switch-card";
 
 export const Route = createFileRoute("/_authenticated/cliente/")({
-  head: () => ({ meta: [
-    { title: "Cliente — Início | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, início." },
-    { property: "og:title", content: "Cliente — Início | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, início." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Início | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, início." },
+      { property: "og:title", content: "Cliente — Início | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, início." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: ClienteHome,
 });
 

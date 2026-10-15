@@ -4,14 +4,16 @@ import { ScoreHistory } from "@/components/score-history";
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/entregador/score")({
-  head: () => ({ meta: [
-    { title: "Entregador — Score | PedeTrem" },
-    { name: "description", content: "PedeTrem: entregador, score." },
-    { property: "og:title", content: "Entregador — Score | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: entregador, score." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Entregador — Score | PedeTrem" },
+      { name: "description", content: "PedeTrem: entregador, score." },
+      { property: "og:title", content: "Entregador — Score | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: entregador, score." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Page,
 });
 

@@ -5,14 +5,16 @@ import { toast } from "sonner";
 import clubeBanner from "@/assets/clube-wifome-banner-hd.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/clube")({
-  head: () => ({ meta: [
-    { title: "Cliente — Perfil — Clube | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, perfil, clube." },
-    { property: "og:title", content: "Cliente — Perfil — Clube | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, perfil, clube." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Perfil — Clube | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, perfil, clube." },
+      { property: "og:title", content: "Cliente — Perfil — Clube | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, perfil, clube." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: ClubePage,
 });
 

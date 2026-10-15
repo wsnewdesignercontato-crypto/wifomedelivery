@@ -13,14 +13,16 @@ import { useMyCourier } from "@/hooks/use-courier";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/entregador")({
-  head: () => ({ meta: [
-    { title: "Entregador | PedeTrem" },
-    { name: "description", content: "PedeTrem: entregador." },
-    { property: "og:title", content: "Entregador | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: entregador." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Entregador | PedeTrem" },
+      { name: "description", content: "PedeTrem: entregador." },
+      { property: "og:title", content: "Entregador | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: entregador." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: EntregadorLayout,
 });
 

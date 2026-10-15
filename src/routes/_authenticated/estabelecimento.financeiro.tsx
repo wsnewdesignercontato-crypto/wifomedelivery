@@ -7,14 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Download, DollarSign, TrendingUp, Percent, Wallet } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/financeiro")({
-  head: () => ({ meta: [
-    { title: "Loja — Financeiro | PedeTrem" },
-    { name: "description", content: "PedeTrem: loja, financeiro." },
-    { property: "og:title", content: "Loja — Financeiro | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: loja, financeiro." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Loja — Financeiro | PedeTrem" },
+      { name: "description", content: "PedeTrem: loja, financeiro." },
+      { property: "og:title", content: "Loja — Financeiro | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: loja, financeiro." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: FinanceiroPage,
 });
 

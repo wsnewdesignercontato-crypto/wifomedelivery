@@ -7,14 +7,18 @@ import { Sparkles } from "lucide-react";
 import { generateAdminInsights } from "@/lib/admin-ai.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/ia")({
-  head: () => ({ meta: [
-    { title: "Admin — Insights | PedeTrem" },
-    { name: "description", content: "PedeTrem: admin, insights." },
-    { property: "og:title", content: "Admin — Insights | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: admin, insights." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }), component: IaPage });
+  head: () => ({
+    meta: [
+      { title: "Admin — Insights | PedeTrem" },
+      { name: "description", content: "PedeTrem: admin, insights." },
+      { property: "og:title", content: "Admin — Insights | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: admin, insights." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: IaPage,
+});
 
 const SUGGESTIONS = [
   "Quais os principais riscos operacionais dessa semana?",

@@ -7,14 +7,18 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/suporte")({
-  head: () => ({ meta: [
-    { title: "Admin — Suporte | PedeTrem" },
-    { name: "description", content: "PedeTrem: admin, suporte." },
-    { property: "og:title", content: "Admin — Suporte | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: admin, suporte." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }), component: SuportePage });
+  head: () => ({
+    meta: [
+      { title: "Admin — Suporte | PedeTrem" },
+      { name: "description", content: "PedeTrem: admin, suporte." },
+      { property: "og:title", content: "Admin — Suporte | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: admin, suporte." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: SuportePage,
+});
 
 type Ticket = {
   id: string;

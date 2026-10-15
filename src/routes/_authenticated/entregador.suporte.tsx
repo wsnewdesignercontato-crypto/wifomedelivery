@@ -11,14 +11,16 @@ import { LifeBuoy } from "lucide-react";
 import { useMyCourier } from "@/hooks/use-courier";
 
 export const Route = createFileRoute("/_authenticated/entregador/suporte")({
-  head: () => ({ meta: [
-    { title: "Entregador — Suporte | PedeTrem" },
-    { name: "description", content: "PedeTrem: entregador, suporte." },
-    { property: "og:title", content: "Entregador — Suporte | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: entregador, suporte." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Entregador — Suporte | PedeTrem" },
+      { name: "description", content: "PedeTrem: entregador, suporte." },
+      { property: "og:title", content: "Entregador — Suporte | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: entregador, suporte." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Suporte,
 });
 

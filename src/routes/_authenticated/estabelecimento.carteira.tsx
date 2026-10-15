@@ -17,14 +17,16 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/carteira")({
-  head: () => ({ meta: [
-    { title: "Loja — Carteira | PedeTrem" },
-    { name: "description", content: "PedeTrem: loja, carteira." },
-    { property: "og:title", content: "Loja — Carteira | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: loja, carteira." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Loja — Carteira | PedeTrem" },
+      { name: "description", content: "PedeTrem: loja, carteira." },
+      { property: "og:title", content: "Loja — Carteira | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: loja, carteira." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Carteira,
 });
 

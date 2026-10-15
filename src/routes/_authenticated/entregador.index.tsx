@@ -26,14 +26,16 @@ import {
 } from "@/lib/courier-approval";
 
 export const Route = createFileRoute("/_authenticated/entregador/")({
-  head: () => ({ meta: [
-    { title: "Entregador — Início | PedeTrem" },
-    { name: "description", content: "PedeTrem: entregador, início." },
-    { property: "og:title", content: "Entregador — Início | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: entregador, início." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Entregador — Início | PedeTrem" },
+      { name: "description", content: "PedeTrem: entregador, início." },
+      { property: "og:title", content: "Entregador — Início | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: entregador, início." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Home,
 });
 

@@ -6,14 +6,16 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/dispositivo")({
-  head: () => ({ meta: [
-    { title: "Cliente — Perfil — Dispositivo | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, perfil, dispositivo." },
-    { property: "og:title", content: "Cliente — Perfil — Dispositivo | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, perfil, dispositivo." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Perfil — Dispositivo | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, perfil, dispositivo." },
+      { property: "og:title", content: "Cliente — Perfil — Dispositivo | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, perfil, dispositivo." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: DispositivoPage,
 });
 

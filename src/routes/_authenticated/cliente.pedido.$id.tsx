@@ -17,14 +17,16 @@ import { Badge } from "@/components/ui/badge";
 import { ReviewForm } from "@/components/reviews";
 
 export const Route = createFileRoute("/_authenticated/cliente/pedido/$id")({
-  head: () => ({ meta: [
-    { title: "Cliente — Acompanhar pedido | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, acompanhar pedido." },
-    { property: "og:title", content: "Cliente — Acompanhar pedido | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, acompanhar pedido." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Acompanhar pedido | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, acompanhar pedido." },
+      { property: "og:title", content: "Cliente — Acompanhar pedido | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, acompanhar pedido." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: PedidoPage,
 });
 

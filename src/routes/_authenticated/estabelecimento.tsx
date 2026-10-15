@@ -22,14 +22,16 @@ import { OnboardingGate } from "@/components/onboarding-gate";
 import { useEstab, type Estab } from "@/hooks/use-estab";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento")({
-  head: () => ({ meta: [
-    { title: "Loja | PedeTrem" },
-    { name: "description", content: "PedeTrem: loja." },
-    { property: "og:title", content: "Loja | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: loja." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Loja | PedeTrem" },
+      { name: "description", content: "PedeTrem: loja." },
+      { property: "og:title", content: "Loja | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: loja." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: EstabLayout,
 });
 

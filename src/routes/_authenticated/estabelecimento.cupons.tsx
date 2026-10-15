@@ -19,14 +19,16 @@ import {
 import { Plus, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/cupons")({
-  head: () => ({ meta: [
-    { title: "Loja — Cupons | PedeTrem" },
-    { name: "description", content: "PedeTrem: loja, cupons." },
-    { property: "og:title", content: "Loja — Cupons | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: loja, cupons." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Loja — Cupons | PedeTrem" },
+      { name: "description", content: "PedeTrem: loja, cupons." },
+      { property: "og:title", content: "Loja — Cupons | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: loja, cupons." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: CuponsPage,
 });
 

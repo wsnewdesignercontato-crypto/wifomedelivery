@@ -6,14 +6,16 @@ import { Switch } from "@/components/ui/switch";
 import { PushToggleCard } from "@/components/push-toggle-card";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/notificacoes")({
-  head: () => ({ meta: [
-    { title: "Cliente — Perfil — Notificações | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, perfil, notificações." },
-    { property: "og:title", content: "Cliente — Perfil — Notificações | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, perfil, notificações." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Perfil — Notificações | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, perfil, notificações." },
+      { property: "og:title", content: "Cliente — Perfil — Notificações | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, perfil, notificações." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: NotifPage,
 });
 

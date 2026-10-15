@@ -7,14 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/enderecos")({
-  head: () => ({ meta: [
-    { title: "Cliente — Perfil — Endereços | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, perfil, endereços." },
-    { property: "og:title", content: "Cliente — Perfil — Endereços | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, perfil, endereços." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Perfil — Endereços | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, perfil, endereços." },
+      { property: "og:title", content: "Cliente — Perfil — Endereços | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, perfil, endereços." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: EnderecosPage,
 });
 

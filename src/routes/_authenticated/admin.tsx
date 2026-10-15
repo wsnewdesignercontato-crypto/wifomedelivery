@@ -3,14 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { AdminShell } from "@/components/admin/admin-shell";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [
-    { title: "Admin | PedeTrem" },
-    { name: "description", content: "PedeTrem: admin." },
-    { property: "og:title", content: "Admin | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: admin." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Admin | PedeTrem" },
+      { name: "description", content: "PedeTrem: admin." },
+      { property: "og:title", content: "Admin | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: admin." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   beforeLoad: async () => {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) throw redirect({ to: "/auth", search: { perfil: "cliente" } });

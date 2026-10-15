@@ -41,14 +41,16 @@ import { brl } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/anuncios")({
-  head: () => ({ meta: [
-    { title: "Loja — Anúncios | PedeTrem" },
-    { name: "description", content: "PedeTrem: loja, anúncios." },
-    { property: "og:title", content: "Loja — Anúncios | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: loja, anúncios." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Loja — Anúncios | PedeTrem" },
+      { name: "description", content: "PedeTrem: loja, anúncios." },
+      { property: "og:title", content: "Loja — Anúncios | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: loja, anúncios." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AnunciosEstabPage,
 });
 

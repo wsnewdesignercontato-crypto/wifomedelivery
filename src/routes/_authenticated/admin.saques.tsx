@@ -19,14 +19,16 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/saques")({
-  head: () => ({ meta: [
-    { title: "Admin — Saques | PedeTrem" },
-    { name: "description", content: "PedeTrem: admin, saques." },
-    { property: "og:title", content: "Admin — Saques | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: admin, saques." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Admin — Saques | PedeTrem" },
+      { name: "description", content: "PedeTrem: admin, saques." },
+      { property: "og:title", content: "Admin — Saques | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: admin, saques." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: SaquesAdmin,
 });
 
