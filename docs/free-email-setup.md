@@ -2,7 +2,7 @@
 
 O usuário aprovou configurar a **chave API** em **Admin → Configurações → Integrações · Brevo**. Esse fluxo substitui a preparação anterior com SMTP: o administrador não precisa informar host, porta ou senha SMTP.
 
-A tela e o backend foram verificados em banco local isolado. A migration `20261014215702_brevo_admin_integration.sql` ainda precisa ser aplicada no Supabase próprio `nsvgfagjezdduatmbsqq`: o login CLI deixou de ser aceito e foi solicitada nova autenticação ao proprietário. Não houve envio real nem ativação do Auth Hook remoto.
+A migration `20261014215702_brevo_admin_integration.sql` foi aplicada no Supabase próprio `nsvgfagjezdduatmbsqq` em 15 de outubro de 2026. O dry-run confirmou somente essa alteração pendente; o histórico agora registra 81 migrations e as 51 tabelas públicas anteriores foram preservadas. Os testes SQL remotos de privacidade, preservação de chave, intervalo entre testes e deduplicação passaram, com rollback dos dados temporários. Não houve envio real nem ativação do Auth Hook remoto.
 
 ## Configuração pelo administrador
 
@@ -20,7 +20,7 @@ O plano gratuito inclui 300 envios por dia, sem acumular cota não usada. Mensag
 
 Esta é uma configuração única da infraestrutura; a chave Brevo continua sendo gerenciada pelo admin do aplicativo.
 
-1. Após renovar o login, confira a identidade/projeto e aplique **somente** a migration nova em `nsvgfagjezdduatmbsqq`. O histórico anterior já foi inicializado: não reaplicar o bootstrap nem as migrations antigas. Execute `supabase/tests/brevo.sql` para verificar permissões, preservação de chave, cooldown e deduplicação, com rollback dos dados de teste.
+1. A migration já está aplicada e verificada no `wifome/nsvgfagjezdduatmbsqq`. Não reaplicar o bootstrap nem as migrations antigas. Em outro ambiente, confira a identidade/projeto e o dry-run antes de aplicar migrations; `supabase/tests/brevo.sql` verifica permissões, preservação de chave, cooldown e deduplicação, com rollback dos dados de teste.
 2. Publique a versão validada na Vercel e confirme o endpoint HTTPS `/api/auth/send-email` no domínio final, com frontend/servidor no mesmo banco.
 3. Cadastre e teste a chave pelo admin. No Supabase, configure **Authentication → Hooks → Send Email → HTTP**, URL `https://wifomedelivery.vercel.app/api/auth/send-email`. O hook substitui SMTP; não precisa de um token de gerenciamento Supabase na aplicação. Não usar preview protegido. [Send Email Hook](https://supabase.com/docs/guides/auth/auth-hooks/send-email-hook).
 4. Crie o segredo de assinatura do hook e guarde o mesmo valor no Supabase e na variável privada Vercel `AUTH_EMAIL_HOOK_SECRET`. O backend aceita `v1,whsec_...`. Configure `AUTH_EMAIL_HOOK_ENABLED=true` somente junto com a ativação efetiva do hook, após testar a chave/remetente. Faça novo deployment para carregar essas variáveis quando necessário. Não imprimir o segredo.
@@ -34,4 +34,4 @@ A chave fica criptografada no Vault. Tabelas internas em `brevo_private` têm RL
 
 O Auth Hook valida assinatura Standard Webhooks e timestamp antes de acessar credenciais, limita o corpo e não registra tokens ou endereços. A deduplicação guarda ID/hash/estado com lease e retenção limitada, sem corpo do e-mail. Cada mensagem usa UUID determinístico para a idempotência Brevo, incluindo reconhecimento de requisições já aceitas. [Idempotência Brevo](https://developers.brevo.com/docs/heterogenous-versions-batch-emails).
 
-Testes locais: ACL/privacidade no banco; RPC real com negação a cliente/anônimo e chave oculta; formulário no navegador e envio com provedor **simulado**, sem mensagens externas. Ainda faltam aplicar a migration remota, configurar chave real e verificar entrega/ativação em produção.
+Testes locais: ACL/privacidade no banco; RPC real com negação a cliente/anônimo e chave oculta; formulário no navegador e envio com provedor **simulado**, sem mensagens externas. Os testes SQL também passaram no Supabase remoto. No preview Vercel conectado ao destino, as três ações recusaram clientes/anônimos; o admin consultou metadados sem chave, e salvar/testar sem primeira chave foi recusado. As contas temporárias foram encerradas globalmente e removidas. Ainda faltam configurar chave/remetente reais, ativar o hook no domínio final e verificar entrega em produção.
