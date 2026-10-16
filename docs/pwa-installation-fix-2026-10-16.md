@@ -45,3 +45,11 @@ Limite: a coinstalação física em Android/iPhone e a atualização de ícones 
 Instalações antigas podem manter o ícone anterior no cache do sistema até a atualização. Para receber a nova arte imediatamente, reinstalar pelo link específico do perfil no navegador do celular.
 
 Referências oficiais: [identidade PWA](https://developer.chrome.com/docs/capabilities/pwa-manifest-id), [ícones adaptáveis](https://web.dev/articles/maskable-icon) e [instalação por sistema](https://web.dev/learn/pwa/installation).
+
+## Publicação verificada
+
+Código publicado: `c855b63d8737fb42637e8b3964824459db82545d`. Deployment de produção `dpl_EwAqDQF6eiF3ZvCLATZ6nL7xCC7C`, promovido para <https://pedetrem.vercel.app> na conta `wsnewdesignercontato-6856`, projeto `wifomedelivery`. Confirmação do domínio e commit em 2026-10-16 às 19:44 UTC; build remoto em 30 segundos.
+
+Validação: 130 testes unitários aprovados, lint sem avisos, TypeScript e builds Node/Vercel aprovados. O deployment preparado passou em 18 consultas autenticadas de HTML/manifests/ícones antes da promoção. Depois da promoção, `node scripts/check-pwa-http.mjs https://pedetrem.vercel.app` passou para cliente, estabelecimento e entregador, incluindo o retorno `confirmado=1`. Consulta dos logs de erro desse deployment nos últimos 15 minutos: zero entradas no momento da verificação.
+
+Foram conferidos 451 arquivos de upload, sem arquivos privados, e 316 arquivos públicos contra os segredos efetivos do projeto, sem exposição encontrada. Esta etapa não alterou banco nem a configuração de envio de e-mails. Os limites de instalação física e atualização de ícones antigos descritos acima permanecem.

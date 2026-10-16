@@ -13,6 +13,6 @@ O HTML inicial apontava sempre ao manifesto padrão do cliente. A troca para loj
 - [x] Renderizar manifesto, título Apple, ícone e cor correspondentes no HTML inicial. Não reutilizar prompt de instalação carregado para outro perfil.
 - [x] Gerar artes opacas com fundo colorido de ponta a ponta e marca dentro da área segura; exportar tamanhos próprios de instalação e declarar ícones maskable, comuns e Apple.
 - [x] Testar HTML antes de JavaScript, escopos/destinos, pixels opacos, registro de prompts por perfil e navegação/login, além de regressões, lint, TypeScript e build.
-- [ ] Publicar na conta WS e verificar manifests, arquivos e telas reais. Informar os limites de teste físico de Android/iPhone sem alegar coinstalação observada se não houver dispositivo disponível.
+- [x] Publicar na conta WS e verificar o HTML inicial, manifests e arquivos servidos em produção. Registrar que a verificação visual no navegador e a coinstalação física em Android/iPhone não foram executadas, pois não havia navegador/dispositivo disponível.
 
 Referências oficiais: [identidade do manifesto](https://developer.chrome.com/docs/capabilities/pwa-manifest-id), [ícones adaptáveis e área segura](https://web.dev/articles/maskable-icon), [instalação](https://web.dev/learn/pwa/installation).
