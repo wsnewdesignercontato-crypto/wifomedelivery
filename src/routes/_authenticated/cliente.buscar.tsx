@@ -6,14 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/cliente/buscar")({
-  head: () => ({ meta: [
-    { title: "Cliente — Buscar | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, buscar." },
-    { property: "og:title", content: "Cliente — Buscar | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, buscar." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Buscar | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, buscar." },
+      { property: "og:title", content: "Cliente — Buscar | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, buscar." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: BuscarPage,
 });
 

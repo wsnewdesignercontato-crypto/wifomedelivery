@@ -6,14 +6,16 @@ import { useMyCourier, fmt } from "@/hooks/use-courier";
 import { History } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/entregador/historico")({
-  head: () => ({ meta: [
-    { title: "Entregador — Histórico | PedeTrem" },
-    { name: "description", content: "PedeTrem: entregador, histórico." },
-    { property: "og:title", content: "Entregador — Histórico | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: entregador, histórico." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Entregador — Histórico | PedeTrem" },
+      { name: "description", content: "PedeTrem: entregador, histórico." },
+      { property: "og:title", content: "Entregador — Histórico | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: entregador, histórico." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Historico,
 });
 

@@ -10,6 +10,8 @@ assert.ok(
 const endpoints = [
   ["/", "text/html"],
   ["/auth", "text/html"],
+  ["/termos", "text/html"],
+  ["/privacidade", "text/html"],
   ["/sitemap.xml", "xml"],
   ["/robots.txt", "text/plain"],
   ["/manifest.webmanifest", "json"],

@@ -8,14 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/estoque")({
-  head: () => ({ meta: [
-    { title: "Loja — Estoque | PedeTrem" },
-    { name: "description", content: "PedeTrem: loja, estoque." },
-    { property: "og:title", content: "Loja — Estoque | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: loja, estoque." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Loja — Estoque | PedeTrem" },
+      { name: "description", content: "PedeTrem: loja, estoque." },
+      { property: "og:title", content: "Loja — Estoque | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: loja, estoque." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: EstoquePage,
 });
 

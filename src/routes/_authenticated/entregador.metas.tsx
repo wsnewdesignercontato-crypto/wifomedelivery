@@ -6,14 +6,16 @@ import { useMyCourier, fmt } from "@/hooks/use-courier";
 import { Trophy } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/entregador/metas")({
-  head: () => ({ meta: [
-    { title: "Entregador — Metas | PedeTrem" },
-    { name: "description", content: "PedeTrem: entregador, metas." },
-    { property: "og:title", content: "Entregador — Metas | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: entregador, metas." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Entregador — Metas | PedeTrem" },
+      { name: "description", content: "PedeTrem: entregador, metas." },
+      { property: "og:title", content: "Entregador — Metas | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: entregador, metas." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Metas,
 });
 

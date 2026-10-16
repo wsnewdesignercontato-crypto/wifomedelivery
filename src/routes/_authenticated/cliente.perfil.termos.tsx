@@ -2,42 +2,25 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronLeft, FileText, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/termos")({
-  head: () => ({ meta: [
-    { title: "Cliente — Perfil — Termos | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, perfil, termos." },
-    { property: "og:title", content: "Cliente — Perfil — Termos | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, perfil, termos." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Perfil — Termos | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, perfil, termos." },
+      { property: "og:title", content: "Cliente — Perfil — Termos | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, perfil, termos." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: TermosPage,
 });
 
 const DOCS = [
-  {
-    title: "Termos de uso",
-    desc: "Regras para usar o aplicativo PedeTrem",
-    href: "https://wifome.com.br/termos",
-  },
+  { title: "Termos de uso", desc: "Funcionamento e uso do PedeTrem", href: "/termos" },
   {
     title: "Política de privacidade",
-    desc: "Como tratamos seus dados",
-    href: "https://wifome.com.br/privacidade",
-  },
-  {
-    title: "Política de cookies",
-    desc: "Uso de cookies e tecnologias similares",
-    href: "https://wifome.com.br/cookies",
-  },
-  {
-    title: "LGPD — Seus direitos",
-    desc: "Consulta, exclusão e portabilidade de dados",
-    href: "https://wifome.com.br/lgpd",
-  },
-  {
-    title: "Código de conduta",
-    desc: "Boas práticas para clientes, lojas e entregadores",
-    href: "https://wifome.com.br/conduta",
+    desc: "Dados, localização e armazenamento no dispositivo",
+    href: "/privacidade",
   },
 ];
 

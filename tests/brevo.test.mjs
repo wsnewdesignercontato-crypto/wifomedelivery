@@ -176,7 +176,81 @@ test("sender display names are escaped and reauthentication uses an OTP without 
     "https://nsvgfagjezdduatmbsqq.supabase.co",
     origins,
   );
-  assert.ok(!emails[0].htmlContent.includes("<img"));
+  assert.ok(!emails[0].htmlContent.includes("<img onerror"));
+  assert.ok(emails[0].htmlContent.includes("&lt;img onerror="));
   assert.ok(emails[0].htmlContent.includes("12345678"));
   assert.ok(!emails[0].htmlContent.includes("href="));
+});
+
+test("branded auth emails include the public logo, responsive layout and readable text alternative", () => {
+  const [email] = buildAuthEmails(
+    event,
+    sender,
+    "https://nsvgfagjezdduatmbsqq.supabase.co",
+    origins,
+  );
+  assert.ok(email.htmlContent.includes(`src="${origins[0]}/assets/pedetrem-logo-circle.png"`));
+  assert.ok(email.htmlContent.includes('alt="PedeTrem"'));
+  assert.ok(email.htmlContent.includes("max-width:600px"));
+  assert.ok(email.htmlContent.includes('lang="pt-BR"'));
+  assert.ok(email.htmlContent.includes("Confirmar meu cadastro"));
+  assert.ok(email.textContent.includes("Confirme seu endereço de e-mail"));
+  assert.ok(email.textContent.includes("/auth/v1/verify?"));
+});
+
+test("security notifications are branded informational messages and do not invent confirmation links", () => {
+  for (const action of ["password_changed_notification", "email_changed_notification"]) {
+    const [email] = buildAuthEmails(
+      { user: event.user, email_data: { email_action_type: action, old_email: "old@example.com" } },
+      sender,
+      "https://nsvgfagjezdduatmbsqq.supabase.co",
+      origins,
+    );
+    assert.ok(email.htmlContent.includes('alt="PedeTrem"'));
+    assert.ok(email.htmlContent.includes("Não reconhece esta alteração?"));
+    assert.ok(!email.htmlContent.includes("/auth/v1/verify"));
+    assert.ok(!email.htmlContent.includes("href="));
+    assert.ok(email.textContent.includes("Central de ajuda"));
+  }
+});
+
+test("email change with secure confirmation disabled only addresses the new email", () => {
+  const emails = buildAuthEmails(
+    {
+      user: { email: "old@example.com", new_email: "new@example.com" },
+      email_data: {
+        ...event.email_data,
+        email_action_type: "email_change",
+        token_hash: "new-hash",
+      },
+    },
+    sender,
+    "https://nsvgfagjezdduatmbsqq.supabase.co",
+    origins,
+  );
+  assert.equal(emails.length, 1);
+  assert.equal(emails[0].to[0].email, "new@example.com");
+  assert.ok(emails[0].htmlContent.includes("token=new-hash"));
+});
+
+test("email change security notices go to the previous address, never an address from user metadata", () => {
+  const payload = {
+    user: { email: "new@example.com", user_metadata: { old_email: "attacker@example.com" } },
+    email_data: { email_action_type: "email_changed_notification", old_email: "owner@example.com" },
+  };
+  const [email] = buildAuthEmails(
+    payload,
+    sender,
+    "https://nsvgfagjezdduatmbsqq.supabase.co",
+    origins,
+  );
+  assert.equal(email.to[0].email, "owner@example.com");
+  assert.throws(() =>
+    buildAuthEmails(
+      { ...payload, email_data: { email_action_type: "email_changed_notification" } },
+      sender,
+      "https://nsvgfagjezdduatmbsqq.supabase.co",
+      origins,
+    ),
+  );
 });

@@ -26,15 +26,16 @@ function DashboardPage() {
   const { estab } = useMyEstab();
   const [k, setK] = useState<KPI | null>(null);
 
+  const estabId = estab?.id;
   useEffect(() => {
-    if (!estab) return;
+    if (!estabId) return;
     (async () => {
       const startDay = new Date();
       startDay.setHours(0, 0, 0, 0);
       const { data: orders } = await supabase
         .from("orders")
         .select("status,total_cents,created_at")
-        .eq("establishment_id", estab.id)
+        .eq("establishment_id", estabId)
         .gte("created_at", startDay.toISOString());
       const list = orders ?? [];
       const faturamento = list
@@ -49,7 +50,7 @@ function DashboardPage() {
       const { data: revs } = await supabase
         .from("reviews")
         .select("rating_loja")
-        .eq("establishment_id", estab.id);
+        .eq("establishment_id", estabId);
       const media = revs?.length
         ? revs.reduce((s, r) => s + (r.rating_loja ?? 0), 0) / revs.length
         : 0;
@@ -57,7 +58,7 @@ function DashboardPage() {
       const { count: baixo } = await supabase
         .from("products")
         .select("id", { head: true, count: "exact" })
-        .eq("establishment_id", estab.id)
+        .eq("establishment_id", estabId)
         .lte("estoque", 5)
         .not("estoque", "is", null);
 
@@ -72,7 +73,7 @@ function DashboardPage() {
         estoqueBaixo: baixo ?? 0,
       });
     })();
-  }, [estab?.id]);
+  }, [estabId]);
 
   if (!estab || !k)
     return <div className="text-sm text-muted-foreground">Carregando dashboard…</div>;

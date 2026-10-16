@@ -1,13 +1,18 @@
 -- Checkout and finance are server-authorized transactions; cart snapshots are display data only.
-ALTER TABLE public.orders ADD COLUMN checkout_key uuid;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS checkout_key uuid;
 ALTER TABLE public.orders ADD COLUMN checkout_request jsonb;
-ALTER TABLE public.orders ADD COLUMN coupon_id uuid REFERENCES public.coupons(id) ON DELETE RESTRICT;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS coupon_id uuid REFERENCES public.coupons(id) ON DELETE RESTRICT;
 ALTER TABLE public.orders ADD COLUMN coupon_funder text;
 ALTER TABLE public.orders ADD COLUMN commission_cents integer;
 ALTER TABLE public.orders ADD COLUMN payment_received_at timestamptz;
 ALTER TABLE public.orders ADD COLUMN payment_received_by uuid REFERENCES auth.users(id);
 ALTER TABLE public.orders ADD COLUMN payment_reference text;
-CREATE UNIQUE INDEX orders_checkout_key_unique ON public.orders(cliente_id,checkout_key) WHERE checkout_key IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS orders_customer_checkout_key ON public.orders(cliente_id,checkout_key) WHERE checkout_key IS NOT NULL;
+-- One cancellation handler owns inventory and coupon restoration, including older RPC orders.
+DROP TRIGGER IF EXISTS release_checkout_reservation ON public.orders;
+DROP TRIGGER IF EXISTS aaa_protect_order_amounts ON public.orders;
+-- Preserve the issuer on orders created before this migration.
+UPDATE public.orders SET coupon_funder=CASE WHEN discount_funder='establishment' THEN 'merchant' ELSE 'platform' END WHERE coupon_funder IS NULL;
 ALTER TABLE public.establishment_withdrawals ADD COLUMN request_key uuid;
 ALTER TABLE public.courier_withdrawals ADD COLUMN request_key uuid;
 CREATE UNIQUE INDEX establishment_withdrawals_request_key ON public.establishment_withdrawals(establishment_id,request_key) WHERE request_key IS NOT NULL;
@@ -18,19 +23,55 @@ REVOKE INSERT,UPDATE,DELETE ON public.order_items FROM anon,authenticated;
 REVOKE INSERT,UPDATE,DELETE ON public.platform_ledger FROM anon,authenticated;
 REVOKE INSERT,DELETE ON public.establishment_withdrawals, public.courier_withdrawals FROM anon,authenticated;
 
+-- Both checkout APIs share delivery and operational checks during rolling upgrades.
+CREATE OR REPLACE FUNCTION private.checkout_freight(p_store_id uuid,p_tipo_entrega text,p_endereco jsonb)
+RETURNS integer LANGUAGE plpgsql SET search_path='' AS $$
+DECLARE store public.establishments%ROWTYPE; freight integer; distance_km double precision;
+BEGIN
+ IF p_tipo_entrega IS NULL OR p_tipo_entrega NOT IN ('delivery','pickup') THEN RAISE EXCEPTION 'Invalid fulfillment' USING ERRCODE='22023'; END IF;
+ IF EXISTS(SELECT 1 FROM public.platform_settings WHERE maintenance_mode) THEN RAISE EXCEPTION 'Platform under maintenance' USING ERRCODE='22023'; END IF;
+ SELECT * INTO store FROM public.establishments WHERE id=p_store_id FOR SHARE;
+ IF NOT FOUND OR store.status <> 'aprovado' OR NOT store.is_open THEN RAISE EXCEPTION 'Store closed or unavailable' USING ERRCODE='22023'; END IF;
+ freight := CASE WHEN p_tipo_entrega='pickup' THEN 0 ELSE store.taxa_entrega_cents END;
+ IF freight < 0 THEN RAISE EXCEPTION 'Invalid delivery fee' USING ERRCODE='22023'; END IF;
+ IF p_tipo_entrega='delivery' THEN
+  IF p_endereco IS NULL OR jsonb_typeof(p_endereco)<>'object' OR coalesce(btrim(p_endereco->>'rua'),'')='' OR coalesce(btrim(p_endereco->>'cidade'),'')='' THEN RAISE EXCEPTION 'Delivery address required' USING ERRCODE='22023'; END IF;
+  IF nullif(btrim(store.cidade),'') IS NOT NULL AND lower(btrim(store.cidade)) <> lower(btrim(p_endereco->>'cidade')) THEN RAISE EXCEPTION 'Address outside delivery city' USING ERRCODE='22023'; END IF;
+  IF store.lat IS NOT NULL AND store.lng IS NOT NULL AND p_endereco->>'lat' IS NOT NULL AND p_endereco->>'lng' IS NOT NULL THEN
+   IF abs((p_endereco->>'lat')::numeric)>90 OR abs((p_endereco->>'lng')::numeric)>180 THEN RAISE EXCEPTION 'Invalid coordinates' USING ERRCODE='22023'; END IF;
+   distance_km := 6371*acos(least(1.0,greatest(-1.0,sin(radians(store.lat))*sin(radians((p_endereco->>'lat')::float8))+cos(radians(store.lat))*cos(radians((p_endereco->>'lat')::float8))*cos(radians((p_endereco->>'lng')::float8-store.lng)))));
+   IF distance_km > store.raio_entrega_km THEN RAISE EXCEPTION 'Address outside delivery radius' USING ERRCODE='22023'; END IF;
+  END IF;
+  IF EXISTS(SELECT 1 FROM public.establishment_delivery_zones WHERE establishment_id=store.id AND ativo) THEN
+   SELECT z.taxa_cents INTO freight FROM public.establishment_delivery_zones z WHERE z.establishment_id=store.id AND z.ativo
+    AND ((nullif(btrim(z.bairro),'') IS NOT NULL AND lower(btrim(z.bairro))=lower(btrim(p_endereco->>'bairro'))) OR (z.bairro IS NULL AND z.raio_km IS NOT NULL AND distance_km IS NOT NULL AND distance_km <= z.raio_km)) ORDER BY z.taxa_cents,z.id LIMIT 1;
+   IF NOT FOUND THEN RAISE EXCEPTION 'Address outside configured delivery areas' USING ERRCODE='22023'; END IF;
+  END IF;
+ END IF;
+ RETURN freight;
+END $$;
+REVOKE ALL ON FUNCTION private.checkout_freight(uuid,text,jsonb) FROM PUBLIC,anon,authenticated;
+
 CREATE OR REPLACE FUNCTION private.guard_order_finance() RETURNS trigger
 LANGUAGE plpgsql SET search_path='' AS $$
 BEGIN
  IF TG_OP='INSERT' THEN
   IF current_user='postgres' AND auth.uid() IS NULL THEN RETURN NEW; END IF;
-  IF current_user <> 'postgres' OR current_setting('app.order_write_context',true) IS DISTINCT FROM 'checkout' THEN
+  IF current_user <> 'postgres' THEN
    RAISE EXCEPTION 'Use checkout_order to create orders' USING ERRCODE='42501';
   END IF;
   IF NEW.status <> 'placed' THEN RAISE EXCEPTION 'Invalid initial status' USING ERRCODE='42501'; END IF;
- ELSIF ROW(NEW.cliente_id,NEW.establishment_id,NEW.subtotal_cents,NEW.frete_cents,NEW.desconto_cents,NEW.total_cents,NEW.forma_pagamento,NEW.tipo_entrega,NEW.endereco_entrega,NEW.checkout_key,NEW.checkout_request,NEW.coupon_id,NEW.coupon_funder,NEW.commission_cents)
-  IS DISTINCT FROM ROW(OLD.cliente_id,OLD.establishment_id,OLD.subtotal_cents,OLD.frete_cents,OLD.desconto_cents,OLD.total_cents,OLD.forma_pagamento,OLD.tipo_entrega,OLD.endereco_entrega,OLD.checkout_key,OLD.checkout_request,OLD.coupon_id,OLD.coupon_funder,OLD.commission_cents) THEN
+  IF NEW.checkout_key IS NOT NULL AND auth.uid() IS NOT NULL AND NEW.frete_cents IS DISTINCT FROM private.checkout_freight(NEW.establishment_id,NEW.tipo_entrega,NEW.endereco_entrega) THEN
+   RAISE EXCEPTION 'CHECKOUT_QUOTE_CHANGED: Atualize a pagina para conferir a taxa de entrega.' USING ERRCODE='22023';
+  END IF;
+  NEW.coupon_funder:=coalesce(NEW.coupon_funder,CASE WHEN NEW.discount_funder='establishment' THEN 'merchant' ELSE 'platform' END);
+  NEW.discount_funder:=CASE WHEN NEW.coupon_funder='merchant' THEN 'establishment' ELSE 'platform' END;
+  IF NEW.commission_cents IS NULL THEN NEW.commission_cents:=round(NEW.subtotal_cents*least(100,greatest(0,coalesce((SELECT commission_pct FROM public.platform_settings WHERE id=1),15)))/100)::integer; END IF;
+ ELSIF ROW(NEW.id,NEW.created_at,NEW.quote_fingerprint,NEW.discount_funder,NEW.cliente_id,NEW.establishment_id,NEW.subtotal_cents,NEW.frete_cents,NEW.desconto_cents,NEW.total_cents,NEW.forma_pagamento,NEW.tipo_entrega,NEW.endereco_entrega,NEW.checkout_key,NEW.checkout_request,NEW.coupon_id,NEW.coupon_funder,NEW.commission_cents)
+  IS DISTINCT FROM ROW(OLD.id,OLD.created_at,OLD.quote_fingerprint,OLD.discount_funder,OLD.cliente_id,OLD.establishment_id,OLD.subtotal_cents,OLD.frete_cents,OLD.desconto_cents,OLD.total_cents,OLD.forma_pagamento,OLD.tipo_entrega,OLD.endereco_entrega,OLD.checkout_key,OLD.checkout_request,OLD.coupon_id,OLD.coupon_funder,OLD.commission_cents) THEN
   RAISE EXCEPTION 'Confirmed order financial fields are immutable' USING ERRCODE='42501';
  END IF;
+ IF TG_OP='UPDATE' AND NEW.inventory_released_at IS DISTINCT FROM OLD.inventory_released_at AND current_user<>'postgres' THEN RAISE EXCEPTION 'Inventory restoration is managed by the server' USING ERRCODE='42501'; END IF;
  IF TG_OP='UPDATE' AND ROW(NEW.payment_received_at,NEW.payment_received_by,NEW.payment_reference,NEW.dinheiro_recebido)
   IS DISTINCT FROM ROW(OLD.payment_received_at,OLD.payment_received_by,OLD.payment_reference,OLD.dinheiro_recebido)
   AND (current_user <> 'postgres' OR current_setting('app.order_write_context',true) IS DISTINCT FROM 'settlement') THEN
@@ -52,7 +93,7 @@ BEGIN
  IF current_user='postgres' AND auth.uid() IS NULL THEN RETURN NEW; END IF;
  -- The product FK may clear its reference on deletion; the receipt snapshot stays immutable.
  IF TG_OP='UPDATE' AND NEW.product_id IS NULL AND OLD.product_id IS NOT NULL AND (to_jsonb(NEW)-'product_id')=(to_jsonb(OLD)-'product_id') AND NOT EXISTS(SELECT 1 FROM public.products WHERE id=OLD.product_id) THEN RETURN NEW; END IF;
- IF TG_OP <> 'INSERT' OR current_user <> 'postgres' OR current_setting('app.order_write_context',true) IS DISTINCT FROM 'checkout' THEN
+ IF TG_OP <> 'INSERT' OR current_user <> 'postgres' THEN
   RAISE EXCEPTION 'Confirmed order items are immutable' USING ERRCODE='42501';
  END IF;
  RETURN NEW;
@@ -68,7 +109,7 @@ DECLARE
  unit_price integer; subtotal bigint := 0; freight integer; discount integer := 0; total integer;
  coupon public.coupons%ROWTYPE; coupon_code text := nullif(upper(btrim(p_coupon_code)),'');
  request jsonb; existing public.orders%ROWTYPE; order_id uuid; commission integer; pct numeric;
- previous_context text := current_setting('app.order_write_context',true); distance_km double precision;
+ previous_context text := current_setting('app.order_write_context',true);
  needed_products jsonb:='{}'; needed_addons jsonb:='{}'; needed integer; stock record;
 BEGIN
  IF uid IS NULL THEN RAISE EXCEPTION 'Authentication required' USING ERRCODE='42501'; END IF;
@@ -85,25 +126,8 @@ BEGIN
  END IF;
  -- Lock the customer's cart across different keys too.
  PERFORM pg_advisory_xact_lock(hashtextextended('cart:'||uid::text,0));
- IF EXISTS(SELECT 1 FROM public.platform_settings WHERE maintenance_mode) THEN RAISE EXCEPTION 'Platform under maintenance' USING ERRCODE='22023'; END IF;
  SELECT * INTO store FROM public.establishments WHERE id=p_establishment_id FOR SHARE;
- IF NOT FOUND OR store.status <> 'aprovado' OR NOT store.is_open THEN RAISE EXCEPTION 'Store closed or unavailable' USING ERRCODE='22023'; END IF;
- freight := CASE WHEN p_tipo_entrega='pickup' THEN 0 ELSE store.taxa_entrega_cents END;
- IF freight < 0 THEN RAISE EXCEPTION 'Invalid delivery fee' USING ERRCODE='22023'; END IF;
- IF p_tipo_entrega='delivery' THEN
-  IF p_endereco IS NULL OR jsonb_typeof(p_endereco)<>'object' OR coalesce(btrim(p_endereco->>'rua'),'')='' OR coalesce(btrim(p_endereco->>'cidade'),'')='' THEN RAISE EXCEPTION 'Delivery address required' USING ERRCODE='22023'; END IF;
-  IF nullif(btrim(store.cidade),'') IS NOT NULL AND lower(btrim(store.cidade)) <> lower(btrim(p_endereco->>'cidade')) THEN RAISE EXCEPTION 'Address outside delivery city' USING ERRCODE='22023'; END IF;
-  IF store.lat IS NOT NULL AND store.lng IS NOT NULL AND p_endereco->>'lat' IS NOT NULL AND p_endereco->>'lng' IS NOT NULL THEN
-   IF abs((p_endereco->>'lat')::numeric)>90 OR abs((p_endereco->>'lng')::numeric)>180 THEN RAISE EXCEPTION 'Invalid coordinates' USING ERRCODE='22023'; END IF;
-   distance_km := 6371*acos(least(1.0,greatest(-1.0,sin(radians(store.lat))*sin(radians((p_endereco->>'lat')::float8))+cos(radians(store.lat))*cos(radians((p_endereco->>'lat')::float8))*cos(radians((p_endereco->>'lng')::float8-store.lng)))));
-   IF distance_km > store.raio_entrega_km THEN RAISE EXCEPTION 'Address outside delivery radius' USING ERRCODE='22023'; END IF;
-  END IF;
-  IF EXISTS(SELECT 1 FROM public.establishment_delivery_zones WHERE establishment_id=store.id AND ativo) THEN
-   SELECT z.taxa_cents INTO freight FROM public.establishment_delivery_zones z WHERE z.establishment_id=store.id AND z.ativo
-    AND ((nullif(btrim(z.bairro),'') IS NOT NULL AND lower(btrim(z.bairro))=lower(btrim(p_endereco->>'bairro'))) OR (z.bairro IS NULL AND z.raio_km IS NOT NULL AND distance_km IS NOT NULL AND distance_km <= z.raio_km)) ORDER BY z.taxa_cents,z.id LIMIT 1;
-   IF NOT FOUND THEN RAISE EXCEPTION 'Address outside configured delivery areas' USING ERRCODE='22023'; END IF;
-  END IF;
- END IF;
+ freight:=private.checkout_freight(p_establishment_id,p_tipo_entrega,p_endereco);
  FOR item IN SELECT * FROM public.cart_items WHERE user_id=uid AND establishment_id=store.id ORDER BY product_id,id FOR UPDATE LOOP
   IF item.quantidade NOT BETWEEN 1 AND 99 OR length(coalesce(item.observacoes,''))>500 OR jsonb_typeof(item.addons)<>'array' OR jsonb_array_length(item.addons)>100 THEN RAISE EXCEPTION 'Invalid cart item' USING ERRCODE='22023'; END IF;
   SELECT * INTO product FROM public.products WHERE id=item.product_id FOR UPDATE;
@@ -129,7 +153,7 @@ BEGIN
   END LOOP;
   subtotal := subtotal+unit_price::bigint*item.quantidade;
   IF subtotal>2147480000 THEN RAISE EXCEPTION 'Order amount too large' USING ERRCODE='22023'; END IF;
-  snapshots := snapshots||jsonb_build_array(jsonb_build_object('product_id',product.id,'nome',product.nome,'price',unit_price,'quantity',item.quantidade,'notes',item.observacoes,'addons',options));
+  snapshots := snapshots||jsonb_build_array(jsonb_build_object('cart_id',item.id,'product_id',product.id,'nome',product.nome,'price',unit_price,'quantity',item.quantidade,'notes',item.observacoes,'addons',options));
  END LOOP;
  IF jsonb_array_length(snapshots)=0 THEN RAISE EXCEPTION 'Empty cart' USING ERRCODE='22023'; END IF;
  IF subtotal < store.pedido_minimo_cents THEN RAISE EXCEPTION 'Minimum order not reached' USING ERRCODE='22023'; END IF;
@@ -157,7 +181,7 @@ BEGIN
  INSERT INTO public.order_items(order_id,product_id,nome_snapshot,preco_unit_cents,quantidade,observacoes,addons)
  SELECT order_id,(x->>'product_id')::uuid,x->>'nome',(x->>'price')::integer,(x->>'quantity')::integer,x->>'notes',x->'addons' FROM jsonb_array_elements(snapshots) x;
  IF coupon.id IS NOT NULL THEN UPDATE public.coupons SET used_count=used_count+1 WHERE id=coupon.id; END IF;
- DELETE FROM public.cart_items WHERE user_id=uid AND establishment_id=store.id;
+ DELETE FROM public.cart_items WHERE user_id=uid AND id IN (SELECT (x->>'cart_id')::uuid FROM jsonb_array_elements(snapshots) x);
  PERFORM set_config('app.order_write_context',coalesce(previous_context,''),true);
  RETURN jsonb_build_object('order_id',order_id,'total_cents',total,'desconto_cents',discount);
 EXCEPTION WHEN OTHERS THEN
@@ -175,13 +199,15 @@ GRANT EXECUTE ON FUNCTION public.quote_order(uuid,uuid,text,text,jsonb,text,text
 CREATE OR REPLACE FUNCTION private.release_cancelled_stock() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 DECLARE item record; choice jsonb;
 BEGIN
- IF NEW.status<>'cancelled' OR OLD.status=NEW.status OR NEW.checkout_key IS NULL THEN RETURN NEW; END IF;
+ IF NEW.status<>'cancelled' OR OLD.status=NEW.status OR NEW.checkout_key IS NULL OR NEW.inventory_released_at IS NOT NULL THEN RETURN NEW; END IF;
  FOR item IN SELECT * FROM public.order_items WHERE order_id=NEW.id ORDER BY product_id,id LOOP
   UPDATE public.products SET estoque=estoque+item.quantidade WHERE id=item.product_id AND estoque IS NOT NULL;
   FOR choice IN SELECT value FROM jsonb_array_elements(item.addons) ORDER BY value->>'id' LOOP
    UPDATE public.addons SET estoque=estoque+item.quantidade WHERE id=(choice->>'id')::uuid AND estoque IS NOT NULL;
   END LOOP;
  END LOOP;
+ IF NEW.coupon_id IS NOT NULL THEN UPDATE public.coupons SET used_count=greatest(0,used_count-1) WHERE id=NEW.coupon_id; END IF;
+ UPDATE public.orders SET inventory_released_at=now() WHERE id=NEW.id;
  RETURN NEW;
 END $$;
 REVOKE ALL ON FUNCTION private.release_cancelled_stock() FROM PUBLIC,anon,authenticated;
@@ -198,11 +224,11 @@ BEGIN
   commission:=coalesce(NEW.commission_cents,round(NEW.subtotal_cents*coalesce((SELECT commission_pct FROM public.platform_settings WHERE id=1),15)/100)::integer);
   SELECT entregador_id INTO courier FROM public.deliveries WHERE order_id=NEW.id LIMIT 1;
   courier_amount:=CASE WHEN NEW.tipo_entrega='pickup' THEN 0 ELSE NEW.frete_cents END;
-  merchant:=NEW.subtotal_cents-commission-CASE WHEN NEW.coupon_funder='merchant' THEN NEW.desconto_cents ELSE 0 END;
+  merchant:=NEW.subtotal_cents-commission-CASE WHEN coalesce(NEW.coupon_funder,CASE WHEN NEW.discount_funder='establishment' THEN 'merchant' ELSE 'platform' END)='merchant' THEN NEW.desconto_cents ELSE 0 END;
   platform:=NEW.total_cents-merchant-courier_amount;
   IF NOT EXISTS(SELECT 1 FROM public.platform_ledger WHERE order_id=NEW.id) THEN
-   INSERT INTO public.platform_ledger(order_id,establishment_id,courier_id,gross_cents,commission_cents,delivery_fee_cents,courier_payout_cents,merchant_payout_cents,platform_revenue_cents,status)
-   VALUES(NEW.id,NEW.establishment_id,courier,NEW.total_cents,commission,NEW.frete_cents,courier_amount,merchant,platform,'pending');
+   INSERT INTO public.platform_ledger(order_id,establishment_id,courier_id,gross_cents,commission_cents,delivery_fee_cents,courier_payout_cents,merchant_payout_cents,platform_revenue_cents,status,discount_cents,discount_funder)
+   VALUES(NEW.id,NEW.establishment_id,courier,NEW.total_cents,commission,NEW.frete_cents,courier_amount,merchant,platform,'pending',NEW.desconto_cents,NEW.discount_funder);
   END IF;
  END IF;
  RETURN NEW;

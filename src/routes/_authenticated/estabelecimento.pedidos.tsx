@@ -233,12 +233,10 @@ function PedidosPage() {
     if (!codigo) return;
 
     // Confirma retirada atomicamente via RPC
-    const { data: rpcRes, error: rpcErr } = await supabase.rpc("confirm_pickup_order" as any, {
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("confirm_pickup_order", {
       p_order_id: order.id,
       p_codigo: codigo,
     });
-
-    const result = rpcRes as any;
 
     if (rpcErr) {
       toast.error("Não foi possível confirmar a retirada", {
@@ -607,12 +605,14 @@ function PrinterSettingsDialog() {
   const [saving, setSaving] = useState(false);
   const [previewHtml, setPreviewHtml] = useState<string>("");
 
+  const printerEnabled = estab?.printer_enabled;
+  const printerAuto = estab?.printer_auto;
+  const printerWidth = estab?.printer_width_mm;
   useEffect(() => {
-    if (!estab) return;
-    setEnabled(!!estab.printer_enabled);
-    setAuto(!!estab.printer_auto);
-    setWidth(String(estab.printer_width_mm ?? 80));
-  }, [estab?.id, estab?.printer_enabled, estab?.printer_auto, estab?.printer_width_mm]);
+    setEnabled(!!printerEnabled);
+    setAuto(!!printerAuto);
+    setWidth(String(printerWidth ?? 80));
+  }, [printerEnabled, printerAuto, printerWidth]);
 
   function buildSample() {
     const w = parseInt(width) === 58 ? 58 : 80;

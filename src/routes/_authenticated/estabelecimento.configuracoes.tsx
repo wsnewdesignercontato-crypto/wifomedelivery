@@ -106,8 +106,10 @@ function ConfigPage() {
   const logoRef = useRef<HTMLInputElement>(null);
   const capaRef = useRef<HTMLInputElement>(null);
 
+  const initializedId = useRef<string | null>(null);
   useEffect(() => {
-    if (!estab) return;
+    if (!estab || initializedId.current === estab.id) return;
+    initializedId.current = estab.id;
     setForm({
       nome: estab.nome,
       razao_social: estab.razao_social ?? "",
@@ -135,18 +137,20 @@ function ConfigPage() {
       banco_titular: estab.banco_titular ?? "",
       banco_documento: estab.banco_documento ?? "",
     });
-  }, [estab?.id]);
+  }, [estab]);
 
-  // Sync UF/cidade/endereço vindos do banco sem sobrescrever edições em andamento
+  // Fill missing location fields without overwriting edits in progress.
+  const savedState = estab?.estado;
+  const savedCity = estab?.cidade;
+  const savedAddress = estab?.endereco;
   useEffect(() => {
-    if (!estab) return;
     setForm((prev) => ({
       ...prev,
-      estado: prev.estado || (estab.estado ?? ""),
-      cidade: prev.cidade || (estab.cidade ?? ""),
-      endereco: prev.endereco || (estab.endereco ?? ""),
+      estado: prev.estado || savedState || "",
+      cidade: prev.cidade || savedCity || "",
+      endereco: prev.endereco || savedAddress || "",
     }));
-  }, [estab?.estado, estab?.cidade, estab?.endereco]);
+  }, [savedState, savedCity, savedAddress]);
 
   async function uploadImage(file: File, kind: "logo" | "capa") {
     if (!file.type.startsWith("image/")) {

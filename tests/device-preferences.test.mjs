@@ -171,7 +171,7 @@ test("malformed JSON uses defaults and blocked writes still honor choices for th
   const data = browser();
   data.set("wifome:device-prefs", "{broken");
   assert.equal(preferences.readDevicePreferences().som, true);
-  window.localStorage.setItem = () => {
+  globalThis.window.localStorage.setItem = () => {
     throw new Error("QuotaExceededError");
   };
   preferences.updateDevicePreference("som", false);

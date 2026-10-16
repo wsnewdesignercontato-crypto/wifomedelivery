@@ -136,6 +136,15 @@ function AuthPage() {
         return;
       }
       if (data.session) {
+        // A cached JWT may outlive a removed/revoked user. Do not bounce forever
+        // between this page and the server-validated protected route.
+        const { data: verified, error } = await supabase.auth.getUser();
+        if (error || !verified.user) {
+          if (!error || [400, 401, 403, 404].includes(error.status ?? 0))
+            await supabase.auth.signOut({ scope: "local" });
+          setCheckingSession(false);
+          return;
+        }
         finishLogin();
       } else {
         if (confirmado) toast.success("Email confirmado! Agora entre com sua senha.");

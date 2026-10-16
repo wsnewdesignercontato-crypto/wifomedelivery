@@ -4,7 +4,15 @@
 // lanche pede adicionais como bacon/ovo, pizza pede tamanho/borda, etc.
 
 export type CategoryKind =
-  "bebida" | "lanche" | "pizza" | "sobremesa" | "acai" | "marmita" | "pastel" | "sushi" | "outro";
+  | "bebida"
+  | "lanche"
+  | "pizza"
+  | "sobremesa"
+  | "acai"
+  | "marmita"
+  | "pastel"
+  | "sushi"
+  | "outro";
 
 const KEYWORDS: Array<[CategoryKind, RegExp]> = [
   [

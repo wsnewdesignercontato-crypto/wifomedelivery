@@ -15,14 +15,16 @@ import { Switch } from "@/components/ui/switch";
 import { IFomeLogo } from "@/components/ifome-logo";
 
 export const Route = createFileRoute("/_authenticated/admin/notificacoes")({
-  head: () => ({ meta: [
-    { title: "Admin — Notificações | PedeTrem" },
-    { name: "description", content: "PedeTrem: admin, notificações." },
-    { property: "og:title", content: "Admin — Notificações | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: admin, notificações." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Admin — Notificações | PedeTrem" },
+      { name: "description", content: "PedeTrem: admin, notificações." },
+      { property: "og:title", content: "Admin — Notificações | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: admin, notificações." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: NotificacoesPage,
 });
 

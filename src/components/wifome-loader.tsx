@@ -1,7 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import { useEffect, useState } from "react";
+import { useLocation } from "@tanstack/react-router";
 import { Sandwich, Store, Bike } from "lucide-react";
 import { IFomeLogo } from "@/components/ifome-logo";
+import { appProfileFromUrl } from "@/lib/app-profiles";
 
 export type LoaderPerfil = "cliente" | "estabelecimento" | "entregador";
 
@@ -18,9 +19,8 @@ export function detectPerfil(pathname?: string): LoaderPerfil {
   const path =
     pathname ??
     (typeof window !== "undefined" ? window.location.pathname + window.location.search : "");
-  if (path.includes("estabelecimento") || path.includes("estab")) return "estabelecimento";
-  if (path.includes("entregador") || path.includes("courier")) return "entregador";
-  return "cliente";
+  const [route, search = ""] = path.split("?");
+  return appProfileFromUrl(route, search);
 }
 
 function themeClassFor(perfil: LoaderPerfil) {
@@ -75,15 +75,8 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
 
 /** Tela cheia na cor do perfil (laranja/vermelho/verde) com a marca PedeTrem. */
 export function WifomeLoader({ perfil, message }: { perfil?: LoaderPerfil; message?: string }) {
-  const [resolved, setResolved] = useState<LoaderPerfil>(perfil ?? "cliente");
-
-  useEffect(() => {
-    if (perfil) {
-      setResolved(perfil);
-      return;
-    }
-    setResolved(detectPerfil());
-  }, [perfil]);
+  const location = useLocation();
+  const resolved = perfil ?? detectPerfil(location.pathname + location.searchStr);
 
   return (
     <div
@@ -93,7 +86,7 @@ export function WifomeLoader({ perfil, message }: { perfil?: LoaderPerfil; messa
       aria-label="Carregando"
     >
       <div className="animate-loader-logo-pop text-center">
-        <IFomeLogo size="lg" showWord={false} />
+        <IFomeLogo size="lg" showWord={false} perfil={resolved} />
         <p className="mt-1 text-xs font-semibold uppercase tracking-[0.25em] text-primary-foreground/70">
           {resolved === "estabelecimento"
             ? "Estabelecimento"

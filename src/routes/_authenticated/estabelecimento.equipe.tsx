@@ -18,14 +18,16 @@ import {
 import { Plus, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/equipe")({
-  head: () => ({ meta: [
-    { title: "Loja — Equipe | PedeTrem" },
-    { name: "description", content: "PedeTrem: loja, equipe." },
-    { property: "og:title", content: "Loja — Equipe | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: loja, equipe." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Loja — Equipe | PedeTrem" },
+      { name: "description", content: "PedeTrem: loja, equipe." },
+      { property: "og:title", content: "Loja — Equipe | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: loja, equipe." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: EquipePage,
 });
 
@@ -59,7 +61,8 @@ function EquipePage() {
 
   async function remover(id: string) {
     if (!confirm("Remover membro?")) return;
-    await supabase.from("team_members").delete().eq("id", id);
+    const { error } = await supabase.from("team_members").delete().eq("id", id);
+    if (error) return toast.error("Não foi possível remover o membro");
     reload();
   }
 
@@ -83,6 +86,11 @@ function EquipePage() {
           </DialogContent>
         </Dialog>
       </div>
+      <p className="text-sm text-muted-foreground">
+        Os convites ficam disponíveis no app para o e-mail informado. Compartilhe o endereço{" "}
+        {typeof window !== "undefined" ? window.location.origin : ""}/equipe com a pessoa convidada.
+        O acesso permite consultar pedidos; não libera configurações ou pagamentos.
+      </p>
       <div className="space-y-2">
         {list.map((m) => (
           <div
@@ -114,7 +122,8 @@ function ConvidarForm({ onSaved }: { onSaved: () => void }) {
   const { estab } = useMyEstab();
   const [f, setF] = useState({ email: "", nome: "", papel: "atendente" });
   async function salvar() {
-    if (!estab || !f.email.trim()) return toast.error("Email obrigatório");
+    if (!estab || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim()))
+      return toast.error("Informe um e-mail válido");
     const { error } = await supabase.from("team_members").insert({
       establishment_id: estab.id,
       email: f.email.trim().toLowerCase(),
@@ -123,7 +132,9 @@ function ConvidarForm({ onSaved }: { onSaved: () => void }) {
     });
     if (error) toast.error("Falha: " + error.message);
     else {
-      toast.success("Convite enviado");
+      toast.success(
+        "Convite criado. A pessoa pode aceitá-lo em Minha equipe, com este e-mail confirmado.",
+      );
       onSaved();
     }
   }

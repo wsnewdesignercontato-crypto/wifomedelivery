@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyEstab, fmt } from "@/hooks/use-my-estab";
@@ -35,14 +35,16 @@ import {
 } from "@/lib/category-templates";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/produtos")({
-  head: () => ({ meta: [
-    { title: "Loja — Produtos | PedeTrem" },
-    { name: "description", content: "PedeTrem: loja, produtos." },
-    { property: "og:title", content: "Loja — Produtos | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: loja, produtos." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Loja — Produtos | PedeTrem" },
+      { name: "description", content: "PedeTrem: loja, produtos." },
+      { property: "og:title", content: "Loja — Produtos | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: loja, produtos." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: ProdutosPage,
 });
 
@@ -70,32 +72,33 @@ function ProdutosPage() {
   const [editing, setEditing] = useState<Produto | null>(null);
   const [openNew, setOpenNew] = useState(false);
 
-  async function reload() {
-    if (!estab) return;
+  const estabId = estab?.id;
+  const reload = useCallback(async () => {
+    if (!estabId) return;
     const { data } = await supabase
       .from("products")
       .select(
         "id,nome,descricao,preco_cents,preco_promo_cents,foto_url,disponivel,estoque,menu_category_id,tempo_preparo_min",
       )
-      .eq("establishment_id", estab.id)
+      .eq("establishment_id", estabId)
       .order("created_at", { ascending: false });
     setProdutos((data ?? []) as Produto[]);
     const { data: c } = await supabase
       .from("menu_categories")
       .select("id,nome")
-      .eq("establishment_id", estab.id)
+      .eq("establishment_id", estabId)
       .order("ordem");
     setCats((c ?? []) as Categoria[]);
     const { data: ag } = await supabase
       .from("addon_groups")
       .select("id,nome")
-      .eq("establishment_id", estab.id)
+      .eq("establishment_id", estabId)
       .order("nome");
     setAddonGroups((ag ?? []) as { id: string; nome: string }[]);
-  }
+  }, [estabId]);
   useEffect(() => {
     reload();
-  }, [estab?.id]);
+  }, [reload]);
 
   async function toggle(p: Produto) {
     await supabase.from("products").update({ disponivel: !p.disponivel }).eq("id", p.id);
@@ -199,24 +202,30 @@ function ProdutosPage() {
             >
               <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-muted shadow-inner">
                 {p.foto_url ? (
-                  <img src={p.foto_url} alt={p.nome} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  <img
+                    src={p.foto_url}
+                    alt={p.nome}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-muted-foreground">
                     <Sparkles className="h-8 w-8 opacity-20" />
                   </div>
                 )}
               </div>
-              
+
               <div className="min-w-0 flex-1 py-1">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h3 className="truncate font-bold text-foreground leading-tight group-hover:text-primary transition-colors">{p.nome}</h3>
+                    <h3 className="truncate font-bold text-foreground leading-tight group-hover:text-primary transition-colors">
+                      {p.nome}
+                    </h3>
                     <p className="line-clamp-1 text-[11px] text-muted-foreground mt-0.5">
                       {p.descricao?.replace(/\[\[extras:[^\]]+\]\]/g, "") || "Sem descrição"}
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="mt-3 flex items-center justify-between">
                   <div className="flex items-baseline gap-2">
                     <span className="text-lg font-black text-primary">{fmt(p.preco_cents)}</span>
@@ -226,19 +235,40 @@ function ProdutosPage() {
                       </span>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center gap-1">
-                    {!p.disponivel && <Badge variant="secondary" className="bg-muted text-[10px] h-5 px-1.5 uppercase font-bold">Pausado</Badge>}
-                    {p.estoque !== null && p.estoque !== undefined && p.estoque <= 5 && <Badge variant="destructive" className="text-[10px] h-5 px-1.5 font-bold">Baixo Estoque</Badge>}
+                    {!p.disponivel && (
+                      <Badge
+                        variant="secondary"
+                        className="bg-muted text-[10px] h-5 px-1.5 uppercase font-bold"
+                      >
+                        Pausado
+                      </Badge>
+                    )}
+                    {p.estoque !== null && p.estoque !== undefined && p.estoque <= 5 && (
+                      <Badge variant="destructive" className="text-[10px] h-5 px-1.5 font-bold">
+                        Baixo Estoque
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>
 
               <div className="absolute right-3 top-3 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-lg" onClick={() => setEditing(p)}>
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="h-8 w-8 rounded-full shadow-lg"
+                  onClick={() => setEditing(p)}
+                >
                   <Pencil className="h-4 w-4" />
                 </Button>
-                <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-lg" onClick={() => duplicar(p)}>
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="h-8 w-8 rounded-full shadow-lg"
+                  onClick={() => duplicar(p)}
+                >
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
@@ -344,7 +374,7 @@ function ProdutoForm({
       });
       setExtras(obj);
     }
-  }, [produto?.id]);
+  }, [produto?.id, produto?.descricao]);
 
   function toggleGroup(id: string) {
     setSelectedGroups((prev) => {
@@ -498,7 +528,9 @@ function ProdutoForm({
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Categoria</Label>
+          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Categoria
+          </Label>
           <Select
             value={form.menu_category_id}
             onValueChange={(v) => setForm({ ...form, menu_category_id: v })}
@@ -517,16 +549,25 @@ function ProdutoForm({
         </div>
 
         <div className="space-y-2">
-          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</Label>
+          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Status
+          </Label>
           <div className="flex h-11 items-center justify-between rounded-xl border border-border bg-muted/30 px-4">
-            <span className="text-sm font-medium">{form.disponivel ? "Disponível para venda" : "Indisponível"}</span>
-            <Switch checked={form.disponivel} onCheckedChange={(v) => setForm({ ...form, disponivel: v })} />
+            <span className="text-sm font-medium">
+              {form.disponivel ? "Disponível para venda" : "Indisponível"}
+            </span>
+            <Switch
+              checked={form.disponivel}
+              onCheckedChange={(v) => setForm({ ...form, disponivel: v })}
+            />
           </div>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Nome do Produto</Label>
+        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          Nome do Produto
+        </Label>
         <Input
           value={form.nome}
           onChange={(e) => setForm({ ...form, nome: e.target.value })}
@@ -537,9 +578,13 @@ function ProdutoForm({
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Preço Base</Label>
+          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Preço Base
+          </Label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">R$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
+              R$
+            </span>
             <Input
               type="number"
               step="0.01"
@@ -551,9 +596,13 @@ function ProdutoForm({
         </div>
 
         <div className="space-y-2">
-          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Preço Promo</Label>
+          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Preço Promo
+          </Label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-500/70">R$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-500/70">
+              R$
+            </span>
             <Input
               type="number"
               step="0.01"
@@ -566,7 +615,9 @@ function ProdutoForm({
         </div>
 
         <div className="col-span-2 md:col-span-1 space-y-2">
-          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Estoque</Label>
+          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Estoque
+          </Label>
           <Input
             type="number"
             value={form.estoque}
@@ -582,11 +633,13 @@ function ProdutoForm({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-primary">
               <Sparkles className="h-4 w-4" />
-              <span className="text-xs font-bold uppercase tracking-wider">Configuração Inteligente: {KIND_LABEL[kind]}</span>
+              <span className="text-xs font-bold uppercase tracking-wider">
+                Configuração Inteligente: {KIND_LABEL[kind]}
+              </span>
             </div>
           </div>
           <p className="text-[11px] text-muted-foreground leading-relaxed">{KIND_HINT[kind]}</p>
-          
+
           <div className="flex flex-wrap gap-2 pt-1">
             {addonTpl.length > 0 && (
               <Button
@@ -596,7 +649,11 @@ function ProdutoForm({
                 onClick={aplicarTemplateComplementos}
                 disabled={applyingTpl}
               >
-                {applyingTpl ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Wand2 className="mr-1 h-3 w-3" />}
+                {applyingTpl ? (
+                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                ) : (
+                  <Wand2 className="mr-1 h-3 w-3" />
+                )}
                 Importar Complementos
               </Button>
             )}
@@ -618,7 +675,9 @@ function ProdutoForm({
         <div className="grid grid-cols-2 gap-4 rounded-xl border border-border bg-muted/10 p-4">
           {extraDefs.map((ed) => (
             <div key={ed.key} className="space-y-2">
-              <Label className="text-[11px] font-bold uppercase text-muted-foreground">{ed.label}</Label>
+              <Label className="text-[11px] font-bold uppercase text-muted-foreground">
+                {ed.label}
+              </Label>
               <div className="relative">
                 <Input
                   value={extras[ed.key] ?? ""}
@@ -638,7 +697,9 @@ function ProdutoForm({
       )}
 
       <div className="space-y-2">
-        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Descrição</Label>
+        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          Descrição
+        </Label>
         <Textarea
           value={form.descricao.replace(/\s*\[\[extras:[^\]]+\]\]\s*$/, "")}
           onChange={(e) => setForm({ ...form, descricao: e.target.value })}
@@ -650,45 +711,73 @@ function ProdutoForm({
       <div className="space-y-4 pt-2">
         <div className="flex items-center justify-between border-b border-border pb-2">
           <h3 className="text-sm font-bold flex items-center gap-2 text-foreground">
-            Variações <Badge variant="outline" className="text-[10px]">{variants.filter(v => !v._deleted).length}</Badge>
+            Variações{" "}
+            <Badge variant="outline" className="text-[10px]">
+              {variants.filter((v) => !v._deleted).length}
+            </Badge>
           </h3>
-          <Button type="button" variant="ghost" size="sm" onClick={addVariant} className="h-8 text-xs text-primary">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={addVariant}
+            className="h-8 text-xs text-primary"
+          >
             <Plus className="mr-1 h-3 w-3" /> Nova variação
           </Button>
         </div>
-        
+
         <div className="space-y-2">
-          {variants.filter((v) => !v._deleted).map((v, i) => {
-            const actualIdx = variants.indexOf(v);
-            return (
-              <div key={i} className="flex items-center gap-2 rounded-xl border border-border p-2 bg-muted/20">
-                <Input
-                  value={v.nome}
-                  onChange={(e) => updVariant(actualIdx, { nome: e.target.value })}
-                  placeholder="Ex: Grande"
-                  className="h-9 flex-1 bg-background text-sm border-none shadow-none focus-visible:ring-0"
-                />
-                <div className="relative w-24">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">R$</span>
+          {variants
+            .filter((v) => !v._deleted)
+            .map((v, i) => {
+              const actualIdx = variants.indexOf(v);
+              return (
+                <div
+                  key={i}
+                  className="flex items-center gap-2 rounded-xl border border-border p-2 bg-muted/20"
+                >
                   <Input
-                    type="number"
-                    value={(v.preco_cents / 100).toFixed(2)}
-                    onChange={(e) => updVariant(actualIdx, { preco_cents: Math.round(parseFloat(e.target.value) * 100) })}
-                    className="h-9 pl-7 bg-background text-sm border-none shadow-none focus-visible:ring-0"
+                    value={v.nome}
+                    onChange={(e) => updVariant(actualIdx, { nome: e.target.value })}
+                    placeholder="Ex: Grande"
+                    className="h-9 flex-1 bg-background text-sm border-none shadow-none focus-visible:ring-0"
                   />
+                  <div className="relative w-24">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
+                      R$
+                    </span>
+                    <Input
+                      type="number"
+                      value={(v.preco_cents / 100).toFixed(2)}
+                      onChange={(e) =>
+                        updVariant(actualIdx, {
+                          preco_cents: Math.round(parseFloat(e.target.value) * 100),
+                        })
+                      }
+                      className="h-9 pl-7 bg-background text-sm border-none shadow-none focus-visible:ring-0"
+                    />
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => delVariant(actualIdx)}
+                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => delVariant(actualIdx)} className="h-8 w-8 text-destructive hover:bg-destructive/10">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            );
-          })}
+              );
+            })}
         </div>
       </div>
 
       <div className="space-y-4 pt-2">
         <h3 className="text-sm font-bold flex items-center gap-2 border-b border-border pb-2 text-foreground">
-          Complementos <Badge variant="outline" className="text-[10px]">{selectedGroups.size}</Badge>
+          Complementos{" "}
+          <Badge variant="outline" className="text-[10px]">
+            {selectedGroups.size}
+          </Badge>
         </h3>
         <div className="grid grid-cols-2 gap-2 max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
           {addonGroups.map((g) => (
@@ -708,7 +797,11 @@ function ProdutoForm({
         </div>
       </div>
 
-      <Button onClick={salvar} disabled={saving} className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20">
+      <Button
+        onClick={salvar}
+        disabled={saving}
+        className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20"
+      >
         {saving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Salvar Alterações"}
       </Button>
     </div>

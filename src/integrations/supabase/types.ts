@@ -1965,6 +1965,7 @@ export type Database = {
           created_at: string;
           desconto_cents: number;
           dinheiro_recebido: boolean;
+          discount_funder: string;
           endereco_entrega: Json | null;
           entrega_metodo_prova: string | null;
           entrega_observacao: string | null;
@@ -1972,12 +1973,14 @@ export type Database = {
           forma_pagamento: Database["public"]["Enums"]["payment_method"];
           frete_cents: number;
           id: string;
+          inventory_released_at: string | null;
           observacoes: string | null;
           payment_received_at: string | null;
           payment_received_by: string | null;
           payment_reference: string | null;
           prova_assinatura: string | null;
           prova_url: string | null;
+          quote_fingerprint: string | null;
           refund_amount_cents: number;
           refund_status: Database["public"]["Enums"]["refund_status"];
           refunded_at: string | null;
@@ -2005,6 +2008,7 @@ export type Database = {
           created_at?: string;
           desconto_cents?: number;
           dinheiro_recebido?: boolean;
+          discount_funder?: string;
           endereco_entrega?: Json | null;
           entrega_metodo_prova?: string | null;
           entrega_observacao?: string | null;
@@ -2012,12 +2016,14 @@ export type Database = {
           forma_pagamento?: Database["public"]["Enums"]["payment_method"];
           frete_cents?: number;
           id?: string;
+          inventory_released_at?: string | null;
           observacoes?: string | null;
           payment_received_at?: string | null;
           payment_received_by?: string | null;
           payment_reference?: string | null;
           prova_assinatura?: string | null;
           prova_url?: string | null;
+          quote_fingerprint?: string | null;
           refund_amount_cents?: number;
           refund_status?: Database["public"]["Enums"]["refund_status"];
           refunded_at?: string | null;
@@ -2045,6 +2051,7 @@ export type Database = {
           created_at?: string;
           desconto_cents?: number;
           dinheiro_recebido?: boolean;
+          discount_funder?: string;
           endereco_entrega?: Json | null;
           entrega_metodo_prova?: string | null;
           entrega_observacao?: string | null;
@@ -2052,12 +2059,14 @@ export type Database = {
           forma_pagamento?: Database["public"]["Enums"]["payment_method"];
           frete_cents?: number;
           id?: string;
+          inventory_released_at?: string | null;
           observacoes?: string | null;
           payment_received_at?: string | null;
           payment_received_by?: string | null;
           payment_reference?: string | null;
           prova_assinatura?: string | null;
           prova_url?: string | null;
+          quote_fingerprint?: string | null;
           refund_amount_cents?: number;
           refund_status?: Database["public"]["Enums"]["refund_status"];
           refunded_at?: string | null;
@@ -2107,6 +2116,8 @@ export type Database = {
           courier_payout_cents: number;
           created_at: string;
           delivery_fee_cents: number;
+          discount_cents: number;
+          discount_funder: string | null;
           establishment_id: string | null;
           gross_cents: number;
           id: string;
@@ -2121,6 +2132,8 @@ export type Database = {
           courier_payout_cents?: number;
           created_at?: string;
           delivery_fee_cents?: number;
+          discount_cents?: number;
+          discount_funder?: string | null;
           establishment_id?: string | null;
           gross_cents?: number;
           id?: string;
@@ -2135,6 +2148,8 @@ export type Database = {
           courier_payout_cents?: number;
           created_at?: string;
           delivery_fee_cents?: number;
+          discount_cents?: number;
+          discount_funder?: string | null;
           establishment_id?: string | null;
           gross_cents?: number;
           id?: string;
@@ -3180,6 +3195,10 @@ export type Database = {
       };
     };
     Functions: {
+      accept_team_invitation: {
+        Args: { p_invitation: string };
+        Returns: undefined;
+      };
       admin_grant_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"];
@@ -3288,12 +3307,17 @@ export type Database = {
         };
         Returns: boolean;
       };
+      my_team_workspace: { Args: never; Returns: Json };
       public_store_sales: {
         Args: never;
         Returns: {
           establishment_id: string;
           order_count: number;
         }[];
+      };
+      quote_checkout: {
+        Args: { p_coupon?: string; p_establishment: string; p_type?: string };
+        Returns: Json;
       };
       quote_order: {
         Args: {
@@ -3333,6 +3357,19 @@ export type Database = {
       settle_order_payment: {
         Args: { p_order_id: string; p_reference: string };
         Returns: undefined;
+      };
+      submit_checkout: {
+        Args: {
+          p_address: Json;
+          p_coupon: string;
+          p_establishment: string;
+          p_fingerprint: string;
+          p_key: string;
+          p_notes: string;
+          p_payment: string;
+          p_type: string;
+        };
+        Returns: Json;
       };
       vehicle_requires_plate: { Args: { _tipo: string }; Returns: boolean };
       wallet_summary: {

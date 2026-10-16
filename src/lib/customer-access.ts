@@ -21,7 +21,13 @@ export function safeReturnPath(
   if (!value || !value.startsWith(`/${profile}`)) return null;
   try {
     const decoded = decodeURIComponent(value);
-    if (/[\\\u0000-\u001f\u007f]/.test(decoded)) return null;
+    if (
+      decoded.includes("\\") ||
+      [...decoded].some(
+        (character) => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127,
+      )
+    )
+      return null;
     const url = new URL(value, "https://pedetrem.invalid");
     return url.origin === "https://pedetrem.invalid" &&
       new RegExp(`^/${profile}(?:/|$)`).test(url.pathname)

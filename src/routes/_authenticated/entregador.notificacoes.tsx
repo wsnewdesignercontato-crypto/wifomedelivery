@@ -8,14 +8,16 @@ import { PushToggleCard } from "@/components/push-toggle-card";
 import { LocationToggleCard } from "@/components/location-toggle-card";
 
 export const Route = createFileRoute("/_authenticated/entregador/notificacoes")({
-  head: () => ({ meta: [
-    { title: "Entregador — Notificações | PedeTrem" },
-    { name: "description", content: "PedeTrem: entregador, notificações." },
-    { property: "og:title", content: "Entregador — Notificações | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: entregador, notificações." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Entregador — Notificações | PedeTrem" },
+      { name: "description", content: "PedeTrem: entregador, notificações." },
+      { property: "og:title", content: "Entregador — Notificações | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: entregador, notificações." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Notif,
 });
 

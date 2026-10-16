@@ -7,14 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/_authenticated/cliente/carrinho")({
-  head: () => ({ meta: [
-    { title: "Cliente — Carrinho | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, carrinho." },
-    { property: "og:title", content: "Cliente — Carrinho | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, carrinho." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Carrinho | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, carrinho." },
+      { property: "og:title", content: "Cliente — Carrinho | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, carrinho." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: CarrinhoPage,
 });
 

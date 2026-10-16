@@ -282,11 +282,21 @@ function Corridas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courier?.user_id, courier?.aprovacao, courier?.kyc_status]);
 
+  const trackingDeliveryId = ativa?.id;
+  const trackingOrderId = ativa?.order_id;
+  const trackingStatus = ativa?.status;
+  const trackingCourierId = courier?.user_id;
   useEffect(() => {
     const shouldTrack =
-      ativa &&
-      ["to_store", "at_store", "picked_up", "to_customer", "at_customer"].includes(ativa.status);
-    if (!shouldTrack || !courier || !("geolocation" in navigator)) {
+      trackingStatus &&
+      ["to_store", "at_store", "picked_up", "to_customer", "at_customer"].includes(trackingStatus);
+    if (
+      !shouldTrack ||
+      !trackingDeliveryId ||
+      !trackingOrderId ||
+      !trackingCourierId ||
+      !("geolocation" in navigator)
+    ) {
       stopWatchRef.current?.();
       stopWatchRef.current = null;
       return;
@@ -299,10 +309,10 @@ function Corridas() {
         lastSent = now;
         const { latitude: lat, longitude: lng, accuracy, heading, speed } = pos.coords;
         await Promise.all([
-          supabase.from("deliveries").update({ lat, lng }).eq("id", ativa!.id),
+          supabase.from("deliveries").update({ lat, lng }).eq("id", trackingDeliveryId),
           supabase.from("tracking_points").insert({
-            courier_id: courier.user_id,
-            order_id: ativa!.order_id,
+            courier_id: trackingCourierId,
+            order_id: trackingOrderId,
             lat,
             lng,
             accuracy: accuracy ?? null,
@@ -312,7 +322,7 @@ function Corridas() {
           supabase
             .from("courier_profiles")
             .update({ lat, lng, last_seen: new Date().toISOString() })
-            .eq("user_id", courier.user_id),
+            .eq("user_id", trackingCourierId),
         ]);
       },
       (err) => console.warn("GPS error", err),
@@ -322,7 +332,7 @@ function Corridas() {
       stopWatchRef.current?.();
       stopWatchRef.current = null;
     };
-  }, [ativa?.id, ativa?.status, courier?.user_id]);
+  }, [trackingDeliveryId, trackingOrderId, trackingStatus, trackingCourierId]);
 
   async function aceitar(d: Delivery) {
     if (!courier) return;
@@ -413,13 +423,13 @@ function Corridas() {
       prova_url = signed?.signedUrl ?? path;
     }
     // Confirma entrega atomicamente via RPC
-    const { data: rpcRes, error: rpcErr } = await supabase.rpc("confirm_delivery_code" as any, {
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("confirm_delivery_code", {
       p_order_id: ativa.order_id,
       p_code: parsed.data,
       p_prova_url: prova_url ?? undefined,
     });
 
-    const result = rpcRes as any;
+    const result = rpcRes && typeof rpcRes === "object" && !Array.isArray(rpcRes) ? rpcRes : null;
 
     if (rpcErr || (result && result.success === false)) {
       setAdvancing(false);

@@ -24,14 +24,16 @@ import { useMyCourier } from "@/hooks/use-courier";
 import { notifyDataUpdated, DATA_UPDATED_EVENT } from "@/lib/app-refresh";
 
 export const Route = createFileRoute("/_authenticated/entregador/veiculo")({
-  head: () => ({ meta: [
-    { title: "Entregador — Veículo | PedeTrem" },
-    { name: "description", content: "PedeTrem: entregador, veículo." },
-    { property: "og:title", content: "Entregador — Veículo | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: entregador, veículo." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Entregador — Veículo | PedeTrem" },
+      { name: "description", content: "PedeTrem: entregador, veículo." },
+      { property: "og:title", content: "Entregador — Veículo | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: entregador, veículo." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Veiculo,
 });
 

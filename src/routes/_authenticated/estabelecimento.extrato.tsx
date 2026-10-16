@@ -16,14 +16,16 @@ import {
 import { useMyEstab } from "@/hooks/use-my-estab";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/extrato")({
-  head: () => ({ meta: [
-    { title: "Loja — Extrato | PedeTrem" },
-    { name: "description", content: "PedeTrem: loja, extrato." },
-    { property: "og:title", content: "Loja — Extrato | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: loja, extrato." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Loja — Extrato | PedeTrem" },
+      { name: "description", content: "PedeTrem: loja, extrato." },
+      { property: "og:title", content: "Loja — Extrato | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: loja, extrato." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Extrato,
 });
 

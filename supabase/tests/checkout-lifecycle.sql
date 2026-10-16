@@ -36,12 +36,9 @@ DO $$ DECLARE result jsonb; oid uuid; coupon_code text:='LIFE-'||(SELECT id FROM
  UPDATE public.orders SET status='cancelled' WHERE id=oid;
  UPDATE public.orders SET status='cancelled' WHERE id=oid;
  IF (SELECT estoque FROM public.products WHERE id=(SELECT id FROM lifecycle_ids WHERE kind='product'))<>2 OR (SELECT estoque FROM public.addons WHERE id=(SELECT id FROM lifecycle_ids WHERE kind='addon'))<>4 THEN RAISE EXCEPTION 'Cancellation did not restore stock exactly once'; END IF;
+ IF (SELECT used_count FROM public.coupons WHERE id=(SELECT id FROM lifecycle_ids WHERE kind='coupon'))<>0 THEN RAISE EXCEPTION 'Cancellation did not return the coupon reservation'; END IF;
  INSERT INTO public.cart_items(user_id,establishment_id,product_id,nome_snapshot,preco_unit_cents,quantidade,addons)
  VALUES(auth.uid(),(SELECT id FROM lifecycle_ids WHERE kind='store'),(SELECT id FROM lifecycle_ids WHERE kind='product'),'Forged',1,1,jsonb_build_array(jsonb_build_object('id',(SELECT id FROM lifecycle_ids WHERE kind='addon'))));
- BEGIN
-  PERFORM public.checkout_order((SELECT id FROM lifecycle_ids WHERE kind='store'),gen_random_uuid(),'pix','pickup',NULL,NULL,coupon_code);
-  RAISE EXCEPTION 'Exhausted coupon accepted';
- EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
  UPDATE public.cart_items SET addons='[]' WHERE user_id=auth.uid();
  BEGIN
   PERFORM public.checkout_order((SELECT id FROM lifecycle_ids WHERE kind='store'),gen_random_uuid(),'pix','pickup',NULL,NULL,NULL);

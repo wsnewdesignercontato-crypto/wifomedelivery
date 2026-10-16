@@ -6,14 +6,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { brl, dateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/admin/pedidos")({
-  head: () => ({ meta: [
-    { title: "Admin — Pedidos | PedeTrem" },
-    { name: "description", content: "PedeTrem: admin, pedidos." },
-    { property: "og:title", content: "Admin — Pedidos | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: admin, pedidos." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Admin — Pedidos | PedeTrem" },
+      { name: "description", content: "PedeTrem: admin, pedidos." },
+      { property: "og:title", content: "Admin — Pedidos | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: admin, pedidos." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: PedidosPage,
 });
 

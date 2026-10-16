@@ -39,8 +39,16 @@ async function checked(sql, label) {
   assert.equal(result.code, 0, `${label}: ${result.errors}`);
   return result.output;
 }
+async function waitForDatabase(sql, label) {
+  for (let attempt = 0; attempt < 60; attempt++) {
+    if ((await checked(sql, label)).trim() === "t") return;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(`Timed out waiting for ${label}`);
+}
 for (const file of [
   "customer-checkout-contact",
+  "legacy-checkout-compatibility",
   "access-controls",
   "commerce-integrity",
   "checkout-lifecycle",
@@ -146,6 +154,59 @@ try {
     "1",
   );
   console.log("Concurrent last coupon redemption: one success, usage limit preserved");
+
+  // Hold the coupon after the cart cursor has opened, then commit a new item from another tab.
+  const addedProduct = randomUUID();
+  const lockApplication = `cart-lock-${ids.key}`;
+  const checkoutApplication = `cart-checkout-${ids.key}`;
+  await checked(
+    `BEGIN; DELETE FROM public.cart_items WHERE user_id='${ids.customer}';
+    UPDATE public.coupons SET used_count=0,usage_limit=NULL WHERE id='${ids.coupon}';
+    INSERT INTO public.products(id,establishment_id,nome,preco_cents,estoque,disponivel) VALUES('${addedProduct}','${ids.store}','Added in second tab',800,10,true);
+    ${cart(ids.customer)} COMMIT;`,
+    "concurrent cart addition setup",
+  );
+  const blocker = query(
+    `BEGIN; SET application_name='${lockApplication}'; SELECT id FROM public.coupons WHERE id='${ids.coupon}' FOR UPDATE; SELECT pg_sleep(4); COMMIT;`,
+  );
+  await waitForDatabase(
+    `SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE application_name='${lockApplication}' AND wait_event='PgSleep');`,
+    "coupon lock",
+  );
+  const purchasing = query(
+    `SET application_name='${checkoutApplication}'; ${checkout(ids.customer, randomUUID(), couponCode)}`,
+  );
+  await waitForDatabase(
+    `SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE application_name='${checkoutApplication}' AND wait_event_type='Lock');`,
+    "checkout waiting after cart snapshot",
+  );
+  await checked(
+    `INSERT INTO public.cart_items(user_id,establishment_id,product_id,nome_snapshot,preco_unit_cents,quantidade) VALUES('${ids.customer}','${ids.store}','${addedProduct}','Added later',800,1);`,
+    "second tab adds a new product",
+  );
+  const [unlocked, purchased] = await Promise.all([blocker, purchasing]);
+  assert.equal(unlocked.code, 0, unlocked.errors);
+  assert.equal(purchased.code, 0, purchased.errors);
+  assert.equal(
+    (
+      await checked(
+        `SELECT count(*) FROM public.cart_items WHERE user_id='${ids.customer}' AND product_id='${addedProduct}';`,
+        "new cart row remains",
+      )
+    ).trim(),
+    "1",
+    "Checkout must delete only the purchased snapshot rows",
+  );
+  assert.equal(
+    (
+      await checked(
+        `SELECT count(*) FROM public.order_items WHERE product_id='${addedProduct}';`,
+        "new product was not purchased",
+      )
+    ).trim(),
+    "0",
+  );
+  console.log("Concurrent cart addition: unpurchased item remains in cart");
 
   await checked(
     `INSERT INTO public.platform_ledger(order_id,establishment_id,gross_cents,commission_cents,delivery_fee_cents,courier_payout_cents,merchant_payout_cents,platform_revenue_cents,status) SELECT id,establishment_id,2000,0,0,0,2000,0,'paid' FROM public.orders WHERE checkout_key='${ids.key}';`,

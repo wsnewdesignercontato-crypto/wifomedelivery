@@ -12,10 +12,6 @@ import {
   Headphones,
   ArrowRight,
   Check,
-  Instagram,
-  Facebook,
-  Twitter,
-  Music2,
   Percent,
   Wallet,
   ChevronDown,
@@ -717,7 +713,10 @@ function LandingPage() {
       </section>
 
       {/* ============= TRACKING (PREMIUM FLOATING) ============= */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-background via-[oklch(0.99_0.01_60)] to-background py-20 sm:py-28">
+      <section
+        id="entregadores"
+        className="relative overflow-hidden bg-gradient-to-b from-background via-[oklch(0.99_0.01_60)] to-background py-20 sm:py-28"
+      >
         <div
           aria-hidden
           className="pointer-events-none absolute left-1/4 top-1/2 h-[520px] w-[520px] -translate-y-1/2 rounded-full bg-primary/12 blur-3xl"
@@ -884,33 +883,26 @@ function LandingPage() {
               Mais que um app de delivery, uma experiência completa para você, restaurantes e
               entregadores.
             </p>
-            <div className="mt-6 flex justify-center gap-2">
-              {[Instagram, Facebook, Twitter, Music2].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/40 text-white transition hover:bg-white/10 sm:h-9 sm:w-9"
-                  aria-label="Rede social"
-                >
-                  <Icon className="h-4 w-4" />
-                </a>
-              ))}
-            </div>
           </div>
 
           <FooterCol
             title="Links rápidos"
             items={[
-              "Início",
-              "Como funciona",
-              "Para estabelecimentos",
-              "Para entregadores",
-              "Ajuda",
+              { label: "Início", href: "#inicio" },
+              { label: "Como funciona", href: "#como-funciona" },
+              { label: "Para estabelecimentos", href: "#estabelecimentos" },
+              { label: "Para entregadores", href: "#entregadores" },
+              { label: "Ajuda", href: "/cliente/perfil/ajuda" },
             ]}
           />
           <FooterCol
             title="Institucional"
-            items={["Sobre nós", "Carreiras", "Blog", "Política de privacidade", "Termos de uso"]}
+            items={[
+              { label: "Sobre o PedeTrem", href: "#como-funciona" },
+              { label: "Política de privacidade", href: "/privacidade" },
+              { label: "Termos de uso", href: "/termos" },
+              { label: "Minha equipe", href: "/equipe" },
+            ]}
           />
 
           <div className="col-span-2 flex flex-col items-center justify-center text-center sm:col-span-3 lg:col-span-2">
@@ -932,18 +924,18 @@ function LandingPage() {
   );
 }
 
-function FooterCol({ title, items }: { title: string; items: string[] }) {
+function FooterCol({ title, items }: { title: string; items: { label: string; href: string }[] }) {
   return (
     <div>
       <h4 className="text-sm font-bold uppercase tracking-wider text-white">{title}</h4>
       <ul className="mt-4 space-y-2.5">
         {items.map((i) => (
-          <li key={i}>
+          <li key={i.href}>
             <a
-              href="#"
+              href={i.href}
               className="tap-target inline-block py-1 text-sm text-white/85 transition hover:text-white"
             >
-              {i}
+              {i.label}
             </a>
           </li>
         ))}
@@ -955,9 +947,9 @@ function FooterCol({ title, items }: { title: string; items: string[] }) {
 function StoreBadge({ store }: { store: "apple" | "google"; dark?: boolean }) {
   const isApple = store === "apple";
   return (
-    <a
-      href="#"
-      aria-label={isApple ? "Baixar na App Store" : "Baixar no Google Play"}
+    <span
+      role="img"
+      aria-label={isApple ? "App Store: em breve" : "Google Play: em breve"}
       className="group inline-flex h-11 items-center gap-2.5 rounded-xl bg-black px-4 text-white shadow-[0_6px_16px_-6px_rgba(0,0,0,0.35)] ring-1 ring-white/10 transition-transform duration-300 hover:-translate-y-0.5"
     >
       {isApple ? (
@@ -986,6 +978,6 @@ function StoreBadge({ store }: { store: "apple" | "google"; dark?: boolean }) {
           {isApple ? "App Store" : "Google Play"}
         </span>
       </span>
-    </a>
+    </span>
   );
 }

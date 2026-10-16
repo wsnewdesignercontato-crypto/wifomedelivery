@@ -10,14 +10,16 @@ import { Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { getCategoryKind, KIND_LABEL } from "@/lib/category-templates";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/categorias")({
-  head: () => ({ meta: [
-    { title: "Loja — Categorias | PedeTrem" },
-    { name: "description", content: "PedeTrem: loja, categorias." },
-    { property: "og:title", content: "Loja — Categorias | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: loja, categorias." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Loja — Categorias | PedeTrem" },
+      { name: "description", content: "PedeTrem: loja, categorias." },
+      { property: "og:title", content: "Loja — Categorias | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: loja, categorias." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: CategoriasPage,
 });
 
