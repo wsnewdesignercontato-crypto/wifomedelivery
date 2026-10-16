@@ -2,9 +2,9 @@
    Não faz cache de app shell: serve apenas para notificações em segundo plano. */
 
 const ICONS = {
-  cliente: "/pedetrem-icon-192.png",
-  estabelecimento: "/pedetrem-estabelecimento.png",
-  entregador: "/pedetrem-entregador.png",
+  cliente: "/icons/cliente-any-192-v2.png",
+  estabelecimento: "/icons/estabelecimento-any-192-v2.png",
+  entregador: "/icons/entregador-any-192-v2.png",
 };
 
 self.addEventListener("install", () => self.skipWaiting());
@@ -60,8 +60,12 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(
     (async () => {
       const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      const target = new URL(url, self.location.origin);
+      const role = target.pathname.split("/")[1];
       for (const client of all) {
-        if (client.url.includes(self.location.origin)) {
+        const current = new URL(client.url);
+        // Three installed apps may be open; do not navigate another profile's window.
+        if (current.origin === target.origin && current.pathname.split("/")[1] === role) {
           await client.focus();
           if ("navigate" in client) {
             try {

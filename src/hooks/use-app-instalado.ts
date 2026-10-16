@@ -5,6 +5,7 @@ import {
   systemInstallationEvidence,
   type PerfilApp,
 } from "@/lib/app-profiles";
+import { isProfileInstallDocument } from "@/lib/install-document";
 export type { PerfilApp } from "@/lib/app-profiles";
 type InstallNavigator = Navigator & {
   standalone?: boolean;
@@ -58,10 +59,12 @@ export function useAppInstalado(profile: PerfilApp) {
       if (active && document.visibilityState !== "hidden") void revalidar();
     };
     const installed = () => {
+      if (!isProfileInstallDocument(profile)) return;
       sessionConfirmed.add(profile);
       if (active) setInstalado(true);
     };
     const installable = () => {
+      if (!isProfileInstallDocument(profile)) return;
       sessionConfirmed.delete(profile);
       if (active) setInstalado(false);
     };

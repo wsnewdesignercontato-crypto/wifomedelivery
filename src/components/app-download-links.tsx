@@ -3,6 +3,7 @@ import { Download } from "lucide-react";
 import { APP_PROFILES, type PerfilApp } from "@/lib/app-profiles";
 import { useAppInstalado } from "@/hooks/use-app-instalado";
 import { PUSH_SW_URL } from "@/lib/push-config";
+import { isProfileInstallDocument } from "@/lib/install-document";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,38 +23,17 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
   const [busy, setBusy] = useState(false);
   const { instalado, revalidar } = useAppInstalado(perfilAtual);
   useEffect(() => {
-    let link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
-    if (!link) {
-      link = document.createElement("link");
-      link.rel = "manifest";
-      document.head.appendChild(link);
-    }
-    link.href = app.manifest;
     if ("serviceWorker" in navigator)
       void navigator.serviceWorker.register(PUSH_SW_URL, { scope: "/" }).catch(() => {
         /* Manual installation remains available. */
       });
-    for (const [name, content] of [
-      ["apple-mobile-web-app-title", app.shortName],
-      ["theme-color", app.color],
-    ]) {
-      let meta = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
-      if (!meta) {
-        meta = document.createElement("meta");
-        meta.name = name;
-        document.head.appendChild(meta);
-      }
-      meta.content = content;
-    }
-    const apple = document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]');
-    if (apple) apple.href = app.icon;
-    const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
-    if (icon) icon.href = app.icon;
     const onPrompt = (event: Event) => {
       event.preventDefault();
+      if (!isProfileInstallDocument(perfilAtual)) return;
       setDeferred(event as InstallEvent);
     };
     const onInstalled = () => {
+      if (!isProfileInstallDocument(perfilAtual)) return;
       setDeferred(null);
       setHelp(false);
     };
@@ -63,9 +43,13 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
       window.removeEventListener("beforeinstallprompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
     };
-  }, [app]);
+  }, [perfilAtual]);
   async function install() {
     if (busy) return;
+    if (!isProfileInstallDocument(perfilAtual)) {
+      window.location.assign(app.loginPath);
+      return;
+    }
     if (!deferred) {
       setHelp(true);
       return;
@@ -137,7 +121,23 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
             Se já instalou, abra pelo ícone da tela inicial. Alguns navegadores não informam ao site
             se o aplicativo está instalado.
           </p>
-          <Button onClick={() => setHelp(false)}>Entendi</Button>
+          <p className="text-xs text-muted-foreground">
+            Para instalar outro perfil, abra o link correspondente no navegador do celular, fora do
+            aplicativo já instalado.
+          </p>
+          <Button asChild variant="outline">
+            <a href={app.loginPath} target="_blank" rel="noopener noreferrer">
+              Abrir no navegador
+            </a>
+          </Button>
+          {deferred && (
+            <Button disabled={busy} onClick={() => void install()}>
+              Instalar agora
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => setHelp(false)}>
+            Entendi
+          </Button>
         </DialogContent>
       </Dialog>
     </div>

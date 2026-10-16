@@ -1,5 +1,5 @@
 import { ESTABLISHMENT_SELECT } from "@/lib/data-access";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Store } from "lucide-react";
@@ -39,6 +39,12 @@ export const Route = createFileRoute("/_authenticated/estabelecimento")({
 type Categoria = { id: string; nome: string };
 
 function EstabLayout() {
+  const location = useLocation();
+  if (location.pathname.replace(/\/$/, "") === "/estabelecimento/entrar") return <Outlet />;
+  return <EstabWorkspace />;
+}
+
+function EstabWorkspace() {
   const { user } = Route.useRouteContext() as { user: { id: string } };
   const { data: estab, isLoading } = useEstab(user.id);
 

@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Bike } from "lucide-react";
@@ -28,6 +28,12 @@ export const Route = createFileRoute("/_authenticated/entregador")({
 });
 
 function EntregadorLayout() {
+  const location = useLocation();
+  if (location.pathname.replace(/\/$/, "") === "/entregador/entrar") return <Outlet />;
+  return <EntregadorWorkspace />;
+}
+
+function EntregadorWorkspace() {
   const { courier, userId, isLoading } = useMyCourier();
   const qc = useQueryClient();
   const [form, setForm] = useState({ veiculo: "moto", placa: "", cnh: "", pix: "", telefone: "" });

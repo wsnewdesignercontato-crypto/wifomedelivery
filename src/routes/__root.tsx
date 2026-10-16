@@ -18,8 +18,9 @@ import { InstallAppPrompt } from "@/components/install-app-prompt";
 
 import { IFomeLogo } from "@/components/ifome-logo";
 import { APP_URL } from "@/lib/app-config";
+import { APP_PROFILES, appProfileFromUrl } from "@/lib/app-profiles";
 
-const BRAND_LOGO_URL = "/pedetrem-icon-512.png";
+const BRAND_LOGO_URL = APP_PROFILES.cliente.icon;
 
 function NotFoundComponent() {
   return (
@@ -80,67 +81,73 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "PedeTrem — Peça em minutos, receba em casa" },
-      {
-        name: "description",
-        content:
-          "PedeTrem é a plataforma de delivery que conecta clientes, restaurantes e entregadores em tempo real. Peça sua comida favorita e acompanhe cada etapa.",
-      },
-      { name: "theme-color", content: "#E10B17" },
-      { property: "og:site_name", content: "PedeTrem" },
-      { property: "og:title", content: "PedeTrem — Delivery em tempo real" },
-      {
-        property: "og:description",
-        content:
-          "Descubra restaurantes próximos, faça seu pedido e acompanhe a entrega ao vivo. Tudo em um só lugar.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-title", content: "PedeTrem" },
-      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-    ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/png", href: "/favicon.png" },
-      { rel: "apple-touch-icon", href: BRAND_LOGO_URL },
-      { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
-      },
-    ],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          name: "PedeTrem",
-          url: APP_URL,
-          logo: `${APP_URL}${BRAND_LOGO_URL}`,
-          description:
-            "Plataforma de delivery que conecta clientes, restaurantes e entregadores em tempo real.",
-        }),
-      },
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: "PedeTrem",
-          url: APP_URL,
-        }),
-      },
-    ],
+  beforeLoad: ({ location }) => ({
+    installationProfile: appProfileFromUrl(location.pathname, location.searchStr),
   }),
+  head: ({ match }) => {
+    const app = APP_PROFILES[match.context.installationProfile];
+    return {
+      meta: [
+        { charSet: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        { title: "PedeTrem — Peça em minutos, receba em casa" },
+        {
+          name: "description",
+          content:
+            "PedeTrem é a plataforma de delivery que conecta clientes, restaurantes e entregadores em tempo real. Peça sua comida favorita e acompanhe cada etapa.",
+        },
+        { name: "theme-color", content: app.color },
+        { property: "og:site_name", content: "PedeTrem" },
+        { property: "og:title", content: "PedeTrem — Delivery em tempo real" },
+        {
+          property: "og:description",
+          content:
+            "Descubra restaurantes próximos, faça seu pedido e acompanhe a entrega ao vivo. Tudo em um só lugar.",
+        },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-title", content: app.shortName },
+        { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      ],
+      links: [
+        { rel: "stylesheet", href: appCss },
+        { rel: "icon", type: "image/png", href: app.icon },
+        { rel: "apple-touch-icon", href: app.appleIcon },
+        { rel: "manifest", href: app.manifest },
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
+        },
+      ],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "PedeTrem",
+            url: APP_URL,
+            logo: `${APP_URL}${BRAND_LOGO_URL}`,
+            description:
+              "Plataforma de delivery que conecta clientes, restaurantes e entregadores em tempo real.",
+          }),
+        },
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "PedeTrem",
+            url: APP_URL,
+          }),
+        },
+      ],
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,

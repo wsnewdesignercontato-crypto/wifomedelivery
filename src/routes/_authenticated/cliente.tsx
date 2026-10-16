@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { ClienteShell } from "@/components/cliente/cliente-shell";
 
 export const Route = createFileRoute("/_authenticated/cliente")({
@@ -16,6 +16,8 @@ export const Route = createFileRoute("/_authenticated/cliente")({
 });
 
 function ClienteLayout() {
+  const location = useLocation();
   const { user } = Route.useRouteContext() as { user: { id: string; email?: string } };
+  if (location.pathname.replace(/\/$/, "") === "/cliente/entrar") return <Outlet />;
   return <ClienteShell user={user} />;
 }
