@@ -1,3 +1,4 @@
+import { ESTABLISHMENT_SELECT } from "@/lib/data-access";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -22,14 +23,16 @@ import { OnboardingGate } from "@/components/onboarding-gate";
 import { useEstab, type Estab } from "@/hooks/use-estab";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento")({
-  head: () => ({ meta: [
-    { title: "Loja | PedeTrem" },
-    { name: "description", content: "PedeTrem: loja." },
-    { property: "og:title", content: "Loja | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: loja." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Loja | PedeTrem" },
+      { name: "description", content: "PedeTrem: loja." },
+      { property: "og:title", content: "Loja | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: loja." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: EstabLayout,
 });
 
@@ -113,7 +116,7 @@ function SetupForm({ userId }: { userId: string }) {
         is_open: false,
         status: "pendente",
       })
-      .select("*")
+      .select(ESTABLISHMENT_SELECT)
       .single();
     setSaving(false);
     if (error || !data) return toast.error("Falha ao cadastrar");

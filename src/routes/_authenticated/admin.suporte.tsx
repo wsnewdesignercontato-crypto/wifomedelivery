@@ -7,14 +7,18 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/suporte")({
-  head: () => ({ meta: [
-    { title: "Admin — Suporte | PedeTrem" },
-    { name: "description", content: "PedeTrem: admin, suporte." },
-    { property: "og:title", content: "Admin — Suporte | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: admin, suporte." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }), component: SuportePage });
+  head: () => ({
+    meta: [
+      { title: "Admin — Suporte | PedeTrem" },
+      { name: "description", content: "PedeTrem: admin, suporte." },
+      { property: "og:title", content: "Admin — Suporte | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: admin, suporte." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: SuportePage,
+});
 
 type Ticket = {
   id: string;
@@ -95,11 +99,18 @@ function SuportePage() {
       .insert({ ticket_id: sel.id, sender_id: u.user.id, mensagem: text.trim() });
     if (error) return toast.error(error.message);
     setText("");
+    qc.invalidateQueries({ queryKey: ["ticket-msgs", sel.id] });
   }
 
   async function setStatus(status: "closed" | "open" | "pending" | "resolved") {
     if (!sel) return;
-    await supabase.from("support_tickets").update({ status }).eq("id", sel.id);
+    const { data, error } = await supabase
+      .from("support_tickets")
+      .update({ status })
+      .eq("id", sel.id)
+      .select("id")
+      .single();
+    if (error || !data) return toast.error("Não foi possível atualizar o chamado");
     qc.invalidateQueries({ queryKey: ["tickets"] });
     setSel({ ...sel, status });
   }

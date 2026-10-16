@@ -7,22 +7,32 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { isCheckoutPhone } from "@/lib/customer-access";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/conta")({
-  head: () => ({ meta: [
-    { title: "Cliente — Perfil — Conta | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, perfil, conta." },
-    { property: "og:title", content: "Cliente — Perfil — Conta | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, perfil, conta." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  validateSearch: (search: Record<string, unknown>): { checkout?: boolean; cupom?: string } => ({
+    ...(search.checkout === true || search.checkout === "true" ? { checkout: true } : {}),
+    ...(typeof search.cupom === "string" && search.cupom.length <= 50
+      ? { cupom: search.cupom }
+      : {}),
+  }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Perfil — Conta | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, perfil, conta." },
+      { property: "og:title", content: "Cliente — Perfil — Conta | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, perfil, conta." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: ContaPage,
 });
 
 type Profile = { id: string; nome: string; telefone: string | null; foto_url: string | null };
 
 function ContaPage() {
+  const { checkout, cupom } = Route.useSearch();
   const { user } = Route.useRouteContext() as { user: { id: string; email?: string } };
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -74,6 +84,8 @@ function ContaPage() {
 
   async function salvarPerfil() {
     if (!profile) return;
+    if ((checkout || profile.telefone?.trim()) && !isCheckoutPhone(profile.telefone))
+      return toast.error("Informe um telefone com DDD, entre 10 e 15 dígitos.");
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
@@ -81,7 +93,10 @@ function ContaPage() {
       .eq("id", user.id);
     setSaving(false);
     if (error) toast.error(error.message);
-    else toast.success("Perfil atualizado");
+    else {
+      toast.success("Perfil atualizado");
+      if (checkout) navigate({ to: "/cliente/checkout", search: { cupom } });
+    }
   }
 
   async function trocarSenha() {
@@ -128,8 +143,12 @@ function ContaPage() {
             />
           </div>
           <div>
-            <Label>Telefone</Label>
+            <Label htmlFor="profile-phone">Telefone</Label>
             <Input
+              id="profile-phone"
+              type="tel"
+              autoComplete="tel"
+              maxLength={24}
               value={profile?.telefone ?? ""}
               onChange={(e) =>
                 setProfile(profile ? { ...profile, telefone: e.target.value } : null)

@@ -30,14 +30,16 @@ import { useCityDetection } from "@/hooks/use-city-detection";
 import { CitySwitchCard } from "@/components/cliente/city-switch-card";
 
 export const Route = createFileRoute("/_authenticated/cliente/")({
-  head: () => ({ meta: [
-    { title: "Cliente — Início | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, início." },
-    { property: "og:title", content: "Cliente — Início | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, início." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Início | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, início." },
+      { property: "og:title", content: "Cliente — Início | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, início." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: ClienteHome,
 });
 
@@ -57,7 +59,7 @@ type Estab = {
 };
 type ActiveLocation = { cidade_ativa: string | null; estado_ativo: string | null };
 type CouponRow = { establishment_id: string | null; expires_at: string | null };
-type OrderCountRow = { establishment_id: string | null };
+type OrderCountRow = { establishment_id: string | null; order_count: number };
 type PlatformSettings = { bestseller_threshold: number | null; ad_default_seconds: number | null };
 type EstablishmentHourRow = { establishment_id: string; abre: string | null; fecha: string | null };
 type ReviewCountRow = { establishment_id: string | null };
@@ -227,7 +229,7 @@ function ClienteHome() {
           .order("ordem"),
         estabQ.order("avaliacao", { ascending: false, nullsFirst: false }),
         supabase.from("coupons").select("establishment_id,expires_at,ativo").eq("ativo", true),
-        supabase.from("orders").select("establishment_id").eq("status", "delivered"),
+        supabase.rpc("public_store_sales"),
         supabase
           .from("public_platform_settings")
           .select("bestseller_threshold, ad_default_seconds")
@@ -243,7 +245,7 @@ function ClienteHome() {
       setPromoIds(promos);
       const counts: Record<string, number> = {};
       (od.data ?? []).forEach((r: OrderCountRow) => {
-        if (r.establishment_id) counts[r.establishment_id] = (counts[r.establishment_id] ?? 0) + 1;
+        if (r.establishment_id) counts[r.establishment_id] = r.order_count;
       });
       setSalesCount(counts);
       const platformSettings = ps.data as PlatformSettings | null;

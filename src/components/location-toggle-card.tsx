@@ -3,22 +3,17 @@ import { MapPin, MapPinOff } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { PermissionHelpDialog } from "@/components/permission-help-dialog";
-
-const KEY = "wifome:location-enabled";
+import { useDevicePreferences } from "@/hooks/use-device-preferences";
 
 /** Cartão para ligar/desligar o uso da localização (GPS) do aparelho. */
 export function LocationToggleCard({ className = "" }: { className?: string }) {
   const supported = typeof navigator !== "undefined" && "geolocation" in navigator;
-  const [enabled, setEnabled] = useState(false);
+  const { prefs, updatePreference } = useDevicePreferences();
+  const enabled = prefs.localizacao;
   const [permission, setPermission] = useState<PermissionState | "unknown">("unknown");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    try {
-      setEnabled(localStorage.getItem(KEY) === "1");
-    } catch {
-      // Ignore storage failures in private mode.
-    }
     if (typeof navigator !== "undefined" && navigator.permissions?.query) {
       navigator.permissions
         .query({ name: "geolocation" as PermissionName })
@@ -30,43 +25,43 @@ export function LocationToggleCard({ className = "" }: { className?: string }) {
     }
   }, []);
 
-  const toggle = useCallback(async (v: boolean) => {
-    if (!v) {
-      setEnabled(false);
-      localStorage.setItem(KEY, "0");
-      toast.success("Localização desativada no app");
-      return;
-    }
-    if (typeof window !== "undefined" && window.self !== window.top) {
-      toast.error(
-        "Abra o app em uma aba própria (ou pelo ícone instalado no celular) para liberar o GPS — a pré-visualização bloqueia o pedido.",
+  const toggle = useCallback(
+    async (v: boolean) => {
+      if (!v) {
+        updatePreference("localizacao", false);
+        toast.success("Localização desativada no app");
+        return;
+      }
+      if (typeof window !== "undefined" && window.self !== window.top) {
+        toast.error(
+          "Abra o app em uma aba própria (ou pelo ícone instalado no celular) para liberar o GPS — a pré-visualização bloqueia o pedido.",
+        );
+        return;
+      }
+      setBusy(true);
+      // Dispara o pedido de permissão do sistema imediatamente.
+      navigator.geolocation.getCurrentPosition(
+        () => {
+          setBusy(false);
+          updatePreference("localizacao", true);
+          setPermission("granted");
+          toast.success("Localização ativada");
+        },
+        (err) => {
+          setBusy(false);
+          updatePreference("localizacao", false);
+          if (err.code === err.PERMISSION_DENIED) {
+            setPermission("denied");
+            toast.error("Permissão de localização negada. Libere nas configurações do navegador.");
+          } else {
+            toast.error("Não foi possível obter sua localização agora. Tente de novo.");
+          }
+        },
+        { enableHighAccuracy: true, timeout: 10000 },
       );
-      return;
-    }
-    setBusy(true);
-    // Dispara o pedido de permissão do sistema imediatamente.
-    navigator.geolocation.getCurrentPosition(
-      () => {
-        setBusy(false);
-        setEnabled(true);
-        localStorage.setItem(KEY, "1");
-        setPermission("granted");
-        toast.success("Localização ativada");
-      },
-      (err) => {
-        setBusy(false);
-        setEnabled(false);
-        localStorage.setItem(KEY, "0");
-        if (err.code === err.PERMISSION_DENIED) {
-          setPermission("denied");
-          toast.error("Permissão de localização negada. Libere nas configurações do navegador.");
-        } else {
-          toast.error("Não foi possível obter sua localização agora. Tente de novo.");
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
-  }, []);
+    },
+    [updatePreference],
+  );
 
   if (!supported) return null;
 

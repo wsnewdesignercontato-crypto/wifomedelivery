@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { reverseGeocodeCity } from "@/lib/location.functions";
+import { getCurrentDevicePosition, isLocationEnabled } from "@/lib/device-preferences";
+import { useDevicePreferences } from "@/hooks/use-device-preferences";
 
 type Detected = {
   cidade: string;
@@ -31,17 +33,22 @@ async function reverseGeocode(
 }
 
 export function useCityDetection(activeCidade: string | null, activeEstado: string | null) {
+  const { prefs } = useDevicePreferences();
   const [detected, setDetected] = useState<Detected>(null);
 
   useEffect(() => {
     if (typeof window === "undefined" || !navigator.geolocation) return;
+    if (!prefs.localizacao) {
+      setDetected(null);
+      return;
+    }
     if (sessionStorage.getItem(SESSION_KEY)) return;
 
-    navigator.geolocation.getCurrentPosition(
+    getCurrentDevicePosition(
       async (pos) => {
         sessionStorage.setItem(SESSION_KEY, "1");
         const geo = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
-        if (!geo) return;
+        if (!geo || !isLocationEnabled()) return;
 
         const differs = norm(geo.cidade) !== norm(activeCidade ?? "");
         if (!differs) return;
@@ -53,6 +60,7 @@ export function useCityDetection(activeCidade: string | null, activeEstado: stri
           .ilike("cidade", geo.cidade)
           .eq("status", "aprovado");
 
+        if (!isLocationEnabled()) return;
         setDetected({
           cidade: geo.cidade,
           estado: geo.estado,
@@ -65,7 +73,7 @@ export function useCityDetection(activeCidade: string | null, activeEstado: stri
       },
       { enableHighAccuracy: false, maximumAge: 60000, timeout: 10000 },
     );
-  }, [activeCidade, activeEstado]);
+  }, [activeCidade, activeEstado, prefs.localizacao]);
 
   return { detected, dismiss: () => setDetected(null) };
 }

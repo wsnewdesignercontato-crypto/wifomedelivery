@@ -1,219 +1,145 @@
 import { useEffect, useState } from "react";
-import { ShoppingBag, Store, Bike, Download, Share, Plus, Smartphone, X } from "lucide-react";
+import { Download } from "lucide-react";
+import { APP_PROFILES, type PerfilApp } from "@/lib/app-profiles";
 import { useAppInstalado } from "@/hooks/use-app-instalado";
-
-type Perfil = "cliente" | "estabelecimento" | "entregador";
-
-type BIPEvent = Event & {
+import { PUSH_SW_URL } from "@/lib/push-config";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+type InstallEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
-
-const apps: Record<
-  Perfil,
-  {
-    nome: string;
-    legenda: string;
-    manifest: string;
-    /** Nome curto que aparece embaixo do ícone na tela inicial (evita corte). */
-    nomeTela: string;
-    Icon: typeof ShoppingBag;
-    theme: string;
-  }
-> = {
-  cliente: {
-    nome: "PedeTrem Cliente",
-    legenda: "Peça e acompanhe pelo app",
-    manifest: "/manifest-cliente.webmanifest?v=3",
-    nomeTela: "PedeTrem",
-    Icon: ShoppingBag,
-    theme: "theme-cliente",
-  },
-  estabelecimento: {
-    nome: "PedeTrem Estabelecimento",
-    legenda: "Gerencie pedidos pelo app",
-    manifest: "/manifest-estabelecimento.webmanifest?v=3",
-    nomeTela: "PedeTrem",
-    Icon: Store,
-    theme: "theme-estab",
-  },
-  entregador: {
-    nome: "PedeTrem Entregador",
-    legenda: "Receba corridas pelo app",
-    manifest: "/manifest-entregador.webmanifest?v=3",
-    nomeTela: "PedeTrem",
-    Icon: Bike,
-    theme: "theme-entregador",
-  },
-};
-
-function isIOS() {
-  if (typeof navigator === "undefined") return false;
-  const ua = navigator.userAgent;
-  return /iPad|iPhone|iPod/.test(ua) && !/CriOS|FxiOS/.test(ua);
-}
-
-/**
- * Barra fina de instalação do app do perfil atual, exibida no topo das telas de acesso.
- * Some automaticamente depois que a pessoa instala o aplicativo.
- */
-export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Perfil }) {
-  const app = apps[perfilAtual];
-  const [deferred, setDeferred] = useState<BIPEvent | null>(null);
-  const [ajuda, setAjuda] = useState(false);
-  const { instalado, revalidar, confirmarInstalado } = useAppInstalado(perfilAtual);
-  const visivel = !instalado;
-
-  // Aponta o manifest e o nome de tela inicial (iOS) do perfil atual assim que
-  // a tela de acesso abre — evita que o rótulo do ícone saia cortado/errado.
+export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: PerfilApp }) {
+  const app = APP_PROFILES[perfilAtual];
+  const [deferred, setDeferred] = useState<InstallEvent | null>(null);
+  const [help, setHelp] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const { instalado, revalidar } = useAppInstalado(perfilAtual);
   useEffect(() => {
-    const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
-    link?.setAttribute("href", apps[perfilAtual].manifest);
-
-    let meta = document.querySelector<HTMLMetaElement>('meta[name="apple-mobile-web-app-title"]');
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.setAttribute("name", "apple-mobile-web-app-title");
-      document.head.appendChild(meta);
+    let link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "manifest";
+      document.head.appendChild(link);
     }
-    meta.setAttribute("content", apps[perfilAtual].nomeTela);
-  }, [perfilAtual]);
-
-  useEffect(() => {
-    const onBIP = (e: Event) => {
-      e.preventDefault();
-      setDeferred(e as BIPEvent);
+    link.href = app.manifest;
+    if ("serviceWorker" in navigator)
+      void navigator.serviceWorker.register(PUSH_SW_URL, { scope: "/" }).catch(() => {
+        /* Manual installation remains available. */
+      });
+    for (const [name, content] of [
+      ["apple-mobile-web-app-title", app.shortName],
+      ["theme-color", app.color],
+    ]) {
+      let meta = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
+      if (!meta) {
+        meta = document.createElement("meta");
+        meta.name = name;
+        document.head.appendChild(meta);
+      }
+      meta.content = content;
+    }
+    const apple = document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]');
+    if (apple) apple.href = app.icon;
+    const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (icon) icon.href = app.icon;
+    const onPrompt = (event: Event) => {
+      event.preventDefault();
+      setDeferred(event as InstallEvent);
     };
     const onInstalled = () => {
-      confirmarInstalado();
-      setAjuda(false);
+      setDeferred(null);
+      setHelp(false);
     };
-    window.addEventListener("beforeinstallprompt", onBIP);
+    window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
-      window.removeEventListener("beforeinstallprompt", onBIP);
+      window.removeEventListener("beforeinstallprompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
     };
-  }, [perfilAtual, confirmarInstalado]);
-
-  async function baixar() {
-    const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
-    link?.setAttribute("href", app.manifest);
-
-    if (deferred) {
-      await deferred.prompt();
-      const { outcome } = await deferred.userChoice;
-      setDeferred(null);
-      if (outcome === "accepted") {
-        confirmarInstalado();
-      } else {
-        void revalidar();
-      }
+  }, [app]);
+  async function install() {
+    if (busy) return;
+    if (!deferred) {
+      setHelp(true);
       return;
     }
-    setAjuda(true);
+    setBusy(true);
+    try {
+      await deferred.prompt();
+      await deferred.userChoice;
+      setDeferred(null);
+      await revalidar();
+    } catch {
+      setHelp(true);
+      setDeferred(null);
+    } finally {
+      setBusy(false);
+    }
   }
-
-  function confirmarInstalacao() {
-    confirmarInstalado();
-    setAjuda(false);
-  }
-
-  if (!visivel) return null;
-
+  if (instalado) return null;
   return (
-    <>
-      <button
-        type="button"
-        onClick={baixar}
-        aria-label={`Baixar ${app.nome}`}
-        className="tap-target flex w-full items-center gap-2.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-left transition-colors hover:border-primary/70"
-      >
-        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
-          <app.Icon className="h-3.5 w-3.5" />
-        </span>
-        <span className="min-w-0 flex-1 leading-tight">
-          <span className="block truncate text-xs font-bold text-foreground">{app.nome}</span>
-          <span className="block truncate text-[10px] text-muted-foreground">{app.legenda}</span>
-        </span>
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground">
-          <Download className="h-3 w-3" />
-          Baixar
-        </span>
-      </button>
-
-      {ajuda && (
-        <div
-          className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60 p-4 sm:items-center"
-          onClick={() => setAjuda(false)}
+    <div className={app.theme} data-app-install-banner>
+      <div className="border-b border-primary/25 bg-card px-4 py-2">
+        <button
+          disabled={busy}
+          type="button"
+          onClick={() => void install()}
+          aria-label={`Baixar ${app.name}`}
+          className="mx-auto flex w-full max-w-7xl items-center gap-3 text-left"
         >
-          <div className={app.theme} onClick={(e) => e.stopPropagation()}>
-            <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-xl">
-              <div className="flex items-center gap-2">
-                <Smartphone className="h-5 w-5 shrink-0 text-primary" />
-                <h3 className="min-w-0 flex-1 truncate text-base font-bold text-foreground">
-                  Instalar {app.nome}
-                </h3>
-                <button
-                  type="button"
-                  aria-label="Fechar"
-                  onClick={() => setAjuda(false)}
-                  className="tap-target shrink-0 text-muted-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <ol className="mt-4 space-y-3 text-sm text-foreground">
-                <li className="flex items-start gap-3">
-                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">
-                    1
-                  </span>
-                  <span>
-                    {isIOS() ? (
-                      <>
-                        Toque em{" "}
-                        <Share className="mx-1 inline h-4 w-4 align-text-bottom text-primary" />
-                        <span className="font-medium">Compartilhar</span> na barra do Safari.
-                      </>
-                    ) : (
-                      <>
-                        Abra o menu do navegador (⋮) e escolha{" "}
-                        <span className="font-medium">Instalar aplicativo</span>.
-                      </>
-                    )}
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">
-                    2
-                  </span>
-                  <span>
-                    Escolha{" "}
-                    <span className="font-medium">
-                      Adicionar à Tela de Início
-                      <Plus className="mx-1 inline h-4 w-4 align-text-bottom text-primary" />
-                    </span>
-                    .
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-bold text-primary">
-                    3
-                  </span>
-                  <span>Confirme — o {app.nome} fica na sua tela inicial.</span>
-                </li>
-              </ol>
-              <button
-                type="button"
-                onClick={confirmarInstalacao}
-                className="tap-target mt-6 min-h-[44px] w-full rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-brand"
-              >
-                Já instalei
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+          <img
+            src={app.icon}
+            alt=""
+            width={40}
+            height={40}
+            className="h-10 w-10 rounded-full object-contain"
+          />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-bold text-foreground">{app.name}</span>
+            <span className="block text-xs text-muted-foreground">{app.description}</span>
+          </span>
+          <span className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">
+            <Download className="h-4 w-4" />
+            Baixar
+          </span>
+        </button>
+      </div>
+      <Dialog open={help} onOpenChange={setHelp}>
+        <DialogContent className={app.theme}>
+          <DialogHeader>
+            <DialogTitle>Instalar {app.name}</DialogTitle>
+            <DialogDescription>
+              Este aplicativo tem ícone e acesso próprios. Você pode instalar também os outros
+              perfis no mesmo celular.
+            </DialogDescription>
+          </DialogHeader>
+          <ol className="list-inside list-decimal space-y-3 text-sm">
+            <li>
+              No Android, abra o menu do Chrome e escolha <b>Instalar aplicativo</b> ou{" "}
+              <b>Adicionar à tela inicial</b>.
+            </li>
+            <li>
+              No iPhone, abra esta página no Safari, toque em <b>Compartilhar</b> e depois em{" "}
+              <b>Adicionar à Tela de Início</b>.
+            </li>
+            <li>
+              Confira o nome <b>{app.shortName}</b> e a cor do ícone antes de adicionar.
+            </li>
+          </ol>
+          <p className="text-xs text-muted-foreground">
+            Se já instalou, abra pelo ícone da tela inicial. Alguns navegadores não informam ao site
+            se o aplicativo está instalado.
+          </p>
+          <Button onClick={() => setHelp(false)}>Entendi</Button>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

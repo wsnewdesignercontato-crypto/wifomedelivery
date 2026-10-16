@@ -15,7 +15,6 @@ import {
   Trash2,
   MessageCircle,
   Mail,
-  Phone,
   ChevronDown,
   Shield,
   User,
@@ -26,16 +25,21 @@ import { Button } from "@/components/ui/button";
 import { PushToggleCard } from "@/components/push-toggle-card";
 import { LocationToggleCard } from "@/components/location-toggle-card";
 import { playSiren } from "@/hooks/use-new-ride-alert";
+import { SupportContacts } from "@/components/support-tickets";
+import { useDevicePreferences } from "@/hooks/use-device-preferences";
+import { clearDeviceCache, type DevicePreferences } from "@/lib/device-preferences";
 
 export const Route = createFileRoute("/_authenticated/entregador/configuracoes")({
-  head: () => ({ meta: [
-    { title: "Entregador — Configurações | PedeTrem" },
-    { name: "description", content: "PedeTrem: entregador, configurações." },
-    { property: "og:title", content: "Entregador — Configurações | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: entregador, configurações." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Entregador — Configurações | PedeTrem" },
+      { name: "description", content: "PedeTrem: entregador, configurações." },
+      { property: "og:title", content: "Entregador — Configurações | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: entregador, configurações." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Cfg,
 });
 
@@ -89,10 +93,16 @@ const FAQS = [
 ];
 
 function Cfg() {
+  const { prefs: devicePrefs, updatePreference } = useDevicePreferences();
   const navigate = useNavigate();
   const [prefs, setPrefs] = useState<Prefs>(DEFAULTS);
   const [permNotif, setPermNotif] = useState<string>("default");
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const displayedPrefs = {
+    ...prefs,
+    ...devicePrefs,
+    som_corridas: devicePrefs.som,
+  };
 
   useEffect(() => {
     try {
@@ -105,9 +115,15 @@ function Cfg() {
   }, []);
 
   function update<K extends keyof Prefs>(k: K, v: Prefs[K]) {
+    const deviceKey = k === "som_corridas" ? "som" : k;
+    if (deviceKey in devicePrefs) updatePreference(deviceKey as keyof DevicePreferences, v);
     const next = { ...prefs, [k]: v };
     setPrefs(next);
-    localStorage.setItem(KEY, JSON.stringify(next));
+    try {
+      localStorage.setItem(KEY, JSON.stringify(next));
+    } catch {
+      /* Session choice still applies. */
+    }
   }
 
   async function pedirPermissao() {
@@ -120,14 +136,7 @@ function Cfg() {
 
   async function limparCache() {
     try {
-      const keep = [KEY, "wifome:device-prefs"];
-      Object.keys(localStorage)
-        .filter((k) => !keep.includes(k))
-        .forEach((k) => localStorage.removeItem(k));
-      if ("caches" in window) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((k) => caches.delete(k)));
-      }
+      await clearDeviceCache();
       toast.success("Cache limpo");
     } catch {
       toast.error("Falha ao limpar cache");
@@ -202,7 +211,7 @@ function Cfg() {
       key: "economia_dados",
       icon: Wifi,
       title: "Economia de dados",
-      desc: "Imagens em qualidade menor",
+      desc: "Reduzir atualizações automáticas e pausar vídeos de anúncios",
     },
   ];
 
@@ -275,7 +284,11 @@ function Cfg() {
                   <p className="text-xs text-muted-foreground">{r.desc}</p>
                 </div>
               </div>
-              <Switch checked={prefs[r.key]} onCheckedChange={(v) => update(r.key, v)} />
+              <Switch
+                aria-label={r.title}
+                checked={displayedPrefs[r.key]}
+                onCheckedChange={(v) => update(r.key, v)}
+              />
             </div>
           ))}
         </div>
@@ -318,7 +331,11 @@ function Cfg() {
                     <p className="text-xs text-muted-foreground">{r.desc}</p>
                   </div>
                 </div>
-                <Switch checked={prefs[r.key]} onCheckedChange={(v) => update(r.key, v)} />
+                <Switch
+                  aria-label={r.title}
+                  checked={displayedPrefs[r.key]}
+                  onCheckedChange={(v) => update(r.key, v)}
+                />
               </div>
             ))}
           </div>
@@ -333,31 +350,7 @@ function Cfg() {
         <h2 className="mb-2 flex items-center gap-2 px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
           <HelpCircle className="h-3.5 w-3.5" /> Ajuda e suporte
         </h2>
-        <div className="grid grid-cols-3 gap-2">
-          <a
-            href="https://wa.me/5500000000000"
-            target="_blank"
-            rel="noreferrer"
-            className="flex flex-col items-center gap-1 rounded-2xl border border-border bg-card p-3 text-center hover:bg-muted/40"
-          >
-            <MessageCircle className="h-5 w-5 text-primary" />
-            <span className="text-xs font-semibold">Chat</span>
-          </a>
-          <a
-            href="mailto:entregador@wifome.com.br"
-            className="flex flex-col items-center gap-1 rounded-2xl border border-border bg-card p-3 text-center hover:bg-muted/40"
-          >
-            <Mail className="h-5 w-5 text-primary" />
-            <span className="text-xs font-semibold">E-mail</span>
-          </a>
-          <a
-            href="tel:+5508000000000"
-            className="flex flex-col items-center gap-1 rounded-2xl border border-border bg-card p-3 text-center hover:bg-muted/40"
-          >
-            <Phone className="h-5 w-5 text-primary" />
-            <span className="text-xs font-semibold">Telefone</span>
-          </a>
-        </div>
+        <SupportContacts />
         <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-card">
           {FAQS.map((f, i) => {
             const isOpen = openFaq === i;

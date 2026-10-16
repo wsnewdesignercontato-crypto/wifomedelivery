@@ -1,3 +1,4 @@
+import { ESTABLISHMENT_SELECT } from "@/lib/data-access";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -144,7 +145,7 @@ function EstabelecimentoPage() {
     (async () => {
       setLoading(true);
       const [e, c, p, f, rc] = await Promise.all([
-        supabase.from("establishments").select("*").eq("id", id).maybeSingle(),
+        supabase.from("establishments").select(ESTABLISHMENT_SELECT).eq("id", id).maybeSingle(),
         supabase
           .from("menu_categories")
           .select("id,nome,ordem")
@@ -160,12 +161,14 @@ function EstabelecimentoPage() {
           .eq("disponivel", true)
           .order("destaque", { ascending: false })
           .order("ordem"),
-        supabase
-          .from("favorites")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("establishment_id", id)
-          .maybeSingle(),
+        user.id
+          ? supabase
+              .from("favorites")
+              .select("id")
+              .eq("user_id", user.id)
+              .eq("establishment_id", id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
         supabase
           .from("public_reviews")
           .select("id", { count: "exact", head: true })
@@ -181,6 +184,11 @@ function EstabelecimentoPage() {
   }, [id, user.id]);
 
   async function toggleFav() {
+    if (!user.id)
+      return navigate({
+        to: "/auth",
+        search: { perfil: "cliente", redirect: `/cliente/estabelecimento/${id}` },
+      });
     if (fav) {
       await supabase.from("favorites").delete().eq("user_id", user.id).eq("establishment_id", id);
       setFav(false);
@@ -308,6 +316,11 @@ function EstabelecimentoPage() {
   }, [groups, sel]);
 
   async function adicionar() {
+    if (!user.id)
+      return navigate({
+        to: "/auth",
+        search: { perfil: "cliente", redirect: `/cliente/estabelecimento/${id}` },
+      });
     if (!openProd || !estab) return;
     if (invalid) {
       toast.error(invalid);

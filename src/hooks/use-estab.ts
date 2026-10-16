@@ -1,3 +1,4 @@
+import { ESTABLISHMENT_SELECT } from "@/lib/data-access";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -42,12 +43,19 @@ export function myEstabQueryOptions(userId: string) {
   return {
     queryKey: ["myEstab", userId] as const,
     queryFn: async (): Promise<Estab | null> => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("establishments")
-        .select("*")
+        .select(ESTABLISHMENT_SELECT)
         .eq("owner_id", userId)
         .maybeSingle();
-      return (data as unknown as Estab) ?? null;
+      if (error) throw error;
+      if (!data) return null;
+      const { data: privateData, error: privateError } = await supabase.rpc(
+        "get_establishment_private",
+        { p_establishment_id: data.id },
+      );
+      if (privateError) throw privateError;
+      return { ...data, ...(privateData as Record<string, unknown>) } as unknown as Estab;
     },
     staleTime: 30_000,
   };

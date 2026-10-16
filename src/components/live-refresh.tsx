@@ -2,9 +2,11 @@ import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { DATA_UPDATED_EVENT, PROFILE_UPDATED_EVENT } from "@/lib/app-refresh";
+import { useDevicePreferences } from "@/hooks/use-device-preferences";
 
 /** Detecta se uma nova versão do app foi publicada. */
 function useVersionWatcher() {
+  const { prefs } = useDevicePreferences();
   const current = useRef<string | null>(null);
 
   useEffect(() => {
@@ -59,7 +61,7 @@ function useVersionWatcher() {
     }
 
     check();
-    const id = window.setInterval(check, 20_000);
+    const id = window.setInterval(check, prefs.economia_dados ? 300_000 : 20_000);
     const onVisible = () => document.visibilityState === "visible" && check();
     const onFocus = () => check();
     document.addEventListener("visibilitychange", onVisible);
@@ -72,7 +74,7 @@ function useVersionWatcher() {
       window.removeEventListener("focus", onFocus);
       window.removeEventListener("online", onFocus);
     };
-  }, []);
+  }, [prefs.economia_dados]);
 }
 
 /**
@@ -80,6 +82,7 @@ function useVersionWatcher() {
  * ao voltar para a aba, ao reconectar, e recarrega quando sai uma nova versão.
  */
 export function LiveRefresh() {
+  const { prefs } = useDevicePreferences();
   const router = useRouter();
   const queryClient = useQueryClient();
   useVersionWatcher();
@@ -91,22 +94,25 @@ export function LiveRefresh() {
     };
 
     const onVisible = () => {
-      if (document.visibilityState === "visible") refresh();
+      if (!prefs.economia_dados && document.visibilityState === "visible") refresh();
+    };
+    const onFocus = () => {
+      if (!prefs.economia_dados) refresh();
     };
 
     window.addEventListener(DATA_UPDATED_EVENT, refresh);
     window.addEventListener(PROFILE_UPDATED_EVENT, refresh);
-    window.addEventListener("focus", refresh);
+    window.addEventListener("focus", onFocus);
     window.addEventListener("online", refresh);
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       window.removeEventListener(DATA_UPDATED_EVENT, refresh);
       window.removeEventListener(PROFILE_UPDATED_EVENT, refresh);
-      window.removeEventListener("focus", refresh);
+      window.removeEventListener("focus", onFocus);
       window.removeEventListener("online", refresh);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [router, queryClient]);
+  }, [router, queryClient, prefs.economia_dados]);
 
   return null;
 }

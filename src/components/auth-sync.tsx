@@ -17,7 +17,9 @@ export function AuthSync() {
         return;
       }
       router.invalidate();
-      if (event !== "SIGNED_OUT") {
+      if (event === "SIGNED_OUT") {
+        queryClient.clear();
+      } else {
         queryClient.invalidateQueries();
       }
     });

@@ -4,56 +4,30 @@ import { toast } from "sonner";
 import { ChevronLeft, Smartphone, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { useDevicePreferences } from "@/hooks/use-device-preferences";
+import { clearDeviceCache, type DevicePreferences } from "@/lib/device-preferences";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/dispositivo")({
-  head: () => ({ meta: [
-    { title: "Cliente — Perfil — Dispositivo | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, perfil, dispositivo." },
-    { property: "og:title", content: "Cliente — Perfil — Dispositivo | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, perfil, dispositivo." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Perfil — Dispositivo | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, perfil, dispositivo." },
+      { property: "og:title", content: "Cliente — Perfil — Dispositivo | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, perfil, dispositivo." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: DispositivoPage,
 });
 
-type DevPrefs = {
-  som: boolean;
-  vibracao: boolean;
-  localizacao: boolean;
-  modo_escuro_auto: boolean;
-  economia_dados: boolean;
-};
-
-const DEFAULTS: DevPrefs = {
-  som: true,
-  vibracao: true,
-  localizacao: true,
-  modo_escuro_auto: true,
-  economia_dados: false,
-};
-
-const KEY = "wifome:device-prefs";
-
 function DispositivoPage() {
-  const [prefs, setPrefs] = useState<DevPrefs>(DEFAULTS);
+  const { prefs, updatePreference } = useDevicePreferences();
   const [permNotif, setPermNotif] = useState<string>("default");
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) setPrefs({ ...DEFAULTS, ...JSON.parse(raw) });
-    } catch {
-      // Ignore invalid persisted preferences.
-    }
     if (typeof Notification !== "undefined") setPermNotif(Notification.permission);
   }, []);
-
-  function update<K extends keyof DevPrefs>(k: K, v: DevPrefs[K]) {
-    const next = { ...prefs, [k]: v };
-    setPrefs(next);
-    localStorage.setItem(KEY, JSON.stringify(next));
-  }
 
   async function pedirPermissao() {
     if (typeof Notification === "undefined") {
@@ -68,21 +42,14 @@ function DispositivoPage() {
 
   async function limparCache() {
     try {
-      const keep = ["wifome:notif-prefs", "wifome:device-prefs"];
-      Object.keys(localStorage)
-        .filter((k) => !keep.includes(k))
-        .forEach((k) => localStorage.removeItem(k));
-      if ("caches" in window) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((k) => caches.delete(k)));
-      }
+      await clearDeviceCache();
       toast.success("Cache limpo");
     } catch {
       toast.error("Não foi possível limpar tudo");
     }
   }
 
-  const rows: Array<{ key: keyof DevPrefs; title: string; desc: string }> = [
+  const rows: Array<{ key: keyof DevicePreferences; title: string; desc: string }> = [
     { key: "som", title: "Som", desc: "Emitir som ao receber notificações" },
     { key: "vibracao", title: "Vibração", desc: "Vibrar em alertas importantes" },
     { key: "localizacao", title: "Localização", desc: "Usar GPS para melhores entregas" },
@@ -94,7 +61,7 @@ function DispositivoPage() {
     {
       key: "economia_dados",
       title: "Economia de dados",
-      desc: "Carregar imagens em qualidade menor",
+      desc: "Reduzir atualizações automáticas e pausar vídeos de anúncios",
     },
   ];
 
@@ -141,7 +108,11 @@ function DispositivoPage() {
               <p className="text-sm font-semibold">{r.title}</p>
               <p className="text-xs text-muted-foreground">{r.desc}</p>
             </div>
-            <Switch checked={prefs[r.key]} onCheckedChange={(v) => update(r.key, v)} />
+            <Switch
+              aria-label={r.title}
+              checked={prefs[r.key]}
+              onCheckedChange={(v) => updatePreference(r.key, v)}
+            />
           </div>
         ))}
       </div>

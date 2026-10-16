@@ -1,5 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  pendingAttempt,
+  browserAttemptStorage,
+  completeAttempt,
+  type PendingAttempt,
+} from "@/lib/pending-attempt";
 import { toast } from "sonner";
 import { Wallet, ArrowUpRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +15,12 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useMyCourier, fmt } from "@/hooks/use-courier";
 import {
+  emptyWallet,
+  parseMoneyCents,
+  walletSummarySchema,
+  type WalletSummary,
+} from "@/lib/commerce";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -17,14 +29,16 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/entregador/carteira")({
-  head: () => ({ meta: [
-    { title: "Entregador — Carteira | PedeTrem" },
-    { name: "description", content: "PedeTrem: entregador, carteira." },
-    { property: "og:title", content: "Entregador — Carteira | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: entregador, carteira." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Entregador — Carteira | PedeTrem" },
+      { name: "description", content: "PedeTrem: entregador, carteira." },
+      { property: "og:title", content: "Entregador — Carteira | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: entregador, carteira." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Carteira,
 });
 
@@ -39,60 +53,91 @@ type Withdrawal = {
 
 function Carteira() {
   const { courier } = useMyCourier();
+  const courierId = courier?.user_id;
   const [ledger, setLedger] = useState<Ledger[]>([]);
+  const [summary, setSummary] = useState<WalletSummary>(emptyWallet);
+  const [walletReady, setWalletReady] = useState(false);
+  const [requesting, setRequesting] = useState(false);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [valor, setValor] = useState("");
   const [open, setOpen] = useState(false);
+  const attemptRef = useRef<PendingAttempt | null>(null);
 
-  const disponivel =
-    ledger.filter((l) => l.status === "paid").reduce((s, l) => s + l.courier_payout_cents, 0) -
-    withdrawals
-      .filter((w) => w.status === "pago" || w.status === "aprovado")
-      .reduce((s, w) => s + w.valor_cents, 0);
-  const pendente = ledger
-    .filter((l) => l.status === "pending")
-    .reduce((s, l) => s + l.courier_payout_cents, 0);
-  const total = ledger.reduce((s, l) => s + l.courier_payout_cents, 0);
+  const disponivel = summary.available_cents;
+  const pendente = summary.pending_cents;
+  const total = summary.total_cents;
 
-  async function load() {
-    if (!courier) return;
-    const { data: l } = await supabase
-      .from("platform_ledger")
-      .select("id,courier_payout_cents,status,created_at")
-      .eq("courier_id", courier.user_id)
-      .order("created_at", { ascending: false })
-      .limit(100);
-    setLedger((l ?? []) as Ledger[]);
-    const { data: w } = await supabase
-      .from("courier_withdrawals")
-      .select("id,valor_cents,metodo,status,created_at")
-      .eq("courier_id", courier.user_id)
-      .order("created_at", { ascending: false })
-      .limit(50);
-    setWithdrawals((w ?? []) as Withdrawal[]);
-  }
+  const load = useCallback(async () => {
+    if (!courierId) return;
+    setWalletReady(false);
+    const [balance, ledgerResult, history] = await Promise.all([
+      supabase.rpc("wallet_summary", { p_kind: "courier" }),
+      supabase
+        .from("platform_ledger")
+        .select("id,courier_payout_cents,status,created_at")
+        .eq("courier_id", courierId)
+        .order("created_at", { ascending: false })
+        .limit(100),
+      supabase
+        .from("courier_withdrawals")
+        .select("id,valor_cents,metodo,status,created_at")
+        .eq("courier_id", courierId)
+        .order("created_at", { ascending: false })
+        .limit(50),
+    ]);
+    const parsed = walletSummarySchema.safeParse(balance.data);
+    if (balance.error || ledgerResult.error || history.error || !parsed.success) {
+      setSummary(emptyWallet);
+      toast.error(
+        balance.error?.message ??
+          ledgerResult.error?.message ??
+          history.error?.message ??
+          "Falha ao consultar saldo",
+      );
+      return;
+    }
+    setSummary(parsed.data);
+    setLedger((ledgerResult.data ?? []) as Ledger[]);
+    setWithdrawals((history.data ?? []) as Withdrawal[]);
+    setWalletReady(true);
+  }, [courierId]);
 
   useEffect(() => {
-    load();
-  }, [courier]);
+    void load();
+  }, [load]);
 
   async function solicitar() {
-    if (!courier) return;
-    const cents = Math.round(Number(valor.replace(",", ".")) * 100);
-    if (!cents || cents < 500) return toast.error("Valor mínimo R$ 5,00");
+    if (!courier || !walletReady || requesting) return;
+    const cents = parseMoneyCents(valor);
+    if (cents === null || cents < 500)
+      return toast.error("Informe um valor válido, mínimo R$ 5,00");
     if (cents > disponivel) return toast.error("Valor acima do saldo disponível");
-    const { error } = await supabase.from("courier_withdrawals").insert({
-      courier_id: courier.user_id,
-      valor_cents: cents,
-      metodo: "pix",
-      pix_key: courier.pix_key,
-      liquido_cents: cents,
-    });
-    if (error) return toast.error(error.message);
-    toast.success("Saque solicitado!");
-    setValor("");
-    setOpen(false);
-    load();
+    setRequesting(true);
+    const storageKey = `wifome-pending-withdrawal-courier-${courierId}`;
+    attemptRef.current = pendingAttempt(
+      browserAttemptStorage(),
+      storageKey,
+      String(cents),
+      attemptRef.current,
+    );
+    try {
+      const { error } = await supabase.rpc("request_withdrawal", {
+        p_kind: "courier",
+        p_valor_cents: cents,
+        p_idempotency_key: attemptRef.current.key,
+      });
+      if (error) throw new Error(error.message);
+      completeAttempt(storageKey);
+      attemptRef.current = null;
+      toast.success("Saque solicitado!");
+      setValor("");
+      setOpen(false);
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Falha ao solicitar saque");
+    } finally {
+      setRequesting(false);
+    }
   }
 
   return (
@@ -109,7 +154,13 @@ function Carteira() {
               <Button
                 className="mt-3 bg-white text-primary hover:bg-white/90"
                 size="sm"
-                disabled={disponivel < 500}
+                disabled={
+                  !walletReady ||
+                  requesting ||
+                  disponivel < 500 ||
+                  courier?.kyc_status !== "aprovado" ||
+                  !courier?.pix_key
+                }
               >
                 <ArrowUpRight className="mr-2 h-4 w-4" /> Solicitar saque
               </Button>
@@ -130,8 +181,8 @@ function Carteira() {
                 <p className="text-xs text-muted-foreground">
                   Chave PIX: {courier?.pix_key ?? "cadastre no perfil"}
                 </p>
-                <Button className="w-full" onClick={solicitar}>
-                  Confirmar
+                <Button className="w-full" onClick={solicitar} disabled={requesting}>
+                  {requesting ? "Solicitando…" : "Confirmar"}
                 </Button>
               </div>
             </DialogContent>
@@ -142,10 +193,14 @@ function Carteira() {
           <p className="mt-2 text-2xl font-black">{fmt(pendente)}</p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
-          <p className="text-sm text-muted-foreground">Total recebido</p>
+          <p className="text-sm text-muted-foreground">Total registrado</p>
           <p className="mt-2 text-2xl font-black">{fmt(total)}</p>
         </div>
       </div>
+      <p className="text-xs text-muted-foreground">
+        Saldo de todo o histórico. Saques em aberto reservam saldo; valores a liberar aguardam
+        confirmação administrativa do pagamento recebido.
+      </p>
 
       <section>
         <h2 className="mb-3 text-sm font-semibold text-muted-foreground">Saques</h2>

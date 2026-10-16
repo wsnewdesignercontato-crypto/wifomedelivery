@@ -54,7 +54,7 @@ export const saveBrevoSettings = createServerFn({ method: "POST" })
       const { error } = await supabaseAdmin.rpc("brevo_settings_save", {
         _sender_name: data.senderName,
         _sender_email: data.senderEmail,
-        _api_key: data.apiKey ?? null,
+        _api_key: data.apiKey ?? undefined,
       });
       if (error) throw new Error();
       return await readStatus();

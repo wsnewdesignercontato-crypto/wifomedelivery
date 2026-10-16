@@ -40,16 +40,19 @@ import { useMyCourier, fmt } from "@/hooks/use-courier";
 import { OrderChat } from "@/components/order-chat";
 import { SOSButton } from "@/components/sos-button";
 import { canCourierAccessRides, getCourierApprovalLabel } from "@/lib/courier-approval";
+import { getCurrentDevicePosition, watchDeviceLocation } from "@/lib/device-preferences";
 
 export const Route = createFileRoute("/_authenticated/entregador/corridas")({
-  head: () => ({ meta: [
-    { title: "Entregador — Corridas | PedeTrem" },
-    { name: "description", content: "PedeTrem: entregador, corridas." },
-    { property: "og:title", content: "Entregador — Corridas | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: entregador, corridas." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Entregador — Corridas | PedeTrem" },
+      { name: "description", content: "PedeTrem: entregador, corridas." },
+      { property: "og:title", content: "Entregador — Corridas | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: entregador, corridas." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Corridas,
 });
 
@@ -69,7 +72,6 @@ type OrderLite = {
   total_cents: number;
   cliente_id: string;
   endereco_entrega: { endereco?: string; bairro?: string; complemento?: string } | null;
-  codigo_entrega: string | null;
   observacoes: string | null;
   forma_pagamento: string;
   troco_para_cents: number | null;
@@ -131,7 +133,6 @@ function Corridas() {
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
-  const [codeAttempts, setCodeAttempts] = useState(0);
   const [deliveredInfo, setDeliveredInfo] = useState<{
     valorCents: number;
     clienteNome: string | null;
@@ -141,7 +142,7 @@ function Corridas() {
   const [incidentType, setIncidentType] = useState("cliente_ausente");
   const [incidentText, setIncidentText] = useState("");
   const [savingIncident, setSavingIncident] = useState(false);
-  const watchIdRef = useRef<number | null>(null);
+  const stopWatchRef = useRef<(() => void) | null>(null);
   const proofInputRef = useRef<HTMLInputElement>(null);
   const [myPos, setMyPos] = useState<{ lat: number; lng: number } | null>(null);
   const [availMeta, setAvailMeta] = useState<
@@ -156,7 +157,7 @@ function Corridas() {
 
   useEffect(() => {
     if (!("geolocation" in navigator)) return;
-    navigator.geolocation.getCurrentPosition(
+    getCurrentDevicePosition(
       (p) => setMyPos({ lat: p.coords.latitude, lng: p.coords.longitude }),
       () => {},
       { enableHighAccuracy: true, maximumAge: 60000, timeout: 8000 },
@@ -244,7 +245,7 @@ function Corridas() {
       const { data: o } = await supabase
         .from("orders")
         .select(
-          "id,establishment_id,total_cents,cliente_id,endereco_entrega,codigo_entrega,observacoes,forma_pagamento,troco_para_cents",
+          "id,establishment_id,total_cents,cliente_id,endereco_entrega,observacoes,forma_pagamento,troco_para_cents",
         )
         .eq("id", at.order_id)
         .maybeSingle();
@@ -286,14 +287,12 @@ function Corridas() {
       ativa &&
       ["to_store", "at_store", "picked_up", "to_customer", "at_customer"].includes(ativa.status);
     if (!shouldTrack || !courier || !("geolocation" in navigator)) {
-      if (watchIdRef.current != null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-        watchIdRef.current = null;
-      }
+      stopWatchRef.current?.();
+      stopWatchRef.current = null;
       return;
     }
     let lastSent = 0;
-    watchIdRef.current = navigator.geolocation.watchPosition(
+    stopWatchRef.current = watchDeviceLocation(
       async (pos) => {
         const now = Date.now();
         if (now - lastSent < 12000) return;
@@ -320,10 +319,8 @@ function Corridas() {
       { enableHighAccuracy: true, maximumAge: 8000, timeout: 20000 },
     );
     return () => {
-      if (watchIdRef.current != null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-        watchIdRef.current = null;
-      }
+      stopWatchRef.current?.();
+      stopWatchRef.current = null;
     };
   }, [ativa?.id, ativa?.status, courier?.user_id]);
 
@@ -388,11 +385,6 @@ function Corridas() {
 
   async function confirmarEntrega() {
     if (!ativa || !order || !courier) return;
-    if (!order.codigo_entrega) {
-      const msg = "Pedido sem código de entrega. Contate o suporte.";
-      setCodeError(msg);
-      return toast.error(msg);
-    }
     // Validação de formato (zod)
     const parsed = codigoEntregaSchema.safeParse(codeInput);
     if (!parsed.success) {
@@ -400,24 +392,9 @@ function Corridas() {
       setCodeError(msg);
       return toast.error(msg);
     }
-    // Comparação com o código real do pedido
-    if (parsed.data !== order.codigo_entrega) {
-      const nextAttempts = codeAttempts + 1;
-      setCodeAttempts(nextAttempts);
-      const msg = `Código incorreto. Peça novamente ao cliente os 4 dígitos que aparecem na tela dele.${
-        nextAttempts >= 3 ? " (várias tentativas — confirme com o cliente)" : ""
-      }`;
-      setCodeError(msg);
-      setCodeInput("");
-      return toast.error("Código incorreto", {
-        description: "Peça ao cliente o código de 4 dígitos correto.",
-      });
-    }
     setCodeError(null);
-    setCodeAttempts(0);
     setAdvancing(true);
     let prova_url: string | null = null;
-    let metodo: string = "code";
     if (proofFile) {
       const invalidProof = validateImageFile(proofFile);
       if (invalidProof) {
@@ -434,7 +411,6 @@ function Corridas() {
         .from("delivery-proofs")
         .createSignedUrl(path, 60 * 60 * 24 * 30);
       prova_url = signed?.signedUrl ?? path;
-      metodo = "photo";
     }
     // Confirma entrega atomicamente via RPC
     const { data: rpcRes, error: rpcErr } = await supabase.rpc("confirm_delivery_code" as any, {
@@ -447,7 +423,9 @@ function Corridas() {
 
     if (rpcErr || (result && result.success === false)) {
       setAdvancing(false);
-      const errorMsg = rpcErr?.message || (result && result.error === 'invalid_code' ? 'Código incorreto' : 'Falha ao finalizar');
+      const errorMsg =
+        rpcErr?.message ||
+        (result && result.error === "invalid_code" ? "Código incorreto" : "Falha ao finalizar");
       return toast.error(errorMsg);
     }
     await supabase
@@ -469,7 +447,7 @@ function Corridas() {
     setCliente(null);
     setDeliveredInfo({ valorCents, clienteNome });
     toast.success("Entrega confirmada! 🎉", {
-      description: `Código validado. +R$ ${(valorCents / 100).toFixed(2).replace(".", ",")} adicionados à sua carteira.`,
+      description: `Código validado. Entrega de R$ ${(valorCents / 100).toFixed(2).replace(".", ",")} registrada para conferência financeira.`,
     });
     load();
   }
@@ -874,8 +852,8 @@ function Corridas() {
                     </span>
                   </div>
                   <div className="mt-4">
-                    <Button 
-                      className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20 transition-transform active:scale-95" 
+                    <Button
+                      className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20 transition-transform active:scale-95"
                       onClick={() => aceitar(d)}
                     >
                       Aceitar corrida
@@ -1009,7 +987,9 @@ function Corridas() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Reportar problema</DialogTitle>
-            <DialogDescription>Gera um protocolo para o suporte PedeTrem analisar.</DialogDescription>
+            <DialogDescription>
+              Gera um protocolo para o suporte PedeTrem analisar.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2 text-sm">

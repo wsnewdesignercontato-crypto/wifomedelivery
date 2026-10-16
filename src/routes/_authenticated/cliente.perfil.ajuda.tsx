@@ -1,16 +1,19 @@
+import { SupportTickets } from "@/components/support-tickets";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronLeft, HelpCircle, MessageCircle, Mail, Phone, ChevronDown } from "lucide-react";
+import { ChevronLeft, HelpCircle, ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/ajuda")({
-  head: () => ({ meta: [
-    { title: "Cliente — Perfil — Ajuda | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, perfil, ajuda." },
-    { property: "og:title", content: "Cliente — Perfil — Ajuda | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, perfil, ajuda." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Perfil — Ajuda | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, perfil, ajuda." },
+      { property: "og:title", content: "Cliente — Perfil — Ajuda | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, perfil, ajuda." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AjudaPage,
 });
 
@@ -29,7 +32,7 @@ const FAQS = [
   },
   {
     q: "Como pedir reembolso?",
-    a: "Abra o pedido finalizado, toque em Ajuda com este pedido e escolha a opção de reembolso.",
+    a: "Abra um chamado nesta página e informe o número do pedido. A equipe analisará sua solicitação.",
   },
 ];
 
@@ -48,31 +51,7 @@ function AjudaPage() {
         <HelpCircle className="h-5 w-5 text-primary" /> Ajuda e suporte
       </h1>
 
-      <div className="grid grid-cols-3 gap-2">
-        <a
-          href="https://wa.me/5500000000000"
-          target="_blank"
-          rel="noreferrer"
-          className="flex flex-col items-center gap-1 rounded-2xl border border-border bg-card p-3 text-center hover:bg-muted/50"
-        >
-          <MessageCircle className="h-5 w-5 text-primary" />
-          <span className="text-xs font-semibold">Chat</span>
-        </a>
-        <a
-          href="mailto:suporte@wifome.com.br"
-          className="flex flex-col items-center gap-1 rounded-2xl border border-border bg-card p-3 text-center hover:bg-muted/50"
-        >
-          <Mail className="h-5 w-5 text-primary" />
-          <span className="text-xs font-semibold">E-mail</span>
-        </a>
-        <a
-          href="tel:+5508000000000"
-          className="flex flex-col items-center gap-1 rounded-2xl border border-border bg-card p-3 text-center hover:bg-muted/50"
-        >
-          <Phone className="h-5 w-5 text-primary" />
-          <span className="text-xs font-semibold">Telefone</span>
-        </a>
-      </div>
+      <SupportTickets />
 
       <section className="space-y-2">
         <h2 className="px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">

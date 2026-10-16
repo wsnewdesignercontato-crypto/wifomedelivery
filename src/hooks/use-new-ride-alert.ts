@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { canCourierAccessRides } from "@/lib/courier-approval";
+import { readDevicePreferences, vibrateDevice } from "@/lib/device-preferences";
 
 type Courier = {
   user_id: string;
@@ -34,6 +35,7 @@ function getCtx(): AudioContext | null {
 }
 
 function unlockAudio() {
+  if (!readDevicePreferences().som) return;
   if (unlocked) return;
   unlocked = true;
   const ctx = getCtx();
@@ -52,6 +54,8 @@ function unlockAudio() {
 }
 
 export function playSiren() {
+  vibrateDevice([250, 90, 250, 90, 250, 90, 400]);
+  if (!readDevicePreferences().som) return;
   const ctx = getCtx();
   if (!ctx) return;
   const now = ctx.currentTime;
@@ -75,11 +79,6 @@ export function playSiren() {
       // Ignore transient oscillator failures on unsupported browsers.
     }
   });
-  try {
-    navigator.vibrate?.([250, 90, 250, 90, 250, 90, 400]);
-  } catch {
-    // Ignore vibration API failures.
-  }
 }
 
 function nativeNotify() {

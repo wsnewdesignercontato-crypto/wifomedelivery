@@ -17,48 +17,35 @@ async function assertAdmin(context: { supabase: SupabaseClient<Database>; userId
 
 export const listAppUsers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d: { search?: string; page?: number }) => d)
+  .validator((d: { search?: string; page?: number }) =>
+    z
+      .object({
+        search: z.string().trim().max(254).default(""),
+        page: z.number().int().min(1).max(100000).default(1),
+      })
+      .parse(d),
+  )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const page = data.page ?? 1;
-    const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({
-      page,
-      perPage: 100,
+    const { data: result, error } = await context.supabase.rpc("admin_search_users", {
+      p_search: data.search,
+      p_page: data.page,
+      p_per_page: 50,
     });
     if (error) throw new Error(error.message);
-    const users = list.users.map((u) => ({
-      id: u.id,
-      email: u.email,
-      created_at: u.created_at,
-      last_sign_in_at: u.last_sign_in_at,
-      confirmed: !!u.email_confirmed_at,
-    }));
-    const filtered = data.search
-      ? users.filter((u) => u.email?.toLowerCase().includes(data.search!.toLowerCase()))
-      : users;
-
-    if (filtered.length === 0) {
-      return [];
-    }
-
-    // Fetch roles for these users
-    const { data: roles, error: rolesError } = await supabaseAdmin
-      .from("user_roles")
-      .select("user_id, role")
-      .in(
-        "user_id",
-        filtered.map((u) => u.id),
-      );
-    if (rolesError) throw new Error(rolesError.message);
-    const rolesByUser = new Map<string, string[]>();
-    (roles ?? []).forEach((r) => {
-      const arr = rolesByUser.get(r.user_id) ?? [];
-      arr.push(r.role);
-      rolesByUser.set(r.user_id, arr);
-    });
-
-    return filtered.map((u) => ({ ...u, roles: rolesByUser.get(u.id) ?? [] }));
+    return result as {
+      users: {
+        id: string;
+        email: string | null;
+        created_at: string;
+        last_sign_in_at: string | null;
+        confirmed: boolean;
+        roles: string[];
+      }[];
+      page: number;
+      total: number;
+      totalPages: number;
+    };
   });
 
 const roleSchema = z.enum(["cliente", "estabelecimento", "entregador", "admin"]);

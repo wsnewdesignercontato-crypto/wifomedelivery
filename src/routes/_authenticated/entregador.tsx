@@ -11,16 +11,19 @@ import { IFomeLogo } from "@/components/ifome-logo";
 import { OnboardingGate } from "@/components/onboarding-gate";
 import { useMyCourier } from "@/hooks/use-courier";
 import { useQueryClient } from "@tanstack/react-query";
+import { watchDeviceLocation } from "@/lib/device-preferences";
 
 export const Route = createFileRoute("/_authenticated/entregador")({
-  head: () => ({ meta: [
-    { title: "Entregador | PedeTrem" },
-    { name: "description", content: "PedeTrem: entregador." },
-    { property: "og:title", content: "Entregador | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: entregador." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Entregador | PedeTrem" },
+      { name: "description", content: "PedeTrem: entregador." },
+      { property: "og:title", content: "Entregador | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: entregador." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: EntregadorLayout,
 });
 
@@ -34,7 +37,7 @@ function EntregadorLayout() {
     if (!courier || typeof navigator === "undefined" || !navigator.geolocation) return;
     if (courier.status !== "online" && courier.status !== "ocupado") return;
     let lastSent = 0;
-    const watchId = navigator.geolocation.watchPosition(
+    const stopWatching = watchDeviceLocation(
       async (pos) => {
         const now = Date.now();
         if (now - lastSent < 10000) return;
@@ -51,7 +54,7 @@ function EntregadorLayout() {
       () => {},
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
     );
-    return () => navigator.geolocation.clearWatch(watchId);
+    return stopWatching;
   }, [courier]);
 
   if (isLoading) {

@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
-import logoAsset from "@/assets/pedetrem-logo-circle.png.asset.json";
+import { useLocation } from "@tanstack/react-router";
+import { APP_PROFILES, appProfileFromUrl } from "@/lib/app-profiles";
 
 interface Props {
   className?: string;
@@ -14,13 +15,15 @@ const sizes = {
   lg: { box: "h-28 w-28", text: "text-3xl" },
 };
 
-export function IFomeLogo({ className, size = "md", showWord = true }: Props) {
+export function IFomeLogo({ className, size = "md", showWord = true, perfil }: Props) {
+  const location = useLocation();
+  const app = APP_PROFILES[perfil ?? appProfileFromUrl(location.pathname, location.searchStr)];
   const s = sizes[size];
   return (
     <div className={cn("inline-flex shrink-0 items-center gap-2.5", className)}>
       <img
-        src={logoAsset.url}
-        alt="PedeTrem"
+        src={app.icon}
+        alt={app.name}
         width={355}
         height={352}
         className={cn("shrink-0 rounded-full object-contain shadow-brand", s.box)}

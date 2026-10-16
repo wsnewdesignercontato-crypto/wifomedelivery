@@ -1,3 +1,4 @@
+import { ORDER_SELECT } from "@/lib/data-access";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -30,14 +31,16 @@ import {
 import { printOrderReceipt, buildReceiptHtml } from "@/lib/print-receipt";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/pedidos")({
-  head: () => ({ meta: [
-    { title: "Loja — Pedidos | PedeTrem" },
-    { name: "description", content: "PedeTrem: loja, pedidos." },
-    { property: "og:title", content: "Loja — Pedidos | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: loja, pedidos." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Loja — Pedidos | PedeTrem" },
+      { name: "description", content: "PedeTrem: loja, pedidos." },
+      { property: "og:title", content: "Loja — Pedidos | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: loja, pedidos." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: PedidosPage,
 });
 
@@ -52,7 +55,6 @@ type Order = {
   desconto_cents: number;
   forma_pagamento: string;
   troco_para_cents: number | null;
-  codigo_entrega: string | null;
   observacoes: string | null;
   created_at: string;
   endereco_entrega: {
@@ -126,7 +128,7 @@ function PedidosPage() {
     const { data } = await supabase
       .from("orders")
       .select(
-        "id,cliente_id,status,total_cents,subtotal_cents,frete_cents,desconto_cents,forma_pagamento,troco_para_cents,codigo_entrega,observacoes,created_at,endereco_entrega,tipo_entrega,cancellation_reason,cancelled_role,refund_status,refund_amount_cents",
+        "id,cliente_id,status,total_cents,subtotal_cents,frete_cents,desconto_cents,forma_pagamento,troco_para_cents,observacoes,created_at,endereco_entrega,tipo_entrega,cancellation_reason,cancelled_role,refund_status,refund_amount_cents",
       )
       .eq("establishment_id", estab.id)
       .order("created_at", { ascending: false })
@@ -168,7 +170,7 @@ function PedidosPage() {
         },
         (payload) => {
           reload();
-          
+
           if (payload.eventType === "INSERT") {
             toast.info("Novo pedido recebido! 🔔", {
               description: "Confira a lista de pedidos.",
@@ -269,16 +271,12 @@ function PedidosPage() {
     const s = prompt("Valor a reembolsar (R$):", (o.total_cents / 100).toFixed(2)) ?? "";
     const v = Math.round(parseFloat(s.replace(",", ".")) * 100);
     if (!Number.isFinite(v) || v <= 0 || v > o.total_cents) return toast.error("Valor inválido");
-    const { error } = await supabase
-      .from("orders")
-      .update({
-        status: "refunded",
-        refund_status: "completed",
-        refund_amount_cents: v,
-      })
-      .eq("id", o.id);
-    if (error) toast.error("Falha");
-    else toast.success("Reembolso registrado");
+    const { error } = await supabase.rpc("create_support_ticket", {
+      p_assunto: `Reembolso do pedido ${o.id.slice(0, 8)}`,
+      p_mensagem: `Solicito análise de reembolso de ${fmt(v)} para o pedido ${o.id}. A devolução deve ser conferida e registrada pela administração.`,
+    });
+    if (error) toast.error("Não foi possível solicitar o reembolso");
+    else toast.success("Solicitação enviada. Acompanhe a resposta em Suporte.");
   }
 
   async function imprimir(orderId: string) {
@@ -286,7 +284,11 @@ function PedidosPage() {
     const order = orders.find((o) => o.id === orderId);
     let its = items[orderId];
     if (!order || !its) {
-      const { data: o } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
+      const { data: o } = await supabase
+        .from("orders")
+        .select(ORDER_SELECT)
+        .eq("id", orderId)
+        .maybeSingle();
       const { data: it } = await supabase.from("order_items").select("*").eq("order_id", orderId);
       if (!o || !it) return toast.error("Pedido não encontrado");
       its = (it as unknown as OrderItem[]).map((r) => ({
@@ -298,7 +300,7 @@ function PedidosPage() {
     const ok = printOrderReceipt(
       order ??
         ({
-          ...(await supabase.from("orders").select("*").eq("id", orderId).single()).data,
+          ...(await supabase.from("orders").select(ORDER_SELECT).eq("id", orderId).single()).data,
         } as unknown as Order),
       its,
       { nome: estab.nome, telefone: estab.telefone, endereco: estab.endereco, cnpj: estab.cnpj },
@@ -520,8 +522,8 @@ function PedidosPage() {
                 )}
                 <div className="mt-4 flex flex-wrap gap-2 pt-2 border-t border-border/40">
                   {step && (
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       onClick={() => mudarStatus(o, step.next)}
                       className="h-10 px-4 rounded-xl shadow-lg shadow-primary/20 transition-transform active:scale-95"
                     >
@@ -532,18 +534,18 @@ function PedidosPage() {
                     </Button>
                   )}
                   {o.tipo_entrega === "pickup" && o.status === "ready" && (
-                    <Button 
-                      size="sm" 
-                      variant="secondary" 
+                    <Button
+                      size="sm"
+                      variant="secondary"
                       onClick={() => confirmarRetirada(o)}
                       className="h-10 px-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white"
                     >
                       Confirmar retirada
                     </Button>
                   )}
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
+                  <Button
+                    size="sm"
+                    variant="outline"
                     onClick={() => imprimir(o.id)}
                     className="h-10 px-4 rounded-xl border-border bg-muted/20 hover:bg-muted"
                   >
@@ -551,9 +553,9 @@ function PedidosPage() {
                     Imprimir
                   </Button>
                   {!TERMINAL.has(o.status) && (
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       onClick={() => cancelar(o.id)}
                       className="h-10 px-4 rounded-xl text-destructive hover:bg-destructive/10"
                     >
@@ -563,7 +565,7 @@ function PedidosPage() {
                   {(o.status === "cancelled" || o.status === "delivered") &&
                     o.refund_status !== "completed" && (
                       <Button size="sm" variant="secondary" onClick={() => reembolsar(o)}>
-                        Reembolsar
+                        Solicitar reembolso
                       </Button>
                     )}
                   <Button

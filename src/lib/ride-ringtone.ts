@@ -1,10 +1,17 @@
 // Toque contínuo de nova corrida (estilo Uber/99).
 // Fica tocando em loop até a corrida ser aceita, recusada ou pega por outro.
+import {
+  readDevicePreferences,
+  subscribeDevicePreferences,
+  vibrateDevice,
+} from "@/lib/device-preferences";
+
 let ctx: AudioContext | null = null;
 let loopTimer: ReturnType<typeof setInterval> | null = null;
 let unlocked = false;
 let activeNodes: { osc: OscillatorNode; gain: GainNode }[] = [];
 let listenersBound = false;
+let stopPreferenceListener: (() => void) | null = null;
 
 function getCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -31,6 +38,7 @@ export function ensureRingtoneUnlocked() {
   if (typeof window === "undefined" || listenersBound) return;
   listenersBound = true;
   const handler = () => {
+    if (!readDevicePreferences().som) return;
     if (unlocked) return;
     unlocked = true;
     const ac = getCtx();
@@ -53,6 +61,8 @@ export function ensureRingtoneUnlocked() {
 }
 
 function burst() {
+  vibrateDevice([300, 100, 300, 100, 300, 100, 500]);
+  if (!readDevicePreferences().som) return;
   const ac = getCtx();
   if (!ac) return;
   const now = ac.currentTime;
@@ -80,11 +90,6 @@ function burst() {
       /* ignore */
     }
   });
-  try {
-    navigator.vibrate?.([300, 100, 300, 100, 300, 100, 500]);
-  } catch {
-    /* ignore */
-  }
 }
 
 export function isRideRingtonePlaying() {
@@ -98,6 +103,11 @@ export function startRideRingtone() {
   if (loopTimer) return;
   burst();
   loopTimer = setInterval(burst, 1500);
+  stopPreferenceListener = subscribeDevicePreferences(() => {
+    const prefs = readDevicePreferences();
+    if (!prefs.som) silenceActiveNodes();
+    if (!prefs.vibracao) navigator.vibrate?.(0);
+  });
   // Retoma o áudio se o app voltar ao foco durante a corrida
   document.addEventListener("visibilitychange", resumeIfPlaying);
 }
@@ -112,6 +122,18 @@ export function stopRideRingtone() {
     clearInterval(loopTimer);
     loopTimer = null;
   }
+  stopPreferenceListener?.();
+  stopPreferenceListener = null;
+  silenceActiveNodes();
+  try {
+    document.removeEventListener("visibilitychange", resumeIfPlaying);
+    navigator.vibrate?.(0);
+  } catch {
+    /* ignore */
+  }
+}
+
+function silenceActiveNodes() {
   // Corta na hora tudo que já foi agendado no grafo de áudio
   const nodes = activeNodes;
   activeNodes = [];
@@ -132,10 +154,4 @@ export function stopRideRingtone() {
       /* ignore */
     }
   });
-  try {
-    document.removeEventListener("visibilitychange", resumeIfPlaying);
-    navigator.vibrate?.(0);
-  } catch {
-    /* ignore */
-  }
 }

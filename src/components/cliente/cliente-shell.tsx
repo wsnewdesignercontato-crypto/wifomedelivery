@@ -35,6 +35,11 @@ export function ClienteShell({ user }: Ctx) {
   const [endereco, setEndereco] = useState<string>("Escolher endereço");
 
   useEffect(() => {
+    if (!user.id) {
+      setCartQty(0);
+      setEndereco("Visitante · Entre para pedir");
+      return;
+    }
     let alive = true;
     async function reload() {
       const [{ data: cart }, { data: addr }] = await Promise.all([
@@ -69,7 +74,7 @@ export function ClienteShell({ user }: Ctx) {
   }, [user.id]);
 
   return (
-    <div className="min-h-screen bg-background pb-24 lg:pb-0">
+    <div className="theme-cliente min-h-screen bg-background pb-24 lg:pb-0">
       {/* Premium orange header — PedeTrem style */}
       <header className="sticky top-0 z-40 bg-gradient-brand text-primary-foreground shadow-lg">
         {/* Top row: brand + (desktop nav) + actions */}
@@ -123,7 +128,17 @@ export function ClienteShell({ user }: Ctx) {
           </div>
 
           <div className="flex items-center gap-1">
-            <NotificationsBell userId={user.id} />
+            {user.id ? (
+              <NotificationsBell userId={user.id} />
+            ) : (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate({ to: "/auth", search: { perfil: "cliente" } })}
+              >
+                Entrar
+              </Button>
+            )}
             <Button
               size="icon"
               variant="ghost"

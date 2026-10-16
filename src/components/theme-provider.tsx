@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useDevicePreferences } from "@/hooks/use-device-preferences";
 
 type Theme = "light" | "dark" | "system";
 
@@ -26,20 +27,26 @@ function applyTheme(resolved: "light" | "dark") {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  const { prefs, updatePreference } = useDevicePreferences();
   const [theme, setThemeState] = useState<Theme>("system");
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
-    const stored = (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? "system";
-    setThemeState(stored);
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored === "light" || stored === "dark" || stored === "system") setThemeState(stored);
+    } catch {
+      // Keep the default theme when storage is unavailable.
+    }
   }, []);
 
   useEffect(() => {
-    const resolved = theme === "system" ? getSystemTheme() : theme;
+    const effectiveTheme = prefs.modo_escuro_auto ? "system" : theme;
+    const resolved = effectiveTheme === "system" ? getSystemTheme() : effectiveTheme;
     setResolvedTheme(resolved);
     applyTheme(resolved);
 
-    if (theme !== "system") return;
+    if (!prefs.modo_escuro_auto) return;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = () => {
       const next = mq.matches ? "dark" : "light";
@@ -48,11 +55,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     };
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
-  }, [theme]);
+  }, [theme, prefs.modo_escuro_auto]);
 
   const setTheme = (next: Theme) => {
     setThemeState(next);
-    localStorage.setItem(STORAGE_KEY, next);
+    updatePreference("modo_escuro_auto", next === "system");
+    try {
+      localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      // Theme still applies for this session.
+    }
   };
 
   return (

@@ -1,30 +1,20 @@
 {
-  "name": "PedeTrem Loja",
-  "short_name": "PedeTrem",
+  "name": "PedeTrem Estabelecimento",
+  "short_name": "PT Loja",
   "description": "Gerencie pedidos, cardápio e entregas do seu estabelecimento no PedeTrem.",
-  "start_url": "/auth?perfil=estabelecimento",
+  "start_url": "/auth?perfil=estabelecimento&app=estabelecimento",
   "scope": "/",
   "id": "/wifome-estabelecimento",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0B0B0F",
-  "theme_color": "#E10B17",
+  "theme_color": "#F58206",
   "lang": "pt-BR",
-  "categories": [
-    "business",
-    "food",
-    "productivity"
-  ],
+  "categories": ["business", "food", "productivity"],
   "icons": [
     {
-      "src": "/pedetrem-icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/pedetrem-icon-512.png",
-      "sizes": "512x512",
+      "src": "/pedetrem-estabelecimento.png",
+      "sizes": "1254x1254",
       "type": "image/png",
       "purpose": "any"
     }
@@ -33,7 +23,18 @@
   "related_applications": [
     {
       "platform": "webapp",
-      "url": "/manifest-estabelecimento.webmanifest"
+      "url": "/manifest-cliente.webmanifest",
+      "id": "/wifome-cliente"
+    },
+    {
+      "platform": "webapp",
+      "url": "/manifest-estabelecimento.webmanifest",
+      "id": "/wifome-estabelecimento"
+    },
+    {
+      "platform": "webapp",
+      "url": "/manifest-entregador.webmanifest",
+      "id": "/wifome-entregador"
     }
   ]
 }

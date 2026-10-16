@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useDevicePreferences } from "@/hooks/use-device-preferences";
 
 type Ad = {
   id: string;
@@ -43,6 +44,7 @@ export function AdRotator({
   fallback?: React.ReactNode;
 }) {
   const navigate = useNavigate();
+  const { prefs } = useDevicePreferences();
 
   const { data: ads = [] } = useQuery({
     queryKey: ["ad_rotator"],
@@ -129,17 +131,17 @@ export function AdRotator({
   }, [adsKey]);
 
   useEffect(() => {
-    if (count <= 1) return;
+    if (count <= 1 || prefs.economia_dados) return;
     const t = window.setInterval(() => {
       setIdx((i) => (i + 1) % count);
     }, rotationMs);
     return () => clearInterval(t);
-  }, [count, rotationMs]);
+  }, [count, rotationMs, prefs.economia_dados]);
 
   if (ads.length === 0) return fallback ? <>{fallback}</> : null;
 
   const ad = ads[idx % ads.length];
-  const ytId = ad.video_url ? extractYouTubeId(ad.video_url) : null;
+  const ytId = !prefs.economia_dados && ad.video_url ? extractYouTubeId(ad.video_url) : null;
   const imgUrl = ad.banner_path ? signed[ad.id] : ad.imagem_url;
 
   function open() {

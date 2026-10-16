@@ -17,14 +17,16 @@ import { Badge } from "@/components/ui/badge";
 import { ReviewForm } from "@/components/reviews";
 
 export const Route = createFileRoute("/_authenticated/cliente/pedido/$id")({
-  head: () => ({ meta: [
-    { title: "Cliente — Acompanhar pedido | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, acompanhar pedido." },
-    { property: "og:title", content: "Cliente — Acompanhar pedido | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, acompanhar pedido." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Acompanhar pedido | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, acompanhar pedido." },
+      { property: "og:title", content: "Cliente — Acompanhar pedido | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, acompanhar pedido." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: PedidoPage,
 });
 
@@ -101,11 +103,24 @@ function PedidoPage() {
       const { data: o } = await supabase
         .from("orders")
         .select(
-          "id,status,subtotal_cents,frete_cents,desconto_cents,total_cents,observacoes,cancellation_reason,refund_status,refund_amount_cents,establishment_id,forma_pagamento,codigo_entrega,codigo_expira_em,tipo_entrega,created_at",
+          "id,status,subtotal_cents,frete_cents,desconto_cents,total_cents,observacoes,cancellation_reason,refund_status,refund_amount_cents,establishment_id,forma_pagamento,codigo_expira_em,tipo_entrega,created_at",
         )
         .eq("id", id)
         .maybeSingle();
-      setOrder(o as Order | null);
+      const { data: confirmation, error: confirmationError } = o
+        ? await supabase.rpc("get_order_delivery_code", { p_order_id: id })
+        : { data: null, error: null };
+      if (confirmationError) toast.error("Não foi possível consultar o código de confirmação");
+      setOrder(
+        o
+          ? ({
+              ...o,
+              ...(confirmation as Record<string, unknown> | null),
+              codigo_entrega:
+                (confirmation as { codigo_entrega?: string } | null)?.codigo_entrega ?? null,
+            } as Order)
+          : null,
+      );
       if (!o) {
         setLoading(false);
         return;

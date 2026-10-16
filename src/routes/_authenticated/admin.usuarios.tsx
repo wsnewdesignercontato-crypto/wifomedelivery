@@ -10,14 +10,16 @@ import { Shield, ShieldOff, Search } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/usuarios")({
-  head: () => ({ meta: [
-    { title: "Admin — Usuários | PedeTrem" },
-    { name: "description", content: "PedeTrem: admin, usuários." },
-    { property: "og:title", content: "Admin — Usuários | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: admin, usuários." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Admin — Usuários | PedeTrem" },
+      { name: "description", content: "PedeTrem: admin, usuários." },
+      { property: "og:title", content: "Admin — Usuários | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: admin, usuários." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AdminUsers,
 });
 
@@ -30,11 +32,17 @@ function AdminUsers() {
   const revoke = useServerFn(revokeAppRole);
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ["admin-users", search],
-    queryFn: () => list({ data: { search } }),
+  const {
+    data: result,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["admin-users", search, page],
+    queryFn: () => list({ data: { search, page } }),
   });
+  const users = result?.users ?? [];
 
   const grantMut = useMutation({
     mutationFn: (v: { targetUserId: string; role: Role }) => grant({ data: v }),
@@ -71,11 +79,20 @@ function AdminUsers() {
         <Input
           placeholder="Buscar por e-mail…"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          maxLength={254}
           className="pl-9"
         />
       </div>
 
+      {isError && (
+        <p role="alert" className="text-destructive">
+          Não foi possível carregar os usuários.
+        </p>
+      )}
       <div className="rounded-xl border overflow-hidden overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted/40">
@@ -163,6 +180,27 @@ function AdminUsers() {
             })}
           </tbody>
         </table>
+      </div>
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span>
+          {result?.total ?? 0} usuários · Página {page} de {result?.totalPages ?? 1}
+        </span>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            disabled={isLoading || page <= 1}
+            onClick={() => setPage(page - 1)}
+          >
+            Anterior
+          </Button>
+          <Button
+            variant="outline"
+            disabled={isLoading || !result || page >= result.totalPages}
+            onClick={() => setPage(page + 1)}
+          >
+            Próxima
+          </Button>
+        </div>
       </div>
     </div>
   );

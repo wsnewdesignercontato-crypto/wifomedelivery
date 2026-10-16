@@ -1,7 +1,11 @@
 /* PedeTrem — service worker de mensagens (push).
    Não faz cache de app shell: serve apenas para notificações em segundo plano. */
 
-const ICON = "/pedetrem-icon-192.png";
+const ICONS = {
+  cliente: "/pedetrem-icon-192.png",
+  estabelecimento: "/pedetrem-estabelecimento.png",
+  entregador: "/pedetrem-entregador.png",
+};
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
@@ -15,6 +19,15 @@ self.addEventListener("push", (event) => {
   }
 
   const title = data.title || "PedeTrem";
+  let profile = "cliente";
+  try {
+    const path = new URL(data.url || "/", self.location.origin).pathname;
+    if (path.startsWith("/estabelecimento")) profile = "estabelecimento";
+    else if (path.startsWith("/entregador")) profile = "entregador";
+  } catch {
+    /* Keep the default icon. */
+  }
+  const ICON = ICONS[profile];
   const options = {
     body: data.body || "",
     icon: ICON,

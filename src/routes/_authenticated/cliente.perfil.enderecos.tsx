@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ChevronLeft, MapPin, Plus, Trash2, Star, Loader2 } from "lucide-react";
@@ -7,14 +7,22 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/enderecos")({
-  head: () => ({ meta: [
-    { title: "Cliente — Perfil — Endereços | PedeTrem" },
-    { name: "description", content: "PedeTrem: cliente, perfil, endereços." },
-    { property: "og:title", content: "Cliente — Perfil — Endereços | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: cliente, perfil, endereços." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  validateSearch: (search: Record<string, unknown>): { checkout?: boolean; cupom?: string } => ({
+    ...(search.checkout === true || search.checkout === "true" ? { checkout: true } : {}),
+    ...(typeof search.cupom === "string" && search.cupom.length <= 50
+      ? { cupom: search.cupom }
+      : {}),
+  }),
+  head: () => ({
+    meta: [
+      { title: "Cliente — Perfil — Endereços | PedeTrem" },
+      { name: "description", content: "PedeTrem: cliente, perfil, endereços." },
+      { property: "og:title", content: "Cliente — Perfil — Endereços | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: cliente, perfil, endereços." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: EnderecosPage,
 });
 
@@ -31,6 +39,8 @@ type Addr = {
 };
 
 function EnderecosPage() {
+  const { checkout, cupom } = Route.useSearch();
+  const navigate = useNavigate();
   const { user } = Route.useRouteContext() as { user: { id: string } };
   const [addrs, setAddrs] = useState<Addr[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,6 +83,7 @@ function EnderecosPage() {
     setAddrs((prev) => [data as Addr, ...prev]);
     setNovo({ label: "Casa", rua: "", numero: "", bairro: "", cidade: "", estado: "", cep: "" });
     toast.success("Endereço adicionado");
+    if (checkout) navigate({ to: "/cliente/checkout", search: { cupom } });
   }
   async function delAddr(id: string) {
     await supabase.from("addresses").delete().eq("id", id);

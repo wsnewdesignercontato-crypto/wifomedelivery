@@ -1,3 +1,4 @@
+import { ESTABLISHMENT_SELECT } from "@/lib/data-access";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -26,14 +27,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { PushToggleCard } from "@/components/push-toggle-card";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/configuracoes")({
-  head: () => ({ meta: [
-    { title: "Loja — Configurações | PedeTrem" },
-    { name: "description", content: "PedeTrem: loja, configurações." },
-    { property: "og:title", content: "Loja — Configurações | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: loja, configurações." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Loja — Configurações | PedeTrem" },
+      { name: "description", content: "PedeTrem: loja, configurações." },
+      { property: "og:title", content: "Loja — Configurações | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: loja, configurações." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: ConfigPage,
 });
 
@@ -212,11 +215,12 @@ function ConfigPage() {
       .from("establishments")
       .update(patch)
       .eq("id", estab.id)
-      .select("*")
+      .select(ESTABLISHMENT_SELECT)
       .single();
     setSaving(false);
     if (error) return toast.error("Falha ao salvar");
-    if (data) qc.setQueryData(["myEstab", userId], data as unknown as Estab);
+    if (data)
+      qc.setQueryData(["myEstab", userId], { ...estab, ...data, ...patch } as unknown as Estab);
     qc.invalidateQueries({ queryKey: ["myEstab", userId] });
     window.dispatchEvent(new Event("wifome:profile-updated"));
     toast.success("Configurações salvas ✨");

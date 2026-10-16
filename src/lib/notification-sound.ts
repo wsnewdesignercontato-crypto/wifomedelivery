@@ -1,5 +1,7 @@
 // Toca um "sininho" curto usando WebAudio (sem asset externo).
 // Duas notas rápidas com decaimento suave — parecido com bell do iOS.
+import { readDevicePreferences } from "@/lib/device-preferences";
+
 let ctx: AudioContext | null = null;
 let lastPlay = 0;
 
@@ -38,6 +40,7 @@ function tone(ac: AudioContext, freq: number, start: number, dur = 0.35, gain = 
 }
 
 export function playBellChime() {
+  if (!readDevicePreferences().som) return;
   const now = Date.now();
   if (now - lastPlay < 600) return; // debounce contra bursts
   lastPlay = now;

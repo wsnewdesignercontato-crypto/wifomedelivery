@@ -86,6 +86,7 @@ import { Route as AuthenticatedEstabelecimentoProdutosRouteImport } from './rout
 import { Route as AuthenticatedEstabelecimentoRelatoriosRouteImport } from './routes/_authenticated/estabelecimento.relatorios'
 import { Route as AuthenticatedEstabelecimentoSaquesRouteImport } from './routes/_authenticated/estabelecimento.saques'
 import { Route as AuthenticatedEstabelecimentoScoreRouteImport } from './routes/_authenticated/estabelecimento.score'
+import { Route as AuthenticatedEstabelecimentoSuporteRouteImport } from './routes/_authenticated/estabelecimento.suporte'
 import { Route as ApiAuthSendEmailRouteImport } from './routes/api/auth/send-email'
 import { Route as ApiInternalPushDispatchRouteImport } from './routes/api/internal/push-dispatch'
 import { Route as AuthenticatedClienteEstabelecimentoIdRouteImport } from './routes/_authenticated/cliente.estabelecimento.$id'
@@ -546,6 +547,12 @@ const AuthenticatedEstabelecimentoScoreRoute =
     path: '/score',
     getParentRoute: () => AuthenticatedEstabelecimentoRoute,
   } as any)
+const AuthenticatedEstabelecimentoSuporteRoute =
+  AuthenticatedEstabelecimentoSuporteRouteImport.update({
+    id: '/suporte',
+    path: '/suporte',
+    getParentRoute: () => AuthenticatedEstabelecimentoRoute,
+  } as any)
 const ApiAuthSendEmailRoute = ApiAuthSendEmailRouteImport.update({
   id: '/api/auth/send-email',
   path: '/api/auth/send-email',
@@ -714,6 +721,7 @@ export interface FileRoutesByFullPath {
   '/estabelecimento/relatorios': typeof AuthenticatedEstabelecimentoRelatoriosRoute
   '/estabelecimento/saques': typeof AuthenticatedEstabelecimentoSaquesRoute
   '/estabelecimento/score': typeof AuthenticatedEstabelecimentoScoreRoute
+  '/estabelecimento/suporte': typeof AuthenticatedEstabelecimentoSuporteRoute
   '/api/auth/send-email': typeof ApiAuthSendEmailRoute
   '/api/internal/push-dispatch': typeof ApiInternalPushDispatchRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -804,6 +812,7 @@ export interface FileRoutesByTo {
   '/estabelecimento/relatorios': typeof AuthenticatedEstabelecimentoRelatoriosRoute
   '/estabelecimento/saques': typeof AuthenticatedEstabelecimentoSaquesRoute
   '/estabelecimento/score': typeof AuthenticatedEstabelecimentoScoreRoute
+  '/estabelecimento/suporte': typeof AuthenticatedEstabelecimentoSuporteRoute
   '/api/auth/send-email': typeof ApiAuthSendEmailRoute
   '/api/internal/push-dispatch': typeof ApiInternalPushDispatchRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -900,6 +909,7 @@ export interface FileRoutesById {
   '/_authenticated/estabelecimento/relatorios': typeof AuthenticatedEstabelecimentoRelatoriosRoute
   '/_authenticated/estabelecimento/saques': typeof AuthenticatedEstabelecimentoSaquesRoute
   '/_authenticated/estabelecimento/score': typeof AuthenticatedEstabelecimentoScoreRoute
+  '/_authenticated/estabelecimento/suporte': typeof AuthenticatedEstabelecimentoSuporteRoute
   '/api/auth/send-email': typeof ApiAuthSendEmailRoute
   '/api/internal/push-dispatch': typeof ApiInternalPushDispatchRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -996,6 +1006,7 @@ export interface FileRouteTypes {
     | '/estabelecimento/relatorios'
     | '/estabelecimento/saques'
     | '/estabelecimento/score'
+    | '/estabelecimento/suporte'
     | '/api/auth/send-email'
     | '/api/internal/push-dispatch'
     | '/admin/'
@@ -1086,6 +1097,7 @@ export interface FileRouteTypes {
     | '/estabelecimento/relatorios'
     | '/estabelecimento/saques'
     | '/estabelecimento/score'
+    | '/estabelecimento/suporte'
     | '/api/auth/send-email'
     | '/api/internal/push-dispatch'
     | '/admin'
@@ -1181,6 +1193,7 @@ export interface FileRouteTypes {
     | '/_authenticated/estabelecimento/relatorios'
     | '/_authenticated/estabelecimento/saques'
     | '/_authenticated/estabelecimento/score'
+    | '/_authenticated/estabelecimento/suporte'
     | '/api/auth/send-email'
     | '/api/internal/push-dispatch'
     | '/_authenticated/admin/'
@@ -1759,6 +1772,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEstabelecimentoScoreRouteImport
       parentRoute: typeof AuthenticatedEstabelecimentoRoute
     }
+    '/_authenticated/estabelecimento/suporte': {
+      id: '/_authenticated/estabelecimento/suporte'
+      path: '/suporte'
+      fullPath: '/estabelecimento/suporte'
+      preLoaderRoute: typeof AuthenticatedEstabelecimentoSuporteRouteImport
+      parentRoute: typeof AuthenticatedEstabelecimentoRoute
+    }
     '/api/auth/send-email': {
       id: '/api/auth/send-email'
       path: '/api/auth/send-email'
@@ -2050,6 +2070,7 @@ interface AuthenticatedEstabelecimentoRouteChildren {
   AuthenticatedEstabelecimentoRelatoriosRoute: typeof AuthenticatedEstabelecimentoRelatoriosRoute
   AuthenticatedEstabelecimentoSaquesRoute: typeof AuthenticatedEstabelecimentoSaquesRoute
   AuthenticatedEstabelecimentoScoreRoute: typeof AuthenticatedEstabelecimentoScoreRoute
+  AuthenticatedEstabelecimentoSuporteRoute: typeof AuthenticatedEstabelecimentoSuporteRoute
   AuthenticatedEstabelecimentoIndexRoute: typeof AuthenticatedEstabelecimentoIndexRoute
 }
 
@@ -2093,6 +2114,8 @@ const AuthenticatedEstabelecimentoRouteChildren: AuthenticatedEstabelecimentoRou
       AuthenticatedEstabelecimentoSaquesRoute,
     AuthenticatedEstabelecimentoScoreRoute:
       AuthenticatedEstabelecimentoScoreRoute,
+    AuthenticatedEstabelecimentoSuporteRoute:
+      AuthenticatedEstabelecimentoSuporteRoute,
     AuthenticatedEstabelecimentoIndexRoute:
       AuthenticatedEstabelecimentoIndexRoute,
   }

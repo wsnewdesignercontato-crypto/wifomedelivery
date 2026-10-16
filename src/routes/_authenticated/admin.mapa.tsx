@@ -6,16 +6,21 @@ import { MapPin, Store, Bike, Loader2, AlertTriangle, Wand2, Eye, EyeOff } from 
 import { useServerFn } from "@tanstack/react-start";
 import { geocodeMissingEstablishments } from "@/lib/admin-map.functions";
 import { toast } from "sonner";
+import { watchDeviceLocation } from "@/lib/device-preferences";
 
 export const Route = createFileRoute("/_authenticated/admin/mapa")({
-  head: () => ({ meta: [
-    { title: "Admin — Mapa ao vivo | PedeTrem" },
-    { name: "description", content: "PedeTrem: admin, mapa ao vivo." },
-    { property: "og:title", content: "Admin — Mapa ao vivo | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: admin, mapa ao vivo." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }), component: MapaPage });
+  head: () => ({
+    meta: [
+      { title: "Admin — Mapa ao vivo | PedeTrem" },
+      { name: "description", content: "PedeTrem: admin, mapa ao vivo." },
+      { property: "og:title", content: "Admin — Mapa ao vivo | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: admin, mapa ao vivo." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: MapaPage,
+});
 
 const LiveMap = lazy(() => import("@/components/admin/live-map"));
 
@@ -116,7 +121,7 @@ function MapaPage() {
       setGeoError("Geolocalização não suportada neste navegador.");
       return;
     }
-    const watchId = navigator.geolocation.watchPosition(
+    const stopWatching = watchDeviceLocation(
       (pos) => {
         setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         setGeoError(null);
@@ -124,7 +129,7 @@ function MapaPage() {
       (err) => setGeoError(err.message || "Não foi possível obter sua localização."),
       { enableHighAccuracy: true, maximumAge: 15000, timeout: 15000 },
     );
-    return () => navigator.geolocation.clearWatch(watchId);
+    return stopWatching;
   }, []);
 
   useEffect(() => {

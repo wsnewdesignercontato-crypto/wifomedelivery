@@ -36,6 +36,7 @@ import {
   Settings,
   LogOut,
   FileText,
+  LifeBuoy,
 } from "lucide-react";
 import { NotificationsBell } from "@/components/cliente/notifications-bell";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,6 +63,7 @@ const NAV: NavItem[] = [
   { label: "Anúncios", to: "/estabelecimento/anuncios", icon: Megaphone },
   { label: "Equipe", to: "/estabelecimento/equipe", icon: Users },
   { label: "Configurações", to: "/estabelecimento/configuracoes", icon: Settings },
+  { label: "Suporte", to: "/estabelecimento/suporte", icon: LifeBuoy },
 ];
 
 function AppSidebar() {

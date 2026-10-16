@@ -6,16 +6,29 @@ import { fmtBRL } from "@/lib/format";
 import { DollarSign, TrendingUp, Wallet, Percent, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMemo, useState } from "react";
+import { sumLedgerAmounts } from "@/lib/commerce";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/financeiro")({
-  head: () => ({ meta: [
-    { title: "Admin — Financeiro | PedeTrem" },
-    { name: "description", content: "PedeTrem: admin, financeiro." },
-    { property: "og:title", content: "Admin — Financeiro | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: admin, financeiro." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Admin — Financeiro | PedeTrem" },
+      { name: "description", content: "PedeTrem: admin, financeiro." },
+      { property: "og:title", content: "Admin — Financeiro | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: admin, financeiro." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: FinanceiroPage,
 });
 
@@ -34,13 +47,20 @@ type Row = {
 };
 
 async function fetchLedger() {
-  const { data, error } = await supabase
-    .from("platform_ledger")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(500);
-  if (error) throw error;
-  return (data ?? []) as Row[];
+  const rows: Row[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await supabase
+      .from("platform_ledger")
+      .select(
+        "id,order_id,establishment_id,gross_cents,commission_cents,delivery_fee_cents,courier_payout_cents,merchant_payout_cents,platform_revenue_cents,status,created_at",
+      )
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(offset, offset + 999);
+    if (error) throw new Error(error.message);
+    rows.push(...(data ?? []));
+    if (!data || data.length < 1000) return rows;
+  }
 }
 
 function toCSV(rows: Row[]) {
@@ -62,8 +82,46 @@ function toCSV(rows: Row[]) {
 }
 
 function FinanceiroPage() {
-  const { data = [], isLoading } = useQuery({ queryKey: ["ledger"], queryFn: fetchLedger });
+  const {
+    data = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({ queryKey: ["ledger"], queryFn: fetchLedger });
   const [range, setRange] = useState<"7" | "30" | "all">("30");
+  const [settlement, setSettlement] = useState<Row | null>(null);
+  const [settlementMode, setSettlementMode] = useState<"receipt" | "refund">("receipt");
+  const [reference, setReference] = useState("");
+  const [settling, setSettling] = useState(false);
+
+  async function confirmReceipt() {
+    if (!settlement?.order_id || settling) return;
+    if (reference.trim().length < 3)
+      return toast.error("Informe a referência do comprovante conferido");
+    setSettling(true);
+    try {
+      const { error: receiptError } = await supabase.rpc(
+        settlementMode === "refund" ? "record_order_refund" : "settle_order_payment",
+        {
+          p_order_id: settlement.order_id,
+          p_reference: reference.trim(),
+        },
+      );
+      if (receiptError) throw new Error(receiptError.message);
+      toast.success(
+        settlementMode === "refund"
+          ? "Reembolso integral registrado; lançamentos estornados"
+          : "Recebimento confirmado; saldo liberado nas carteiras",
+      );
+      setSettlement(null);
+      setReference("");
+      await refetch();
+    } catch (failure) {
+      toast.error(failure instanceof Error ? failure.message : "Falha ao confirmar recebimento");
+    } finally {
+      setSettling(false);
+    }
+  }
 
   const filtered = useMemo(() => {
     if (range === "all") return data;
@@ -72,15 +130,7 @@ function FinanceiroPage() {
     return data.filter((r) => new Date(r.created_at).getTime() >= min);
   }, [data, range]);
 
-  const totals = filtered.reduce(
-    (acc, r) => ({
-      gross: acc.gross + r.gross_cents,
-      revenue: acc.revenue + r.platform_revenue_cents,
-      merchant: acc.merchant + r.merchant_payout_cents,
-      courier: acc.courier + r.courier_payout_cents,
-    }),
-    { gross: 0, revenue: 0, merchant: 0, courier: 0 },
-  );
+  const totals = sumLedgerAmounts(filtered);
   const takeRate = totals.gross > 0 ? (totals.revenue / totals.gross) * 100 : 0;
 
   function download() {
@@ -131,6 +181,57 @@ function FinanceiroPage() {
         <KpiCard label="Repasse lojas" value={fmtBRL(totals.merchant)} icon={Wallet} />
         <KpiCard label="Take-rate" value={`${takeRate.toFixed(1)}%`} icon={Percent} />
       </div>
+      {error && (
+        <p className="text-sm text-destructive">Falha ao carregar financeiro: {error.message}</p>
+      )}
+      <p className="text-sm text-muted-foreground">
+        Confirme o recebimento somente após conferir o pagamento. A confirmação libera o saldo para
+        saque e registra a referência; nenhuma transferência bancária é executada por esta ação.
+      </p>
+
+      <Dialog
+        open={settlement !== null}
+        onOpenChange={(open) => {
+          if (!open && !settling) setSettlement(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {settlementMode === "refund"
+                ? "Registrar reembolso integral"
+                : "Confirmar pagamento recebido"}
+            </DialogTitle>
+            <DialogDescription>
+              Pedido {settlement?.order_id?.slice(0, 8)} · {fmtBRL(settlement?.gross_cents ?? 0)}.
+              {settlementMode === "refund"
+                ? "Registre somente após realizar e conferir a devolução integral; não envia dinheiro. O saldo correspondente será estornado nas carteiras."
+                : "Confirme após verificar o recebimento integral. Os repasses ficarão disponíveis nas carteiras."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="payment-reference">Referência ou comprovante conferido</Label>
+            <Input
+              id="payment-reference"
+              value={reference}
+              maxLength={160}
+              onChange={(event) => setReference(event.target.value)}
+              placeholder={
+                settlementMode === "refund"
+                  ? "Identificação da devolução integral"
+                  : "Identificação do recebimento"
+              }
+            />
+          </div>
+          <Button onClick={confirmReceipt} disabled={settling || reference.trim().length < 3}>
+            {settling
+              ? "Registrando…"
+              : settlementMode === "refund"
+                ? "Registrar devolução integral conferida"
+                : "Confirmar recebimento e liberar saldo"}
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       <div className="rounded-xl border border-border bg-card">
         <div className="border-b border-border p-4 text-sm font-semibold">
@@ -147,19 +248,20 @@ function FinanceiroPage() {
                 <th>Loja</th>
                 <th>Entregador</th>
                 <th>Status</th>
+                <th>Recebimento</th>
               </tr>
             </thead>
             <tbody>
               {isLoading && (
                 <tr>
-                  <td colSpan={7} className="p-6 text-center text-muted-foreground">
+                  <td colSpan={8} className="p-6 text-center text-muted-foreground">
                     Carregando…
                   </td>
                 </tr>
               )}
               {!isLoading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-6 text-center text-muted-foreground">
+                  <td colSpan={8} className="p-6 text-center text-muted-foreground">
                     Sem lançamentos no período.
                   </td>
                 </tr>
@@ -178,6 +280,40 @@ function FinanceiroPage() {
                     <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-600">
                       {r.status}
                     </span>
+                  </td>
+                  <td className="px-4 py-2">
+                    {r.status === "pending" && r.order_id && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={settling}
+                        onClick={() => {
+                          setReference("");
+                          setSettlementMode("receipt");
+                          setSettlement(r);
+                        }}
+                      >
+                        Confirmar recebido
+                      </Button>
+                    )}
+                    {r.status === "paid" && (
+                      <span className="text-xs text-muted-foreground">Confirmado</span>
+                    )}
+                    {(r.status === "paid" || r.status === "pending") && r.order_id && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="ml-2"
+                        disabled={settling}
+                        onClick={() => {
+                          setReference("");
+                          setSettlementMode("refund");
+                          setSettlement(r);
+                        }}
+                      >
+                        Registrar reembolso integral
+                      </Button>
+                    )}
                   </td>
                 </tr>
               ))}

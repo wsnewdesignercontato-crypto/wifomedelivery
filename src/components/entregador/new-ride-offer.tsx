@@ -21,6 +21,7 @@ import { canCourierAccessRides } from "@/lib/courier-approval";
 import OpenStreetMap, { type MapMarker } from "@/components/open-street-map";
 import { deliveryPoint, haversineKm, navigationUrl, validMapPoint } from "@/lib/map-utils";
 import { ensureRingtoneUnlocked, startRideRingtone, stopRideRingtone } from "@/lib/ride-ringtone";
+import { watchDeviceLocation } from "@/lib/device-preferences";
 import type { Courier } from "@/hooks/use-courier";
 
 type Offer = {
@@ -134,12 +135,12 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
   // Captura localização do entregador em tempo real
   useEffect(() => {
     if (!enabled || typeof navigator === "undefined" || !navigator.geolocation) return;
-    const id = navigator.geolocation.watchPosition(
+    const stopWatching = watchDeviceLocation(
       (p) => setMyPos({ lat: p.coords.latitude, lng: p.coords.longitude }),
       () => {},
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
     );
-    return () => navigator.geolocation.clearWatch(id);
+    return stopWatching;
   }, [enabled]);
 
   // Busca corrida disponível

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { AlertOctagon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { getCurrentDevicePosition } from "@/lib/device-preferences";
 
 export function SOSButton({
   orderId,
@@ -30,7 +31,7 @@ export function SOSButton({
     let lng: number | null = null;
     try {
       const pos = await new Promise<GeolocationPosition>((res, rej) =>
-        navigator.geolocation.getCurrentPosition(res, rej, { timeout: 6000 }),
+        getCurrentDevicePosition(res, rej, { timeout: 6000 }),
       );
       lat = pos.coords.latitude;
       lng = pos.coords.longitude;

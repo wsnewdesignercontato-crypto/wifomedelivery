@@ -173,8 +173,8 @@ function RootComponent() {
           Pular para o conteúdo
         </a>
         <div id="conteudo" className="relative h-full">
-          <Outlet />
           <InstallAppPrompt />
+          <Outlet />
         </div>
         <Toaster richColors closeButton position="top-right" />
       </ThemeProvider>

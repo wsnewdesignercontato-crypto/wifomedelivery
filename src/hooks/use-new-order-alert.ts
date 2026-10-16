@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { playSiren } from "@/hooks/use-new-ride-alert";
+import { readDevicePreferences, vibrateDevice } from "@/lib/device-preferences";
 
 /**
  * Alerta o estabelecimento (som + aviso na tela) sempre que um novo pedido chega,
@@ -34,13 +35,7 @@ export function useNewOrderAlert(establishmentId: string | undefined) {
           seen.current.add(row.id);
 
           playSiren();
-          if ("vibrate" in navigator) {
-            try {
-              navigator.vibrate([220, 120, 220, 120, 320]);
-            } catch {
-              /* ignore */
-            }
-          }
+          vibrateDevice([220, 120, 220, 120, 320]);
           const valor = ((row.total_cents ?? 0) / 100).toLocaleString("pt-BR", {
             style: "currency",
             currency: "BRL",
@@ -62,6 +57,7 @@ export function useNewOrderAlert(establishmentId: string | undefined) {
 
 /** Toca um som inaudível só para liberar o áudio no navegador. */
 function playSirenSilently() {
+  if (!readDevicePreferences().som) return;
   try {
     const Ctx =
       window.AudioContext ||

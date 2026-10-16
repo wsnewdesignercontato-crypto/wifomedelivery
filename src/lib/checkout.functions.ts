@@ -1,10 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { orderQuoteSchema } from "@/lib/commerce";
 
-const placeOrderInput = z.object({
+const quoteOrderInput = z.object({
   establishment_id: z.string().uuid(),
-  forma_pagamento: z.enum(["pix", "cartao", "dinheiro", "carteira"]),
+  idempotency_key: z.string().uuid(),
+  forma_pagamento: z.enum(["pix", "cartao", "dinheiro"]),
   tipo_entrega: z.enum(["delivery", "pickup"]).default("delivery"),
   endereco: z
     .object({
@@ -15,8 +17,8 @@ const placeOrderInput = z.object({
       bairro: z.string().optional().nullable(),
       cidade: z.string().min(1),
       estado: z.string().optional().nullable(),
-      lat: z.number().optional().nullable(),
-      lng: z.number().optional().nullable(),
+      lat: z.number().min(-90).max(90).optional().nullable(),
+      lng: z.number().min(-180).max(180).optional().nullable(),
       cep: z.string().optional().nullable(),
     })
     .nullable()
@@ -25,114 +27,54 @@ const placeOrderInput = z.object({
   coupon_code: z.string().trim().max(50).optional().nullable(),
 });
 
+const placeOrderInput = quoteOrderInput.extend({
+  expected_total_cents: z.number().int().nonnegative(),
+});
+
+export type CheckoutQuoteInput = z.infer<typeof quoteOrderInput>;
+
+export const quoteOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: CheckoutQuoteInput) => quoteOrderInput.parse(data))
+  .handler(async ({ data, context }) => {
+    const { data: result, error } = await context.supabase.rpc("quote_order", {
+      p_establishment_id: data.establishment_id,
+      p_idempotency_key: data.idempotency_key,
+      p_forma_pagamento: data.forma_pagamento,
+      p_tipo_entrega: data.tipo_entrega,
+      p_endereco: data.endereco ?? null,
+      p_observacoes: data.observacoes ?? undefined,
+      p_coupon_code: data.coupon_code ?? undefined,
+    });
+    if (error) throw new Error(error.message);
+    return orderQuoteSchema.parse(result);
+  });
+
+const placedOrder = z.object({
+  order_id: z.string().uuid(),
+  total_cents: z.number().int().nonnegative(),
+  desconto_cents: z.number().int().nonnegative(),
+});
+
 export const placeOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d: z.infer<typeof placeOrderInput>) => placeOrderInput.parse(d))
+  .validator((data: z.infer<typeof placeOrderInput>) => placeOrderInput.parse(data))
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-
-    // Carrinho do usuário para essa loja
-    const { data: items, error: cartErr } = await supabase
-      .from("cart_items")
-      .select("product_id,nome_snapshot,preco_unit_cents,quantidade,observacoes,addons")
-      .eq("user_id", userId)
-      .eq("establishment_id", data.establishment_id);
-    if (cartErr) throw new Error(cartErr.message);
-    if (!items || items.length === 0) throw new Error("Carrinho vazio");
-
-    const { data: loja, error: lojaErr } = await supabase
-      .from("establishments")
-      .select("id,taxa_entrega_cents,pedido_minimo_cents,is_open,status")
-      .eq("id", data.establishment_id)
-      .maybeSingle();
-    if (lojaErr) throw new Error(lojaErr.message);
-    if (!loja || loja.status !== "aprovado") throw new Error("Loja indisponível");
-
-    const isPickup = data.tipo_entrega === "pickup";
-    if (!isPickup && !data.endereco) throw new Error("Selecione um endereço de entrega");
-
-    const subtotal = items.reduce((s, i) => s + i.preco_unit_cents * i.quantidade, 0);
-    if (subtotal < loja.pedido_minimo_cents) {
+    const { data: result, error } = await context.supabase.rpc("checkout_order", {
+      p_establishment_id: data.establishment_id,
+      p_idempotency_key: data.idempotency_key,
+      p_forma_pagamento: data.forma_pagamento,
+      p_tipo_entrega: data.tipo_entrega,
+      p_endereco: data.endereco ?? null,
+      p_observacoes: data.observacoes ?? undefined,
+      p_coupon_code: data.coupon_code ?? undefined,
+      p_expected_total_cents: data.expected_total_cents,
+    });
+    if (error)
       throw new Error(
-        `Pedido mínimo desta loja é R$ ${(loja.pedido_minimo_cents / 100)
-          .toFixed(2)
-          .replace(".", ",")}`,
+        /^[0-9A-Z]{5}$/.test(error.code ?? "")
+          ? `CHECKOUT_REJECTED:${error.message}`
+          : error.message,
       );
-    }
-
-    // Cupom (opcional)
-    let desconto = 0;
-    const frete = isPickup ? 0 : loja.taxa_entrega_cents;
-    if (data.coupon_code) {
-      const { data: cup } = await supabase
-        .from("coupons")
-        .select(
-          "id,type,value_cents,percent,min_order_cents,max_discount_cents,ativo,starts_at,expires_at,usage_limit,used_count,establishment_id",
-        )
-        .eq("code", data.coupon_code.trim().toUpperCase())
-        .maybeSingle();
-      if (!cup || !cup.ativo) throw new Error("Cupom inválido");
-      if (cup.establishment_id && cup.establishment_id !== loja.id)
-        throw new Error("Cupom não vale para esta loja");
-      if (cup.starts_at && new Date(cup.starts_at) > new Date())
-        throw new Error("Cupom ainda não está ativo");
-      if (cup.expires_at && new Date(cup.expires_at) < new Date())
-        throw new Error("Cupom expirado");
-      if (cup.usage_limit != null && cup.used_count >= cup.usage_limit)
-        throw new Error("Cupom esgotado");
-      if (subtotal < cup.min_order_cents)
-        throw new Error("Pedido abaixo do mínimo para este cupom");
-      if (cup.type === "percent") {
-        desconto = Math.floor((subtotal * Number(cup.percent)) / 100);
-        if (cup.max_discount_cents) desconto = Math.min(desconto, cup.max_discount_cents);
-      } else if (cup.type === "fixed") {
-        desconto = cup.value_cents;
-      } else if (cup.type === "free_delivery") {
-        desconto = frete;
-      }
-      desconto = Math.max(0, Math.min(desconto, subtotal + frete));
-    }
-
-    const total = Math.max(0, subtotal + frete - desconto);
-
-    const { data: order, error: orderErr } = await supabase
-      .from("orders")
-      .insert({
-        cliente_id: userId,
-        establishment_id: loja.id,
-        status: "placed",
-        subtotal_cents: subtotal,
-        frete_cents: frete,
-        desconto_cents: desconto,
-        total_cents: total,
-        forma_pagamento: data.forma_pagamento,
-        tipo_entrega: data.tipo_entrega,
-        endereco_entrega: isPickup ? null : data.endereco,
-        observacoes: data.observacoes ?? null,
-      })
-      .select("id")
-      .single();
-    if (orderErr || !order) throw new Error(orderErr?.message ?? "Falha ao criar pedido");
-
-    const { error: itensErr } = await supabase.from("order_items").insert(
-      items.map((i) => ({
-        order_id: order.id,
-        product_id: i.product_id,
-        nome_snapshot: i.nome_snapshot,
-        preco_unit_cents: i.preco_unit_cents,
-        quantidade: i.quantidade,
-        observacoes: i.observacoes,
-        addons: Array.isArray(i.addons) ? i.addons : [],
-      })),
-    );
-    if (itensErr) throw new Error(itensErr.message);
-
-    // Limpa carrinho da loja
-    await supabase
-      .from("cart_items")
-      .delete()
-      .eq("user_id", userId)
-      .eq("establishment_id", loja.id);
-
-    return { order_id: order.id, total_cents: total, desconto_cents: desconto };
+    return placedOrder.parse(result);
   });

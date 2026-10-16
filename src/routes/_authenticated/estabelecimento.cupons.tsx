@@ -17,16 +17,19 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Plus, Trash2 } from "lucide-react";
+import { parseMoneyCents } from "@/lib/commerce";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/cupons")({
-  head: () => ({ meta: [
-    { title: "Loja — Cupons | PedeTrem" },
-    { name: "description", content: "PedeTrem: loja, cupons." },
-    { property: "og:title", content: "Loja — Cupons | PedeTrem" },
-    { property: "og:description", content: "PedeTrem: loja, cupons." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Loja — Cupons | PedeTrem" },
+      { name: "description", content: "PedeTrem: loja, cupons." },
+      { property: "og:title", content: "Loja — Cupons | PedeTrem" },
+      { property: "og:description", content: "PedeTrem: loja, cupons." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: CuponsPage,
 });
 
@@ -50,11 +53,12 @@ function CuponsPage() {
 
   const reload = useCallback(async () => {
     if (!estabId) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("coupons")
       .select("id,code,type,value_cents,percent,min_order_cents,usage_limit,used_count,ativo")
       .eq("establishment_id", estabId)
       .order("created_at", { ascending: false });
+    if (error) return toast.error(error.message);
     setList((data ?? []) as Coupon[]);
   }, [estabId]);
   useEffect(() => {
@@ -62,13 +66,31 @@ function CuponsPage() {
   }, [reload]);
 
   async function toggle(c: Coupon) {
-    await supabase.from("coupons").update({ ativo: !c.ativo }).eq("id", c.id);
-    reload();
+    if (!estabId) return;
+    const { data, error } = await supabase
+      .from("coupons")
+      .update({ ativo: !c.ativo })
+      .eq("id", c.id)
+      .eq("establishment_id", estabId)
+      .select("id");
+    if (error || data?.length !== 1)
+      return toast.error(error?.message ?? "Cupom não encontrado ou sem permissão");
+    await reload();
   }
   async function remover(id: string) {
+    if (!estabId) return;
     if (!confirm("Excluir cupom?")) return;
-    await supabase.from("coupons").delete().eq("id", id);
-    reload();
+    const { data, error } = await supabase
+      .from("coupons")
+      .delete()
+      .eq("id", id)
+      .eq("establishment_id", estabId)
+      .select("id");
+    if (error?.code === "23503")
+      return toast.error("Cupom vinculado a pedidos. Desative-o para impedir novos usos.");
+    if (error || data?.length !== 1)
+      return toast.error(error?.message ?? "Cupom não encontrado ou sem permissão");
+    await reload();
   }
 
   return (
@@ -123,19 +145,42 @@ function CuponsPage() {
 function CupomForm({ onSaved }: { onSaved: () => void }) {
   const { estab } = useMyEstab();
   const [f, setF] = useState({ code: "", type: "percent", valor: "10", minimo: "", usos: "" });
+  const [saving, setSaving] = useState(false);
   async function salvar() {
+    if (saving) return;
     if (!estab || !f.code.trim()) return toast.error("Código obrigatório");
+    if (f.code.trim().length > 50) return toast.error("Código deve ter até 50 caracteres");
+    const minimum = f.minimo ? parseMoneyCents(f.minimo) : 0;
+    const amount = parseMoneyCents(f.valor);
+    const percent = /^\d+(?:[,.]\d{1,2})?$/.test(f.valor.trim())
+      ? Number(f.valor.replace(",", "."))
+      : NaN;
+    const uses = f.usos ? Number(f.usos) : null;
+    if (
+      minimum === null ||
+      (uses !== null &&
+        (!/^\d+$/.test(f.usos) || !Number.isSafeInteger(uses) || uses < 1 || uses > 2147483647))
+    )
+      return toast.error("Mínimo ou limite de usos inválido");
+    if (
+      f.type === "percent"
+        ? !Number.isFinite(percent) || percent <= 0 || percent > 100
+        : amount === null || amount <= 0
+    )
+      return toast.error("Informe um desconto válido");
     const payload = {
       establishment_id: estab.id,
       code: f.code.trim().toUpperCase(),
       type: f.type as "percent" | "fixed",
       ativo: true,
-      min_order_cents: f.minimo ? Math.round(parseFloat(f.minimo) * 100) : 0,
-      usage_limit: f.usos ? parseInt(f.usos) : null,
-      value_cents: f.type === "fixed" ? Math.round(parseFloat(f.valor) * 100) : 0,
-      percent: f.type === "percent" ? parseFloat(f.valor) : 0,
+      min_order_cents: minimum,
+      usage_limit: uses,
+      value_cents: f.type === "fixed" ? (amount ?? 0) : 0,
+      percent: f.type === "percent" ? percent : 0,
     };
+    setSaving(true);
     const { error } = await supabase.from("coupons").insert(payload);
+    setSaving(false);
     if (error) toast.error("Falha: " + error.message);
     else {
       toast.success("Cupom criado");
@@ -185,7 +230,9 @@ function CupomForm({ onSaved }: { onSaved: () => void }) {
         </div>
       </div>
       <DialogFooter>
-        <Button onClick={salvar}>Criar</Button>
+        <Button onClick={salvar} disabled={saving}>
+          {saving ? "Criando…" : "Criar"}
+        </Button>
       </DialogFooter>
     </>
   );

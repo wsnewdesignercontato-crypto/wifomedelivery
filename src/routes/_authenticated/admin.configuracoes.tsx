@@ -44,6 +44,9 @@ type Config = {
   score_start: number;
   score_band_warn: number;
   score_band_critical: number;
+  support_email: string | null;
+  support_whatsapp: string | null;
+  support_phone: string | null;
 };
 
 async function fetchConfig() {
@@ -87,6 +90,9 @@ function ConfigPage() {
         score_start: form.score_start,
         score_band_warn: form.score_band_warn,
         score_band_critical: form.score_band_critical,
+        support_email: form.support_email?.trim() || null,
+        support_whatsapp: form.support_whatsapp?.trim() || null,
+        support_phone: form.support_phone?.trim() || null,
         updated_by: uid,
         updated_at: new Date().toISOString(),
       })
@@ -111,6 +117,43 @@ function ConfigPage() {
       </div>
 
       <BrevoSettings />
+      <section className="max-w-2xl space-y-3 rounded-2xl border bg-card p-6">
+        <h2 className="font-semibold">Contatos do suporte</h2>
+        <p className="text-sm text-muted-foreground">
+          Informe os canais reais da equipe. Campos vazios não aparecem no aplicativo. Use Salvar
+          alterações ao terminar.
+        </p>
+        <div>
+          <Label htmlFor="support-email">E-mail</Label>
+          <Input
+            id="support-email"
+            type="email"
+            maxLength={254}
+            value={form.support_email ?? ""}
+            onChange={(e) => setForm({ ...form, support_email: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label htmlFor="support-whatsapp">WhatsApp com país e DDD (somente números)</Label>
+          <Input
+            id="support-whatsapp"
+            placeholder="5531999999999"
+            maxLength={15}
+            value={form.support_whatsapp ?? ""}
+            onChange={(e) => setForm({ ...form, support_whatsapp: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label htmlFor="support-phone">Telefone com país e DDD</Label>
+          <Input
+            id="support-phone"
+            placeholder="+5531999999999"
+            maxLength={16}
+            value={form.support_phone ?? ""}
+            onChange={(e) => setForm({ ...form, support_phone: e.target.value })}
+          />
+        </div>
+      </section>
 
       <div className="max-w-2xl space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div>

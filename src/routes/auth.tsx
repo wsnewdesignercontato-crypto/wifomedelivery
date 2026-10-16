@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { safeReturnPath } from "@/lib/customer-access";
 import { z } from "zod";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, ShoppingBag, Store, Bike, MailCheck } from "lucide-react";
@@ -16,10 +17,10 @@ import { APP_URL } from "@/lib/app-config";
 
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AppDownloadLinks } from "@/components/app-download-links";
 
 const perfilSchema = z.enum(["cliente", "estabelecimento", "entregador"]).catch("cliente");
 const searchSchema = z.object({
+  app: perfilSchema.optional(),
   perfil: perfilSchema.optional(),
   redirect: z.string().optional(),
   confirmado: z.string().optional(),
@@ -83,6 +84,11 @@ function AuthPage() {
   const navigate = useNavigate();
   const perfil: "cliente" | "estabelecimento" | "entregador" = search.perfil ?? "cliente";
   const info = perfilInfo[perfil];
+  const returnPath = safeReturnPath(search.redirect, perfil);
+  const finishLogin = useCallback(() => {
+    if (returnPath) window.location.assign(returnPath);
+    else void navigate({ to: "/app", search: { perfil }, replace: true });
+  }, [returnPath, navigate, perfil]);
   const themeClass =
     perfil === "estabelecimento"
       ? "theme-estab"
@@ -130,13 +136,13 @@ function AuthPage() {
         return;
       }
       if (data.session) {
-        navigate({ to: "/app", search: { perfil }, replace: true });
+        finishLogin();
       } else {
         if (confirmado) toast.success("Email confirmado! Agora entre com sua senha.");
         setCheckingSession(false);
       }
     });
-  }, [navigate, perfil, confirmado]);
+  }, [finishLogin, confirmado]);
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -166,7 +172,7 @@ function AuthPage() {
       /* ignore */
     }
     toast.success("Bem-vindo de volta!");
-    navigate({ to: "/app", search: { perfil }, replace: true });
+    finishLogin();
   }
 
   async function handleCadastro(e: React.FormEvent<HTMLFormElement>) {
@@ -188,7 +194,7 @@ function AuthPage() {
       email: parsed.data.email,
       password: parsed.data.senha,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth?perfil=${perfil}&confirmado=1`,
+        emailRedirectTo: `${window.location.origin}/auth?perfil=${perfil}&confirmado=1${returnPath ? `&redirect=${encodeURIComponent(returnPath)}` : ""}`,
         data: {
           nome: parsed.data.nome,
           perfil_inicial: perfil,
@@ -208,7 +214,7 @@ function AuthPage() {
     setEmailSalvo(parsed.data.email);
     if (data.session) {
       toast.success("Conta criada! Bem-vindo ao PedeTrem.");
-      navigate({ to: "/app", search: { perfil }, replace: true });
+      finishLogin();
       return;
     }
     setModo("confirmar-email");
@@ -271,7 +277,15 @@ function AuthPage() {
         </div>
 
         <div className="mt-3 overflow-hidden transition-all duration-500 ease-in-out">
-          <AppDownloadLinks perfilAtual={perfil} />
+          {perfil === "cliente" && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate({ to: "/cliente" })}
+            >
+              Continuar como visitante
+            </Button>
+          )}
         </div>
 
         <div className="mt-6 text-center" data-no-reveal>

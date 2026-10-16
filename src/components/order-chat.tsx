@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { validateImageFile } from "@/lib/upload-validation";
+import { chatAttachmentPath } from "@/lib/data-access";
+import { isLocationEnabled } from "@/lib/device-preferences";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Send, Image as ImageIcon, MapPin, Phone } from "lucide-react";
@@ -17,6 +19,7 @@ export type Message = {
   tipo: "text" | "image" | "location" | "audio";
   conteudo: string | null;
   anexo_url: string | null;
+  attachmentUrl?: string | null;
   lat: number | null;
   lng: number | null;
   created_at: string;
@@ -51,6 +54,16 @@ function mask(phone: string | null | undefined) {
   return digits.slice(0, 2) + " " + digits[2] + "****" + digits.slice(-4);
 }
 
+async function loadAttachment(message: Message): Promise<Message> {
+  const path = chatAttachmentPath(message.anexo_url);
+  if (!path) return { ...message, attachmentUrl: null };
+  // Storage authorizes the current participant and scope each time this URL is renewed.
+  const { data, error } = await supabase.storage
+    .from("chat-attachments")
+    .createSignedUrl(path, 5 * 60);
+  return { ...message, attachmentUrl: error ? null : (data?.signedUrl ?? null) };
+}
+
 export function OrderChat({
   orderId,
   escopo,
@@ -79,14 +92,19 @@ export function OrderChat({
 
   // Get or create chat
   useEffect(() => {
+    let active = true;
     (async () => {
       setLoading(true);
+      setChatId(null);
+      setMessages([]);
+      setText("");
       const { data: existing } = await supabase
         .from("order_chats")
         .select("id")
         .eq("order_id", orderId)
         .eq("escopo", escopo)
         .maybeSingle();
+      if (!active) return;
       if (existing) {
         setChatId(existing.id);
       } else {
@@ -95,25 +113,40 @@ export function OrderChat({
           .insert({ order_id: orderId, escopo })
           .select("id")
           .maybeSingle();
+        if (!active) return;
         if (error) toast.error("Não foi possível abrir o chat");
         else setChatId(created?.id ?? null);
       }
       setLoading(false);
     })();
+    return () => {
+      active = false;
+    };
   }, [orderId, escopo]);
 
   // Load + subscribe messages
   useEffect(() => {
     if (!chatId) return;
-    (async () => {
-      const { data } = await supabase
+    const currentChatId = chatId;
+    let active = true;
+    async function loadMessages() {
+      const { data, error } = await supabase
         .from("order_messages")
         .select("*")
-        .eq("chat_id", chatId)
+        .eq("chat_id", currentChatId)
         .order("created_at", { ascending: true });
-      setMessages((data ?? []) as Message[]);
+      if (error) {
+        if (active) setMessages([]);
+        return;
+      }
+      const hydrated = await Promise.all(((data ?? []) as Message[]).map(loadAttachment));
+      if (!active) return;
+      setMessages(hydrated);
       queueMicrotask(() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight }));
-    })();
+    }
+    void loadMessages();
+    const renewal = window.setInterval(() => void loadMessages(), 4 * 60 * 1000);
+    window.addEventListener("focus", loadMessages);
     const ch = supabase
       .channel("order-chat-" + chatId)
       .on(
@@ -124,8 +157,12 @@ export function OrderChat({
           table: "order_messages",
           filter: `chat_id=eq.${chatId}`,
         },
-        (p) => {
-          setMessages((prev) => [...prev, p.new as Message]);
+        async (p) => {
+          const message = await loadAttachment(p.new as Message);
+          if (!active) return;
+          setMessages((prev) =>
+            prev.some((item) => item.id === message.id) ? prev : [...prev, message],
+          );
           queueMicrotask(() =>
             listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }),
           );
@@ -133,6 +170,9 @@ export function OrderChat({
       )
       .subscribe();
     return () => {
+      active = false;
+      window.clearInterval(renewal);
+      window.removeEventListener("focus", loadMessages);
       supabase.removeChannel(ch);
     };
   }, [chatId]);
@@ -168,21 +208,22 @@ export function OrderChat({
     if (!uid) return;
     const invalid = validateImageFile(file);
     if (invalid) return toast.error(invalid);
-    const path = `${uid}/${orderId}/${Date.now()}-${file.name}`;
+    const path = `${uid}/${orderId}/${escopo}/${Date.now()}-${file.name}`;
     setSending(true);
     const { error: upErr } = await supabase.storage.from("chat-attachments").upload(path, file);
     if (upErr) {
       setSending(false);
       return toast.error("Falha ao enviar imagem");
     }
-    const { data: signed } = await supabase.storage
-      .from("chat-attachments")
-      .createSignedUrl(path, 60 * 60 * 24 * 7);
-    await send("image", { anexo_url: signed?.signedUrl ?? path });
+    await send("image", { anexo_url: path });
     setSending(false);
   }
 
   async function sendLocation() {
+    if (!isLocationEnabled())
+      return toast.error(
+        "Ative a localização nas preferências do dispositivo para compartilhar sua posição.",
+      );
     if (!("geolocation" in navigator)) return toast.error("Localização indisponível");
     navigator.geolocation.getCurrentPosition(
       (pos) => send("location", { lat: pos.coords.latitude, lng: pos.coords.longitude }),
@@ -235,10 +276,13 @@ export function OrderChat({
                 {m.tipo === "text" && (
                   <p className="whitespace-pre-wrap break-words">{m.conteudo}</p>
                 )}
-                {m.tipo === "image" && m.anexo_url && (
-                  <a href={m.anexo_url} target="_blank" rel="noopener noreferrer">
-                    <img src={m.anexo_url} alt="anexo" className="max-h-60 rounded-lg" />
+                {m.tipo === "image" && m.attachmentUrl && (
+                  <a href={m.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                    <img src={m.attachmentUrl} alt="anexo" className="max-h-60 rounded-lg" />
                   </a>
+                )}
+                {m.tipo === "image" && !m.attachmentUrl && (
+                  <p className="text-xs opacity-70">Anexo indisponível</p>
                 )}
                 {m.tipo === "location" && m.lat != null && m.lng != null && (
                   <a
@@ -286,12 +330,19 @@ export function OrderChat({
           <Button
             size="icon"
             variant="outline"
+            aria-label="Enviar imagem"
             onClick={() => fileRef.current?.click()}
             disabled={sending}
           >
             <ImageIcon className="h-4 w-4" />
           </Button>
-          <Button size="icon" variant="outline" onClick={sendLocation} disabled={sending}>
+          <Button
+            size="icon"
+            variant="outline"
+            aria-label="Compartilhar localização"
+            onClick={sendLocation}
+            disabled={sending}
+          >
             <MapPin className="h-4 w-4" />
           </Button>
           <Input
@@ -301,7 +352,12 @@ export function OrderChat({
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), sendText())}
             disabled={sending}
           />
-          <Button size="icon" onClick={sendText} disabled={sending || !text.trim()}>
+          <Button
+            size="icon"
+            aria-label="Enviar mensagem"
+            onClick={sendText}
+            disabled={sending || !text.trim()}
+          >
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>
