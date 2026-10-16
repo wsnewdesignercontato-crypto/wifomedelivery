@@ -43,4 +43,10 @@ As mudanças preservam a publicação anterior `25323f9`, incluindo e-mails com 
 
 Destino autorizado: projeto Vercel `wifomedelivery`, conta WS, domínio `https://pedetrem.vercel.app`, Supabase `nsvgfagjezdduatmbsqq`.
 
-Migrations novas: `20261016025220`, `20261016025222`, `20261016025223`, `20261016025225`. Estado final de aplicação e deploy será registrado após a verificação do ambiente publicado.
+As migrations `20261016025220`, `20261016025222`, `20261016025223`, `20261016025225` foram aplicadas em uma transação. Histórico com 88 entradas, um usuário, zero pedidos reais e o proprietário admin preservados.
+
+Versão de aplicação validada: `e1b3a63819b09ffe5d5f765d305777d63ea8043d`. Deployment `dpl_DyT4vCse15HCBEpd1RqrnK6zkvwV`, estado READY, promovido ao domínio canônico em 16/10/2026 03:27 UTC. Treze endpoints HTTP passaram, assim como os três manifests e os bytes exatos de seus ícones. A consulta de erros da produção retornou zero registros no período verificado.
+
+No navegador de produção, em viewport de celular, o cliente abriu o catálogo como visitante; loja e entregador abriram seus logins, com banner, marca e cor correspondentes e sem opção de visitante. Não foram criados pedidos ou usuários reais nesses testes. REST público confirmou a leitura do catálogo e negou colunas bancárias, pedidos e criação de checkout anônimo.
+
+O registro desta publicação altera apenas documentação após o commit da aplicação validado acima. Evidências detalhadas e capturas ficam em arquivos locais ignorados; credenciais não integram o repositório.

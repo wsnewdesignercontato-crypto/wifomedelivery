@@ -12,8 +12,8 @@ Pedido explícito do proprietário em 15/10: preservar as correções A01–A18 
 
 ## Execução
 
-- [ ] Testes de acesso público, retorno seguro, dados da compra e evidências de instalação por perfil.
-- [ ] Fronteira de autenticação e catálogo visitante; checkout/modal e retorno dos formulários.
-- [ ] Regra de telefone/endereço no banco e regressões dos fluxos autorizados.
-- [ ] Logos por perfil, manifests, controlador de instalação único e banner superior.
-- [ ] Testes integrados, build, publicação e verificação junto às correções da auditoria.
+- [x] Testes de acesso público, retorno seguro, dados da compra e evidências de instalação por perfil.
+- [x] Fronteira de autenticação e catálogo visitante; checkout/modal e retorno dos formulários.
+- [x] Regra de telefone/endereço no banco e regressões dos fluxos autorizados.
+- [x] Logos por perfil, manifests, controlador de instalação único e banner superior.
+- [x] Testes integrados, build, publicação e verificação junto às correções da auditoria.
