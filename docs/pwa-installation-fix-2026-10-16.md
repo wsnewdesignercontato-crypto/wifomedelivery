@@ -53,3 +53,11 @@ Código publicado: `c855b63d8737fb42637e8b3964824459db82545d`. Deployment de pro
 Validação: 130 testes unitários aprovados, lint sem avisos, TypeScript e builds Node/Vercel aprovados. O deployment preparado passou em 18 consultas autenticadas de HTML/manifests/ícones antes da promoção. Depois da promoção, `node scripts/check-pwa-http.mjs https://pedetrem.vercel.app` passou para cliente, estabelecimento e entregador, incluindo o retorno `confirmado=1`. Consulta dos logs de erro desse deployment nos últimos 15 minutos: zero entradas no momento da verificação.
 
 Foram conferidos 451 arquivos de upload, sem arquivos privados, e 316 arquivos públicos contra os segredos efetivos do projeto, sem exposição encontrada. Esta etapa não alterou banco nem a configuração de envio de e-mails. Os limites de instalação física e atualização de ícones antigos descritos acima permanecem.
+
+## Correção da sobreposição no cabeçalho
+
+Um print enviado pelo proprietário mostrou a faixa de instalação e o cabeçalho da página inicial sobrepostos. A faixa é renderizada antes do `Outlet` no contêiner relativo da raiz. Como a página inicial não estabelecia seu próprio bloco de referência, o cabeçalho absoluto com `top:0` se posicionava no topo desse contêiner, sobre a faixa.
+
+A correção adiciona `position:relative` ao contêiner da página inicial. O cabeçalho passa a se posicionar dentro da página, depois da faixa, acompanhando a altura real dela sem deslocamentos fixos. Quando a faixa é ocultada, a página e seu cabeçalho retornam juntos ao topo. Não altera manifests, identidades de instalação, autenticação nem banco.
+
+Verificação antes da publicação: 130 testes aprovados, lint sem avisos, TypeScript e build Node aprovados. Não foi criado um teste que apenas repita a classe CSS. O print e a árvore de componentes fundamentam o diagnóstico; a confirmação visual após a correção permanece pendente. A ferramenta de controle do Chrome interrompeu a inspeção porque não conseguiu determinar com segurança a URL atual, e não foram tentadas outras formas de automação do navegador após o bloqueio.
