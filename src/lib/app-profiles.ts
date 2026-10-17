@@ -3,7 +3,7 @@ export const APP_PROFILES = {
   cliente: {
     origin: "https://pedetrem.vercel.app",
     name: "PedeTrem Cliente",
-    shortName: "PedeTrem",
+    shortName: "PedeTrem Cliente",
     id: "/wifome-cliente",
     manifest: "/manifest-cliente.webmanifest",
     icon: "/icons/cliente-any-512-v2.png",
@@ -17,7 +17,7 @@ export const APP_PROFILES = {
   estabelecimento: {
     origin: "https://pedetrem-loja.vercel.app",
     name: "PedeTrem Estabelecimento",
-    shortName: "PedeTrem",
+    shortName: "PedeTrem Estabelecimento",
     id: "/wifome-estabelecimento",
     manifest: "/manifest-estabelecimento.webmanifest",
     icon: "/icons/estabelecimento-any-512-v2.png",
@@ -31,7 +31,7 @@ export const APP_PROFILES = {
   entregador: {
     origin: "https://pedetrem-entregador.vercel.app",
     name: "PedeTrem Entregador",
-    shortName: "PedeTrem",
+    shortName: "PedeTrem Entregador",
     id: "/wifome-entregador",
     manifest: "/manifest-entregador.webmanifest",
     icon: "/icons/entregador-any-512-v2.png",

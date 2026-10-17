@@ -69,9 +69,49 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [emailSalvo, setEmailSalvo] = useState("");
+  const [resendSeconds, setResendSeconds] = useState(0);
   const [modo, setModo] = useState<"form" | "confirmar-email" | "recuperar" | "link-enviado">(
     "form",
   );
+
+  const confirmationUrl = () =>
+    `${window.location.origin}/auth?perfil=${perfil}&confirmado=1${returnPath ? `&redirect=${encodeURIComponent(returnPath)}` : ""}`;
+
+  useEffect(() => {
+    if (resendSeconds <= 0) return;
+    const timer = window.setTimeout(() => setResendSeconds((seconds) => seconds - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [resendSeconds]);
+
+  async function handleReenviar() {
+    const email = emailSchema.safeParse(emailSalvo);
+    if (!email.success || loading || resendSeconds > 0) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: email.data,
+        options: { emailRedirectTo: confirmationUrl() },
+      });
+      if (error) {
+        if (error.status === 429) {
+          setResendSeconds(60);
+          toast.error("Aguarde um minuto antes de solicitar outro e-mail.");
+        } else {
+          toast.error("Não foi possível reenviar a confirmação. Tente novamente mais tarde.");
+        }
+        return;
+      }
+      setResendSeconds(60);
+      toast.success(
+        "Solicitação recebida. Confira a caixa de entrada e o spam. Se já confirmou, entre com sua senha.",
+      );
+    } catch {
+      toast.error("Não foi possível conectar. Confira sua internet e tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   // Se já autenticado, encaminhar para /app
   const confirmado = search.confirmado === "1";
@@ -86,39 +126,56 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
     }
   }, []);
 
-  // Se já autenticado, encaminhar para /app (exceto ao voltar da confirmação de email)
+  // A query parameter alone never proves that an email was confirmed.
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (data.session && confirmado) {
-        if (data.session.user.email) {
-          setEmailSalvo(data.session.user.email);
-          try {
-            window.localStorage.setItem("wifome:last-email", data.session.user.email);
-          } catch {
-            /* ignore */
+    let cancelled = false;
+    const linkError = new URLSearchParams(window.location.hash.slice(1)).has("error");
+    void (async () => {
+      try {
+        const { data, error: sessionError } = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (data.session) {
+          const { data: verified, error } = await supabase.auth.getUser();
+          if (cancelled) return;
+          if (error || !verified.user) {
+            if (!error || [400, 401, 403, 404].includes(error.status ?? 0))
+              await supabase.auth.signOut({ scope: "local" });
+            return;
           }
-        }
-        await supabase.auth.signOut();
-        toast.success("Email confirmado! Agora entre com sua senha.");
-        setCheckingSession(false);
-        return;
-      }
-      if (data.session) {
-        // A cached JWT may outlive a removed/revoked user. Do not bounce forever
-        // between this page and the server-validated protected route.
-        const { data: verified, error } = await supabase.auth.getUser();
-        if (error || !verified.user) {
-          if (!error || [400, 401, 403, 404].includes(error.status ?? 0))
+          if (confirmado) {
+            if (!verified.user.email_confirmed_at) {
+              toast.error("Seu e-mail ainda precisa ser confirmado.");
+              return;
+            }
+            if (verified.user.email) {
+              setEmailSalvo(verified.user.email);
+              try {
+                window.localStorage.setItem("wifome:last-email", verified.user.email);
+              } catch {
+                /* Storage may be unavailable. */
+              }
+            }
             await supabase.auth.signOut({ scope: "local" });
-          setCheckingSession(false);
-          return;
+            if (!cancelled) toast.success("Email confirmado! Agora entre com sua senha.");
+            return;
+          }
+          finishLogin();
+        } else if (confirmado) {
+          if (sessionError || linkError)
+            toast.error(
+              "O link de confirmação é inválido ou expirou. Entre para solicitar outro e-mail.",
+            );
+          else toast.info("Entre com seu e-mail e senha para continuar.");
         }
-        finishLogin();
-      } else {
-        if (confirmado) toast.success("Email confirmado! Agora entre com sua senha.");
-        setCheckingSession(false);
+      } catch {
+        if (!cancelled) toast.error("Não foi possível verificar sua sessão. Tente novamente.");
+      } finally {
+        if (!cancelled) setCheckingSession(false);
       }
-    });
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [finishLogin, confirmado]);
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
@@ -132,16 +189,34 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: parsed.data.email,
-      password: parsed.data.senha,
-    });
-    setLoading(false);
-    if (error) {
-      toast.error(
-        error.message === "Invalid login credentials" ? "Email ou senha inválidos" : error.message,
-      );
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: parsed.data.email,
+        password: parsed.data.senha,
+      });
+      if (error) {
+        if (error.code === "email_not_confirmed") {
+          setEmailSalvo(parsed.data.email);
+          setModo("confirmar-email");
+          toast.error(
+            "Confirme seu e-mail antes de entrar. Você pode solicitar outro envio abaixo.",
+          );
+        } else {
+          toast.error(
+            error.message === "Invalid login credentials"
+              ? "Email ou senha inválidos"
+              : error.status === 429
+                ? "Muitas tentativas. Aguarde um pouco antes de entrar."
+                : "Não foi possível entrar. Confira os dados e tente novamente.",
+          );
+        }
+        return;
+      }
+    } catch {
+      toast.error("Não foi possível conectar. Confira sua internet e tente novamente.");
       return;
+    } finally {
+      setLoading(false);
     }
     try {
       window.localStorage.setItem("wifome:last-email", parsed.data.email);
@@ -167,34 +242,40 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
       return;
     }
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email: parsed.data.email,
-      password: parsed.data.senha,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth?perfil=${perfil}&confirmado=1${returnPath ? `&redirect=${encodeURIComponent(returnPath)}` : ""}`,
-        data: {
-          nome: parsed.data.nome,
-          perfil_inicial: perfil,
-        },
-      },
-    });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
     try {
-      window.localStorage.setItem("wifome:last-email", parsed.data.email);
+      const { data, error } = await supabase.auth.signUp({
+        email: parsed.data.email,
+        password: parsed.data.senha,
+        options: {
+          emailRedirectTo: confirmationUrl(),
+          data: {
+            nome: parsed.data.nome,
+            perfil_inicial: perfil,
+          },
+        },
+      });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      try {
+        window.localStorage.setItem("wifome:last-email", parsed.data.email);
+      } catch {
+        /* ignore */
+      }
+      setEmailSalvo(parsed.data.email);
+      if (data.session) {
+        toast.success("Conta criada! Bem-vindo ao PedeTrem.");
+        finishLogin();
+        return;
+      }
+      setResendSeconds(60);
+      setModo("confirmar-email");
     } catch {
-      /* ignore */
+      toast.error("Não foi possível conectar. Confira sua internet e tente novamente.");
+    } finally {
+      setLoading(false);
     }
-    setEmailSalvo(parsed.data.email);
-    if (data.session) {
-      toast.success("Conta criada! Bem-vindo ao PedeTrem.");
-      finishLogin();
-      return;
-    }
-    setModo("confirmar-email");
   }
 
   async function handleRecuperar(e: React.FormEvent<HTMLFormElement>) {
@@ -206,16 +287,21 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
-      redirectTo: `${window.location.origin}/redefinir-senha?perfil=${perfil}`,
-    });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
+        redirectTo: `${window.location.origin}/redefinir-senha?perfil=${perfil}`,
+      });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      setEmailSalvo(parsed.data);
+      setModo("link-enviado");
+    } catch {
+      toast.error("Não foi possível conectar. Confira sua internet e tente novamente.");
+    } finally {
+      setLoading(false);
     }
-    setEmailSalvo(parsed.data);
-    setModo("link-enviado");
   }
 
   if (checkingSession) {
@@ -287,14 +373,15 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
               <MailCheck className="mx-auto h-12 w-12 text-primary" />
 
               <h2 className="text-lg font-bold text-foreground">
-                {modo === "confirmar-email" ? "Bem-vindo ao PedeTrem! 🎉" : "Link enviado!"}
+                {modo === "confirmar-email" ? "Confirme seu e-mail" : "Link enviado!"}
               </h2>
               <p className="text-sm text-muted-foreground">
                 {modo === "confirmar-email" ? (
                   <>
-                    Enviamos um email de confirmação para{" "}
+                    Confira o e-mail de confirmação em{" "}
                     <span className="font-semibold text-foreground">{emailSalvo}</span>. Confirme
-                    seu email para ativar a conta — depois você volta automaticamente para o login.
+                    seu email para ativar a conta. Se já usa esse e-mail em outro aplicativo
+                    PedeTrem, entre com a mesma senha.
                   </>
                 ) : (
                   <>
@@ -305,8 +392,21 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
                 )}
               </p>
               <p className="text-xs text-muted-foreground">
-                Não recebeu? Verifique a caixa de spam.
+                Não recebeu? Verifique a caixa de spam e confira se digitou o e-mail corretamente.
               </p>
+              {modo === "confirmar-email" && (
+                <Button
+                  className="w-full"
+                  disabled={loading || resendSeconds > 0}
+                  onClick={() => void handleReenviar()}
+                >
+                  {loading
+                    ? "Solicitando..."
+                    : resendSeconds > 0
+                      ? `Reenviar em ${resendSeconds}s`
+                      : "Reenviar confirmação"}
+                </Button>
+              )}
               <Button
                 variant="outline"
                 className="w-full"
@@ -411,6 +511,10 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
 
               <TabsContent value="cadastro" className="mt-4">
                 <form onSubmit={handleCadastro} className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Já tem conta em outro aplicativo PedeTrem? Use o mesmo e-mail e senha na aba
+                    Entrar.
+                  </p>
                   <div className="space-y-1.5">
                     <Label htmlFor="nome">Nome</Label>
                     <Input

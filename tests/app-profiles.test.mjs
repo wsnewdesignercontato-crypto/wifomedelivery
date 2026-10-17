@@ -10,17 +10,17 @@ import {
   isProfileLoginPath,
 } from "../src/lib/app-profiles.ts";
 
-test("three profiles keep distinct identities and colors while sharing the PedeTrem launcher name", () => {
+test("three profiles keep distinct identities, colors and full launcher names", () => {
   const apps = Object.values(APP_PROFILES);
-  for (const key of ["id", "color", "icon"])
+  for (const key of ["id", "color", "icon", "name", "shortName"])
     assert.equal(new Set(apps.map((app) => app[key])).size, 3);
   for (const [profile, app] of Object.entries(APP_PROFILES)) {
     const manifest = JSON.parse(
       readFileSync(new URL("../public" + app.manifest, import.meta.url), "utf8"),
     );
     assert.equal(manifest.id, app.id);
-    assert.equal(manifest.name, "PedeTrem");
-    assert.equal(manifest.short_name, "PedeTrem");
+    assert.equal(manifest.name, app.name);
+    assert.equal(manifest.short_name, app.name);
     assert.equal(manifest.short_name, app.shortName);
     assert.equal(manifest.theme_color, app.color);
     assert.ok(manifest.start_url.includes(profile));

@@ -1,6 +1,6 @@
 {
-  "name": "PedeTrem",
-  "short_name": "PedeTrem",
+  "name": "PedeTrem Estabelecimento",
+  "short_name": "PedeTrem Estabelecimento",
   "description": "Gerencie pedidos, cardápio e entregas do seu estabelecimento no PedeTrem.",
   "start_url": "/estabelecimento/entrar?app=estabelecimento",
   "scope": "/estabelecimento",

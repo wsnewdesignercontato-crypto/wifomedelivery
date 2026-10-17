@@ -1,6 +1,6 @@
 {
-  "name": "PedeTrem",
-  "short_name": "PedeTrem",
+  "name": "PedeTrem Entregador",
+  "short_name": "PedeTrem Entregador",
   "description": "Receba corridas, faça entregas e acompanhe seus ganhos no PedeTrem.",
   "start_url": "/entregador/entrar?app=entregador",
   "scope": "/entregador",

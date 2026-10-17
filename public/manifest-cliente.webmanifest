@@ -1,6 +1,6 @@
 {
-  "name": "PedeTrem",
-  "short_name": "PedeTrem",
+  "name": "PedeTrem Cliente",
+  "short_name": "PedeTrem Cliente",
   "description": "Peça comida e acompanhe suas entregas em tempo real no PedeTrem.",
   "start_url": "/cliente?app=cliente",
   "scope": "/cliente",
