@@ -33,3 +33,11 @@ O problema foi reproduzido renderizando os componentes reais de React/TanStack: 
 A instalação física lado a lado no Android e no iPhone não foi observada nesta sessão. O navegador compartilhado não está conectado. Os testes de React e router usam os componentes reais, mas não substituem o teste do instalador do celular. A validação real do retorno por e-mail também permanece fora desta etapa; nenhum e-mail foi enviado para terceiros.
 
 Fonte principal: [Chrome — múltiplos PWAs no mesmo domínio](https://web.dev/articles/building-multiple-pwas-on-the-same-domain). Configuração de retornos: [Supabase Auth](https://supabase.com/docs/guides/auth/redirect-urls).
+
+## Publicação confirmada
+
+Aplicação publicada em `685f1d70ad17affd5971e9be7a07ca125b18ce8e`, deployment de produção `dpl_3nKyFk65fZ39kRSnPpRVjBzm9pRr`. Build remoto em 28 segundos; domínio principal confirmado às 03:13 UTC de 2026-10-17. A consulta de logs de erro dos últimos 15 minutos retornou zero entradas nesse deployment.
+
+`node scripts/check-independent-apps.mjs` passou nas três origens reais: HTTPS, entradas próprias, redirects de raiz, parâmetros preservados, HTML com manifesto correto antes de JavaScript, IDs distintos por origem, associação somente ao próprio app, ícones e worker. `node scripts/check-pwa-http.mjs https://pedetrem.vercel.app` também passou, mantendo os links antigos e o retorno `confirmado=1`. Os 454 arquivos preparados para deploy não incluíram arquivos privados; 316 arquivos públicos foram conferidos contra os segredos efetivos do projeto, sem exposição encontrada.
+
+A consulta final da configuração remota confirmou os três domínios verificados no mesmo projeto WS, Site URL canônica e os quatro padrões adicionais de retorno. A confirmação física de coinstalação e de retorno real por e-mail continua pendente, conforme os limites acima.

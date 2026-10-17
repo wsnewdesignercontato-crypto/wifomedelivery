@@ -9,7 +9,7 @@ O isolamento apenas por caminhos passou nas verificações de manifesto, mas nã
 - [x] Reter a oferta nativa de instalação desde a carga do documento, mesmo antes de montar a faixa.
 - [x] Usar o destino pendente no carregador, com tema explícito para o cliente.
 - [x] Configurar os dois endereços HTTPS no mesmo projeto Vercel e acrescentar somente os retornos necessários à lista de autenticação Supabase e ao hook de e-mails.
-- [ ] Verificar testes, lint, TypeScript, builds, redirects, origem/manifesto/ícones servidos, logs e a associação dos endereços ao commit publicado.
-- [ ] Publicar e registrar evidências, distinguindo checagens técnicas de instalação física não observada.
+- [x] Verificar testes, lint, TypeScript, builds, redirects, origem/manifesto/ícones servidos, logs e a associação dos endereços ao commit publicado.
+- [x] Publicar e registrar evidências, distinguindo checagens técnicas de instalação física não observada.
 
 Fonte: https://web.dev/articles/building-multiple-pwas-on-the-same-domain

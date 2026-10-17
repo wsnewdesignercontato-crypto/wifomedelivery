@@ -1,5 +1,7 @@
 # Instalações independentes e ícones completos
 
+Atualização: o isolamento somente por caminhos não resolveu a instalação no Android relatada pelo proprietário. A configuração atual usa três origens independentes; consulte [a correção complementar](independent-app-installs-2026-10-17.md). O histórico abaixo documenta a etapa anterior.
+
 ## Problema reproduzido
 
 `node scripts/check-pwa-http.mjs https://pedetrem.vercel.app` falhou na versão anterior: o HTML inicial de `/auth?perfil=estabelecimento` continha `/manifest.webmanifest`, o manifesto do cliente. O código corrigia o link apenas depois da hidratação. Isso podia vincular a oferta/pacote de instalação ao aplicativo errado. As três aplicações também compartilhavam escopo `/`, e os ícones transparentes declaravam apenas a finalidade comum.
