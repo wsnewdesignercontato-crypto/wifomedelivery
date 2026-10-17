@@ -14,6 +14,7 @@ export function isProfileInstallDocument(profile: PerfilApp): boolean {
     const url = new URL(initialManifest, window.location.origin);
     return (
       url.origin === window.location.origin &&
+      window.location.origin === APP_PROFILES[profile].origin &&
       url.pathname === APP_PROFILES[profile].manifest &&
       !!initialPath?.startsWith(APP_PROFILES[profile].scope)
     );

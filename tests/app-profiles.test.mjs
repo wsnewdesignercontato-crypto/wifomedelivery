@@ -22,7 +22,9 @@ test("three profiles preserve distinct installed identities, names, colors and i
     assert.equal(manifest.short_name, app.shortName);
     assert.equal(manifest.theme_color, app.color);
     assert.ok(manifest.start_url.includes(profile));
-    assert.equal(manifest.related_applications.length, 3);
+    assert.deepEqual(manifest.related_applications, [
+      { platform: "webapp", url: app.manifest, id: app.id },
+    ]);
     const png = readFileSync(new URL("../public" + manifest.icons[0].src, import.meta.url));
     assert.equal(manifest.icons[0].sizes, `${png.readUInt32BE(16)}x${png.readUInt32BE(20)}`);
     assert.ok(png.readUInt32BE(16) >= 512);

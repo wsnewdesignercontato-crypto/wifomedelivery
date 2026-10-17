@@ -24,6 +24,7 @@ test("SPA navigation cannot reuse an installation prompt loaded for another app"
     globalThis.window.location.pathname = "/estabelecimento/entrar";
     assert.equal(first.isProfileInstallDocument("cliente"), true);
     assert.equal(first.isProfileInstallDocument("estabelecimento"), false);
+    globalThis.window.location.origin = "https://pedetrem-loja.vercel.app";
     const secondDocument = await import("../src/lib/install-document.ts?fresh-store");
     assert.equal(secondDocument.isProfileInstallDocument("estabelecimento"), true);
     assert.equal(secondDocument.isProfileInstallDocument("cliente"), false);

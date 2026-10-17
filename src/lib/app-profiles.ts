@@ -1,6 +1,7 @@
 export type PerfilApp = "cliente" | "estabelecimento" | "entregador";
 export const APP_PROFILES = {
   cliente: {
+    origin: "https://pedetrem.vercel.app",
     name: "PedeTrem Cliente",
     shortName: "PT Cliente",
     id: "/wifome-cliente",
@@ -14,6 +15,7 @@ export const APP_PROFILES = {
     description: "Peça e acompanhe pelo app",
   },
   estabelecimento: {
+    origin: "https://pedetrem-loja.vercel.app",
     name: "PedeTrem Estabelecimento",
     shortName: "PT Loja",
     id: "/wifome-estabelecimento",
@@ -27,6 +29,7 @@ export const APP_PROFILES = {
     description: "Gerencie sua loja pelo app",
   },
   entregador: {
+    origin: "https://pedetrem-entregador.vercel.app",
     name: "PedeTrem Entregador",
     shortName: "PT Entrega",
     id: "/wifome-entregador",
@@ -40,6 +43,10 @@ export const APP_PROFILES = {
     description: "Receba corridas pelo app",
   },
 } as const;
+export function profileInstallUrl(profile: PerfilApp): string {
+  const app = APP_PROFILES[profile];
+  return new URL(app.loginPath, app.origin).href;
+}
 export function isProfileLoginPath(pathname: string): boolean {
   return Object.values(APP_PROFILES).some((app) => app.loginPath === pathname.replace(/\/$/, ""));
 }

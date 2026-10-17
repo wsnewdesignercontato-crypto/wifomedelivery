@@ -2,5 +2,19 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "tanstack-start",
   "buildCommand": "npm run build",
-  "installCommand": "bun install --frozen-lockfile"
+  "installCommand": "bun install --frozen-lockfile",
+  "redirects": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "pedetrem-loja.vercel.app" }],
+      "destination": "/estabelecimento/entrar",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "pedetrem-entregador.vercel.app" }],
+      "destination": "/entregador/entrar",
+      "permanent": false
+    }
+  ]
 }

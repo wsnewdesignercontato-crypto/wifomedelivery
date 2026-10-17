@@ -1,8 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import { useLocation } from "@tanstack/react-router";
+import { useLocation, useRouter } from "@tanstack/react-router";
 import { Sandwich, Store, Bike } from "lucide-react";
 import { IFomeLogo } from "@/components/ifome-logo";
-import { appProfileFromUrl } from "@/lib/app-profiles";
+import { APP_PROFILES, appProfileFromUrl } from "@/lib/app-profiles";
 
 export type LoaderPerfil = "cliente" | "estabelecimento" | "entregador";
 
@@ -21,12 +21,6 @@ export function detectPerfil(pathname?: string): LoaderPerfil {
     (typeof window !== "undefined" ? window.location.pathname + window.location.search : "");
   const [route, search = ""] = path.split("?");
   return appProfileFromUrl(route, search);
-}
-
-function themeClassFor(perfil: LoaderPerfil) {
-  if (perfil === "estabelecimento") return "theme-estab";
-  if (perfil === "entregador") return "theme-entregador";
-  return "";
 }
 
 /** Animação de carregamento: pedido → loja → entregador, em loop contínuo. */
@@ -76,11 +70,14 @@ export function WifomeLoaderIcons({ compact = false }: { compact?: boolean }) {
 /** Tela cheia na cor do perfil (laranja/vermelho/verde) com a marca PedeTrem. */
 export function WifomeLoader({ perfil, message }: { perfil?: LoaderPerfil; message?: string }) {
   const location = useLocation();
-  const resolved = perfil ?? detectPerfil(location.pathname + location.searchStr);
+  const router = useRouter();
+  // While navigation is pending, the route store still describes the previous page.
+  const destination = router.latestLocation ?? location;
+  const resolved = perfil ?? detectPerfil(destination.pathname + destination.searchStr);
 
   return (
     <div
-      className={`${themeClassFor(resolved)} fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 bg-primary px-6`}
+      className={`${APP_PROFILES[resolved].theme} fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 bg-primary px-6`}
       role="status"
       aria-live="polite"
       aria-label="Carregando"

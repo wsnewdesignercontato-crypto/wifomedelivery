@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Download } from "lucide-react";
-import { APP_PROFILES, type PerfilApp } from "@/lib/app-profiles";
+import { APP_PROFILES, profileInstallUrl, type PerfilApp } from "@/lib/app-profiles";
 import { useAppInstalado } from "@/hooks/use-app-instalado";
 import { PUSH_SW_URL } from "@/lib/push-config";
 import { isProfileInstallDocument } from "@/lib/install-document";
+import { getInstallPrompt, clearInstallPrompt, type InstallEvent } from "@/lib/install-prompt";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,13 +13,11 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-type InstallEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-};
 export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: PerfilApp }) {
   const app = APP_PROFILES[perfilAtual];
-  const [deferred, setDeferred] = useState<InstallEvent | null>(null);
+  const [deferred, setDeferred] = useState<InstallEvent | null>(() =>
+    getInstallPrompt(perfilAtual),
+  );
   const [help, setHelp] = useState(false);
   const [busy, setBusy] = useState(false);
   const { instalado, revalidar } = useAppInstalado(perfilAtual);
@@ -39,6 +38,7 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
     };
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
+    setDeferred(getInstallPrompt(perfilAtual));
     return () => {
       window.removeEventListener("beforeinstallprompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
@@ -47,22 +47,25 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
   async function install() {
     if (busy) return;
     if (!isProfileInstallDocument(perfilAtual)) {
-      window.location.assign(app.loginPath);
+      window.location.assign(profileInstallUrl(perfilAtual));
       return;
     }
-    if (!deferred) {
+    const offer = deferred ?? getInstallPrompt(perfilAtual);
+    if (!offer) {
       setHelp(true);
       return;
     }
     setBusy(true);
     try {
-      await deferred.prompt();
-      await deferred.userChoice;
+      await offer.prompt();
+      await offer.userChoice;
+      clearInstallPrompt();
       setDeferred(null);
       await revalidar();
     } catch {
       setHelp(true);
       setDeferred(null);
+      clearInstallPrompt();
     } finally {
       setBusy(false);
     }
@@ -126,7 +129,7 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
             aplicativo já instalado.
           </p>
           <Button asChild variant="outline">
-            <a href={app.loginPath} target="_blank" rel="noopener noreferrer">
+            <a href={profileInstallUrl(perfilAtual)} target="_blank" rel="noopener noreferrer">
               Abrir no navegador
             </a>
           </Button>

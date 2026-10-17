@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { IFomeLogo } from "@/components/ifome-logo";
 import { APP_URL } from "@/lib/app-config";
+import { APP_PROFILES, profileInstallUrl } from "@/lib/app-profiles";
 import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -156,8 +157,7 @@ const perfis = [
     descricao: "Descubra restaurantes, faça pedidos e acompanhe a entrega em tempo real.",
     Icon: ShoppingBag,
     mockup: perfilCliente,
-    to: "/cliente" as const,
-    search: {},
+    href: `${APP_PROFILES.cliente.origin}/cliente`,
   },
   {
     key: "estabelecimento",
@@ -166,8 +166,7 @@ const perfis = [
     descricao: "Gerencie seu cardápio, receba pedidos e aumente suas vendas no PedeTrem.",
     Icon: Store,
     mockup: perfilEstabelecimento,
-    to: "/auth" as const,
-    search: { perfil: "estabelecimento" as const },
+    href: profileInstallUrl("estabelecimento"),
   },
   {
     key: "entregador",
@@ -176,8 +175,7 @@ const perfis = [
     descricao: "Aceite corridas próximas, faça entregas e acompanhe seus ganhos.",
     Icon: Bike,
     mockup: perfilEntregador,
-    to: "/auth" as const,
-    search: { perfil: "entregador" as const },
+    href: profileInstallUrl("entregador"),
   },
 ];
 
@@ -356,19 +354,19 @@ function LandingPage() {
                 <DropdownMenuLabel>Entrar como</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link reloadDocument to="/auth" search={{ perfil: "cliente" }}>
+                  <a href={profileInstallUrl("cliente")}>
                     <User className="mr-2 h-4 w-4" /> Cliente
-                  </Link>
+                  </a>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link reloadDocument to="/auth" search={{ perfil: "estabelecimento" }}>
+                  <a href={profileInstallUrl("estabelecimento")}>
                     <Store className="mr-2 h-4 w-4" /> Estabelecimento
-                  </Link>
+                  </a>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link reloadDocument to="/auth" search={{ perfil: "entregador" }}>
+                  <a href={profileInstallUrl("entregador")}>
                     <Bike className="mr-2 h-4 w-4" /> Entregador
-                  </Link>
+                  </a>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -382,19 +380,19 @@ function LandingPage() {
                 <DropdownMenuLabel>Criar conta como</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link reloadDocument to="/auth" search={{ perfil: "cliente" }}>
+                  <a href={profileInstallUrl("cliente")}>
                     <User className="mr-2 h-4 w-4" /> Cliente
-                  </Link>
+                  </a>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link reloadDocument to="/auth" search={{ perfil: "estabelecimento" }}>
+                  <a href={profileInstallUrl("estabelecimento")}>
                     <Store className="mr-2 h-4 w-4" /> Estabelecimento
-                  </Link>
+                  </a>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link reloadDocument to="/auth" search={{ perfil: "entregador" }}>
+                  <a href={profileInstallUrl("entregador")}>
                     <Bike className="mr-2 h-4 w-4" /> Entregador
-                  </Link>
+                  </a>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -447,7 +445,7 @@ function LandingPage() {
               className="reveal mt-8 flex flex-col gap-3 sm:flex-row"
               style={{ ["--reveal-delay" as never]: "220ms" } as React.CSSProperties}
             >
-              <Link reloadDocument to="/auth" search={{ perfil: "cliente" }}>
+              <a href={profileInstallUrl("cliente")}>
                 <Button
                   size="lg"
                   className="w-full bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95 sm:w-auto"
@@ -455,8 +453,8 @@ function LandingPage() {
                   Peça agora
                   <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Button>
-              </Link>
-              <Link reloadDocument to="/auth" search={{ perfil: "estabelecimento" }}>
+              </a>
+              <a href={profileInstallUrl("estabelecimento")}>
                 <Button
                   size="lg"
                   variant="outline"
@@ -464,8 +462,8 @@ function LandingPage() {
                 >
                   Sou um restaurante
                 </Button>
-              </Link>
-              <Link reloadDocument to="/auth" search={{ perfil: "entregador" }}>
+              </a>
+              <a href={profileInstallUrl("entregador")}>
                 <Button
                   size="lg"
                   variant="outline"
@@ -473,7 +471,7 @@ function LandingPage() {
                 >
                   Quero entregar
                 </Button>
-              </Link>
+              </a>
             </div>
 
             {/* Trust icons */}
@@ -546,12 +544,10 @@ function LandingPage() {
           </div>
 
           <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-7">
-            {perfis.map(({ key, tag, highlight, descricao, Icon, mockup, to, search }, i) => (
-              <Link
+            {perfis.map(({ key, tag, highlight, descricao, Icon, mockup, href }, i) => (
+              <a
                 key={key}
-                reloadDocument
-                to={to}
-                search={search}
+                href={href}
                 className="reveal group relative flex flex-col overflow-hidden rounded-[2rem] border border-border/60 bg-card p-7 shadow-[0_20px_50px_-20px_oklch(0_0_0/0.15)] transition-all duration-500 hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_40px_80px_-24px_oklch(0.72_0.19_45/0.35)] sm:p-8"
                 style={{ ["--reveal-delay" as never]: `${i * 140}ms` } as React.CSSProperties}
               >
@@ -619,7 +615,7 @@ function LandingPage() {
                   aria-hidden
                   className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary/5 to-transparent transition-transform duration-1000 group-hover:translate-x-full"
                 />
-              </Link>
+              </a>
             ))}
           </div>
         </div>
@@ -685,7 +681,7 @@ function LandingPage() {
               className="reveal mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row"
               style={{ ["--reveal-delay" as never]: "320ms" } as React.CSSProperties}
             >
-              <Link reloadDocument to="/auth" search={{ perfil: "estabelecimento" }}>
+              <a href={profileInstallUrl("estabelecimento")}>
                 <Button
                   size="lg"
                   className="bg-gradient-brand text-primary-foreground shadow-brand hover:opacity-95"
@@ -693,7 +689,7 @@ function LandingPage() {
                   Cadastrar meu restaurante
                   <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Button>
-              </Link>
+              </a>
             </div>
 
             <div

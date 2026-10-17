@@ -41,16 +41,6 @@
       "platform": "webapp",
       "url": "/manifest-cliente.webmanifest",
       "id": "/wifome-cliente"
-    },
-    {
-      "platform": "webapp",
-      "url": "/manifest-estabelecimento.webmanifest",
-      "id": "/wifome-estabelecimento"
-    },
-    {
-      "platform": "webapp",
-      "url": "/manifest-entregador.webmanifest",
-      "id": "/wifome-entregador"
     }
   ]
 }
