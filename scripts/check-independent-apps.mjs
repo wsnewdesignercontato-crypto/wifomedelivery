@@ -30,6 +30,16 @@ async function main() {
     assert.equal(page.status, 200);
     assert.equal(new URL(page.url).origin, origin);
     const html = await page.text();
+    const otherApps = html.match(
+      /<nav\b[^>]*aria-label="Outros aplicativos PedeTrem"[^>]*>([\s\S]*?)<\/nav>/,
+    )?.[1];
+    assert.ok(otherApps, `${profile}: other app downloads must remain reachable`);
+    for (const other of apps.filter((app) => app.profile !== profile)) {
+      assert.ok(
+        otherApps.includes(`href="${other.origin}/${other.profile}/entrar"`),
+        `${profile}: missing ${other.profile} download`,
+      );
+    }
     const manifests = [...html.matchAll(/<link\b[^>]*rel="manifest"[^>]*>/g)];
     assert.equal(manifests.length, 1);
     const manifestPath = manifests[0][0].match(/href="([^"]+)"/)[1];
@@ -57,7 +67,7 @@ async function main() {
     const worker = await get(origin + "/push-sw.js");
     assert.equal(worker.status, 200);
     console.log(
-      `${profile}: HTTPS, isolated entry, initial manifest, self association, icons and worker passed`,
+      `${profile}: HTTPS, other app downloads, isolated entry, initial manifest, self association, icons and worker passed`,
     );
   }
   assert.equal(identities.size, 3);

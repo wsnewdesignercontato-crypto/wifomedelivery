@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { Download } from "lucide-react";
 import { APP_PROFILES, profileInstallUrl, type PerfilApp } from "@/lib/app-profiles";
 import { useAppInstalado } from "@/hooks/use-app-instalado";
 import { PUSH_SW_URL } from "@/lib/push-config";
 import { isProfileInstallDocument } from "@/lib/install-document";
 import { getInstallPrompt, clearInstallPrompt, type InstallEvent } from "@/lib/install-prompt";
 import { Button } from "@/components/ui/button";
+import { AppDownloadOptions } from "@/components/app-download-options";
 import {
   Dialog,
   DialogContent,
@@ -70,35 +70,15 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
       setBusy(false);
     }
   }
-  if (instalado) return null;
   return (
-    <div className={app.theme} data-app-install-banner>
-      <div className="border-b border-primary/25 bg-card px-4 py-2">
-        <button
-          disabled={busy}
-          type="button"
-          onClick={() => void install()}
-          aria-label={`Baixar ${app.name}`}
-          className="mx-auto flex w-full max-w-7xl items-center gap-3 text-left"
-        >
-          <img
-            src={app.icon}
-            alt=""
-            width={40}
-            height={40}
-            className="h-10 w-10 rounded-full object-contain"
-          />
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-bold text-foreground">{app.name}</span>
-            <span className="block text-xs text-muted-foreground">{app.description}</span>
-          </span>
-          <span className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">
-            <Download className="h-4 w-4" />
-            Baixar
-          </span>
-        </button>
-      </div>
-      <Dialog open={help} onOpenChange={setHelp}>
+    <>
+      <AppDownloadOptions
+        perfilAtual={perfilAtual}
+        instalado={instalado}
+        busy={busy}
+        onInstall={() => void install()}
+      />
+      <Dialog open={help && !instalado} onOpenChange={setHelp}>
         <DialogContent className={app.theme}>
           <DialogHeader>
             <DialogTitle>Instalar {app.name}</DialogTitle>
@@ -143,6 +123,6 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
           </Button>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
