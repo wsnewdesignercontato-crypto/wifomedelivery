@@ -10,5 +10,5 @@ export function InstallAppPrompt() {
     location.pathname !== "/"
   )
     return null;
-  return <AppDownloadLinks key={profile} perfilAtual={profile} />;
+  return <AppDownloadLinks key={`${profile}:${location.pathname}`} perfilAtual={profile} />;
 }

@@ -46,29 +46,6 @@ test("native query can confirm removal without reusing a permanent installed fla
   );
   assert.equal(module.currentPwaInstallation("entregador").installed, false);
 });
-test("Agora não postpones only the corresponding app for seven days without marking it installed", () => {
-  assert.ok(module);
-  const values = storage();
-  const now = 1700000000000;
-  module.postponePwaInvite("estabelecimento", now);
-  assert.equal(module.pwaInvitePostponed("estabelecimento", now + 1000), true);
-  assert.equal(module.pwaInvitePostponed("cliente", now + 1000), false);
-  assert.equal(module.pwaInvitePostponed("estabelecimento", now + 7 * 86400000 + 1), false);
-  assert.equal(
-    [...values.keys()].some((key) => key.includes("installation-proof")),
-    false,
-  );
-});
-test("postponing remains effective when browser storage refuses writes", () => {
-  assert.ok(module);
-  storage();
-  globalThis.window.localStorage.setItem = () => {
-    throw Error("blocked");
-  };
-  module.postponePwaInvite("entregador", 1700000000000);
-  assert.equal(module.pwaInvitePostponed("entregador", 1700000001000), true);
-});
-
 test("a slow older backend observation cannot finish after the newer confirmation", async () => {
   const enqueue = module.createPwaInstallQueue();
   let release;

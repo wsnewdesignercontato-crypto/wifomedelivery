@@ -4,7 +4,6 @@ import { useAppInstalado } from "@/hooks/use-app-instalado";
 import { PUSH_SW_URL } from "@/lib/push-config";
 import { isProfileInstallDocument } from "@/lib/install-document";
 import { getInstallPrompt, takeInstallPrompt } from "@/lib/install-prompt";
-import { postponePwaInvite, pwaInvitePostponed } from "@/lib/pwa-installation";
 import { Button } from "@/components/ui/button";
 import { AppDownloadOptions } from "@/components/app-download-options";
 import { PwaInstallSync } from "@/components/pwa-install-sync";
@@ -30,20 +29,16 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
       /iPad|iPhone|iPod/.test(navigator.userAgent) ||
         (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1),
     );
-    if (instalado || !isProfileInstallDocument(perfilAtual) || pwaInvitePostponed(perfilAtual))
-      return;
+    // Dismissal applies only to this visit. Always offer again on the next login visit.
+    // This is our invitation; native prompts still require the matching install document.
+    if (instalado) return;
     const timer = window.setTimeout(() => {
-      if (
-        !requesting.current &&
-        !pwaInvitePostponed(perfilAtual) &&
-        !document.querySelector('[role="dialog"][data-state="open"]')
-      )
+      if (!requesting.current && !document.querySelector('[role="dialog"][data-state="open"]'))
         setInvite(true);
     }, 1500);
     return () => window.clearTimeout(timer);
   }, [perfilAtual, instalado]);
   const dismissInvite = () => {
-    postponePwaInvite(perfilAtual);
     setInvite(false);
   };
   useEffect(() => {
@@ -86,8 +81,7 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
     requesting.current = true;
     try {
       await offer.prompt();
-      const choice = await offer.userChoice;
-      if (choice.outcome === "dismissed") postponePwaInvite(perfilAtual);
+      await offer.userChoice;
       setCanPrompt(!!getInstallPrompt(perfilAtual));
       await revalidar();
     } catch {
@@ -119,7 +113,7 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
             <IFomeLogo perfil={perfilAtual} size="md" showWord={false} />
           </div>
           <DialogHeader>
-            <DialogTitle>Instale o PedeTrem</DialogTitle>
+            <DialogTitle>Instale {app.name}</DialogTitle>
             <DialogDescription>
               Instale o PedeTrem no seu celular para ter acesso mais rápido. Este é o aplicativo de{" "}
               {perfilAtual === "cliente"

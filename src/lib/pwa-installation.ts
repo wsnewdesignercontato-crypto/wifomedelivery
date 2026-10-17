@@ -8,8 +8,6 @@ export type PwaInstallationEvidence = {
 export const PWA_INSTALLATION_CHANGED = "pedetrem:pwa-installation-changed";
 const observed = new Map<PerfilApp, PwaInstallationEvidence>();
 const deviceIds = new Map<PerfilApp, string>();
-const postponed = new Map<PerfilApp, number>();
-const INVITE_DELAY = 7 * 86400000;
 
 /** Preserve observation order when an older network request is still in flight. */
 export function createPwaInstallQueue() {
@@ -76,27 +74,4 @@ export function pwaInstallationId(profile: PerfilApp): string | null {
     /* Keep the session ID. */
   }
   return id;
-}
-
-export function pwaInvitePostponed(profile: PerfilApp, now = Date.now()): boolean {
-  if (typeof window === "undefined") return false;
-  let until = postponed.get(profile) ?? 0;
-  try {
-    const saved = Number(window.localStorage.getItem(`pedetrem:pwa-invite:${profile}:v1`));
-    if (Number.isFinite(saved)) until = Math.max(until, saved);
-  } catch {
-    /* Use the session choice. */
-  }
-  return until > now;
-}
-
-export function postponePwaInvite(profile: PerfilApp, now = Date.now()): void {
-  if (typeof window === "undefined") return;
-  const until = now + INVITE_DELAY;
-  postponed.set(profile, until);
-  try {
-    window.localStorage.setItem(`pedetrem:pwa-invite:${profile}:v1`, String(until));
-  } catch {
-    /* Keep the session choice. */
-  }
 }
