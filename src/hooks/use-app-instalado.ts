@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  appProfileFromUrl,
-  APP_PROFILES,
-  isAppProfile,
-  systemInstallationEvidence,
-  type PerfilApp,
-} from "@/lib/app-profiles";
+import { APP_PROFILES, systemInstallationEvidence, type PerfilApp } from "@/lib/app-profiles";
 import { isProfileInstallDocument } from "@/lib/install-document";
+import { RUNNING_APP_KEY, runningAppProfile } from "@/lib/pwa-launch";
 import {
   currentPwaInstallation,
   observePwaInstallation,
@@ -24,24 +19,26 @@ export function perfilInstaladoEmExecucao(): PerfilApp | null {
     window.matchMedia?.("(display-mode: standalone)").matches ||
     (navigator as InstallNavigator).standalone === true;
   if (!standalone) return null;
-  const dedicated = Object.entries(APP_PROFILES).find(
-    ([key, app]) => key !== "cliente" && app.origin === window.location.origin,
-  )?.[0] as PerfilApp | undefined;
-  if (dedicated) return dedicated;
-  const launched = new URLSearchParams(window.location.search).get("app");
+  let savedProfile: string | null = null;
   try {
-    if (isAppProfile(launched)) {
-      sessionStorage.setItem("pedetrem:running-app", launched);
-      return launched;
-    }
-    const saved = sessionStorage.getItem("pedetrem:running-app");
-    if (isAppProfile(saved)) return saved;
-    const profile = appProfileFromUrl(window.location.pathname, window.location.search);
-    sessionStorage.setItem("pedetrem:running-app", profile);
-    return profile;
+    savedProfile = window.sessionStorage.getItem(RUNNING_APP_KEY);
   } catch {
-    return appProfileFromUrl(window.location.pathname, window.location.search);
+    // A launch URL can still identify the app when storage is unavailable.
   }
+  const profile = runningAppProfile({
+    standalone: !!standalone,
+    origin: window.location.origin,
+    search: window.location.search,
+    savedProfile,
+  });
+  if (profile) {
+    try {
+      window.sessionStorage.setItem(RUNNING_APP_KEY, profile);
+    } catch {
+      // Keep detecting this launch from its URL.
+    }
+  }
+  return profile;
 }
 export function useAppInstalado(profile: PerfilApp) {
   const [evidence, setEvidence] = useState<PwaInstallationEvidence | null>(null);
@@ -87,6 +84,11 @@ export function useAppInstalado(profile: PerfilApp) {
     };
     const installed = () => {
       if (!isProfileInstallDocument(profile)) return;
+      try {
+        window.sessionStorage.setItem(RUNNING_APP_KEY, profile);
+      } catch {
+        // The in-memory installation event still confirms this profile.
+      }
       invalidate();
       if (active.current)
         setEvidence(observePwaInstallation(profile, window.location.origin, true, "appinstalled"));
