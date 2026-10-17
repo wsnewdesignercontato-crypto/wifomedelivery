@@ -22,3 +22,7 @@ export function isProfileInstallDocument(profile: PerfilApp): boolean {
     return false;
   }
 }
+
+export function initialInstallProfile(): PerfilApp | null {
+  return (Object.keys(APP_PROFILES) as PerfilApp[]).find(isProfileInstallDocument) ?? null;
+}

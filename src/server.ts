@@ -2,6 +2,7 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { independentAppRedirect } from "./lib/pwa-entry";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -46,6 +47,8 @@ function isH3SwallowedErrorBody(body: string): boolean {
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const appRedirect = independentAppRedirect(request);
+    if (appRedirect) return Response.redirect(appRedirect, 307);
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);

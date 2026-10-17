@@ -34,12 +34,16 @@ for (const profile of ["estabelecimento", "entregador", "cliente"]) {
     `Initial HTML must identify ${profile} before JavaScript executes`,
   );
   assert.equal(new URL(response.url).pathname, `/${profile}/entrar`);
+  if (Object.values(APP_PROFILES).some((app) => app.origin === origin))
+    assert.equal(new URL(response.url).origin, APP_PROFILES[profile].origin);
   const returnedSearch = defaultParseSearch(new URL(response.url).search);
   assert.equal(returnedSearch.confirmado, "1");
   assert.equal(returnedSearch.redirect, "/" + profile);
   const manifestResponse = await fetch(new URL(expected, origin));
   assert.equal(manifestResponse.status, 200);
   const manifest = await manifestResponse.json();
+  assert.equal(manifest.name, "PedeTrem");
+  assert.equal(manifest.short_name, "PedeTrem");
   assert.equal(manifest.id, `/wifome-${profile}`);
   assert.equal(manifest.scope, `/${profile}`);
   assert.ok(new URL(manifest.start_url, origin).pathname.startsWith(manifest.scope));

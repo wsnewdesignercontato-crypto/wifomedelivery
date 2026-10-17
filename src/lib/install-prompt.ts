@@ -1,4 +1,5 @@
-import { isProfileInstallDocument } from "./install-document";
+import { initialInstallProfile, isProfileInstallDocument } from "./install-document";
+import { clearCurrentPwaInstallation, observePwaInstallation } from "./pwa-installation.ts";
 import type { PerfilApp } from "./app-profiles";
 
 export type InstallEvent = Event & {
@@ -13,9 +14,13 @@ if (typeof window !== "undefined") {
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
     pending = event as InstallEvent;
+    const profile = initialInstallProfile();
+    if (profile) clearCurrentPwaInstallation(profile);
   });
   window.addEventListener("appinstalled", () => {
     pending = null;
+    const profile = initialInstallProfile();
+    if (profile) observePwaInstallation(profile, window.location.origin, true, "appinstalled");
   });
 }
 
@@ -25,4 +30,11 @@ export function getInstallPrompt(profile: PerfilApp): InstallEvent | null {
 
 export function clearInstallPrompt(): void {
   pending = null;
+}
+
+/** Consume before invoking the native UI: the browser accepts each offer only once. */
+export function takeInstallPrompt(profile: PerfilApp): InstallEvent | null {
+  const offer = getInstallPrompt(profile);
+  if (offer) pending = null;
+  return offer;
 }

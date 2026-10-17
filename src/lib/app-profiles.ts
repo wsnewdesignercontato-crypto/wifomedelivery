@@ -3,7 +3,7 @@ export const APP_PROFILES = {
   cliente: {
     origin: "https://pedetrem.vercel.app",
     name: "PedeTrem Cliente",
-    shortName: "PT Cliente",
+    shortName: "PedeTrem",
     id: "/wifome-cliente",
     manifest: "/manifest-cliente.webmanifest",
     icon: "/icons/cliente-any-512-v2.png",
@@ -17,7 +17,7 @@ export const APP_PROFILES = {
   estabelecimento: {
     origin: "https://pedetrem-loja.vercel.app",
     name: "PedeTrem Estabelecimento",
-    shortName: "PT Loja",
+    shortName: "PedeTrem",
     id: "/wifome-estabelecimento",
     manifest: "/manifest-estabelecimento.webmanifest",
     icon: "/icons/estabelecimento-any-512-v2.png",
@@ -31,7 +31,7 @@ export const APP_PROFILES = {
   entregador: {
     origin: "https://pedetrem-entregador.vercel.app",
     name: "PedeTrem Entregador",
-    shortName: "PT Entrega",
+    shortName: "PedeTrem",
     id: "/wifome-entregador",
     manifest: "/manifest-entregador.webmanifest",
     icon: "/icons/entregador-any-512-v2.png",
@@ -69,6 +69,7 @@ export function relatedAppMatches(
 ): boolean {
   if (app.platform !== "webapp") return false;
   const target = APP_PROFILES[profile];
+  if (origin !== target.origin) return false;
   return [app.id, app.url].some((value) => {
     if (!value) return false;
     try {
@@ -87,6 +88,7 @@ export async function systemInstallationEvidence(
   runningProfile: PerfilApp | null,
   query?: () => Promise<Array<{ platform?: string; id?: string; url?: string }>>,
 ): Promise<boolean | null> {
+  if (origin !== APP_PROFILES[profile].origin) return false;
   if (runningProfile === profile) return true;
   if (!query) return null;
   try {

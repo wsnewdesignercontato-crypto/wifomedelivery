@@ -33,6 +33,10 @@ test("an install offer arriving before the banner mounts remains available for t
     assert.equal(offer.defaultPrevented, true);
     assert.equal(module.getInstallPrompt("estabelecimento"), offer);
     assert.equal(module.getInstallPrompt("cliente"), null);
+    assert.equal(module.takeInstallPrompt("cliente"), null);
+    assert.equal(module.takeInstallPrompt("estabelecimento"), offer);
+    assert.equal(module.takeInstallPrompt("estabelecimento"), null);
+    globalThis.window.dispatchEvent(offer);
     module.clearInstallPrompt();
     assert.equal(module.getInstallPrompt("estabelecimento"), null);
     globalThis.window.dispatchEvent(offer);

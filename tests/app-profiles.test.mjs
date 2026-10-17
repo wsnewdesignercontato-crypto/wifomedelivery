@@ -10,15 +10,17 @@ import {
   isProfileLoginPath,
 } from "../src/lib/app-profiles.ts";
 
-test("three profiles preserve distinct installed identities, names, colors and icons", () => {
+test("three profiles keep distinct identities and colors while sharing the PedeTrem launcher name", () => {
   const apps = Object.values(APP_PROFILES);
-  for (const key of ["id", "shortName", "color", "icon"])
+  for (const key of ["id", "color", "icon"])
     assert.equal(new Set(apps.map((app) => app[key])).size, 3);
   for (const [profile, app] of Object.entries(APP_PROFILES)) {
     const manifest = JSON.parse(
       readFileSync(new URL("../public" + app.manifest, import.meta.url), "utf8"),
     );
     assert.equal(manifest.id, app.id);
+    assert.equal(manifest.name, "PedeTrem");
+    assert.equal(manifest.short_name, "PedeTrem");
     assert.equal(manifest.short_name, app.shortName);
     assert.equal(manifest.theme_color, app.color);
     assert.ok(manifest.start_url.includes(profile));
@@ -31,7 +33,7 @@ test("three profiles preserve distinct installed identities, names, colors and i
   }
 });
 test("OS evidence can change from installed to removed, independently for each app", async () => {
-  const origin = "https://pedetrem.vercel.app";
+  const origin = APP_PROFILES.estabelecimento.origin;
   const query = async () => [{ platform: "webapp", id: origin + "/wifome-estabelecimento" }];
   assert.equal(await systemInstallationEvidence("estabelecimento", origin, null, query), true);
   assert.equal(await systemInstallationEvidence("cliente", origin, null, query), false);
@@ -39,10 +41,16 @@ test("OS evidence can change from installed to removed, independently for each a
     await systemInstallationEvidence("estabelecimento", origin, null, async () => []),
     false,
   );
-  assert.equal(await systemInstallationEvidence("entregador", origin, "entregador"), true);
-  assert.equal(await systemInstallationEvidence("cliente", origin, null), null);
   assert.equal(
-    await systemInstallationEvidence("cliente", origin, null, async () => {
+    await systemInstallationEvidence("entregador", APP_PROFILES.entregador.origin, "entregador"),
+    true,
+  );
+  assert.equal(
+    await systemInstallationEvidence("cliente", APP_PROFILES.cliente.origin, null),
+    null,
+  );
+  assert.equal(
+    await systemInstallationEvidence("cliente", APP_PROFILES.cliente.origin, null, async () => {
       throw Error("unavailable");
     }),
     null,
@@ -116,7 +124,7 @@ test("every phone icon is opaque at every pixel and has colored edges without a 
   }
 });
 test("an installed app never hides a different role or an unrelated origin", () => {
-  const origin = "https://pedetrem.vercel.app";
+  const origin = APP_PROFILES.entregador.origin;
   const app = {
     platform: "webapp",
     id: origin + "/wifome-entregador",
@@ -136,4 +144,20 @@ test("an installed app never hides a different role or an unrelated origin", () 
     ),
   );
   assert.ok(!relatedAppMatches({ ...app, platform: "play" }, "entregador", origin));
+});
+
+test("a legacy store installation on the customer origin cannot hide the independent store installation", async () => {
+  const origin = APP_PROFILES.cliente.origin;
+  const old = {
+    platform: "webapp",
+    id: origin + "/wifome-estabelecimento",
+    url: origin + "/manifest-estabelecimento.webmanifest",
+  };
+  assert.equal(relatedAppMatches(old, "estabelecimento", origin), false);
+  assert.equal(
+    await systemInstallationEvidence("estabelecimento", origin, "estabelecimento", async () => [
+      old,
+    ]),
+    false,
+  );
 });

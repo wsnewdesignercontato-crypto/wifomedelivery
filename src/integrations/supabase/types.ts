@@ -3,6 +3,29 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      user_app_installs: {
+        Row: {
+          user_id: string;
+          app_type: "cliente" | "estabelecimento" | "entrega";
+          installation_id: string;
+          installed: boolean;
+          evidence: "appinstalled" | "standalone" | "browser-query";
+          installed_at: string | null;
+          last_opened_at: string | null;
+        };
+        Insert: {
+          user_id: string;
+          app_type: "cliente" | "estabelecimento" | "entrega";
+          installation_id: string;
+          installed: boolean;
+          evidence: "appinstalled" | "standalone" | "browser-query";
+        };
+        Update: {
+          installed?: boolean;
+          evidence?: "appinstalled" | "standalone" | "browser-query";
+        };
+        Relationships: [];
+      };
       ad_plans: {
         Row: {
           ativo: boolean;
@@ -3195,6 +3218,15 @@ export type Database = {
       };
     };
     Functions: {
+      record_app_install: {
+        Args: {
+          p_app_type: "cliente" | "estabelecimento" | "entrega";
+          p_installation_id: string;
+          p_evidence: "appinstalled" | "standalone" | "browser-query";
+          p_installed: boolean;
+        };
+        Returns: Json;
+      };
       accept_team_invitation: {
         Args: { p_invitation: string };
         Returns: undefined;

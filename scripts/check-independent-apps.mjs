@@ -19,6 +19,17 @@ async function main() {
   const identities = new Set();
   for (const { profile, origin, color } of apps) {
     if (profile !== "cliente") {
+      const old = await get(`${apps[0].origin}/${profile}/entrar?confirmado=1`, {
+        redirect: "manual",
+      });
+      assert.equal(
+        old.status,
+        307,
+        `Legacy ${profile} entry must not serve an installable page on the customer origin`,
+      );
+      assert.equal(old.headers.get("location"), `${origin}/${profile}/entrar?confirmado=1`);
+    }
+    if (profile !== "cliente") {
       const root = await get(origin + "/?app=" + profile, { redirect: "manual" });
       assert.equal(root.status, 307, `The ${profile} host root must open its own app`);
       const target = new URL(root.headers.get("location"), origin);
@@ -49,6 +60,8 @@ async function main() {
     const response = await get(origin + manifestPath);
     assert.equal(response.status, 200);
     const manifest = await response.json();
+    assert.equal(manifest.name, "PedeTrem");
+    assert.equal(manifest.short_name, "PedeTrem");
     assert.equal(manifest.id, `/wifome-${profile}`);
     assert.equal(manifest.scope, `/${profile}`);
     assert.equal(manifest.theme_color, color);
