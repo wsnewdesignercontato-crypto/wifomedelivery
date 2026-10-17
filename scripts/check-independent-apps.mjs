@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { APP_PROFILES } from "../src/lib/app-profiles.ts";
 
 const apps = [
   { profile: "cliente", origin: "https://pedetrem.vercel.app", color: "#E10B17" },
@@ -59,8 +60,8 @@ async function main() {
     const response = await get(origin + manifestPath);
     assert.equal(response.status, 200);
     const manifest = await response.json();
-    assert.equal(manifest.name, "PedeTrem");
-    assert.equal(manifest.short_name, "PedeTrem");
+    assert.equal(manifest.name, APP_PROFILES[profile].name);
+    assert.equal(manifest.short_name, APP_PROFILES[profile].shortName);
     assert.equal(manifest.id, `/wifome-${profile}`);
     assert.equal(manifest.scope, `/${profile}`);
     assert.equal(manifest.theme_color, color);

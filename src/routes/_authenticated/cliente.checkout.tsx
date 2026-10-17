@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { missingCheckoutDetails } from "@/lib/customer-access";
+import { PROFILE_UPDATED_EVENT } from "@/lib/app-refresh";
 import {
   Dialog,
   DialogContent,
@@ -92,13 +93,16 @@ function CheckoutPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const missing = useMemo(() => missingCheckoutDetails(phone, addrs), [phone, addrs]);
   useEffect(() => {
-    if (!loading && detailsLoaded && estab && missing.length) setDetailsOpen(true);
+    if (!loading && detailsLoaded && estab) setDetailsOpen(missing.length > 0);
   }, [loading, detailsLoaded, estab, missing]);
   const [enviando, setEnviando] = useState(false);
   const [novo, setNovo] = useState({ rua: "", numero: "", bairro: "", cidade: "", estado: "" });
 
   useEffect(() => {
-    (async () => {
+    let active = true;
+    let sequence = 0;
+    const reload = async () => {
+      const request = ++sequence;
       const [a, c, profile] = await Promise.all([
         supabase
           .from("addresses")
@@ -111,7 +115,9 @@ function CheckoutPage() {
           .eq("user_id", user.id),
         supabase.from("profiles").select("telefone").eq("id", user.id).single(),
       ]);
+      if (!active || request !== sequence) return;
       if (a.error || c.error || profile.error) {
+        setDetailsLoaded(false);
         setLoadError("Não foi possível carregar seus dados e carrinho. Tente novamente.");
         toast.error(
           a.error?.message ??
@@ -123,10 +129,13 @@ function CheckoutPage() {
         return;
       }
       const arr = (a.data ?? []) as Addr[];
+      setLoadError(null);
       setAddrs(arr);
       setPhone(profile.data.telefone);
       setDetailsLoaded(true);
-      setAddrId(arr[0]?.id ?? null);
+      setAddrId((current) =>
+        arr.some((address) => address.id === current) ? current : (arr[0]?.id ?? null),
+      );
       const ci = c.data ?? [];
       const storeItems = ci.filter((item) => item.establishment_id === ci[0]?.establishment_id);
       setCartFingerprint(
@@ -140,14 +149,26 @@ function CheckoutPage() {
           .select("id,nome,taxa_entrega_cents,pedido_minimo_cents")
           .eq("id", ci[0].establishment_id)
           .maybeSingle();
+        if (!active || request !== sequence) return;
         if (storeError) {
           toast.error(storeError.message);
           setLoadError("Não foi possível carregar a loja. Tente novamente.");
         }
         setEstab(e as Estab | null);
-      }
+      } else setEstab(null);
       setLoading(false);
-    })();
+    };
+    void reload();
+    const refresh = () => {
+      void reload();
+    };
+    window.addEventListener(PROFILE_UPDATED_EVENT, refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      active = false;
+      window.removeEventListener(PROFILE_UPDATED_EVENT, refresh);
+      window.removeEventListener("focus", refresh);
+    };
   }, [user.id]);
 
   const checkoutData = useMemo<Omit<CheckoutQuoteInput, "idempotency_key"> | null>(() => {
@@ -329,8 +350,12 @@ function CheckoutPage() {
           <DialogHeader>
             <DialogTitle>Complete os dados para fazer seu pedido</DialogTitle>
             <DialogDescription>
-              Precisamos de telefone e endereço cadastrados para entrar em contato e realizar a
-              entrega. Você pode continuar navegando enquanto isso.
+              {missing.length === 1
+                ? missing.includes("endereco")
+                  ? "Cadastre seu endereço de entrega para concluir o pedido."
+                  : "Cadastre um telefone com DDD para contato sobre a entrega."
+                : "Precisamos de telefone e endereço cadastrados para entrar em contato e realizar a entrega."}{" "}
+              Você pode continuar navegando enquanto isso.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">

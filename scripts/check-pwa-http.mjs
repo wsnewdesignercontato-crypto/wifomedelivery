@@ -36,8 +36,8 @@ for (const profile of ["estabelecimento", "entregador", "cliente"]) {
   const manifestResponse = await fetch(new URL(expected, origin));
   assert.equal(manifestResponse.status, 200);
   const manifest = await manifestResponse.json();
-  assert.equal(manifest.name, "PedeTrem");
-  assert.equal(manifest.short_name, "PedeTrem");
+  assert.equal(manifest.name, APP_PROFILES[profile].name);
+  assert.equal(manifest.short_name, APP_PROFILES[profile].shortName);
   assert.equal(manifest.id, `/wifome-${profile}`);
   assert.equal(manifest.scope, `/${profile}`);
   assert.ok(new URL(manifest.start_url, origin).pathname.startsWith(manifest.scope));

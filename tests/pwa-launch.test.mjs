@@ -110,10 +110,10 @@ test("a normal browser visit is not an installed app even with a launch marker",
 
 test("a matching launch still works when browser storage is blocked", () => {
   browser("entregador", { search: "?app=entregador" });
-  window.sessionStorage.getItem = () => {
+  globalThis.window.sessionStorage.getItem = () => {
     throw Error("blocked");
   };
-  window.sessionStorage.setItem = () => {
+  globalThis.window.sessionStorage.setItem = () => {
     throw Error("blocked");
   };
   assert.equal(perfilInstaladoEmExecucao(), "entregador");

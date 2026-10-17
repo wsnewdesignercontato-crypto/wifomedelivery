@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { safeReturnPath } from "@/lib/customer-access";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -15,6 +15,11 @@ import { PasswordStrength } from "@/components/ui/password-strength";
 import { senhaForteSchema } from "@/lib/password-strength";
 import type { AuthSearch } from "@/lib/auth-search";
 import type { PerfilApp } from "@/lib/app-profiles";
+import {
+  authEmailSchema,
+  confirmationRedirectUrl,
+  resendSignupConfirmation,
+} from "@/lib/auth-confirmation";
 
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,7 +45,7 @@ const perfilInfo: Record<
   },
 };
 
-const emailSchema = z.string().trim().email({ message: "Email inválido" }).max(255);
+const emailSchema = authEmailSchema;
 const senhaSchema = z
   .string()
   .min(6, { message: "A senha deve ter pelo menos 6 caracteres" })
@@ -70,12 +75,12 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
   const [checkingSession, setCheckingSession] = useState(true);
   const [emailSalvo, setEmailSalvo] = useState("");
   const [resendSeconds, setResendSeconds] = useState(0);
+  const resendPending = useRef(false);
   const [modo, setModo] = useState<"form" | "confirmar-email" | "recuperar" | "link-enviado">(
     "form",
   );
 
-  const confirmationUrl = () =>
-    `${window.location.origin}/auth?perfil=${perfil}&confirmado=1${returnPath ? `&redirect=${encodeURIComponent(returnPath)}` : ""}`;
+  const confirmationUrl = () => confirmationRedirectUrl(window.location.origin, perfil, returnPath);
 
   useEffect(() => {
     if (resendSeconds <= 0) return;
@@ -85,30 +90,32 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
 
   async function handleReenviar() {
     const email = emailSchema.safeParse(emailSalvo);
-    if (!email.success || loading || resendSeconds > 0) return;
+    if (!email.success) {
+      toast.error(email.error.issues[0]?.message ?? "Confira o e-mail do cadastro.");
+      return;
+    }
+    if (resendPending.current || loading || resendSeconds > 0) return;
+    resendPending.current = true;
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email: email.data,
-        options: { emailRedirectTo: confirmationUrl() },
-      });
-      if (error) {
-        if (error.status === 429) {
-          setResendSeconds(60);
-          toast.error("Aguarde um minuto antes de solicitar outro e-mail.");
-        } else {
-          toast.error("Não foi possível reenviar a confirmação. Tente novamente mais tarde.");
-        }
-        return;
-      }
+      await resendSignupConfirmation(
+        supabase.auth,
+        email.data,
+        window.location.origin,
+        perfil,
+        returnPath,
+      );
       setResendSeconds(60);
       toast.success(
         "Solicitação recebida. Confira a caixa de entrada e o spam. Se já confirmou, entre com sua senha.",
       );
-    } catch {
-      toast.error("Não foi possível conectar. Confira sua internet e tente novamente.");
+    } catch (error) {
+      setResendSeconds(60);
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível reenviar a confirmação.",
+      );
     } finally {
+      resendPending.current = false;
       setLoading(false);
     }
   }
@@ -395,17 +402,30 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
                 Não recebeu? Verifique a caixa de spam e confira se digitou o e-mail corretamente.
               </p>
               {modo === "confirmar-email" && (
-                <Button
-                  className="w-full"
-                  disabled={loading || resendSeconds > 0}
-                  onClick={() => void handleReenviar()}
-                >
-                  {loading
-                    ? "Solicitando..."
-                    : resendSeconds > 0
-                      ? `Reenviar em ${resendSeconds}s`
-                      : "Reenviar confirmação"}
-                </Button>
+                <>
+                  <Button
+                    className="w-full"
+                    disabled={loading || resendSeconds > 0}
+                    onClick={() => void handleReenviar()}
+                  >
+                    {loading
+                      ? "Solicitando..."
+                      : resendSeconds > 0
+                        ? `Reenviar em ${resendSeconds}s`
+                        : "Reenviar confirmação"}
+                  </Button>
+                  <Button
+                    className="w-full"
+                    variant="ghost"
+                    disabled={loading}
+                    onClick={() => {
+                      setModo("form");
+                      setTab("cadastro");
+                    }}
+                  >
+                    Corrigir e-mail e refazer cadastro
+                  </Button>
+                </>
               )}
               <Button
                 variant="outline"
@@ -532,6 +552,8 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
                       id="email-cad"
                       name="email"
                       type="email"
+                      defaultValue={emailSalvo}
+                      key={emailSalvo}
                       autoComplete="email"
                       required
                       placeholder="voce@exemplo.com"
