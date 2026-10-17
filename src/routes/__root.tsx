@@ -15,6 +15,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthSync } from "@/components/auth-sync";
 import { LiveRefresh } from "@/components/live-refresh";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
+import { InstalledAppPermissionPrompt } from "@/components/installed-app-permission-prompt";
 
 import { IFomeLogo } from "@/components/ifome-logo";
 import { APP_URL } from "@/lib/app-config";
@@ -182,6 +183,7 @@ function RootComponent() {
         <div id="conteudo" className="relative h-full">
           <InstallAppPrompt />
           <Outlet />
+          <InstalledAppPermissionPrompt />
         </div>
         <Toaster richColors closeButton position="top-right" />
       </ThemeProvider>

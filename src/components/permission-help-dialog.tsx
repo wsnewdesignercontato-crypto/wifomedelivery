@@ -64,7 +64,13 @@ const STEPS: Record<"ios" | "android" | "desktop", Record<Kind, string[]>> = {
 };
 
 /** Atalho com o passo a passo para liberar a permissão nas configurações do aparelho. */
-export function PermissionHelpDialog({ kind }: { kind: Kind }) {
+export function PermissionHelpDialog({
+  kind,
+  themeClass = "",
+}: {
+  kind: Kind;
+  themeClass?: string;
+}) {
   const [os, setOs] = useState<"ios" | "android" | "desktop">(detectOS());
   const title = kind === "push" ? "Liberar notificações" : "Liberar localização";
   const steps = STEPS[os][kind];
@@ -74,10 +80,10 @@ export function PermissionHelpDialog({ kind }: { kind: Kind }) {
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" className="w-full rounded-full">
           <Settings2 className="mr-2 h-4 w-4" />
-          Abrir configurações do aparelho
+          Como liberar nos ajustes
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className={`max-w-md ${themeClass}`}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>

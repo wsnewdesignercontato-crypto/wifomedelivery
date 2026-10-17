@@ -1,29 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  PUSH_SW_URL,
-  VAPID_PUBLIC_KEY,
-  pushSupported,
-  urlBase64ToUint8Array,
-} from "@/lib/push-config";
+import { PUSH_SW_URL, pushSupported } from "@/lib/push-config";
+import { devicePushSubscription, setDevicePushEnabled } from "@/lib/push-subscription";
 import { savePushSubscription, removePushSubscription, sendTestPush } from "@/lib/push.functions";
 
 type PermissionState = "unsupported" | "default" | "granted" | "denied";
-
-async function getRegistration(): Promise<ServiceWorkerRegistration> {
-  const existing = await navigator.serviceWorker.getRegistration(PUSH_SW_URL);
-  if (existing) return existing;
-  return navigator.serviceWorker.register(PUSH_SW_URL, { scope: "/" });
-}
-
-function keyToBase64Url(buffer: ArrayBuffer | null): string {
-  if (!buffer) return "";
-  const bytes = new Uint8Array(buffer);
-  let bin = "";
-  for (const b of bytes) bin += String.fromCharCode(b);
-  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
 
 /** Define o "balãozinho" com a quantidade de notificações no ícone do app. */
 export async function setAppBadgeCount(count: number) {
@@ -90,25 +72,10 @@ export function usePushNotifications() {
         return false;
       }
 
-      const reg = await getRegistration();
-      await navigator.serviceWorker.ready;
-
-      let sub = await reg.pushManager.getSubscription();
-      if (!sub) {
-        sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
-        });
-      }
-
       await savePushSubscription({
-        data: {
-          endpoint: sub.endpoint,
-          p256dh: keyToBase64Url(sub.getKey("p256dh")),
-          auth: keyToBase64Url(sub.getKey("auth")),
-          userAgent: navigator.userAgent,
-        },
+        data: await devicePushSubscription(),
       });
+      setDevicePushEnabled(true);
 
       setSubscribed(true);
       toast.success("Notificações ativadas! Você será avisado mesmo com o app fechado.");
@@ -124,6 +91,7 @@ export function usePushNotifications() {
 
   const disable = useCallback(async () => {
     setBusy(true);
+    setDevicePushEnabled(false);
     try {
       const reg = await navigator.serviceWorker.getRegistration(PUSH_SW_URL);
       const sub = await reg?.pushManager.getSubscription();
