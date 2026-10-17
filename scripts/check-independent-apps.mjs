@@ -41,16 +41,15 @@ async function main() {
     assert.equal(page.status, 200);
     assert.equal(new URL(page.url).origin, origin);
     const html = await page.text();
-    const otherApps = html.match(
-      /<nav\b[^>]*aria-label="Outros aplicativos PedeTrem"[^>]*>([\s\S]*?)<\/nav>/,
-    )?.[1];
-    assert.ok(otherApps, `${profile}: other app downloads must remain reachable`);
-    for (const other of apps.filter((app) => app.profile !== profile)) {
-      assert.ok(
-        otherApps.includes(`href="${other.origin}/${other.profile}/entrar"`),
-        `${profile}: missing ${other.profile} download`,
-      );
-    }
+    assert.ok(html.includes("data-app-install-banner"), `${profile}: own install bar missing`);
+    assert.ok(!html.includes('aria-label="Outros aplicativos PedeTrem"'));
+    const banner = html.slice(
+      html.indexOf("data-app-install-banner"),
+      html.indexOf("data-app-install-banner") + 2500,
+    );
+    assert.ok(banner.includes(`/icons/${profile}-any-512-v2.png`));
+    for (const other of apps.filter((app) => app.profile !== profile))
+      assert.ok(!banner.includes(`/icons/${other.profile}-any-512-v2.png`));
     const manifests = [...html.matchAll(/<link\b[^>]*rel="manifest"[^>]*>/g)];
     assert.equal(manifests.length, 1);
     const manifestPath = manifests[0][0].match(/href="([^"]+)"/)[1];
@@ -80,7 +79,7 @@ async function main() {
     const worker = await get(origin + "/push-sw.js");
     assert.equal(worker.status, 200);
     console.log(
-      `${profile}: HTTPS, other app downloads, isolated entry, initial manifest, self association, icons and worker passed`,
+      `${profile}: HTTPS, own install bar, isolated entry, initial manifest, self association, icons and worker passed`,
     );
   }
   assert.equal(identities.size, 3);

@@ -22,6 +22,7 @@ import {
   LifeBuoy,
   Map as MapIcon,
   Sparkles,
+  Smartphone,
 } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +41,7 @@ type NavItem = {
 };
 const navItems: NavItem[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/admin/aplicativos", label: "Aplicativos", icon: Smartphone },
   { to: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag },
   { to: "/admin/mapa", label: "Mapa ao vivo", icon: MapIcon },
   { to: "/admin/usuarios", label: "Usuários & Admins", icon: Shield, group: "Pessoas" },

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { defaultParseSearch } from "@tanstack/router-core";
-import { APP_PROFILES, profileInstallUrl } from "../src/lib/app-profiles.ts";
+import { APP_PROFILES } from "../src/lib/app-profiles.ts";
 
 const origin = new URL(process.argv[2] ?? "http://127.0.0.1:3000").origin;
 function links(html, rel) {
@@ -17,16 +17,10 @@ for (const profile of ["estabelecimento", "entregador", "cliente"]) {
   );
   assert.equal(response.status, 200);
   const html = await response.text();
-  const otherApps = html.match(
-    /<nav\b[^>]*aria-label="Outros aplicativos PedeTrem"[^>]*>([\s\S]*?)<\/nav>/,
-  )?.[1];
-  assert.ok(otherApps, `${profile}: other app downloads must be present in the rendered page`);
-  for (const other of Object.keys(APP_PROFILES).filter((item) => item !== profile)) {
-    assert.ok(
-      otherApps.includes(`href="${profileInstallUrl(other)}"`),
-      `${profile}: missing ${other} download`,
-    );
-  }
+  assert.ok(html.includes(`aria-label="Baixar ${APP_PROFILES[profile].name}"`));
+  assert.ok(!html.includes('aria-label="Outros aplicativos PedeTrem"'));
+  for (const other of Object.keys(APP_PROFILES).filter((item) => item !== profile))
+    assert.ok(!html.includes(`aria-label="Baixar ${APP_PROFILES[other].name}"`));
   const expected = `/manifest-${profile}.webmanifest`;
   assert.deepEqual(
     links(html, "manifest"),

@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { APP_PROFILES, type PerfilApp } from "@/lib/app-profiles";
-import { recordAppInstall } from "@/lib/app-install.functions";
+import { observeAppInstall, recordAppInstall } from "@/lib/app-install.functions";
+import { syncPwaInstall } from "@/lib/pwa-install-sync";
 import {
   createPwaInstallQueue,
   pwaInstallationId,
@@ -27,7 +28,7 @@ export function PwaInstallSync({
     },
   });
   useEffect(() => {
-    if (!userId || !evidence || window.location.origin !== APP_PROFILES[profile].origin) return;
+    if (!evidence || window.location.origin !== APP_PROFILES[profile].origin) return;
     const installationId = pwaInstallationId(profile);
     if (!installationId) return;
     let active = true;
@@ -39,13 +40,9 @@ export function PwaInstallSync({
       try {
         await queue.current!(async () => {
           if (!active) return;
-          await recordAppInstall({
-            data: {
-              appType: profile === "entregador" ? "entrega" : profile,
-              installationId,
-              installed: evidence.installed,
-              evidence: evidence.evidence,
-            },
+          await syncPwaInstall(profile, installationId, evidence, !!userId, {
+            observe: (data) => observeAppInstall({ data }),
+            record: (data) => recordAppInstall({ data }),
           });
         });
         saved = true;

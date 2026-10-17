@@ -24,3 +24,20 @@ export const appInstallRecordResultSchema = z.object({
   installed_at: z.string().nullable(),
   last_opened_at: z.string().nullable(),
 });
+
+export const appInstallMetricsSchema = z.object({
+  updatedAt: z.string(),
+  apps: z
+    .array(
+      z.object({
+        appType: z.enum(["cliente", "estabelecimento", "entrega"]),
+        activeInstalls: z.number().int().nonnegative(),
+        historicalInstalls: z.number().int().nonnegative(),
+        identifiedAccounts: z.number().int().nonnegative(),
+        lastObservedAt: z.string().nullable(),
+      }),
+    )
+    .length(3),
+});
+
+export type AppInstallMetrics = z.infer<typeof appInstallMetricsSchema>;

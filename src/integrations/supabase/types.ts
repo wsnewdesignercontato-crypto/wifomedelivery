@@ -3,6 +3,33 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      pwa_install_observations: {
+        Row: {
+          app_type: "cliente" | "estabelecimento" | "entrega";
+          installation_id: string;
+          installed: boolean;
+          evidence: "appinstalled" | "standalone" | "browser-query";
+          first_installed_at: string;
+          last_opened_at: string | null;
+          last_observed_at: string;
+        };
+        Insert: {
+          app_type: "cliente" | "estabelecimento" | "entrega";
+          installation_id: string;
+          installed: boolean;
+          evidence: "appinstalled" | "standalone" | "browser-query";
+          first_installed_at: string;
+          last_opened_at?: string | null;
+          last_observed_at: string;
+        };
+        Update: {
+          installed?: boolean;
+          evidence?: "appinstalled" | "standalone" | "browser-query";
+          last_opened_at?: string | null;
+          last_observed_at?: string;
+        };
+        Relationships: [];
+      };
       user_app_installs: {
         Row: {
           user_id: string;
@@ -3218,6 +3245,19 @@ export type Database = {
       };
     };
     Functions: {
+      observe_pwa_install: {
+        Args: {
+          p_app_type: "cliente" | "estabelecimento" | "entrega";
+          p_installation_id: string;
+          p_evidence: "appinstalled" | "standalone" | "browser-query";
+          p_installed: boolean;
+        };
+        Returns: undefined;
+      };
+      admin_pwa_install_metrics: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       record_app_install: {
         Args: {
           p_app_type: "cliente" | "estabelecimento" | "entrega";

@@ -29,6 +29,7 @@ import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedEstabelecimentoRouteImport } from './routes/_authenticated/estabelecimento'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminAnunciosRouteImport } from './routes/_authenticated/admin.anuncios'
+import { Route as AuthenticatedAdminAplicativosRouteImport } from './routes/_authenticated/admin.aplicativos'
 import { Route as AuthenticatedAdminAvaliacoesRouteImport } from './routes/_authenticated/admin.avaliacoes'
 import { Route as AuthenticatedAdminBannersRouteImport } from './routes/_authenticated/admin.banners'
 import { Route as AuthenticatedAdminCampanhasRouteImport } from './routes/_authenticated/admin.campanhas'
@@ -209,6 +210,12 @@ const AuthenticatedAdminAnunciosRoute =
   AuthenticatedAdminAnunciosRouteImport.update({
     id: '/anuncios',
     path: '/anuncios',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminAplicativosRoute =
+  AuthenticatedAdminAplicativosRouteImport.update({
+    id: '/aplicativos',
+    path: '/aplicativos',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminAvaliacoesRoute =
@@ -706,6 +713,7 @@ export interface FileRoutesByFullPath {
   '/equipe': typeof AuthenticatedEquipeRoute
   '/estabelecimento': typeof AuthenticatedEstabelecimentoRouteWithChildren
   '/admin/anuncios': typeof AuthenticatedAdminAnunciosRoute
+  '/admin/aplicativos': typeof AuthenticatedAdminAplicativosRoute
   '/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/admin/campanhas': typeof AuthenticatedAdminCampanhasRoute
@@ -803,6 +811,7 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/admin/anuncios': typeof AuthenticatedAdminAnunciosRoute
+  '/admin/aplicativos': typeof AuthenticatedAdminAplicativosRoute
   '/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/admin/campanhas': typeof AuthenticatedAdminCampanhasRoute
@@ -906,6 +915,7 @@ export interface FileRoutesById {
   '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
   '/_authenticated/estabelecimento': typeof AuthenticatedEstabelecimentoRouteWithChildren
   '/_authenticated/admin/anuncios': typeof AuthenticatedAdminAnunciosRoute
+  '/_authenticated/admin/aplicativos': typeof AuthenticatedAdminAplicativosRoute
   '/_authenticated/admin/avaliacoes': typeof AuthenticatedAdminAvaliacoesRoute
   '/_authenticated/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/_authenticated/admin/campanhas': typeof AuthenticatedAdminCampanhasRoute
@@ -1009,6 +1019,7 @@ export interface FileRouteTypes {
     | '/equipe'
     | '/estabelecimento'
     | '/admin/anuncios'
+    | '/admin/aplicativos'
     | '/admin/avaliacoes'
     | '/admin/banners'
     | '/admin/campanhas'
@@ -1106,6 +1117,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/equipe'
     | '/admin/anuncios'
+    | '/admin/aplicativos'
     | '/admin/avaliacoes'
     | '/admin/banners'
     | '/admin/campanhas'
@@ -1208,6 +1220,7 @@ export interface FileRouteTypes {
     | '/_authenticated/equipe'
     | '/_authenticated/estabelecimento'
     | '/_authenticated/admin/anuncios'
+    | '/_authenticated/admin/aplicativos'
     | '/_authenticated/admin/avaliacoes'
     | '/_authenticated/admin/banners'
     | '/_authenticated/admin/campanhas'
@@ -1448,6 +1461,13 @@ declare module '@tanstack/react-router' {
       path: '/anuncios'
       fullPath: '/admin/anuncios'
       preLoaderRoute: typeof AuthenticatedAdminAnunciosRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/aplicativos': {
+      id: '/_authenticated/admin/aplicativos'
+      path: '/aplicativos'
+      fullPath: '/admin/aplicativos'
+      preLoaderRoute: typeof AuthenticatedAdminAplicativosRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/avaliacoes': {
@@ -2015,6 +2035,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAnunciosRoute: typeof AuthenticatedAdminAnunciosRoute
+  AuthenticatedAdminAplicativosRoute: typeof AuthenticatedAdminAplicativosRoute
   AuthenticatedAdminAvaliacoesRoute: typeof AuthenticatedAdminAvaliacoesRoute
   AuthenticatedAdminBannersRoute: typeof AuthenticatedAdminBannersRoute
   AuthenticatedAdminCampanhasRoute: typeof AuthenticatedAdminCampanhasRoute
@@ -2038,6 +2059,7 @@ interface AuthenticatedAdminRouteChildren {
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAnunciosRoute: AuthenticatedAdminAnunciosRoute,
+  AuthenticatedAdminAplicativosRoute: AuthenticatedAdminAplicativosRoute,
   AuthenticatedAdminAvaliacoesRoute: AuthenticatedAdminAvaliacoesRoute,
   AuthenticatedAdminBannersRoute: AuthenticatedAdminBannersRoute,
   AuthenticatedAdminCampanhasRoute: AuthenticatedAdminCampanhasRoute,

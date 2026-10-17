@@ -34,6 +34,7 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
       return;
     const timer = window.setTimeout(() => {
       if (
+        !requesting.current &&
         !pwaInvitePostponed(perfilAtual) &&
         !document.querySelector('[role="dialog"][data-state="open"]')
       )
@@ -70,7 +71,7 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
   }, [perfilAtual]);
   async function install() {
     if (requesting.current) return;
-    dismissInvite();
+    setInvite(false);
     if (!isProfileInstallDocument(perfilAtual)) {
       window.location.assign(profileInstallUrl(perfilAtual));
       return;
@@ -85,7 +86,8 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
     requesting.current = true;
     try {
       await offer.prompt();
-      await offer.userChoice;
+      const choice = await offer.userChoice;
+      if (choice.outcome === "dismissed") postponePwaInvite(perfilAtual);
       setCanPrompt(!!getInstallPrompt(perfilAtual));
       await revalidar();
     } catch {
@@ -103,6 +105,7 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
         perfilAtual={perfilAtual}
         instalado={instalado}
         busy={busy}
+        nativeReady={canPrompt}
         onInstall={() => void install()}
       />
       <Dialog
@@ -145,19 +148,24 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
           <DialogHeader>
             <DialogTitle>Instalar {app.name}</DialogTitle>
             <DialogDescription>
-              Este aplicativo tem ícone e acesso próprios. Você pode instalar também os outros
-              perfis no mesmo celular.
+              {canPrompt
+                ? "A instalação está disponível. Toque em Instalar agora para confirmar no navegador."
+                : "O navegador ainda não disponibilizou a janela de instalação. Você pode instalar pelo menu seguindo os passos abaixo."}
             </DialogDescription>
           </DialogHeader>
           <ol className="list-inside list-decimal space-y-3 text-sm">
-            <li>
-              No Android, abra o menu do Chrome e escolha <b>Instalar aplicativo</b> ou{" "}
-              <b>Adicionar à tela inicial</b>.
-            </li>
-            <li>
-              No iPhone, abra esta página no Safari, toque em <b>Compartilhar</b> e depois em{" "}
-              <b>Adicionar à Tela de Início</b>.
-            </li>
+            {ios ? (
+              <li>
+                Abra esta página no Safari, toque em <b>Compartilhar</b> e depois em{" "}
+                <b>Adicionar à Tela de Início</b>.
+              </li>
+            ) : (
+              <li>
+                No Android, abra o menu de três pontos do Chrome e escolha{" "}
+                <b>Instalar aplicativo</b> ou <b>Adicionar à tela inicial</b>. Confirme em{" "}
+                <b>Instalar</b>.
+              </li>
+            )}
             <li>
               Confira o nome <b>{app.shortName}</b> e a cor do ícone antes de adicionar.
             </li>
