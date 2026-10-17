@@ -74,7 +74,6 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [emailSalvo, setEmailSalvo] = useState("");
-  const [resendSeconds, setResendSeconds] = useState(0);
   const resendPending = useRef(false);
   const [modo, setModo] = useState<"form" | "confirmar-email" | "recuperar" | "link-enviado">(
     "form",
@@ -82,19 +81,13 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
 
   const confirmationUrl = () => confirmationRedirectUrl(window.location.origin, perfil, returnPath);
 
-  useEffect(() => {
-    if (resendSeconds <= 0) return;
-    const timer = window.setTimeout(() => setResendSeconds((seconds) => seconds - 1), 1000);
-    return () => window.clearTimeout(timer);
-  }, [resendSeconds]);
-
   async function handleReenviar() {
     const email = emailSchema.safeParse(emailSalvo);
     if (!email.success) {
       toast.error(email.error.issues[0]?.message ?? "Confira o e-mail do cadastro.");
       return;
     }
-    if (resendPending.current || loading || resendSeconds > 0) return;
+    if (resendPending.current || loading) return;
     resendPending.current = true;
     setLoading(true);
     try {
@@ -105,12 +98,10 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
         perfil,
         returnPath,
       );
-      setResendSeconds(60);
       toast.success(
         "Solicitação recebida. Confira a caixa de entrada e o spam. Se já confirmou, entre com sua senha.",
       );
     } catch (error) {
-      setResendSeconds(60);
       toast.error(
         error instanceof Error ? error.message : "Não foi possível reenviar a confirmação.",
       );
@@ -276,7 +267,6 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
         finishLogin();
         return;
       }
-      setResendSeconds(60);
       setModo("confirmar-email");
     } catch {
       toast.error("Não foi possível conectar. Confira sua internet e tente novamente.");
@@ -405,14 +395,10 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
                 <>
                   <Button
                     className="w-full"
-                    disabled={loading || resendSeconds > 0}
+                    disabled={loading}
                     onClick={() => void handleReenviar()}
                   >
-                    {loading
-                      ? "Solicitando..."
-                      : resendSeconds > 0
-                        ? `Reenviar em ${resendSeconds}s`
-                        : "Reenviar confirmação"}
+                    {loading ? "Solicitando..." : "Reenviar confirmação"}
                   </Button>
                   <Button
                     className="w-full"

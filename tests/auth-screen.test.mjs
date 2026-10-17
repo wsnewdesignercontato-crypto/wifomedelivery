@@ -139,6 +139,44 @@ test("an unconfirmed login offers a working, role-specific resend without retryi
       const input = runtime.calls.find(([kind]) => kind === "resend")[1];
       assert.equal(new URL(input.options.emailRedirectTo).origin, APP_PROFILES[profile].origin);
       assert.equal(input.type, "signup");
+      const nextResend = find(
+        app.render(),
+        (node) => node.props?.children === "Reenviar confirmação",
+      );
+      assert.ok(nextResend, "A completed manual request must not impose a 60-second frontend wait");
+      assert.equal(nextResend.props.disabled, false);
+      nextResend.props.onClick();
+      await settle();
+      assert.equal(runtime.calls.filter(([kind]) => kind === "resend").length, 2);
+    } finally {
+      app.cleanup();
+    }
+  }
+});
+
+test("each fresh signup can request confirmation again without a frontend countdown", async () => {
+  for (const profile of Object.keys(APP_PROFILES)) {
+    const app = await mount(profile);
+    try {
+      const form = find(
+        app.render(),
+        (node) => node.type === "form" && !!find(node, (n) => n.props?.id === "email-cad"),
+      );
+      await form.props.onSubmit({
+        preventDefault() {},
+        currentTarget: { nome: "Teste", email: "person@gmail.com", senha: "SenhaForte123!" },
+      });
+      const resend = find(app.render(), (node) => node.props?.children === "Reenviar confirmação");
+      assert.ok(resend);
+      assert.equal(resend.props.disabled, false);
+      assert.equal(
+        runtime.calls.filter(([kind]) => kind === "resend").length,
+        0,
+        "Resend is always manual",
+      );
+      resend.props.onClick();
+      await settle();
+      assert.equal(runtime.calls.filter(([kind]) => kind === "resend").length, 1);
     } finally {
       app.cleanup();
     }
