@@ -1,0 +1,59 @@
+{
+  "cli": {
+    "version": ">=16.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "cliente-preview": {
+      "distribution": "internal",
+      "env": {
+        "PEDETREM_APP": "cliente"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "cliente-production": {
+      "env": {
+        "PEDETREM_APP": "cliente"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    },
+    "estabelecimento-preview": {
+      "distribution": "internal",
+      "env": {
+        "PEDETREM_APP": "estabelecimento"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "estabelecimento-production": {
+      "env": {
+        "PEDETREM_APP": "estabelecimento"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    },
+    "entregador-preview": {
+      "distribution": "internal",
+      "env": {
+        "PEDETREM_APP": "entregador"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "entregador-production": {
+      "env": {
+        "PEDETREM_APP": "entregador"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  }
+}

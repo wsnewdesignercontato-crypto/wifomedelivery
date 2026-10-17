@@ -1,0 +1,23 @@
+{
+  "cliente": {
+    "name": "PedeTrem Cliente",
+    "id": "app.pedetrem.cliente",
+    "origin": "https://pedetrem.vercel.app",
+    "loginPath": "/cliente/entrar",
+    "color": "#E10B17"
+  },
+  "estabelecimento": {
+    "name": "PedeTrem Estabelecimento",
+    "id": "app.pedetrem.estabelecimento",
+    "origin": "https://pedetrem-loja.vercel.app",
+    "loginPath": "/estabelecimento/entrar",
+    "color": "#F58206"
+  },
+  "entregador": {
+    "name": "PedeTrem Entregador",
+    "id": "app.pedetrem.entregador",
+    "origin": "https://pedetrem-entregador.vercel.app",
+    "loginPath": "/entregador/entrar",
+    "color": "#07883B"
+  }
+}
