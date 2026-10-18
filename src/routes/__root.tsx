@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
-import appCss from "../styles.css?url";
+import appCss from "../styles.css?inline";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthSync } from "@/components/auth-sync";
@@ -113,7 +113,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       ],
       links: [
-        { rel: "stylesheet", href: appCss },
         { rel: "icon", type: "image/png", href: app.icon },
         { rel: "apple-touch-icon", href: app.appleIcon },
         { rel: "manifest", href: app.manifest },
@@ -160,6 +159,8 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/* Keep the compiled application styles in the document, including installed apps. */}
+        <style data-app-styles="pedetrem" dangerouslySetInnerHTML={{ __html: appCss }} />
       </head>
       <body>
         {children}
