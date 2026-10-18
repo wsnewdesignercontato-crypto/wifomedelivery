@@ -109,6 +109,7 @@ export type Database = {
       };
       addon_groups: {
         Row: {
+          menu_category_id: string | null;
           ativo: boolean;
           created_at: string;
           descricao: string | null;
@@ -123,6 +124,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          menu_category_id?: string | null;
           ativo?: boolean;
           created_at?: string;
           descricao?: string | null;
@@ -137,6 +139,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          menu_category_id?: string | null;
           ativo?: boolean;
           created_at?: string;
           descricao?: string | null;
@@ -3246,6 +3249,15 @@ export type Database = {
     };
     Functions: {
       ensure_menu_category: { Args: { p_establishment_id: string; p_name: string }; Returns: Json };
+      save_addon_group_configuration: {
+        Args: {
+          p_establishment_id: string;
+          p_group_id: string | null;
+          p_category_id: string | null;
+          p_group: Json;
+        };
+        Returns: string;
+      };
       save_product_configuration: {
         Args: {
           p_product_id: string | null;

@@ -1,7 +1,9 @@
+import { Badge } from "@/components/ui/badge";
+import { ProductAddonSelector } from "@/components/product-addon-selector";
+import type { CatalogAddonGroup } from "@/lib/catalog-selection";
 import { ProductPhotoField } from "@/components/product-photo-field";
 import { ProductCategoryPicker } from "@/components/product-category-picker";
-import { ProductAddonDrafts, addonDraft, type AddonDraft } from "@/components/product-addon-drafts";
-import { priceInCents, validateAddonDrafts } from "@/lib/product-configuration";
+import { priceInCents } from "@/lib/product-configuration";
 import type { Json } from "@/integrations/supabase/types";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
@@ -13,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -27,17 +28,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Loader2, Plus, Trash2, Copy, Pencil, Sparkles, Wand2 } from "lucide-react";
-import {
-  getCategoryKind,
-  KIND_LABEL,
-  KIND_HINT,
-  ADDON_TEMPLATES,
-  VARIANT_TEMPLATES,
-  EXTRA_FIELDS,
-} from "@/lib/category-templates";
+import { Loader2, Plus, Trash2, Copy, Pencil, Sparkles } from "lucide-react";
+import { getCategoryKind, EXTRA_FIELDS } from "@/lib/category-templates";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/produtos")({
   head: () => ({
@@ -71,7 +64,7 @@ function ProdutosPage() {
   const { estab } = useMyEstab();
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [cats, setCats] = useState<Categoria[]>([]);
-  const [addonGroups, setAddonGroups] = useState<{ id: string; nome: string }[]>([]);
+  const [addonGroups, setAddonGroups] = useState<CatalogAddonGroup[]>([]);
   const [busca, setBusca] = useState("");
   const [filterCat, setFilterCat] = useState<string>("todas");
   const [editing, setEditing] = useState<Produto | null>(null);
@@ -96,7 +89,7 @@ function ProdutosPage() {
           .order("ordem"),
         supabase
           .from("addon_groups")
-          .select("id,nome")
+          .select("id,nome,menu_category_id,obrigatorio,minimo,maximo,ativo")
           .eq("establishment_id", estabId)
           .order("nome"),
       ]);
@@ -170,13 +163,6 @@ function ProdutosPage() {
             <div className="p-6 pt-4 overflow-y-auto">
               <ProdutoForm
                 cats={cats}
-                onCategoryCreated={(category) =>
-                  setCats((previous) =>
-                    previous.some((item) => item.id === category.id)
-                      ? previous
-                      : [...previous, category],
-                  )
-                }
                 addonGroups={addonGroups}
                 onSaved={() => {
                   setOpenNew(false);
@@ -307,13 +293,6 @@ function ProdutosPage() {
             {editing && (
               <ProdutoForm
                 cats={cats}
-                onCategoryCreated={(category) =>
-                  setCats((previous) =>
-                    previous.some((item) => item.id === category.id)
-                      ? previous
-                      : [...previous, category],
-                  )
-                }
                 addonGroups={addonGroups}
                 produto={editing}
                 onSaved={() => {
@@ -341,14 +320,12 @@ type Variant = {
 
 function ProdutoForm({
   cats,
-  onCategoryCreated,
   addonGroups,
   produto,
   onSaved,
 }: {
   cats: Categoria[];
-  onCategoryCreated: (category: Categoria) => void;
-  addonGroups: { id: string; nome: string }[];
+  addonGroups: CatalogAddonGroup[];
   produto?: Produto;
   onSaved: () => void;
 }) {
@@ -370,15 +347,12 @@ function ProdutoForm({
   const [saving, setSaving] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoBusy, setPhotoBusy] = useState(false);
-  const [draftGroups, setDraftGroups] = useState<AddonDraft[]>([]);
   const [configLoading, setConfigLoading] = useState(!!produto);
   const [configError, setConfigError] = useState(false);
 
   const catNome = cats.find((c) => c.id === form.menu_category_id)?.nome;
   const kind = getCategoryKind(catNome);
   const extraDefs = EXTRA_FIELDS[kind];
-  const addonTpl = ADDON_TEMPLATES[kind];
-  const variantTpl = VARIANT_TEMPLATES[kind];
 
   useEffect(() => {
     if (!produto?.id) return;
@@ -437,29 +411,6 @@ function ProdutoForm({
     });
   }
 
-  function aplicarTemplateComplementos() {
-    const newDrafts = addonTpl
-      .filter((template) => !draftGroups.some((group) => group.nome === template.nome))
-      .map((template) => addonDraft(template));
-    if (!newDrafts.length) return toast.info("As sugestões já estão no formulário.");
-    setDraftGroups((previous) => [...previous, ...newDrafts]);
-    toast.info("Sugestões adicionadas. Revise os preços e as opções antes de salvar.");
-  }
-
-  function aplicarTemplateVariacoes() {
-    if (!variantTpl.length) return;
-    const base = Math.max(...variants.filter((v) => !v._deleted).map((v) => v.ordem), -1) + 1;
-    const novas = variantTpl.map((v, i) => ({
-      nome: v.nome,
-      preco_cents: v.preco_cents,
-      ativo: true,
-      ordem: base + i,
-      _new: true,
-    }));
-    setVariants((prev) => [...prev, ...novas]);
-    toast.success(`${novas.length} variações adicionadas — ajuste os preços e salve`);
-  }
-
   function addVariant() {
     const ordem = Math.max(...variants.map((v) => v.ordem), -1) + 1;
     setVariants((v) => [...v, { nome: "", preco_cents: 0, ativo: true, ordem, _new: true }]);
@@ -489,7 +440,6 @@ function ProdutoForm({
         (time !== null && (!Number.isInteger(time) || time < 0))
       )
         throw new Error("Estoque e tempo de preparo devem ser números inteiros positivos ou zero.");
-      const newGroups = validateAddonDrafts(draftGroups);
       const descRaw = form.descricao.replace(/\s*\[\[extras:[^\]]+\]\]\s*$/, "").trim();
       const extraEntries = Object.entries(extras).filter(([, value]) => value.trim() !== "");
       const description = extraEntries.length
@@ -521,7 +471,7 @@ function ProdutoForm({
         p_product_id: produto?.id ?? null,
         p_product: payload,
         p_group_ids: [...selectedGroups],
-        p_new_groups: newGroups,
+        p_new_groups: [],
         p_variant_changes: variants as unknown as Json,
       });
       if (error || !data) throw new Error(error?.message ?? "O banco não confirmou o salvamento.");
@@ -543,11 +493,7 @@ function ProdutoForm({
   }
 
   return (
-    <div className="space-y-6">
-      <p className="rounded-xl bg-muted/50 p-3 text-sm text-muted-foreground">
-        Preencha o nome, escolha a categoria e informe o preço. Adicione uma foto e complementos se
-        precisar. Ao terminar, clique em Salvar produto.
-      </p>
+    <div className="space-y-4">
       <ProductPhotoField
         url={form.foto_url}
         file={photoFile}
@@ -558,287 +504,210 @@ function ProdutoForm({
           if (remove) setForm((previous) => ({ ...previous, foto_url: "" }));
         }}
       />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Categoria
-          </Label>
+      <section className="space-y-4 rounded-2xl border border-border bg-card p-4">
+        <h3 className="text-sm font-semibold">Informações do produto</h3>
+        <div className="space-y-1.5">
+          <Label htmlFor="product-name">Nome do produto</Label>
+          <Input
+            id="product-name"
+            placeholder="Ex.: X-Salada artesanal"
+            value={form.nome}
+            maxLength={200}
+            onChange={(event) => setForm({ ...form, nome: event.target.value })}
+            disabled={saving}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="product-category">Categoria</Label>
           <ProductCategoryPicker
-            establishmentId={estab?.id ?? ""}
             categories={cats}
             value={form.menu_category_id}
-            onChange={(value) => setForm((previous) => ({ ...previous, menu_category_id: value }))}
-            onCreated={onCategoryCreated}
+            onChange={(id) => setForm({ ...form, menu_category_id: id })}
+            disabled={saving}
           />
+          {!cats.length && (
+            <p className="text-xs text-muted-foreground">
+              Cadastre uma categoria no módulo Categorias para continuar.
+            </p>
+          )}
         </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Status
-          </Label>
-          <div className="flex h-11 items-center justify-between rounded-xl border border-border bg-muted/30 px-4">
-            <span className="text-sm font-medium">
-              {form.disponivel ? "Disponível para venda" : "Indisponível"}
-            </span>
-            <Switch
-              checked={form.disponivel}
-              onCheckedChange={(v) => setForm({ ...form, disponivel: v })}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Nome do Produto
-        </Label>
-        <Input
-          value={form.nome}
-          onChange={(e) => setForm({ ...form, nome: e.target.value })}
-          placeholder="Ex: X-Salada Artesanal"
-          className="h-11 rounded-xl border-border bg-muted/30 focus:ring-primary/20"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Preço Base
-          </Label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
-              R$
-            </span>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="product-price">Preço (R$)</Label>
             <Input
-              type="number"
-              step="0.01"
+              id="product-price"
+              inputMode="decimal"
+              placeholder="0,00"
               value={form.preco}
-              onChange={(e) => setForm({ ...form, preco: e.target.value })}
-              className="h-11 rounded-xl border-border bg-muted/30 pl-9 focus:ring-primary/20"
+              onChange={(event) => setForm({ ...form, preco: event.target.value })}
+              disabled={saving}
             />
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Preço Promo
-          </Label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-500/70">
-              R$
-            </span>
+          <div className="space-y-1.5">
+            <Label htmlFor="product-promo">Promoção (R$)</Label>
             <Input
-              type="number"
-              step="0.01"
-              value={form.preco_promo}
-              onChange={(e) => setForm({ ...form, preco_promo: e.target.value })}
-              className="h-11 rounded-xl border-border bg-muted/30 pl-9 text-emerald-600 focus:ring-emerald-500/20"
+              id="product-promo"
+              inputMode="decimal"
               placeholder="Opcional"
+              value={form.preco_promo}
+              onChange={(event) => setForm({ ...form, preco_promo: event.target.value })}
+              disabled={saving}
             />
           </div>
         </div>
-
-        <div className="col-span-2 md:col-span-1 space-y-2">
-          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Estoque
+        <div className="space-y-1.5">
+          <Label htmlFor="product-description">
+            Descrição <span className="font-normal text-muted-foreground">· opcional</span>
           </Label>
-          <Input
-            type="number"
-            value={form.estoque}
-            onChange={(e) => setForm({ ...form, estoque: e.target.value })}
-            placeholder="∞ Ilimitado"
-            className="h-11 rounded-xl border-border bg-muted/30 focus:ring-primary/20"
+          <Textarea
+            id="product-description"
+            value={form.descricao.replace(/\s*\[\[extras:[^\]]+\]\]\s*$/, "")}
+            onChange={(event) => setForm({ ...form, descricao: event.target.value })}
+            placeholder="Ingredientes ou detalhes do produto"
+            className="min-h-20 resize-y"
+            disabled={saving}
           />
         </div>
-      </div>
-
-      {kind !== "outro" && (
-        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-3">
+        <div className="flex items-center justify-between rounded-xl bg-muted/30 px-3 py-2.5">
+          <Label htmlFor="product-active" className="text-sm font-medium">
+            Disponível para venda
+          </Label>
+          <Switch
+            id="product-active"
+            checked={form.disponivel}
+            onCheckedChange={(value) => setForm({ ...form, disponivel: value })}
+            disabled={saving}
+          />
+        </div>
+      </section>
+      <ProductAddonSelector
+        groups={addonGroups}
+        categories={cats}
+        categoryId={form.menu_category_id}
+        selected={selectedGroups}
+        onToggle={toggleGroup}
+        disabled={saving || configLoading || configError}
+      />
+      <details className="rounded-2xl border border-border bg-card px-4">
+        <summary className="cursor-pointer py-4 text-sm font-medium">
+          Mais opções{" "}
+          <span className="ml-1 font-normal text-muted-foreground">
+            · estoque, preparo e variações
+          </span>
+        </summary>
+        <div className="space-y-4 pb-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="product-stock">Estoque</Label>
+              <Input
+                id="product-stock"
+                type="number"
+                min="0"
+                placeholder="Sem limite"
+                value={form.estoque}
+                onChange={(event) => setForm({ ...form, estoque: event.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="product-time">Preparo (min)</Label>
+              <Input
+                id="product-time"
+                type="number"
+                min="0"
+                placeholder="Opcional"
+                value={form.tempo}
+                onChange={(event) => setForm({ ...form, tempo: event.target.value })}
+              />
+            </div>
+          </div>
+          {extraDefs.length > 0 && (
+            <div className="grid grid-cols-2 gap-3">
+              {extraDefs.map((field) => (
+                <div key={field.key} className="space-y-1.5">
+                  <Label htmlFor={"extra-" + field.key}>{field.label}</Label>
+                  <Input
+                    id={"extra-" + field.key}
+                    placeholder={field.placeholder}
+                    value={extras[field.key] ?? ""}
+                    onChange={(event) => setExtras({ ...extras, [field.key]: event.target.value })}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-primary">
-              <Sparkles className="h-4 w-4" />
-              <span className="text-xs font-bold uppercase tracking-wider">
-                Configuração Inteligente: {KIND_LABEL[kind]}
-              </span>
-            </div>
+            <h4 className="text-sm font-semibold">
+              Variações ({variants.filter((item) => !item._deleted).length})
+            </h4>
+            <Button type="button" variant="ghost" size="sm" onClick={addVariant}>
+              Adicionar variação
+            </Button>
           </div>
-          <p className="text-[11px] text-muted-foreground leading-relaxed">{KIND_HINT[kind]}</p>
-
-          <div className="flex flex-wrap gap-2 pt-1">
-            {addonTpl.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 rounded-lg border-primary/30 text-[11px] hover:bg-primary hover:text-white"
-                onClick={aplicarTemplateComplementos}
-                disabled={saving || configLoading}
-              >
-                <Wand2 className="mr-1 h-3 w-3" />
-                Sugerir adicionais
-              </Button>
-            )}
-            {variantTpl.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 rounded-lg border-primary/30 text-[11px] hover:bg-primary hover:text-white"
-                onClick={aplicarTemplateVariacoes}
-              >
-                <Plus className="mr-1 h-3 w-3" /> Adicionar Variações
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {extraDefs.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 rounded-xl border border-border bg-muted/10 p-4">
-          {extraDefs.map((ed) => (
-            <div key={ed.key} className="space-y-2">
-              <Label className="text-[11px] font-bold uppercase text-muted-foreground">
-                {ed.label}
-              </Label>
-              <div className="relative">
-                <Input
-                  value={extras[ed.key] ?? ""}
-                  onChange={(e) => setExtras({ ...extras, [ed.key]: e.target.value })}
-                  placeholder={ed.placeholder}
-                  className="h-9 rounded-lg border-border bg-background text-sm"
-                />
-                {ed.suffix && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground">
-                    {ed.suffix}
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="space-y-2">
-        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Descrição
-        </Label>
-        <Textarea
-          value={form.descricao.replace(/\s*\[\[extras:[^\]]+\]\]\s*$/, "")}
-          onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-          placeholder="Ingredientes e detalhes..."
-          className="min-h-[80px] rounded-xl border-border bg-muted/30 focus:ring-primary/20 resize-none"
-        />
-      </div>
-
-      <div className="space-y-4 pt-2">
-        <div className="flex items-center justify-between border-b border-border pb-2">
-          <h3 className="text-sm font-bold flex items-center gap-2 text-foreground">
-            Variações{" "}
-            <Badge variant="outline" className="text-[10px]">
-              {variants.filter((v) => !v._deleted).length}
-            </Badge>
-          </h3>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={addVariant}
-            className="h-8 text-xs text-primary"
-          >
-            <Plus className="mr-1 h-3 w-3" /> Nova variação
-          </Button>
-        </div>
-
-        <div className="space-y-2">
-          {variants
-            .filter((v) => !v._deleted)
-            .map((v, i) => {
-              const actualIdx = variants.indexOf(v);
-              return (
+          {variants.map(
+            (variant, index) =>
+              !variant._deleted && (
                 <div
-                  key={i}
-                  className="flex items-center gap-2 rounded-xl border border-border p-2 bg-muted/20"
+                  key={variant.id ?? index}
+                  className="grid grid-cols-[1fr_6rem_auto] items-center gap-2"
                 >
                   <Input
-                    value={v.nome}
-                    onChange={(e) => updVariant(actualIdx, { nome: e.target.value })}
-                    placeholder="Ex: Grande"
-                    className="h-9 flex-1 bg-background text-sm border-none shadow-none focus-visible:ring-0"
+                    aria-label={"Nome da variação " + (index + 1)}
+                    placeholder="Ex.: Grande"
+                    value={variant.nome}
+                    onChange={(event) => updVariant(index, { nome: event.target.value })}
                   />
-                  <div className="relative w-24">
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
-                      R$
-                    </span>
-                    <Input
-                      type="number"
-                      value={(v.preco_cents / 100).toFixed(2)}
-                      onChange={(e) =>
-                        updVariant(actualIdx, {
-                          preco_cents: Math.round(parseFloat(e.target.value) * 100),
-                        })
-                      }
-                      className="h-9 pl-7 bg-background text-sm border-none shadow-none focus-visible:ring-0"
-                    />
-                  </div>
+                  <Input
+                    aria-label={"Preço da variação " + (index + 1)}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={(variant.preco_cents / 100).toFixed(2)}
+                    onChange={(event) =>
+                      updVariant(index, {
+                        preco_cents: Math.round(Number(event.target.value) * 100),
+                      })
+                    }
+                  />
                   <Button
-                    size="icon"
+                    type="button"
                     variant="ghost"
-                    onClick={() => delVariant(actualIdx)}
-                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                    size="icon"
+                    aria-label={"Remover variação " + (index + 1)}
+                    onClick={() => delVariant(index)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-              );
-            })}
+              ),
+          )}
         </div>
-      </div>
-
-      <div className="space-y-4 pt-2">
-        <h3 className="text-sm font-bold flex items-center gap-2 border-b border-border pb-2 text-foreground">
-          Complementos{" "}
-          <Badge variant="outline" className="text-[10px]">
-            {selectedGroups.size + draftGroups.length}
-          </Badge>
-        </h3>
-        <div className="grid grid-cols-2 gap-2 max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
-          {addonGroups.map((g) => (
-            <div
-              key={g.id}
-              role="checkbox"
-              aria-checked={selectedGroups.has(g.id)}
-              tabIndex={0}
-              onKeyDown={(event) => {
-                if (event.key === " " || event.key === "Enter") {
-                  event.preventDefault();
-                  toggleGroup(g.id);
-                }
-              }}
-              onClick={() => toggleGroup(g.id)}
-              className={`flex cursor-pointer items-center justify-between rounded-xl border p-3 transition-all ${
-                selectedGroups.has(g.id)
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-muted/20 hover:border-primary/50"
-              }`}
-            >
-              <span className="text-xs font-medium truncate">{g.nome}</span>
-              {selectedGroups.has(g.id) && <Sparkles className="h-3 w-3 fill-primary" />}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <ProductAddonDrafts groups={draftGroups} onChange={setDraftGroups} />
-      {configError && (
-        <p role="alert" className="text-sm text-destructive">
-          A configuração anterior não foi carregada. Reabra o produto antes de salvar.
+      </details>
+      {configLoading && (
+        <p role="status" className="text-xs text-muted-foreground">
+          Carregando opções do produto...
         </p>
       )}
-      <Button
-        onClick={salvar}
-        disabled={saving || photoBusy || configLoading || configError}
-        className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20"
-      >
-        {saving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Salvar produto"}
-      </Button>
+      {configError && (
+        <p role="alert" className="text-sm text-destructive">
+          Não foi possível carregar as opções. Reabra o produto antes de salvar.
+        </p>
+      )}
+      <div className="sticky bottom-0 -mx-1 border-t border-border bg-background/95 px-1 pb-1 pt-3 backdrop-blur-sm">
+        <Button
+          onClick={salvar}
+          disabled={saving || photoBusy || configLoading || configError || !cats.length}
+          className="h-11 w-full rounded-xl font-semibold"
+        >
+          {saving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Salvando...
+            </>
+          ) : (
+            "Salvar produto"
+          )}
+        </Button>
+      </div>
     </div>
   );
 }

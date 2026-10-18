@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { Input } from "@/components/ui/input";
+import { ImagePlus, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+
 import { toast } from "sonner";
 
 export async function prepareProductPhoto(file: File): Promise<File> {
@@ -63,6 +63,7 @@ export function ProductPhotoField({
 }) {
   const id = useId();
   const mounted = useRef(true);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState("");
   useEffect(() => {
@@ -97,26 +98,69 @@ export function ProductPhotoField({
     }
   }
   return (
-    <section className="space-y-3 rounded-2xl border border-border p-4">
-      <Label htmlFor={id} className="font-semibold">
-        Foto do produto (opcional)
-      </Label>
-      <p id={id + "-help"} className="text-sm text-muted-foreground">
-        Escolha da galeria ou tire uma foto pelo celular. Recomendado: 1.000 × 1.000 pixels, JPG,
-        PNG ou WebP, até 5 MB. Use boa iluminação e deixe o produto inteiro no centro. Ajustamos o
-        tamanho automaticamente, sem cortar a foto.
-      </p>
-      {(preview || url) && (
-        <img
-          src={preview || url}
-          alt="Prévia da foto do produto"
-          className="h-40 w-40 rounded-xl border bg-white object-contain"
-        />
-      )}
-      <Input
+    <section className="flex items-center gap-4 rounded-2xl border border-border bg-gradient-to-br from-muted/30 to-background p-4">
+      <button
+        type="button"
+        aria-label={preview || url ? "Trocar foto do produto" : "Adicionar foto do produto"}
+        disabled={disabled || busy}
+        onClick={() => inputRef.current?.click()}
+        className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-primary/30 bg-background text-primary transition-colors hover:bg-primary/5 disabled:opacity-50"
+      >
+        {busy ? (
+          <Loader2 className="h-6 w-6 animate-spin" />
+        ) : preview || url ? (
+          <img
+            src={preview || url}
+            alt="Prévia da foto do produto"
+            className="h-full w-full object-contain"
+          />
+        ) : (
+          <ImagePlus className="h-7 w-7" />
+        )}
+      </button>
+      <div className="min-w-0 space-y-1.5">
+        <p className="text-sm font-semibold">
+          Foto do produto <span className="font-normal text-muted-foreground">· opcional</span>
+        </p>
+        <p id={id + "-help"} className="text-xs leading-relaxed text-muted-foreground">
+          1.000 × 1.000 px · JPG, PNG ou WebP · até 5 MB
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={disabled || busy}
+            onClick={() => inputRef.current?.click()}
+          >
+            {busy ? "Preparando..." : preview || url ? "Trocar foto" : "Escolher foto"}
+          </Button>
+          {(file || url) && (
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label="Remover foto"
+              disabled={disabled || busy}
+              onClick={() => onChange(null, true)}
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
+        {file && (
+          <p role="status" className="text-xs text-emerald-700">
+            Pronta para salvar
+          </p>
+        )}
+      </div>
+      <input
+        ref={inputRef}
         id={id}
         type="file"
         accept="image/jpeg,image/png,image/webp"
+        className="sr-only"
+        aria-label="Arquivo da foto do produto"
         aria-describedby={id + "-help"}
         disabled={disabled || busy}
         onChange={(event) => {
@@ -125,30 +169,6 @@ export function ProductPhotoField({
           if (selected) void choose(selected);
         }}
       />
-      {busy && (
-        <p role="status" className="text-sm">
-          Preparando sua foto…
-        </p>
-      )}
-      {file && (
-        <p className="text-sm text-emerald-700">
-          Foto pronta: 1.000 × 1.000 pixels. Clique em Salvar produto para enviar.
-        </p>
-      )}
-      {(file || url) && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={disabled || busy}
-          onClick={() => onChange(null, true)}
-        >
-          Remover foto
-        </Button>
-      )}
-      <p className="text-xs text-muted-foreground">
-        Você pode trocar a foto depois, em Editar produto.
-      </p>
     </section>
   );
 }
