@@ -194,7 +194,7 @@ function BuscarPage() {
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Restaurantes, pratos, categorias..."
+          placeholder="Lojas, segmentos ou produtos..."
           className="pl-9"
           autoFocus
         />
