@@ -3257,6 +3257,22 @@ export type Database = {
       };
     };
     Functions: {
+      customer_store_directory: {
+        Args: { p_city?: string | null; p_state?: string | null };
+        Returns: {
+          id: string;
+          nome: string;
+          descricao: string | null;
+          categoria_id: string | null;
+          logo_url: string | null;
+          capa_url: string | null;
+          taxa_entrega_cents: number;
+          tempo_medio_min: number | null;
+          avaliacao: number | null;
+          is_open: boolean;
+          cidade: string | null;
+        }[];
+      };
       dispatch_order_delivery: {
         Args: { p_order_id: string; p_fee_cents: number; p_courier_id?: string | null };
         Returns: string;

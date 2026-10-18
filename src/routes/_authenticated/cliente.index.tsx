@@ -26,6 +26,9 @@ import catMercado from "@/assets/cat-mercado.jpg";
 import catFarmacia from "@/assets/cat-farmacia.jpg";
 import bannerFreteGratis from "@/assets/banner-frete-gratis-premium.png.asset.json";
 import { AdRotator } from "@/components/cliente/ad-rotator";
+import { Button } from "@/components/ui/button";
+import { bindResumeRefresh } from "@/lib/resume-refresh";
+import { DATA_UPDATED_EVENT, PROFILE_UPDATED_EVENT } from "@/lib/app-refresh";
 import { useCityDetection } from "@/hooks/use-city-detection";
 import { CitySwitchCard } from "@/components/cliente/city-switch-card";
 
@@ -100,6 +103,9 @@ function ClienteHome() {
   const [estabs, setEstabs] = useState<Estab[]>([]);
   const [catSel, setCatSel] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [locationReady, setLocationReady] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [showAllCats, setShowAllCats] = useState(false);
   const [promoIds, setPromoIds] = useState<Set<string>>(new Set());
   const [salesCount, setSalesCount] = useState<Record<string, number>>({});
@@ -113,21 +119,55 @@ function ClienteHome() {
   const catsPausedRef = useRef(false);
   const { detected, dismiss } = useCityDetection(activeCidade, activeEstado);
 
-  // Carrega cidade ativa do perfil
   useEffect(() => {
-    (async () => {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth?.user) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("cidade_ativa,estado_ativo")
-        .eq("id", auth.user.id)
-        .maybeSingle();
-      const profile = data as ActiveLocation | null;
-      setActiveCidade(profile?.cidade_ativa ?? null);
-      setActiveEstado(profile?.estado_ativo ?? null);
-    })();
+    const refresh = () => setRefreshKey((value) => value + 1);
+    const unbind = bindResumeRefresh(refresh);
+    window.addEventListener(DATA_UPDATED_EVENT, refresh);
+    window.addEventListener(PROFILE_UPDATED_EVENT, refresh);
+    const channel = supabase
+      .channel("customer-home-stores")
+      .on("postgres_changes", { event: "*", schema: "public", table: "establishments" }, refresh)
+      .subscribe();
+    return () => {
+      unbind();
+      window.removeEventListener(DATA_UPDATED_EVENT, refresh);
+      window.removeEventListener(PROFILE_UPDATED_EVENT, refresh);
+      void supabase.removeChannel(channel);
+    };
   }, []);
+
+  // Resolve the customer's location before listing stores, including on app resume.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        if (!auth?.user) {
+          if (active) setLocationReady(true);
+          return;
+        }
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("cidade_ativa,estado_ativo")
+          .eq("id", auth.user.id)
+          .maybeSingle();
+        if (error) throw error;
+        if (!active) return;
+        const profile = data as ActiveLocation | null;
+        setActiveCidade(profile?.cidade_ativa ?? null);
+        setActiveEstado(profile?.estado_ativo ?? null);
+        setLocationReady(true);
+      } catch {
+        if (active) {
+          setLoadError(true);
+          setLoading(false);
+        }
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [refreshKey]);
 
   // Auto-scroll lento das categorias — pausa ao interagir, ao selecionar,
   // ao expandir em grade, ao trocar de aba e para reduced-motion.
@@ -211,80 +251,87 @@ function ClienteHome() {
   }, [catSel]);
 
   useEffect(() => {
+    if (!locationReady) return;
+    let active = true;
+    setLoadError(false);
     (async () => {
-      const nowIso = new Date().toISOString();
-      let estabQ = supabase
-        .from("establishments")
-        .select(
-          "id,nome,descricao,categoria_id,logo_url,capa_url,taxa_entrega_cents,tempo_medio_min,avaliacao,is_open,cidade",
-        )
-        .eq("status", "aprovado")
-        .eq("is_open", true);
-      if (activeCidade) estabQ = estabQ.ilike("cidade", activeCidade);
-      const [c, e, cp, od, ps] = await Promise.all([
-        supabase
-          .from("global_categories")
-          .select("id,nome,slug,icone")
-          .eq("ativo", true)
-          .order("ordem"),
-        estabQ.order("avaliacao", { ascending: false, nullsFirst: false }),
-        supabase.from("coupons").select("establishment_id,expires_at,ativo").eq("ativo", true),
-        supabase.rpc("public_store_sales"),
-        supabase
-          .from("public_platform_settings")
-          .select("bestseller_threshold, ad_default_seconds")
-          .maybeSingle(),
-      ]);
-      setCats((c.data ?? []) as Categoria[]);
-      setEstabs((e.data ?? []) as Estab[]);
-      const promos = new Set<string>();
-      (cp.data ?? []).forEach((r: CouponRow) => {
-        if (r.establishment_id && (!r.expires_at || r.expires_at > nowIso))
-          promos.add(r.establishment_id);
-      });
-      setPromoIds(promos);
-      const counts: Record<string, number> = {};
-      (od.data ?? []).forEach((r: OrderCountRow) => {
-        if (r.establishment_id) counts[r.establishment_id] = r.order_count;
-      });
-      setSalesCount(counts);
-      const platformSettings = ps.data as PlatformSettings | null;
-      if (platformSettings?.bestseller_threshold)
-        setThreshold(platformSettings.bestseller_threshold);
-
-      // Horário de hoje para as lojas listadas
-      const ids = ((e.data ?? []) as Estab[]).map((x) => x.id);
-      if (ids.length) {
-        const today = new Date().getDay();
-        const { data: hrs } = await supabase
-          .from("establishment_hours")
-          .select("establishment_id,abre,fecha,ativo,dia_semana")
-          .in("establishment_id", ids)
-          .eq("dia_semana", today)
-          .eq("ativo", true);
-        const map: Record<string, { abre: string; fecha: string }> = {};
-        (hrs ?? []).forEach((h: EstablishmentHourRow) => {
-          map[h.establishment_id] = {
-            abre: String(h.abre).slice(0, 5),
-            fecha: String(h.fecha).slice(0, 5),
-          };
+      try {
+        const nowIso = new Date().toISOString();
+        const [c, e, cp, od, ps] = await Promise.all([
+          supabase
+            .from("global_categories")
+            .select("id,nome,slug,icone")
+            .eq("ativo", true)
+            .order("ordem"),
+          supabase.rpc("customer_store_directory", { p_city: activeCidade, p_state: activeEstado }),
+          supabase.from("coupons").select("establishment_id,expires_at,ativo").eq("ativo", true),
+          supabase.rpc("public_store_sales"),
+          supabase
+            .from("public_platform_settings")
+            .select("bestseller_threshold, ad_default_seconds")
+            .maybeSingle(),
+        ]);
+        if (!active) return;
+        if (e.error) throw e.error;
+        setCats((c.data ?? []) as Categoria[]);
+        setEstabs((e.data ?? []) as Estab[]);
+        setLoading(false);
+        const promos = new Set<string>();
+        (cp.data ?? []).forEach((r: CouponRow) => {
+          if (r.establishment_id && (!r.expires_at || r.expires_at > nowIso))
+            promos.add(r.establishment_id);
         });
-        setHoursById(map);
-
-        const { data: revs } = await supabase
-          .from("public_reviews")
-          .select("establishment_id")
-          .in("establishment_id", ids);
-        const rc: Record<string, number> = {};
-        (revs ?? []).forEach((r: ReviewCountRow) => {
-          if (r.establishment_id) rc[r.establishment_id] = (rc[r.establishment_id] ?? 0) + 1;
+        setPromoIds(promos);
+        const counts: Record<string, number> = {};
+        (od.data ?? []).forEach((r: OrderCountRow) => {
+          if (r.establishment_id) counts[r.establishment_id] = r.order_count;
         });
-        setReviewCountById(rc);
+        setSalesCount(counts);
+        const platformSettings = ps.data as PlatformSettings | null;
+        if (platformSettings?.bestseller_threshold)
+          setThreshold(platformSettings.bestseller_threshold);
+
+        // Horário de hoje para as lojas listadas
+        const ids = ((e.data ?? []) as Estab[]).map((x) => x.id);
+        if (ids.length) {
+          const today = new Date().getDay();
+          const { data: hrs } = await supabase
+            .from("establishment_hours")
+            .select("establishment_id,abre,fecha,ativo,dia_semana")
+            .in("establishment_id", ids)
+            .eq("dia_semana", today)
+            .eq("ativo", true);
+          if (!active) return;
+          const map: Record<string, { abre: string; fecha: string }> = {};
+          (hrs ?? []).forEach((h: EstablishmentHourRow) => {
+            map[h.establishment_id] = {
+              abre: String(h.abre).slice(0, 5),
+              fecha: String(h.fecha).slice(0, 5),
+            };
+          });
+          setHoursById(map);
+
+          const { data: revs } = await supabase
+            .from("public_reviews")
+            .select("establishment_id")
+            .in("establishment_id", ids);
+          if (!active) return;
+          const rc: Record<string, number> = {};
+          (revs ?? []).forEach((r: ReviewCountRow) => {
+            if (r.establishment_id) rc[r.establishment_id] = (rc[r.establishment_id] ?? 0) + 1;
+          });
+          setReviewCountById(rc);
+        }
+      } catch {
+        if (active) setLoadError(true);
+      } finally {
+        if (active) setLoading(false);
       }
-
-      setLoading(false);
     })();
-  }, [activeCidade]);
+    return () => {
+      active = false;
+    };
+  }, [activeCidade, activeEstado, locationReady, refreshKey]);
 
   const filtered = useMemo(() => {
     const base = catSel ? estabs.filter((e) => e.categoria_id === catSel) : estabs;
@@ -292,6 +339,7 @@ function ClienteHome() {
     if (sortBy === "reviews") {
       arr.sort(
         (a, b) =>
+          Number(b.is_open) - Number(a.is_open) ||
           (reviewCountById[b.id] ?? 0) - (reviewCountById[a.id] ?? 0) ||
           Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0) ||
           (salesCount[b.id] ?? 0) - (salesCount[a.id] ?? 0),
@@ -299,6 +347,7 @@ function ClienteHome() {
     } else if (sortBy === "vendas") {
       arr.sort(
         (a, b) =>
+          Number(b.is_open) - Number(a.is_open) ||
           (salesCount[b.id] ?? 0) - (salesCount[a.id] ?? 0) ||
           Number(b.avaliacao ?? 0) - Number(a.avaliacao ?? 0) ||
           (reviewCountById[b.id] ?? 0) - (reviewCountById[a.id] ?? 0),
@@ -312,7 +361,7 @@ function ClienteHome() {
         const promo = promoIds.has(e.id) ? 1 : 0;
         return rating * 2 + Math.log10(revs + 1) * 3 + Math.log10(sales + 1) * 2 + promo * 0.5;
       };
-      arr.sort((a, b) => score(b) - score(a));
+      arr.sort((a, b) => Number(b.is_open) - Number(a.is_open) || score(b) - score(a));
     }
     return arr;
   }, [estabs, catSel, sortBy, reviewCountById, salesCount, promoIds]);
@@ -500,11 +549,29 @@ function ClienteHome() {
           ))}
         </div>
 
+        {loadError && (
+          <div
+            role="alert"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4"
+          >
+            <p className="text-sm">Não foi possível atualizar as lojas. Tente novamente.</p>
+            <Button
+              size="sm"
+              onClick={() => {
+                setLoading(true);
+                setLoadError(false);
+                setRefreshKey((value) => value + 1);
+              }}
+            >
+              Tentar novamente
+            </Button>
+          </div>
+        )}
         {loading ? (
           <div className="flex justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
-        ) : filtered.length === 0 ? (
+        ) : loadError && !estabs.length ? null : filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
             <p className="text-sm text-muted-foreground">Nenhum estabelecimento encontrado.</p>
           </div>
