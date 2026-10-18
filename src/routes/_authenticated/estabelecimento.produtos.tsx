@@ -112,7 +112,12 @@ function ProdutosPage() {
     }
   }, [estabId]);
   useEffect(() => {
-    reload();
+    void reload();
+    const refresh = () => {
+      void reload();
+    };
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
   }, [reload]);
 
   async function toggle(p: Produto) {
@@ -165,13 +170,14 @@ function ProdutosPage() {
               <Plus className="mr-2 h-4 w-4" /> Novo produto
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90dvh] overflow-hidden flex flex-col p-0 border-none shadow-2xl">
-            <DialogHeader className="p-6 pb-0">
+          <DialogContent className="flex h-[90dvh] max-h-[90dvh] w-[calc(100%_-_1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden border-none p-0 shadow-2xl">
+            <DialogHeader className="shrink-0 border-b p-4 pr-12 text-left sm:p-5 sm:pr-12">
               <DialogTitle className="text-xl font-black">Adicionar Novo Produto</DialogTitle>
             </DialogHeader>
-            <div className="p-6 pt-4 overflow-y-auto">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <ProdutoForm
                 cats={cats}
+                onRefreshCatalog={reload}
                 addonGroups={addonGroups}
                 onSaved={() => {
                   setOpenNew(false);
@@ -294,14 +300,15 @@ function ProdutosPage() {
       )}
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="max-w-2xl max-h-[90dvh] overflow-hidden flex flex-col p-0 border-none shadow-2xl">
-          <DialogHeader className="p-6 pb-0">
+        <DialogContent className="flex h-[90dvh] max-h-[90dvh] w-[calc(100%_-_1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden border-none p-0 shadow-2xl">
+          <DialogHeader className="shrink-0 border-b p-4 pr-12 text-left sm:p-5 sm:pr-12">
             <DialogTitle className="text-xl font-black">Editar Produto</DialogTitle>
           </DialogHeader>
-          <div className="p-6 pt-4 overflow-y-auto">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             {editing && (
               <ProdutoForm
                 cats={cats}
+                onRefreshCatalog={reload}
                 addonGroups={addonGroups}
                 produto={editing}
                 onSaved={() => {
@@ -329,11 +336,13 @@ type Variant = {
 
 function ProdutoForm({
   cats,
+  onRefreshCatalog,
   addonGroups,
   produto,
   onSaved,
 }: {
   cats: Categoria[];
+  onRefreshCatalog: () => Promise<void>;
   addonGroups: CatalogAddonGroup[];
   produto?: Produto;
   onSaved: () => void;
@@ -365,6 +374,7 @@ function ProdutoForm({
   const photoBusy = busyPhotos.some(Boolean);
   const [configLoading, setConfigLoading] = useState(!!produto);
   const [configError, setConfigError] = useState(false);
+  const [refreshingCategories, setRefreshingCategories] = useState(false);
 
   const catNome = cats.find((c) => c.id === form.menu_category_id)?.nome;
   const fields = productFields(catNome);
@@ -429,8 +439,20 @@ function ProdutoForm({
 
   async function salvar() {
     if (!estab || saving || photoBusy || configLoading || configError) return;
-    if (!form.nome.trim() || !form.menu_category_id)
-      return toast.error("Informe o nome e escolha uma categoria.");
+    if (!cats.length) {
+      document.getElementById("product-category")?.focus();
+      return toast.error(
+        "Cadastre uma categoria no módulo Categorias e atualize a lista para salvar.",
+      );
+    }
+    if (!form.nome.trim()) {
+      document.getElementById("product-name")?.focus();
+      return toast.error("Informe o nome do produto.");
+    }
+    if (!form.menu_category_id) {
+      document.getElementById("product-category")?.focus();
+      return toast.error("Escolha uma categoria para o produto.");
+    }
     setSaving(true);
     let uploadedPhotos: string[] = [];
     try {
@@ -499,239 +521,287 @@ function ProdutoForm({
   }
 
   return (
-    <div className="space-y-4">
-      <section className="space-y-3 rounded-2xl border border-border bg-gradient-to-br from-muted/30 to-background p-4">
-        <div>
-          <h3 className="text-sm font-semibold">Fotos do produto</h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Até 3 fotos · 1.000 × 1.000 px · JPG, PNG ou WebP · até 5 MB cada
-          </p>
-        </div>
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          {[0, 1, 2].map((index) => (
-            <ProductPhotoField
-              key={index}
-              compact
-              title={index === 0 ? "Principal" : `Foto ${index + 1}`}
-              optional={index !== 0}
-              url={photoUrls[index]}
-              file={photoFiles[index]}
-              disabled={saving}
-              onBusy={(busy) =>
-                setBusyPhotos((previous) =>
-                  previous.map((value, i) => (i === index ? busy : value)),
-                )
-              }
-              onChange={(file, remove) => {
-                setPhotoFiles((previous) =>
-                  previous.map((value, i) => (i === index ? file : value)),
-                );
-                if (remove)
-                  setPhotoUrls((previous) =>
-                    previous.map((value, i) => (i === index ? "" : value)),
-                  );
-              }}
-            />
-          ))}
-        </div>
-      </section>
-      <section className="space-y-4 rounded-2xl border border-border bg-card p-4">
-        <h3 className="text-sm font-semibold">Informações do produto</h3>
-        <div className="space-y-1.5">
-          <Label htmlFor="product-name">Nome do produto</Label>
-          <Input
-            id="product-name"
-            placeholder="Ex.: X-Salada artesanal"
-            value={form.nome}
-            maxLength={200}
-            onChange={(event) => setForm({ ...form, nome: event.target.value })}
-            disabled={saving}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="product-category">Categoria</Label>
-          <ProductCategoryPicker
-            categories={cats}
-            value={form.menu_category_id}
-            onChange={(id) => setForm({ ...form, menu_category_id: id })}
-            disabled={saving}
-          />
-          {!cats.length && (
-            <p className="text-xs text-muted-foreground">
-              Cadastre uma categoria no módulo Categorias para continuar.
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div
+        className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-4 sm:p-6"
+        aria-label="Campos do produto"
+        role="region"
+      >
+        <section className="space-y-3 rounded-2xl border border-border bg-gradient-to-br from-muted/30 to-background p-4">
+          <div>
+            <h3 className="text-sm font-semibold">Fotos do produto</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Até 3 fotos · 1.000 × 1.000 px · JPG, PNG ou WebP · até 5 MB cada
             </p>
-          )}
-        </div>
-        <div className="grid grid-cols-2 gap-3">
+          </div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            {[0, 1, 2].map((index) => (
+              <ProductPhotoField
+                key={index}
+                compact
+                title={index === 0 ? "Principal" : `Foto ${index + 1}`}
+                optional={index !== 0}
+                url={photoUrls[index]}
+                file={photoFiles[index]}
+                disabled={saving}
+                onBusy={(busy) =>
+                  setBusyPhotos((previous) =>
+                    previous.map((value, i) => (i === index ? busy : value)),
+                  )
+                }
+                onChange={(file, remove) => {
+                  setPhotoFiles((previous) =>
+                    previous.map((value, i) => (i === index ? file : value)),
+                  );
+                  if (remove)
+                    setPhotoUrls((previous) =>
+                      previous.map((value, i) => (i === index ? "" : value)),
+                    );
+                }}
+              />
+            ))}
+          </div>
+        </section>
+        <section className="space-y-4 rounded-2xl border border-border bg-card p-4">
+          <h3 className="text-sm font-semibold">Informações do produto</h3>
           <div className="space-y-1.5">
-            <Label htmlFor="product-price">Preço (R$)</Label>
+            <Label htmlFor="product-name">Nome do produto</Label>
             <Input
-              id="product-price"
-              inputMode="decimal"
-              placeholder="0,00"
-              value={form.preco}
-              onChange={(event) => setForm({ ...form, preco: event.target.value })}
+              id="product-name"
+              placeholder="Ex.: X-Salada artesanal"
+              value={form.nome}
+              maxLength={200}
+              onChange={(event) => setForm({ ...form, nome: event.target.value })}
               disabled={saving}
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="product-promo">Promoção (R$)</Label>
-            <Input
-              id="product-promo"
-              inputMode="decimal"
-              placeholder="Opcional"
-              value={form.preco_promo}
-              onChange={(event) => setForm({ ...form, preco_promo: event.target.value })}
+            <Label htmlFor="product-category">Categoria</Label>
+            <ProductCategoryPicker
+              categories={cats}
+              value={form.menu_category_id}
+              onChange={(id) => setForm({ ...form, menu_category_id: id })}
               disabled={saving}
             />
+            {!cats.length && (
+              <div
+                className="space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950 dark:bg-amber-950/30 dark:text-amber-100"
+                role="note"
+              >
+                <p>
+                  Crie ou escolha um modelo no módulo Categorias. Depois, atualize esta lista para
+                  continuar com os dados que já preencheu.
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <a
+                    className="font-semibold underline underline-offset-2"
+                    href="/estabelecimento/categorias"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Abrir Categorias
+                  </a>
+                  <button
+                    type="button"
+                    className="font-semibold underline underline-offset-2 disabled:opacity-50"
+                    disabled={refreshingCategories || saving}
+                    onClick={async () => {
+                      setRefreshingCategories(true);
+                      try {
+                        await onRefreshCatalog();
+                      } finally {
+                        setRefreshingCategories(false);
+                      }
+                    }}
+                  >
+                    {refreshingCategories ? "Atualizando..." : "Atualizar lista"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="product-description">
-            Descrição <span className="font-normal text-muted-foreground">· opcional</span>
-          </Label>
-          <Textarea
-            id="product-description"
-            value={readProductDetails(form.descricao).description}
-            onChange={(event) => setForm({ ...form, descricao: event.target.value })}
-            placeholder="Ingredientes ou detalhes do produto"
-            className="min-h-20 resize-y"
-            disabled={saving}
-          />
-        </div>
-        <div className="flex items-center justify-between rounded-xl bg-muted/30 px-3 py-2.5">
-          <Label htmlFor="product-active" className="text-sm font-medium">
-            Disponível para venda
-          </Label>
-          <Switch
-            id="product-active"
-            checked={form.disponivel}
-            onCheckedChange={(value) => setForm({ ...form, disponivel: value })}
-            disabled={saving}
-          />
-        </div>
-      </section>
-      <ProductSpecificFields
-        fields={fields}
-        values={extras}
-        onChange={setExtras}
-        disabled={saving}
-      />
-      <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
-        <Label htmlFor="offer-addons">Oferecer complementos</Label>
-        <Switch
-          id="offer-addons"
-          checked={showAddons || selectedGroups.size > 0}
-          disabled={saving || configLoading}
-          onCheckedChange={(value) => {
-            setShowAddons(value);
-            if (!value) setSelectedGroups(new Set());
-          }}
-        />
-      </div>
-      {(showAddons || selectedGroups.size > 0) && (
-        <ProductAddonSelector
-          groups={addonGroups}
-          categories={cats}
-          categoryId={form.menu_category_id}
-          selected={selectedGroups}
-          onToggle={toggleGroup}
-          disabled={saving || configLoading || configError}
-        />
-      )}
-      <details className="rounded-2xl border border-border bg-card px-4">
-        <summary className="cursor-pointer py-4 text-sm font-medium">
-          Mais opções{" "}
-          <span className="ml-1 font-normal text-muted-foreground">
-            · estoque, preparo e variações
-          </span>
-        </summary>
-        <div className="space-y-4 pb-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="product-stock">Estoque</Label>
+              <Label htmlFor="product-price">Preço (R$)</Label>
               <Input
-                id="product-stock"
-                type="number"
-                min="0"
-                placeholder="Sem limite"
-                value={form.estoque}
-                onChange={(event) => setForm({ ...form, estoque: event.target.value })}
+                id="product-price"
+                inputMode="decimal"
+                placeholder="0,00"
+                value={form.preco}
+                onChange={(event) => setForm({ ...form, preco: event.target.value })}
+                disabled={saving}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="product-time">Preparo (min)</Label>
+              <Label htmlFor="product-promo">Promoção (R$)</Label>
               <Input
-                id="product-time"
-                type="number"
-                min="0"
+                id="product-promo"
+                inputMode="decimal"
                 placeholder="Opcional"
-                value={form.tempo}
-                onChange={(event) => setForm({ ...form, tempo: event.target.value })}
+                value={form.preco_promo}
+                onChange={(event) => setForm({ ...form, preco_promo: event.target.value })}
+                disabled={saving}
               />
             </div>
           </div>
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-semibold">
-              Variações ({variants.filter((item) => !item._deleted).length})
-            </h4>
-            <Button type="button" variant="ghost" size="sm" onClick={addVariant}>
-              Adicionar variação
-            </Button>
+          <div className="space-y-1.5">
+            <Label htmlFor="product-description">
+              Descrição <span className="font-normal text-muted-foreground">· opcional</span>
+            </Label>
+            <Textarea
+              id="product-description"
+              value={readProductDetails(form.descricao).description}
+              onChange={(event) => setForm({ ...form, descricao: event.target.value })}
+              placeholder="Ingredientes ou detalhes do produto"
+              className="min-h-20 resize-y"
+              disabled={saving}
+            />
           </div>
-          {variants.map(
-            (variant, index) =>
-              !variant._deleted && (
-                <div
-                  key={variant.id ?? index}
-                  className="grid grid-cols-[1fr_6rem_auto] items-center gap-2"
-                >
-                  <Input
-                    aria-label={"Nome da variação " + (index + 1)}
-                    placeholder="Ex.: Grande"
-                    value={variant.nome}
-                    onChange={(event) => updVariant(index, { nome: event.target.value })}
-                  />
-                  <Input
-                    aria-label={"Preço da variação " + (index + 1)}
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={(variant.preco_cents / 100).toFixed(2)}
-                    onChange={(event) =>
-                      updVariant(index, {
-                        preco_cents: Math.round(Number(event.target.value) * 100),
-                      })
-                    }
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={"Remover variação " + (index + 1)}
-                    onClick={() => delVariant(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ),
-          )}
+          <div className="flex items-center justify-between rounded-xl bg-muted/30 px-3 py-2.5">
+            <Label htmlFor="product-active" className="text-sm font-medium">
+              Disponível para venda
+            </Label>
+            <Switch
+              id="product-active"
+              checked={form.disponivel}
+              onCheckedChange={(value) => setForm({ ...form, disponivel: value })}
+              disabled={saving}
+            />
+          </div>
+        </section>
+        <ProductSpecificFields
+          fields={fields}
+          values={extras}
+          onChange={setExtras}
+          disabled={saving}
+        />
+        <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
+          <Label htmlFor="offer-addons">Oferecer complementos</Label>
+          <Switch
+            id="offer-addons"
+            checked={showAddons || selectedGroups.size > 0}
+            disabled={saving || configLoading}
+            onCheckedChange={(value) => {
+              setShowAddons(value);
+              if (!value) setSelectedGroups(new Set());
+            }}
+          />
         </div>
-      </details>
-      {configLoading && (
-        <p role="status" className="text-xs text-muted-foreground">
-          Carregando opções do produto...
-        </p>
-      )}
-      {configError && (
-        <p role="alert" className="text-sm text-destructive">
-          Não foi possível carregar as opções. Reabra o produto antes de salvar.
-        </p>
-      )}
-      <div className="border-t border-border pt-4">
+        {(showAddons || selectedGroups.size > 0) && (
+          <ProductAddonSelector
+            groups={addonGroups}
+            categories={cats}
+            categoryId={form.menu_category_id}
+            selected={selectedGroups}
+            onToggle={toggleGroup}
+            disabled={saving || configLoading || configError}
+          />
+        )}
+        <details className="rounded-2xl border border-border bg-card px-4">
+          <summary className="cursor-pointer py-4 text-sm font-medium">
+            Mais opções{" "}
+            <span className="ml-1 font-normal text-muted-foreground">
+              · estoque, preparo e variações
+            </span>
+          </summary>
+          <div className="space-y-4 pb-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="product-stock">Estoque</Label>
+                <Input
+                  id="product-stock"
+                  type="number"
+                  min="0"
+                  placeholder="Sem limite"
+                  value={form.estoque}
+                  onChange={(event) => setForm({ ...form, estoque: event.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="product-time">Preparo (min)</Label>
+                <Input
+                  id="product-time"
+                  type="number"
+                  min="0"
+                  placeholder="Opcional"
+                  value={form.tempo}
+                  onChange={(event) => setForm({ ...form, tempo: event.target.value })}
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-semibold">
+                Variações ({variants.filter((item) => !item._deleted).length})
+              </h4>
+              <Button type="button" variant="ghost" size="sm" onClick={addVariant}>
+                Adicionar variação
+              </Button>
+            </div>
+            {variants.map(
+              (variant, index) =>
+                !variant._deleted && (
+                  <div
+                    key={variant.id ?? index}
+                    className="grid grid-cols-[1fr_6rem_auto] items-center gap-2"
+                  >
+                    <Input
+                      aria-label={"Nome da variação " + (index + 1)}
+                      placeholder="Ex.: Grande"
+                      value={variant.nome}
+                      onChange={(event) => updVariant(index, { nome: event.target.value })}
+                    />
+                    <Input
+                      aria-label={"Preço da variação " + (index + 1)}
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={(variant.preco_cents / 100).toFixed(2)}
+                      onChange={(event) =>
+                        updVariant(index, {
+                          preco_cents: Math.round(Number(event.target.value) * 100),
+                        })
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label={"Remover variação " + (index + 1)}
+                      onClick={() => delVariant(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ),
+            )}
+          </div>
+        </details>
+        {configLoading && (
+          <p role="status" className="text-xs text-muted-foreground">
+            Carregando opções do produto...
+          </p>
+        )}
+        {configError && (
+          <p role="alert" className="text-sm text-destructive">
+            Não foi possível carregar as opções. Reabra o produto antes de salvar.
+          </p>
+        )}
+      </div>
+      <div className="shrink-0 space-y-2 border-t border-border bg-background p-4 sm:px-6">
+        {(!cats.length || photoBusy || configLoading || configError) && (
+          <p role="status" className="text-xs text-muted-foreground">
+            {configError
+              ? "Reabra o produto para carregar as opções antes de salvar."
+              : configLoading
+                ? "Carregando as opções do produto..."
+                : photoBusy
+                  ? "Preparando as fotos. Aguarde um instante..."
+                  : "Cadastre uma categoria em Categorias para salvar o produto."}
+          </p>
+        )}
         <Button
           onClick={salvar}
-          disabled={saving || photoBusy || configLoading || configError || !cats.length}
+          disabled={saving || photoBusy || configLoading || configError}
           className="h-11 w-full rounded-xl font-semibold"
         >
           {saving ? (

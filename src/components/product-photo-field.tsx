@@ -107,7 +107,7 @@ export function ProductPhotoField({
     <section
       className={
         compact
-          ? "min-w-0 space-y-2"
+          ? "relative min-w-0 space-y-2"
           : "flex items-center gap-4 rounded-2xl border border-border bg-gradient-to-br from-muted/30 to-background p-4"
       }
     >
@@ -137,8 +137,13 @@ export function ProductPhotoField({
         )}
       </button>
       <div className="min-w-0 space-y-1.5">
-        <p className="text-sm font-semibold">
+        <p
+          className={compact ? "min-h-10 text-sm font-semibold leading-5" : "text-sm font-semibold"}
+        >
           {title}{" "}
+          {compact && !optional && (
+            <span className="block text-xs font-normal text-muted-foreground">Capa</span>
+          )}
           {optional && (
             <span
               className={
@@ -182,6 +187,11 @@ export function ProductPhotoField({
               type="button"
               size="icon"
               variant="ghost"
+              className={
+                compact
+                  ? "absolute right-1 top-1 h-7 w-7 rounded-full border bg-background/95 shadow-sm"
+                  : undefined
+              }
               aria-label={compact ? `Remover ${title.toLowerCase()}` : "Remover foto"}
               disabled={disabled || busy}
               onClick={() => onChange(null, true)}
@@ -191,8 +201,15 @@ export function ProductPhotoField({
           )}
         </div>
         {file && (
-          <p role="status" className="text-xs text-emerald-700">
-            Pronta para salvar
+          <p
+            role="status"
+            className={
+              compact
+                ? "absolute left-1 top-1 rounded bg-background/95 px-1.5 py-1 text-[10px] font-medium text-emerald-700"
+                : "text-xs text-emerald-700"
+            }
+          >
+            {compact ? "Pronta" : "Pronta para salvar"}
           </p>
         )}
       </div>
