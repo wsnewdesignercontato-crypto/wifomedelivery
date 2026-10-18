@@ -10,7 +10,7 @@ import {
 } from "../src/lib/product-category-catalog.ts";
 import { getCategoryKind } from "../src/lib/category-templates.ts";
 const migration = new URL(
-  "../supabase/migrations/20261018050551_fix_profile_and_product_flows.sql",
+  "../supabase/migrations/20261018052258_fix_profile_and_product_flows.sql",
   import.meta.url,
 );
 
@@ -286,7 +286,7 @@ test("product photo storage restricts each owner's writes and permits cleanup af
     `);
     await db.exec(
       await readFile(
-        new URL("../supabase/migrations/20261018051912_product_photos.sql", import.meta.url),
+        new URL("../supabase/migrations/20261018052259_product_photos.sql", import.meta.url),
         "utf8",
       ),
     );
