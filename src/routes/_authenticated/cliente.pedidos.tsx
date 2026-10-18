@@ -5,6 +5,7 @@ import { Loader2, ReceiptText, Bike, Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { bindResumeRefresh } from "@/lib/resume-refresh";
 
 export const Route = createFileRoute("/_authenticated/cliente/pedidos")({
   head: () => ({
@@ -55,27 +56,44 @@ function PedidosPage() {
   const [filter, setFilter] = useState<"todos" | "ativos" | "concluidos">("todos");
 
   useEffect(() => {
+    setLoading(true);
+    setOrders([]);
+    setLojas({});
+    let alive = true;
+    let sequence = 0;
     async function load() {
-      const { data } = await supabase
+      if (!alive) return;
+      const request = ++sequence;
+      const { data, error } = await supabase
         .from("orders")
         .select("id,status,total_cents,created_at,establishment_id,tipo_entrega")
         .eq("cliente_id", user.id)
         .order("created_at", { ascending: false })
         .limit(50);
+      if (!alive || request !== sequence) return;
+      if (error) {
+        setLoading(false);
+        return;
+      }
       const arr = (data ?? []) as Order[];
-      setOrders(arr);
       const ids = Array.from(new Set(arr.map((o) => o.establishment_id)));
       if (ids.length) {
-        const { data: es } = await supabase.from("establishments").select("id,nome").in("id", ids);
+        const { data: es, error: storesError } = await supabase
+          .from("establishments")
+          .select("id,nome")
+          .in("id", ids);
+        if (!alive || request !== sequence) return;
         const map: Record<string, string> = {};
         (es ?? []).forEach((e) => {
           map[e.id] = e.nome;
         });
-        setLojas(map);
-      }
+        if (!storesError) setLojas(map);
+      } else setLojas({});
+      setOrders(arr);
       setLoading(false);
     }
-    load();
+    void load();
+    const unbindResume = bindResumeRefresh(load);
     const ch = supabase
       .channel(`pedidos-${user.id}`)
       .on(
@@ -83,8 +101,12 @@ function PedidosPage() {
         { event: "*", schema: "public", table: "orders", filter: `cliente_id=eq.${user.id}` },
         load,
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") void load();
+      });
     return () => {
+      alive = false;
+      unbindResume();
       supabase.removeChannel(ch);
     };
   }, [user.id]);

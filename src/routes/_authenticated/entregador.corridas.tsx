@@ -23,6 +23,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { transitionCourierDelivery } from "@/lib/courier-delivery-transition";
+import { bindResumeRefresh } from "@/lib/resume-refresh";
 import { validateImageFile } from "@/lib/upload-validation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -100,14 +102,6 @@ const STAGES = [
   },
   { key: "at_customer", label: "No cliente", next: "delivered", cta: "Confirmar entrega" },
 ];
-const ORDER_MAP: Record<string, string> = {
-  to_store: "courier_assigned",
-  at_store: "courier_assigned",
-  picked_up: "picked_up",
-  to_customer: "on_the_way",
-  at_customer: "arriving",
-  delivered: "delivered",
-};
 
 const INCIDENT_TYPES = [
   { k: "endereco_errado", label: "Endereço errado" },
@@ -144,6 +138,10 @@ function Corridas() {
   const [savingIncident, setSavingIncident] = useState(false);
   const stopWatchRef = useRef<(() => void) | null>(null);
   const proofInputRef = useRef<HTMLInputElement>(null);
+  const detailsOrderIdRef = useRef<string | null>(null);
+  const refreshLifetime = useRef<{ active: boolean; sequence: number; courierId: string } | null>(
+    null,
+  );
   const [myPos, setMyPos] = useState<{ lat: number; lng: number } | null>(null);
   const [availMeta, setAvailMeta] = useState<
     Record<string, { nome: string; distKm: number | null }>
@@ -176,12 +174,16 @@ function Corridas() {
   }
 
   async function load() {
-    if (!courier) return;
+    const lifetime = refreshLifetime.current;
+    if (!courier || !lifetime?.active || lifetime.courierId !== courier.user_id) return;
+    const request = ++lifetime.sequence;
+    const isCurrent = () =>
+      lifetime.active && refreshLifetime.current === lifetime && request === lifetime.sequence;
     if (!canReceiveRides) {
       setDisponiveis([]);
       setAvailMeta({});
     } else {
-      const { data: dv } = await supabase
+      const { data: dv, error: availableError } = await supabase
         .from("deliveries")
         .select(
           "id,order_id,status,valor_entrega_cents,entregador_id,aceito_em,coletado_em,entregue_em",
@@ -189,7 +191,8 @@ function Corridas() {
         .eq("status", "broadcasting")
         .or(`entregador_id.is.null,entregador_id.eq.${courier.user_id}`)
         .order("created_at", { ascending: false });
-      setDisponiveis((dv ?? []) as Delivery[]);
+      if (!isCurrent()) return;
+      if (!availableError) setDisponiveis((dv ?? []) as Delivery[]);
 
       // Metadados (nome da loja + distância até a coleta)
       const dvList = (dv ?? []) as Delivery[];
@@ -199,11 +202,13 @@ function Corridas() {
           .from("orders")
           .select("id, establishment_id")
           .in("id", orderIds);
+        if (!isCurrent()) return;
         const orderRows = (ords ?? []) as OrderMeta[];
         const estabIds = Array.from(new Set(orderRows.map((o) => o.establishment_id)));
         const { data: estabs } = estabIds.length
           ? await supabase.from("establishments").select("id, nome, lat, lng").in("id", estabIds)
           : { data: [] as EstabLocation[] };
+        if (!isCurrent()) return;
         const estabById: Record<string, { nome: string; lat: number | null; lng: number | null }> =
           {};
         ((estabs ?? []) as EstabLocation[]).forEach((e) => {
@@ -224,12 +229,12 @@ function Corridas() {
           meta[d.id] = { nome: e?.nome ?? "Loja", distKm };
         }
         setAvailMeta(meta);
-      } else {
+      } else if (!availableError) {
         setAvailMeta({});
       }
     }
 
-    const { data: at } = await supabase
+    const { data: at, error: activeError } = await supabase
       .from("deliveries")
       .select(
         "id,order_id,status,valor_entrega_cents,entregador_id,aceito_em,coletado_em,entregue_em",
@@ -239,16 +244,25 @@ function Corridas() {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+    if (!isCurrent() || activeError) return;
+    const nextOrderId = at?.order_id ?? null;
+    if (detailsOrderIdRef.current !== nextOrderId) {
+      detailsOrderIdRef.current = nextOrderId;
+      setOrder(null);
+      setEstab(null);
+      setCliente(null);
+    }
     setAtiva((at as Delivery) ?? null);
 
     if (at) {
-      const { data: o } = await supabase
+      const { data: o, error: orderError } = await supabase
         .from("orders")
         .select(
           "id,establishment_id,total_cents,cliente_id,endereco_entrega,observacoes,forma_pagamento,troco_para_cents",
         )
         .eq("id", at.order_id)
         .maybeSingle();
+      if (!isCurrent() || orderError) return;
       setOrder(o as OrderLite);
       if (o) {
         const [{ data: e }, { data: c }] = await Promise.all([
@@ -259,6 +273,7 @@ function Corridas() {
             .maybeSingle(),
           supabase.from("profiles").select("nome,telefone").eq("id", o.cliente_id).maybeSingle(),
         ]);
+        if (!isCurrent()) return;
         setEstab(e as Estab);
         setCliente((c as ClienteInfo) ?? null);
       }
@@ -270,17 +285,36 @@ function Corridas() {
   }
 
   useEffect(() => {
+    if (refreshLifetime.current?.courierId !== courier?.user_id) {
+      detailsOrderIdRef.current = null;
+      setDisponiveis([]);
+      setAvailMeta({});
+      setAtiva(null);
+      setOrder(null);
+      setEstab(null);
+      setCliente(null);
+    }
     if (!courier) return;
-    load();
+    const lifetime = { active: true, sequence: 0, courierId: courier.user_id };
+    refreshLifetime.current = lifetime;
+    const refresh = () => {
+      if (lifetime.active) return load();
+    };
+    void refresh();
+    const unbindResume = bindResumeRefresh(refresh);
     const ch = supabase
       .channel("courier-corridas-" + courier.user_id)
-      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, load)
-      .subscribe();
+      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, refresh)
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") void refresh();
+      });
     return () => {
+      lifetime.active = false;
+      unbindResume();
       supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courier?.user_id, courier?.aprovacao, courier?.kyc_status]);
+  }, [courier?.user_id, courier?.aprovacao, courier?.kyc_status, canReceiveRides]);
 
   const trackingDeliveryId = ativa?.id;
   const trackingOrderId = ativa?.order_id;
@@ -340,23 +374,12 @@ function Corridas() {
       return toast.error("Seu cadastro ainda não foi aprovado para receber corridas.");
     }
     if (ativa) return toast.error("Finalize sua corrida atual antes");
-    const { data, error } = await supabase
-      .from("deliveries")
-      .update({
-        entregador_id: courier.user_id,
-        status: "accepted",
-        aceito_em: new Date().toISOString(),
-      })
-      .eq("id", d.id)
-      .eq("status", "broadcasting")
-      .select("*")
-      .maybeSingle();
-    if (error || !data) return toast.error("Corrida indisponível");
-    await supabase.from("orders").update({ status: "courier_assigned" }).eq("id", d.order_id);
-    await supabase
-      .from("courier_profiles")
-      .update({ status: "ocupado" })
-      .eq("user_id", courier.user_id);
+    try {
+      await transitionCourierDelivery(d.id, "accepted");
+    } catch {
+      load();
+      return toast.error("Corrida indisponível");
+    }
     toast.success("Corrida aceita!");
     load();
   }
@@ -368,23 +391,14 @@ function Corridas() {
       return;
     }
     setAdvancing(true);
-    const patch: Record<string, unknown> = { status: next };
-    if (next === "picked_up") patch.coletado_em = new Date().toISOString();
-    const { error } = await supabase
-      .from("deliveries")
-      .update(patch as never)
-      .eq("id", ativa.id);
-    if (error) {
+    try {
+      await transitionCourierDelivery(ativa.id, next);
+    } catch {
+      toast.error("Falha ao atualizar");
+    } finally {
       setAdvancing(false);
-      return toast.error("Falha ao atualizar");
+      load();
     }
-    if (ORDER_MAP[next])
-      await supabase
-        .from("orders")
-        .update({ status: ORDER_MAP[next] as never })
-        .eq("id", ativa.order_id);
-    setAdvancing(false);
-    load();
   }
 
   function pickProof(f: File) {

@@ -1,4 +1,4 @@
-import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
+import { Link, Outlet, useRouterState, useNavigate, useRouteContext } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Users,
@@ -9,7 +9,6 @@ import {
   ScrollText,
   Settings,
   Search,
-  Bell,
   LogOut,
   Menu,
   X,
@@ -31,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { IFomeLogo } from "@/components/ifome-logo";
+import { NotificationsBell } from "@/components/cliente/notifications-bell";
 
 type NavItem = {
   to: string;
@@ -65,6 +65,7 @@ const navItems: NavItem[] = [
 ];
 
 export function AdminShell() {
+  const { user } = useRouteContext({ from: "/_authenticated" });
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -182,10 +183,7 @@ export function AdminShell() {
             <Input placeholder="Buscar clientes, pedidos, lojas…" className="h-10 pl-9" />
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <button className="tap-target relative rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground">
-              <Bell className="h-4 w-4" />
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
-            </button>
+            <NotificationsBell userId={user.id} audience="admin" />
             <ThemeToggle />
           </div>
         </header>

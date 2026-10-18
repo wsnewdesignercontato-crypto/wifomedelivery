@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ReviewForm } from "@/components/reviews";
+import { bindResumeRefresh } from "@/lib/resume-refresh";
 
 export const Route = createFileRoute("/_authenticated/cliente/pedido/$id")({
   head: () => ({
@@ -68,9 +69,11 @@ const DELIVERY_STAGES = [
   { key: "accepted", label: "Aceito pela loja" },
   { key: "preparing", label: "Em preparo" },
   { key: "ready", label: "Pronto" },
+  { key: "waiting_courier", label: "Aguardando entregador" },
   { key: "courier_assigned", label: "Entregador designado" },
   { key: "picked_up", label: "Coletado" },
   { key: "on_the_way", label: "A caminho" },
+  { key: "arriving", label: "Chegando" },
   { key: "delivered", label: "Entregue" },
 ] as const;
 
@@ -99,17 +102,35 @@ function PedidoPage() {
   const [reviewed, setReviewed] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
+    setOrder(null);
+    setItems([]);
+    setLoja(null);
+    setDelivery(null);
+    setReviewed(false);
+    let alive = true;
+    let sequence = 0;
+    let trackingSequence = 0;
     async function load() {
-      const { data: o } = await supabase
+      if (!alive) return;
+      const request = ++sequence;
+      const trackingAtStart = trackingSequence;
+      const { data: o, error: orderError } = await supabase
         .from("orders")
         .select(
           "id,status,subtotal_cents,frete_cents,desconto_cents,total_cents,observacoes,cancellation_reason,refund_status,refund_amount_cents,establishment_id,forma_pagamento,codigo_expira_em,tipo_entrega,created_at",
         )
         .eq("id", id)
         .maybeSingle();
+      if (!alive || request !== sequence) return;
+      if (orderError) {
+        setLoading(false);
+        return;
+      }
       const { data: confirmation, error: confirmationError } = o
         ? await supabase.rpc("get_order_delivery_code", { p_order_id: id })
         : { data: null, error: null };
+      if (!alive || request !== sequence) return;
       if (confirmationError) toast.error("Não foi possível consultar o código de confirmação");
       setOrder(
         o
@@ -142,13 +163,22 @@ function PedidoPage() {
           .maybeSingle(),
         supabase.from("reviews").select("id").eq("order_id", id).maybeSingle(),
       ]);
-      setItems((it.data ?? []) as Item[]);
-      setLoja(e.data as { id: string; nome: string } | null);
-      setDelivery(d.data as Delivery | null);
-      setReviewed(!!r.data);
+      if (!alive || request !== sequence) return;
+      if (!it.error) setItems((it.data ?? []) as Item[]);
+      if (!e.error) setLoja(e.data as { id: string; nome: string } | null);
+      if (!d.error) {
+        setDelivery((previous) => {
+          const next = d.data as Delivery | null;
+          return next && previous && trackingAtStart !== trackingSequence
+            ? { ...next, lat: previous.lat, lng: previous.lng }
+            : next;
+        });
+      }
+      if (!r.error) setReviewed(!!r.data);
       setLoading(false);
     }
-    load();
+    void load();
+    const unbindResume = bindResumeRefresh(load);
 
     const ch = supabase
       .channel(`pedido-${id}`)
@@ -156,6 +186,7 @@ function PedidoPage() {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${id}` },
         (p) => {
+          if (!alive) return;
           const next = p.new as Order;
           setOrder((prev) => {
             if (prev && prev.status !== "delivered" && next.status === "delivered") {
@@ -172,14 +203,14 @@ function PedidoPage() {
             }
             return prev ? { ...prev, ...next } : next;
           });
+          void load();
         },
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "deliveries", filter: `order_id=eq.${id}` },
-        (p) => {
-          const next = p.new as Delivery;
-          setDelivery((prev) => (prev ? { ...prev, ...next } : next));
+        () => {
+          void load();
         },
       )
       .on(
@@ -191,15 +222,21 @@ function PedidoPage() {
           filter: `order_id=eq.${id}`,
         },
         (p) => {
+          if (!alive) return;
+          trackingSequence++;
           const t = p.new as { lat: number; lng: number };
           setDelivery((prev) => (prev ? { ...prev, lat: t.lat, lng: t.lng } : prev));
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") void load();
+      });
     return () => {
+      alive = false;
+      unbindResume();
       supabase.removeChannel(ch);
     };
-  }, [id]);
+  }, [id, user.id]);
 
   async function cancelar() {
     const motivo = prompt("Motivo do cancelamento (opcional):") ?? "";

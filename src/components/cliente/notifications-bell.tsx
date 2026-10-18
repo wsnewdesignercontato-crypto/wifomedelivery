@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { playBellChime } from "@/lib/notification-sound";
 import { setAppBadgeCount, usePushNotifications } from "@/hooks/use-push-notifications";
+import { bindResumeRefresh } from "@/lib/resume-refresh";
 
 type Notif = {
   id: string;
@@ -17,7 +18,7 @@ type Notif = {
   created_at: string;
 };
 
-type Audience = "cliente" | "estabelecimento" | "entregador";
+type Audience = "cliente" | "estabelecimento" | "entregador" | "admin";
 
 export function NotificationsBell({
   userId,
@@ -32,8 +33,11 @@ export function NotificationsBell({
 
   useEffect(() => {
     let alive = true;
+    let requestId = 0;
     const audienceOk = (a: string | null | undefined) => !a || a === audience || a === "all";
     async function load() {
+      if (!alive) return;
+      const currentRequest = ++requestId;
       const { data } = await supabase
         .from("notifications")
         .select("id,titulo,mensagem,link_url,lida,created_at,audience")
@@ -42,24 +46,27 @@ export function NotificationsBell({
         .or(`audience.is.null,audience.eq.${audience},audience.eq.all`)
         .order("created_at", { ascending: false })
         .limit(20);
-      if (alive) setItems((data ?? []) as Notif[]);
+      if (alive && currentRequest === requestId) setItems((data ?? []) as Notif[]);
     }
     load();
+    const detachResume = bindResumeRefresh(load);
     const ch = supabase
       .channel(`notif-${audience}-${userId}`)
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "notifications",
           filter: `user_id=eq.${userId}`,
         },
         (p) => {
+          if (!alive) return;
+          void load();
+          if (p.eventType !== "INSERT") return;
           const n = p.new as Notif & { audience?: string | null };
           if (!audienceOk(n.audience)) return;
           if (n.lida) return;
-          setItems((prev) => [n, ...prev].slice(0, 20));
           playBellChime();
           const isDelivered = /entregue/i.test(n.mensagem);
           if (isDelivered && audience === "cliente") {
@@ -83,9 +90,12 @@ export function NotificationsBell({
           }
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") void load();
+      });
     return () => {
       alive = false;
+      detachResume();
       supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -100,7 +110,14 @@ export function NotificationsBell({
   async function handleClick(n: Notif) {
     setItems((prev) => prev.filter((i) => i.id !== n.id));
     await supabase.from("notifications").update({ lida: true }).eq("id", n.id);
-    if (n.link_url) navigate({ to: n.link_url });
+    if (n.link_url) {
+      const target = new URL(n.link_url, window.location.origin);
+      navigate({
+        to: target.pathname,
+        search: Object.fromEntries(target.searchParams),
+        hash: target.hash.slice(1),
+      });
+    }
   }
 
   async function markAllRead() {

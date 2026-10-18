@@ -15,6 +15,7 @@ import {
   Phone,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { transitionCourierDelivery } from "@/lib/courier-delivery-transition";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { canCourierAccessRides } from "@/lib/courier-approval";
@@ -371,28 +372,15 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
     }
     stopRideRingtone();
     setAccepting(true);
-    const { data, error } = await supabase
-      .from("deliveries")
-      .update({
-        entregador_id: courier.user_id,
-        status: "accepted",
-        aceito_em: new Date().toISOString(),
-      })
-      .eq("id", offer.deliveryId)
-      .eq("status", "broadcasting")
-      .select("id")
-      .maybeSingle();
-    setAccepting(false);
-    if (error || !data) {
-      toast.error("Corrida já foi aceita por outro entregador");
+    try {
+      await transitionCourierDelivery(offer.deliveryId, "accepted");
+    } catch {
+      toast.error("Corrida indisponível");
       setOffer(null);
       return;
+    } finally {
+      setAccepting(false);
     }
-    await supabase.from("orders").update({ status: "courier_assigned" }).eq("id", offer.orderId);
-    await supabase
-      .from("courier_profiles")
-      .update({ status: "ocupado" })
-      .eq("user_id", courier.user_id);
     toast.success("Corrida aceita! Boa entrega 🛵");
     setOffer(null);
     navigate({ to: "/entregador/corridas" });

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { OrderHistory } from "@/components/order-history";
 import { dispatchOrderDelivery } from "@/lib/delivery-dispatch";
+import { bindResumeRefresh } from "@/lib/resume-refresh";
 import {
   Bike,
   ReceiptText,
@@ -113,19 +114,31 @@ function PedidosPage() {
   const [openHistory, setOpenHistory] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<string>("todos");
   const printedRef = useRef<Set<string>>(new Set());
+  const refreshLifetime = useRef<{
+    active: boolean;
+    sequence: number;
+    establishmentId: string;
+  } | null>(null);
 
   async function loadContact(orderId: string) {
     if (contacts[orderId]) return contacts[orderId];
+    const lifetime = refreshLifetime.current;
     const { data } = await supabase.rpc("get_order_client_contact", { _order_id: orderId });
     const row = Array.isArray(data) ? data[0] : null;
     const c: Contact = { nome: row?.nome ?? null, telefone: row?.telefone ?? null };
-    setContacts((p) => ({ ...p, [orderId]: c }));
+    if (lifetime?.active && refreshLifetime.current === lifetime) {
+      setContacts((p) => ({ ...p, [orderId]: c }));
+    }
     return c;
   }
 
   async function reload() {
-    if (!estab) return;
-    const { data } = await supabase
+    const lifetime = refreshLifetime.current;
+    if (!estab || !lifetime?.active || lifetime.establishmentId !== estab.id) return;
+    const request = ++lifetime.sequence;
+    const isCurrent = () =>
+      lifetime.active && refreshLifetime.current === lifetime && request === lifetime.sequence;
+    const { data, error } = await supabase
       .from("orders")
       .select(
         "id,cliente_id,status,total_cents,subtotal_cents,frete_cents,desconto_cents,forma_pagamento,troco_para_cents,observacoes,created_at,endereco_entrega,tipo_entrega,cancellation_reason,cancelled_role,refund_status,refund_amount_cents",
@@ -133,18 +146,23 @@ function PedidosPage() {
       .eq("establishment_id", estab.id)
       .order("created_at", { ascending: false })
       .limit(80);
+    if (!isCurrent() || error) return;
     const list = (data ?? []) as Order[];
     setOrders(list);
     if (list.length) {
       const ids = list.map((o) => o.id);
-      const { data: it } = await supabase.from("order_items").select("*").in("order_id", ids);
+      const { data: it, error: itemsError } = await supabase
+        .from("order_items")
+        .select("*")
+        .in("order_id", ids);
+      if (!isCurrent()) return;
       const g: Record<string, OrderItem[]> = {};
       (it ?? []).forEach((r) => {
         const row = r as unknown as OrderItem;
         row.addons = Array.isArray(row.addons) ? row.addons : [];
         (g[row.order_id] ??= []).push(row);
       });
-      setItems(g);
+      if (!itemsError) setItems(g);
       // Pré-carrega contatos dos pedidos ativos (não terminais) para a exibição.
       list
         .filter((o) => !TERMINAL.has(o.status))
@@ -152,12 +170,22 @@ function PedidosPage() {
         .forEach((o) => {
           void loadContact(o.id);
         });
-    }
+    } else setItems({});
   }
 
   useEffect(() => {
+    if (refreshLifetime.current?.establishmentId !== estab?.id) {
+      setOrders([]);
+      setItems({});
+      setContacts({});
+      setOpenHistory(new Set());
+    }
     if (!estab) return;
-    reload();
+    const lifetime = { active: true, sequence: 0, establishmentId: estab.id };
+    refreshLifetime.current = lifetime;
+    const printTimers = new Set<ReturnType<typeof setTimeout>>();
+    void reload();
+    const unbindResume = bindResumeRefresh(reload);
     const ch = supabase
       .channel("estab-pedidos-" + estab.id)
       .on(
@@ -169,7 +197,8 @@ function PedidosPage() {
           filter: `establishment_id=eq.${estab.id}`,
         },
         (payload) => {
-          reload();
+          if (!lifetime.active) return;
+          void reload();
 
           if (payload.eventType === "INSERT") {
             toast.info("Novo pedido recebido! 🔔", {
@@ -195,13 +224,22 @@ function PedidosPage() {
             const oid = (payload.new as { id?: string })?.id;
             if (oid && !printedRef.current.has(oid)) {
               printedRef.current.add(oid);
-              setTimeout(() => imprimir(oid), 800);
+              const timer = setTimeout(() => {
+                printTimers.delete(timer);
+                if (lifetime.active) void imprimir(oid);
+              }, 800);
+              printTimers.add(timer);
             }
           }
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (lifetime.active && status === "SUBSCRIBED") void reload();
+      });
     return () => {
+      lifetime.active = false;
+      unbindResume();
+      printTimers.forEach(clearTimeout);
       supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

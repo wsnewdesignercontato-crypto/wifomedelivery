@@ -3254,6 +3254,14 @@ export type Database = {
       };
     };
     Functions: {
+      dispatch_order_delivery: {
+        Args: { p_order_id: string; p_fee_cents: number; p_courier_id?: string | null };
+        Returns: string;
+      };
+      transition_courier_delivery: {
+        Args: { p_delivery_id: string; p_next_status: string };
+        Returns: undefined;
+      };
       ensure_menu_categories: {
         Args: { p_establishment_id: string; p_names: string[] };
         Returns: Json;

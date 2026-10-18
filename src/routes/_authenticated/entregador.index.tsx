@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Bike,
@@ -13,6 +13,8 @@ import {
   Wallet,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { transitionCourierDelivery } from "@/lib/courier-delivery-transition";
+import { bindResumeRefresh } from "@/lib/resume-refresh";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -79,41 +81,57 @@ function Home() {
   const [estab, setEstab] = useState<Estab | null>(null);
   const [disponiveis, setDisponiveis] = useState<Delivery[]>([]);
   const [stats, setStats] = useState({ hoje: 0, entregas: 0, saldo: 0, nota: 0 });
+  const detailsOrderIdRef = useRef<string | null>(null);
+  const refreshLifetime = useRef<{
+    active: boolean;
+    courierId: string;
+    statsSequence: number;
+    activeSequence: number;
+    availableSequence: number;
+  } | null>(null);
 
   async function loadStats() {
-    if (!courier) return;
+    const lifetime = refreshLifetime.current;
+    if (!courier || !lifetime?.active || lifetime.courierId !== courier.user_id) return;
+    const request = ++lifetime.statsSequence;
+    const isCurrent = () =>
+      lifetime.active && refreshLifetime.current === lifetime && request === lifetime.statsSequence;
     const start = new Date();
     start.setHours(0, 0, 0, 0);
-    const { data: hoje } = await supabase
+    const { data: hoje, error: todayError } = await supabase
       .from("deliveries")
       .select("valor_entrega_cents")
       .eq("entregador_id", courier.user_id)
       .eq("status", "delivered")
       .gte("entregue_em", start.toISOString());
+    if (!isCurrent() || todayError) return;
     const soma = (hoje ?? []).reduce(
       (s, d: { valor_entrega_cents: number }) => s + (d.valor_entrega_cents ?? 0),
       0,
     );
-    const { data: ledger } = await supabase
+    const { data: ledger, error: ledgerError } = await supabase
       .from("platform_ledger")
       .select("courier_payout_cents,status")
       .eq("courier_id", courier.user_id);
+    if (!isCurrent() || ledgerError) return;
     const saldo = (ledger ?? [])
       .filter((l: { status: string }) => l.status === "pending")
       .reduce((s, l: { courier_payout_cents: number }) => s + (l.courier_payout_cents ?? 0), 0);
-    const { data: myDeliv } = await supabase
+    const { data: myDeliv, error: deliveriesError } = await supabase
       .from("deliveries")
       .select("order_id")
       .eq("entregador_id", courier.user_id)
       .eq("status", "delivered");
+    if (!isCurrent() || deliveriesError) return;
     const orderIds = (myDeliv ?? []).map((d: { order_id: string }) => d.order_id);
     let nota = Number(courier.avaliacao ?? 0);
     if (orderIds.length) {
-      const { data: revs } = await supabase
+      const { data: revs, error: reviewsError } = await supabase
         .from("reviews")
         .select("rating_entregador")
         .in("order_id", orderIds)
         .not("rating_entregador", "is", null);
+      if (!isCurrent() || reviewsError) return;
       const arr = (revs ?? [])
         .map((r: { rating_entregador: number | null }) => r.rating_entregador ?? 0)
         .filter((n: number) => n > 0);
@@ -123,13 +141,26 @@ function Home() {
   }
 
   async function loadAtiva() {
-    if (!courier) return;
-    const { data } = await supabase
+    const lifetime = refreshLifetime.current;
+    if (!courier || !lifetime?.active || lifetime.courierId !== courier.user_id) return;
+    const request = ++lifetime.activeSequence;
+    const isCurrent = () =>
+      lifetime.active &&
+      refreshLifetime.current === lifetime &&
+      request === lifetime.activeSequence;
+    const { data, error } = await supabase
       .from("deliveries")
       .select("id,order_id,status,valor_entrega_cents,entregador_id")
       .eq("entregador_id", courier.user_id)
       .not("status", "in", "(delivered,cancelled)")
       .maybeSingle();
+    if (!isCurrent() || error) return;
+    const nextOrderId = data?.order_id ?? null;
+    if (detailsOrderIdRef.current !== nextOrderId) {
+      detailsOrderIdRef.current = nextOrderId;
+      setOrder(null);
+      setEstab(null);
+    }
     if (!data) {
       setAtiva(null);
       setOrder(null);
@@ -137,34 +168,49 @@ function Home() {
       return;
     }
     setAtiva(data as Delivery);
-    const { data: o } = await supabase
+    const { data: o, error: orderError } = await supabase
       .from("orders")
       .select("id,establishment_id,total_cents,endereco_entrega")
       .eq("id", data.order_id)
       .maybeSingle();
+    if (!isCurrent() || orderError) return;
     if (o) {
       setOrder(o as OrderLite);
-      const { data: e } = await supabase
+      const { data: e, error: storeError } = await supabase
         .from("establishments")
         .select("id,nome,endereco,cidade")
         .eq("id", o.establishment_id)
         .maybeSingle();
-      if (e) setEstab(e as Estab);
+      if (!isCurrent() || storeError) return;
+      setEstab((e as Estab) ?? null);
+    } else {
+      setOrder(null);
+      setEstab(null);
     }
   }
 
   async function loadDisponiveis() {
+    const lifetime = refreshLifetime.current;
+    if (!courier || !lifetime?.active || lifetime.courierId !== courier.user_id) return;
+    const request = ++lifetime.availableSequence;
     if (!canReceiveRides) {
       setDisponiveis([]);
       return;
     }
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("deliveries")
       .select("id,order_id,status,valor_entrega_cents,entregador_id")
       .eq("status", "broadcasting")
       .order("created_at", { ascending: false })
       .limit(10);
+    if (
+      !lifetime.active ||
+      refreshLifetime.current !== lifetime ||
+      request !== lifetime.availableSequence ||
+      error
+    )
+      return;
     setDisponiveis((data ?? []) as Delivery[]);
   }
 
@@ -173,20 +219,42 @@ function Home() {
   }, [courier?.status]);
 
   useEffect(() => {
+    if (refreshLifetime.current?.courierId !== courier?.user_id) {
+      detailsOrderIdRef.current = null;
+      setAtiva(null);
+      setOrder(null);
+      setEstab(null);
+      setDisponiveis([]);
+      setStats({ hoje: 0, entregas: 0, saldo: 0, nota: 0 });
+    }
     if (!courier) return;
-    loadStats();
-    loadAtiva();
-    if (online && canReceiveRides) loadDisponiveis();
-    else setDisponiveis([]);
+    const lifetime = {
+      active: true,
+      courierId: courier.user_id,
+      statsSequence: 0,
+      activeSequence: 0,
+      availableSequence: 0,
+    };
+    refreshLifetime.current = lifetime;
+    const refresh = async () => {
+      if (!lifetime.active) return;
+      await Promise.all([
+        loadStats(),
+        loadAtiva(),
+        online && canReceiveRides ? loadDisponiveis() : Promise.resolve(setDisponiveis([])),
+      ]);
+    };
+    void refresh();
+    const unbindResume = bindResumeRefresh(refresh);
     const ch = supabase
       .channel("courier-home")
-      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, () => {
-        loadAtiva();
-        if (online && canReceiveRides) loadDisponiveis();
-        else setDisponiveis([]);
-      })
-      .subscribe();
+      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, refresh)
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") void refresh();
+      });
     return () => {
+      lifetime.active = false;
+      unbindResume();
       supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -212,23 +280,13 @@ function Home() {
     if (!canReceiveRides) {
       return toast.error("Seu cadastro ainda não foi aprovado para receber corridas.");
     }
-    const { data, error } = await supabase
-      .from("deliveries")
-      .update({
-        entregador_id: courier.user_id,
-        status: "accepted",
-        aceito_em: new Date().toISOString(),
-      })
-      .eq("id", d.id)
-      .eq("status", "broadcasting")
-      .select("*")
-      .maybeSingle();
-    if (error || !data) return toast.error("Corrida já foi aceita por outro entregador");
-    await supabase.from("orders").update({ status: "courier_assigned" }).eq("id", d.order_id);
-    await supabase
-      .from("courier_profiles")
-      .update({ status: "ocupado" })
-      .eq("user_id", courier.user_id);
+    try {
+      await transitionCourierDelivery(d.id, "accepted");
+    } catch {
+      loadAtiva();
+      loadDisponiveis();
+      return toast.error("Corrida indisponível");
+    }
     toast.success("Corrida aceita!");
     loadAtiva();
     loadDisponiveis();
@@ -238,24 +296,13 @@ function Home() {
     next: "to_store" | "at_store" | "picked_up" | "to_customer" | "at_customer",
   ) {
     if (!ativa || !courier) return;
-    const patch: Record<string, unknown> = { status: next };
-    if (next === "picked_up") patch.coletado_em = new Date().toISOString();
-    await supabase
-      .from("deliveries")
-      .update(patch as never)
-      .eq("id", ativa.id);
-    const orderMap: Record<string, string> = {
-      to_store: "courier_assigned",
-      picked_up: "picked_up",
-      to_customer: "on_the_way",
-      at_customer: "arriving",
-    };
-    if (orderMap[next])
-      await supabase
-        .from("orders")
-        .update({ status: orderMap[next] as never })
-        .eq("id", ativa.order_id);
-    loadAtiva();
+    try {
+      await transitionCourierDelivery(ativa.id, next);
+    } catch {
+      toast.error("Falha ao atualizar");
+    } finally {
+      loadAtiva();
+    }
   }
 
   return (
