@@ -692,7 +692,7 @@ function ProdutoForm({
           Não foi possível carregar as opções. Reabra o produto antes de salvar.
         </p>
       )}
-      <div className="sticky bottom-0 -mx-1 border-t border-border bg-background/95 px-1 pb-1 pt-3 backdrop-blur-sm">
+      <div className="border-t border-border pt-4">
         <Button
           onClick={salvar}
           disabled={saving || photoBusy || configLoading || configError || !cats.length}

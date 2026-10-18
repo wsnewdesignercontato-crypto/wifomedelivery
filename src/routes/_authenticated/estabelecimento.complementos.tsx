@@ -142,7 +142,7 @@ function ComplementosPage() {
           aria-label="Filtrar complementos por categoria"
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
-          className="h-10 rounded-xl border border-input bg-background px-3 text-sm sm:ml-auto"
+          className="h-10 w-full min-w-0 max-w-full rounded-xl border border-input bg-background px-3 text-sm sm:ml-auto sm:w-auto"
         >
           <option value="all">Todas as categorias</option>
           <option value="general">Uso geral</option>
