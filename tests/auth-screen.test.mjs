@@ -55,6 +55,7 @@ const hooks = registerHooks({
   },
 });
 const { AuthScreen } = await import("../src/components/auth-screen.tsx");
+const { Dialog, DialogContent } = await import("../src/components/ui/dialog.tsx");
 hooks.deregister();
 jsx.deregister();
 
@@ -164,14 +165,24 @@ test("each fresh signup can request confirmation again without a frontend countd
   for (const profile of Object.keys(APP_PROFILES)) {
     const app = await mount(profile);
     try {
+      runtime.signupResult = {
+        data: { session: null, user: { identities: [{ id: "new-user" }] } },
+        error: null,
+      };
       const form = find(
         app.render(),
         (node) => node.type === "form" && !!find(node, (n) => n.props?.id === "email-cad"),
       );
       await form.props.onSubmit({
         preventDefault() {},
-        currentTarget: { nome: "Teste", email: "person@gmail.com", senha: "SenhaForte123!" },
+        currentTarget: {
+          nome: "Teste",
+          email: `${profile}.novo@example.com`,
+          senha: "SenhaForte123!",
+        },
       });
+      assert.ok(!find(app.render(), (node) => node.type === Dialog && node.props.open));
+      assert.equal(runtime.calls[0][1].email, `${profile}.novo@example.com`);
       const resend = find(app.render(), (node) => node.props?.children === "Reenviar confirmação");
       assert.ok(resend);
       assert.equal(resend.props.disabled, false);
@@ -271,6 +282,10 @@ for (const response of [
           preventDefault() {},
           currentTarget: { nome: "Teste", email: "person@gmail.com", senha: "SenhaForte123!" },
         });
+        assert.ok(
+          find(app.render(), (node) => node.type === Dialog && node.props.open),
+          "The shared-account notice must open as a popup",
+        );
         assert.ok(!find(app.render(), (node) => node.props?.children === "Reenviar confirmação"));
         const enter = find(
           app.render(),
@@ -302,7 +317,8 @@ test("existing-account guidance keeps password recovery available for the chosen
         preventDefault() {},
         currentTarget: { nome: "Teste", email: "person@gmail.com", senha: "SenhaForte123!" },
       });
-      const recovery = find(app.render(), (node) => node.props?.children === "Esqueci minha senha");
+      const dialog = find(app.render(), (node) => node.type === Dialog && node.props.open);
+      const recovery = find(dialog, (node) => node.props?.children === "Esqueci minha senha");
       assert.ok(recovery);
       recovery.props.onClick();
       assert.equal(
@@ -310,6 +326,123 @@ test("existing-account guidance keeps password recovery available for the chosen
         "person@gmail.com",
       );
     } finally {
+      app.cleanup();
+    }
+  }
+});
+
+test("closing the repeated-signup popup returns to login with the entered email", async () => {
+  const app = await mount("estabelecimento");
+  try {
+    runtime.signupResult = { data: { session: null, user: { identities: [] } }, error: null };
+    const form = find(
+      app.render(),
+      (node) => node.type === "form" && !!find(node, (input) => input.props?.id === "email-cad"),
+    );
+    await form.props.onSubmit({
+      preventDefault() {},
+      currentTarget: { nome: "Teste", email: "person@gmail.com", senha: "SenhaForte123!" },
+    });
+    const dialog = find(app.render(), (node) => node.type === Dialog && node.props.open);
+    assert.ok(dialog);
+    dialog.props.onOpenChange(false);
+    assert.ok(!find(app.render(), (node) => node.type === Dialog && node.props.open));
+    assert.equal(
+      find(app.render(), (node) => node.props?.id === "email").props.defaultValue,
+      "person@gmail.com",
+    );
+    assert.equal(runtime.calls.length, 1);
+  } finally {
+    app.cleanup();
+  }
+});
+
+test("the repeated-signup popup can start a new registration with a different email", async () => {
+  const app = await mount("entregador");
+  try {
+    runtime.signupResult = { data: { session: null, user: { identities: [] } }, error: null };
+    const form = find(
+      app.render(),
+      (node) => node.type === "form" && !!find(node, (input) => input.props?.id === "email-cad"),
+    );
+    await form.props.onSubmit({
+      preventDefault() {},
+      currentTarget: { nome: "Teste", email: "person@gmail.com", senha: "SenhaForte123!" },
+    });
+    const dialog = find(app.render(), (node) => node.type === Dialog && node.props.open);
+    find(dialog, (node) => node.props?.children === "Cadastrar com outro e-mail").props.onClick();
+    assert.ok(!find(app.render(), (node) => node.type === Dialog && node.props.open));
+    assert.equal(
+      find(app.render(), (node) => node.props?.id === "email-cad").props.defaultValue,
+      "",
+    );
+    assert.equal(runtime.calls.length, 1);
+  } finally {
+    app.cleanup();
+  }
+});
+
+test("a signup email delivery error is not replaced by the existing-account popup", async () => {
+  const app = await mount("estabelecimento");
+  try {
+    runtime.signupResult = {
+      data: { session: null, user: null },
+      error: { code: "hook_timeout", message: "Envio indisponível" },
+    };
+    const form = find(
+      app.render(),
+      (node) => node.type === "form" && !!find(node, (input) => input.props?.id === "email-cad"),
+    );
+    await form.props.onSubmit({
+      preventDefault() {},
+      currentTarget: { nome: "Teste", email: "person@gmail.com", senha: "SenhaForte123!" },
+    });
+    assert.ok(!find(app.render(), (node) => node.type === Dialog && node.props.open));
+    assert.ok(
+      runtime.notices.some(
+        (notice) => notice.kind === "error" && notice.message === "Envio indisponível",
+      ),
+    );
+  } finally {
+    app.cleanup();
+  }
+});
+
+test("closing the account popup focuses the visible login, recovery or registration field", async () => {
+  for (const nextField of ["senha", "email-rec", "email-cad"]) {
+    const app = await mount("entregador");
+    const previousDocument = globalThis.document;
+    try {
+      runtime.signupResult = { data: { session: null, user: { identities: [] } }, error: null };
+      const form = find(
+        app.render(),
+        (node) => node.type === "form" && !!find(node, (input) => input.props?.id === "email-cad"),
+      );
+      await form.props.onSubmit({
+        preventDefault() {},
+        currentTarget: { nome: "Teste", email: "person@gmail.com", senha: "SenhaForte123!" },
+      });
+      const content = find(app.render(), (node) => node.type === DialogContent);
+      assert.equal(typeof content.props.onCloseAutoFocus, "function");
+      let focused;
+      let prevented = false;
+      globalThis.document = {
+        getElementById: (id) => ({
+          getClientRects: () => (id === nextField ? [{}] : []),
+          focus: () => {
+            focused = id;
+          },
+        }),
+      };
+      content.props.onCloseAutoFocus({
+        preventDefault() {
+          prevented = true;
+        },
+      });
+      assert.equal(prevented, true);
+      assert.equal(focused, nextField);
+    } finally {
+      globalThis.document = previousDocument;
       app.cleanup();
     }
   }

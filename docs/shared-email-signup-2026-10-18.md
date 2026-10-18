@@ -12,6 +12,8 @@ Uma resposta sem sessão e com identidades explicitamente vazias agora oferece a
 
 O botão “Entrar com minha conta” abre o login com o e-mail preenchido. A pessoa precisa autenticar com a senha existente. “Esqueci minha senha” mantém o e-mail e o aplicativo de retorno. Os demais erros continuam visíveis; cadastros novos e contas ainda não confirmadas continuam no fluxo de confirmação.
 
+O aviso de conta compartilhada aparece em um pop-up acessível com título e descrição. Ele explica que o cadastro já usado no Cliente ou em outro aplicativo PedeTrem pode ser acessado com o mesmo e-mail e senha, e que a senha digitada nesta nova tentativa não altera a anterior. Fechar o pop-up retorna ao login, preservando o e-mail. O botão de cadastrar com outro e-mail limpa o endereço e reabre a aba de cadastro. E-mails novos não abrem esse pop-up; erros reais de envio também não são confundidos com cadastro repetido. A mensagem continua condicional porque uma resposta ofuscada não identifica de forma confiável o perfil de origem da conta.
+
 Nenhuma resposta ofuscada é usada para obter identidade, criar sessão ou ativar um perfil. Não há login, reenvio de confirmação ou recuperação automáticos. A ativação de perfil continua passando pela autenticação real e pelas regras já existentes. Não foram alterados senhas reais, confirmação obrigatória, banco, RLS ou a identidade dos aplicativos instaláveis.
 
 ## Verificação

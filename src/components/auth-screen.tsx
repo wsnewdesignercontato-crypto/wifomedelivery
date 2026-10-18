@@ -23,6 +23,13 @@ import {
 
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const perfilInfo: Record<
   "cliente" | "estabelecimento" | "entregador",
@@ -379,36 +386,7 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
         </div>
 
         <div className="mt-6 rounded-3xl border border-border bg-card p-5 shadow-card sm:p-6">
-          {modo === "acessar-conta" ? (
-            <div className="space-y-4 py-2 text-center">
-              <h2 className="text-lg font-bold text-foreground">Acesse sua conta PedeTrem</h2>
-              <p className="text-sm text-muted-foreground">
-                Se você já tem conta com este e-mail, entre com a senha que cadastrou. O mesmo
-                acesso pode ser usado nos aplicativos de Cliente, Estabelecimento e Entregador.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Para usar outro aplicativo, você não precisa criar uma nova senha. Se não lembrar da
-                senha, solicite a recuperação abaixo.
-              </p>
-              <Button className="w-full" onClick={() => setModo("form")}>
-                Entrar com minha conta
-              </Button>
-              <Button className="w-full" variant="outline" onClick={() => setModo("recuperar")}>
-                Esqueci minha senha
-              </Button>
-              <Button
-                className="w-full"
-                variant="ghost"
-                onClick={() => {
-                  setEmailSalvo("");
-                  setTab("cadastro");
-                  setModo("form");
-                }}
-              >
-                Cadastrar com outro e-mail
-              </Button>
-            </div>
-          ) : modo === "confirmar-email" || modo === "link-enviado" ? (
+          {modo === "confirmar-email" || modo === "link-enviado" ? (
             <div className="space-y-4 py-2 text-center">
               <MailCheck className="mx-auto h-12 w-12 text-primary" />
 
@@ -617,6 +595,56 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
             </Tabs>
           )}
         </div>
+
+        {modo === "acessar-conta" && (
+          <Dialog
+            open
+            onOpenChange={(open) => {
+              if (!open) setModo("form");
+            }}
+          >
+            <DialogContent
+              className={`${themeClass} max-w-sm`}
+              onCloseAutoFocus={(event) => {
+                event.preventDefault();
+                const field = ["email-rec", "email-cad", "senha"]
+                  .map((id) => document.getElementById(id))
+                  .find((element) => element && element.getClientRects().length > 0);
+                field?.focus();
+              }}
+            >
+              <DialogHeader>
+                <DialogTitle>Use sua conta PedeTrem</DialogTitle>
+                <DialogDescription>
+                  Se você já cadastrou <span className="break-all font-semibold">{emailSalvo}</span>{" "}
+                  no aplicativo de Cliente ou em outro aplicativo PedeTrem, pode entrar aqui com o
+                  mesmo e-mail e senha.
+                </DialogDescription>
+              </DialogHeader>
+              <p className="text-sm text-muted-foreground">
+                Um e-mail já confirmado não precisa de outra confirmação. A senha digitada nesta
+                tentativa de cadastro não substitui sua senha anterior.
+              </p>
+              <Button className="w-full" onClick={() => setModo("form")}>
+                Entrar com minha conta
+              </Button>
+              <Button className="w-full" variant="outline" onClick={() => setModo("recuperar")}>
+                Esqueci minha senha
+              </Button>
+              <Button
+                className="w-full"
+                variant="ghost"
+                onClick={() => {
+                  setEmailSalvo("");
+                  setTab("cadastro");
+                  setModo("form");
+                }}
+              >
+                Cadastrar com outro e-mail
+              </Button>
+            </DialogContent>
+          </Dialog>
+        )}
 
         <div className="flex-1" />
       </div>
