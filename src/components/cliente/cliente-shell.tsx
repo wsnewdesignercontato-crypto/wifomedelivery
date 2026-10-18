@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/cliente/notifications-bell";
 import { IFomeLogo } from "@/components/ifome-logo";
+import { DATA_UPDATED_EVENT, PROFILE_UPDATED_EVENT } from "@/lib/app-refresh";
 
 type Ctx = { user: { id: string; email?: string } };
 
@@ -31,34 +32,66 @@ const NAV = [
 export function ClienteShell({ user }: Ctx) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [cartQty, setCartQty] = useState(0);
-  const [endereco, setEndereco] = useState<string>("Escolher endereço");
+  const emptySummary = {
+    userId: user.id,
+    cartQty: 0,
+    endereco: user.id ? "Escolher endereço" : "Visitante · Entre para pedir",
+  };
+  const [summary, setSummary] = useState(emptySummary);
+  const { cartQty, endereco } = summary.userId === user.id ? summary : emptySummary;
 
   useEffect(() => {
     if (!user.id) {
-      setCartQty(0);
-      setEndereco("Visitante · Entre para pedir");
+      setSummary({ userId: "", cartQty: 0, endereco: "Visitante · Entre para pedir" });
       return;
     }
     let alive = true;
+    let sequence = 0;
     async function reload() {
-      const [{ data: cart }, { data: addr }] = await Promise.all([
-        supabase.from("cart_items").select("quantidade").eq("user_id", user.id),
-        supabase
-          .from("addresses")
-          .select("label,rua,numero,cidade,is_default")
-          .eq("user_id", user.id)
-          .order("is_default", { ascending: false })
-          .limit(1),
-      ]);
-      if (!alive) return;
-      setCartQty((cart ?? []).reduce((s, i) => s + i.quantidade, 0));
-      if (addr && addr[0]) {
-        const a = addr[0];
-        setEndereco(`${a.rua}${a.numero ? `, ${a.numero}` : ""}`);
-      }
+      const request = ++sequence;
+      const [{ data: cart, error: cartError }, { data: addr, error: addressError }] =
+        await Promise.all([
+          supabase.from("cart_items").select("quantidade").eq("user_id", user.id),
+          supabase
+            .from("addresses")
+            .select("label,rua,numero,cidade,is_default")
+            .eq("user_id", user.id)
+            .order("is_default", { ascending: false })
+            .limit(1),
+        ]);
+      if (!alive || request !== sequence) return;
+      setSummary((previous) => {
+        const current =
+          previous.userId === user.id
+            ? previous
+            : { userId: user.id, cartQty: 0, endereco: "Escolher endereço" };
+        const a = addr?.[0];
+        return {
+          userId: user.id,
+          cartQty: cartError
+            ? current.cartQty
+            : (cart ?? []).reduce((sum, item) => sum + item.quantidade, 0),
+          endereco: addressError
+            ? current.endereco
+            : a
+              ? `${a.rua}${a.numero ? `, ${a.numero}` : ""}`
+              : "Escolher endereço",
+        };
+      });
     }
-    reload();
+    const refresh = () => {
+      void reload();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    refresh();
+    window.addEventListener(DATA_UPDATED_EVENT, refresh);
+    window.addEventListener(PROFILE_UPDATED_EVENT, refresh);
+    window.addEventListener("focus", refresh);
+    window.addEventListener("online", refresh);
+    window.addEventListener("pageshow", refresh);
+    document.addEventListener("visibilitychange", onVisible);
     const ch = supabase
       .channel(`cart-count-${user.id}`)
       .on(
@@ -66,9 +99,20 @@ export function ClienteShell({ user }: Ctx) {
         { event: "*", schema: "public", table: "cart_items", filter: `user_id=eq.${user.id}` },
         reload,
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "addresses", filter: `user_id=eq.${user.id}` },
+        refresh,
+      )
       .subscribe();
     return () => {
       alive = false;
+      window.removeEventListener(DATA_UPDATED_EVENT, refresh);
+      window.removeEventListener(PROFILE_UPDATED_EVENT, refresh);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("online", refresh);
+      window.removeEventListener("pageshow", refresh);
+      document.removeEventListener("visibilitychange", onVisible);
       supabase.removeChannel(ch);
     };
   }, [user.id]);

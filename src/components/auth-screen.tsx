@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { safeReturnPath } from "@/lib/customer-access";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -15,9 +15,21 @@ import { PasswordStrength } from "@/components/ui/password-strength";
 import { senhaForteSchema } from "@/lib/password-strength";
 import type { AuthSearch } from "@/lib/auth-search";
 import type { PerfilApp } from "@/lib/app-profiles";
+import {
+  authEmailSchema,
+  confirmationRedirectUrl,
+  resendSignupConfirmation,
+} from "@/lib/auth-confirmation";
 
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const perfilInfo: Record<
   "cliente" | "estabelecimento" | "entregador",
@@ -40,7 +52,7 @@ const perfilInfo: Record<
   },
 };
 
-const emailSchema = z.string().trim().email({ message: "Email inválido" }).max(255);
+const emailSchema = authEmailSchema;
 const senhaSchema = z
   .string()
   .min(6, { message: "A senha deve ter pelo menos 6 caracteres" })
@@ -69,46 +81,46 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [emailSalvo, setEmailSalvo] = useState("");
-  const [resendSeconds, setResendSeconds] = useState(0);
-  const [modo, setModo] = useState<"form" | "confirmar-email" | "recuperar" | "link-enviado">(
-    "form",
-  );
+  const resendPending = useRef(false);
+  const [modo, setModo] = useState<
+    "form" | "confirmar-email" | "recuperar" | "link-enviado" | "acessar-conta"
+  >("form");
 
-  const confirmationUrl = () =>
-    `${window.location.origin}/auth?perfil=${perfil}&confirmado=1${returnPath ? `&redirect=${encodeURIComponent(returnPath)}` : ""}`;
+  const confirmationUrl = () => confirmationRedirectUrl(window.location.origin, perfil, returnPath);
 
-  useEffect(() => {
-    if (resendSeconds <= 0) return;
-    const timer = window.setTimeout(() => setResendSeconds((seconds) => seconds - 1), 1000);
-    return () => window.clearTimeout(timer);
-  }, [resendSeconds]);
+  function offerAccountAccess(email: string) {
+    setEmailSalvo(email);
+    setSenhaCad("");
+    setTab("login");
+    setModo("acessar-conta");
+  }
 
   async function handleReenviar() {
     const email = emailSchema.safeParse(emailSalvo);
-    if (!email.success || loading || resendSeconds > 0) return;
+    if (!email.success) {
+      toast.error(email.error.issues[0]?.message ?? "Confira o e-mail do cadastro.");
+      return;
+    }
+    if (resendPending.current || loading) return;
+    resendPending.current = true;
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email: email.data,
-        options: { emailRedirectTo: confirmationUrl() },
-      });
-      if (error) {
-        if (error.status === 429) {
-          setResendSeconds(60);
-          toast.error("Aguarde um minuto antes de solicitar outro e-mail.");
-        } else {
-          toast.error("Não foi possível reenviar a confirmação. Tente novamente mais tarde.");
-        }
-        return;
-      }
-      setResendSeconds(60);
+      await resendSignupConfirmation(
+        supabase.auth,
+        email.data,
+        window.location.origin,
+        perfil,
+        returnPath,
+      );
       toast.success(
         "Solicitação recebida. Confira a caixa de entrada e o spam. Se já confirmou, entre com sua senha.",
       );
-    } catch {
-      toast.error("Não foi possível conectar. Confira sua internet e tente novamente.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível reenviar a confirmação.",
+      );
     } finally {
+      resendPending.current = false;
       setLoading(false);
     }
   }
@@ -255,7 +267,8 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
         },
       });
       if (error) {
-        toast.error(error.message);
+        if (error.code === "user_already_exists") offerAccountAccess(parsed.data.email);
+        else toast.error(error.message);
         return;
       }
       try {
@@ -269,7 +282,12 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
         finishLogin();
         return;
       }
-      setResendSeconds(60);
+      // Never treat the provider's obfuscated duplicate response as a new account
+      // awaiting mail. It proves no identity and grants no session or app role.
+      if (Array.isArray(data.user?.identities) && data.user.identities.length === 0) {
+        offerAccountAccess(parsed.data.email);
+        return;
+      }
       setModo("confirmar-email");
     } catch {
       toast.error("Não foi possível conectar. Confira sua internet e tente novamente.");
@@ -395,17 +413,26 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
                 Não recebeu? Verifique a caixa de spam e confira se digitou o e-mail corretamente.
               </p>
               {modo === "confirmar-email" && (
-                <Button
-                  className="w-full"
-                  disabled={loading || resendSeconds > 0}
-                  onClick={() => void handleReenviar()}
-                >
-                  {loading
-                    ? "Solicitando..."
-                    : resendSeconds > 0
-                      ? `Reenviar em ${resendSeconds}s`
-                      : "Reenviar confirmação"}
-                </Button>
+                <>
+                  <Button
+                    className="w-full"
+                    disabled={loading}
+                    onClick={() => void handleReenviar()}
+                  >
+                    {loading ? "Solicitando..." : "Reenviar confirmação"}
+                  </Button>
+                  <Button
+                    className="w-full"
+                    variant="ghost"
+                    disabled={loading}
+                    onClick={() => {
+                      setModo("form");
+                      setTab("cadastro");
+                    }}
+                  >
+                    Corrigir e-mail e refazer cadastro
+                  </Button>
+                </>
               )}
               <Button
                 variant="outline"
@@ -532,6 +559,8 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
                       id="email-cad"
                       name="email"
                       type="email"
+                      defaultValue={emailSalvo}
+                      key={emailSalvo}
                       autoComplete="email"
                       required
                       placeholder="voce@exemplo.com"
@@ -566,6 +595,56 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
             </Tabs>
           )}
         </div>
+
+        {modo === "acessar-conta" && (
+          <Dialog
+            open
+            onOpenChange={(open) => {
+              if (!open) setModo("form");
+            }}
+          >
+            <DialogContent
+              className={`${themeClass} max-w-sm`}
+              onCloseAutoFocus={(event) => {
+                event.preventDefault();
+                const field = ["email-rec", "email-cad", "senha"]
+                  .map((id) => document.getElementById(id))
+                  .find((element) => element && element.getClientRects().length > 0);
+                field?.focus();
+              }}
+            >
+              <DialogHeader>
+                <DialogTitle>Use sua conta PedeTrem</DialogTitle>
+                <DialogDescription>
+                  Se você já cadastrou <span className="break-all font-semibold">{emailSalvo}</span>{" "}
+                  no aplicativo de Cliente ou em outro aplicativo PedeTrem, pode entrar aqui com o
+                  mesmo e-mail e senha.
+                </DialogDescription>
+              </DialogHeader>
+              <p className="text-sm text-muted-foreground">
+                Um e-mail já confirmado não precisa de outra confirmação. A senha digitada nesta
+                tentativa de cadastro não substitui sua senha anterior.
+              </p>
+              <Button className="w-full" onClick={() => setModo("form")}>
+                Entrar com minha conta
+              </Button>
+              <Button className="w-full" variant="outline" onClick={() => setModo("recuperar")}>
+                Esqueci minha senha
+              </Button>
+              <Button
+                className="w-full"
+                variant="ghost"
+                onClick={() => {
+                  setEmailSalvo("");
+                  setTab("cadastro");
+                  setModo("form");
+                }}
+              >
+                Cadastrar com outro e-mail
+              </Button>
+            </DialogContent>
+          </Dialog>
+        )}
 
         <div className="flex-1" />
       </div>

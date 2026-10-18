@@ -23,11 +23,11 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
   const [ios, setIos] = useState(false);
   const [android, setAndroid] = useState(false);
   const [openChrome, setOpenChrome] = useState(false);
-  const [preparing, setPreparing] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [help, setHelp] = useState(false);
   const [busy, setBusy] = useState(false);
   const requesting = useRef(false);
+  const inviteShown = useRef(false);
   const { instalado, evidence, revalidar } = useAppInstalado(perfilAtual);
   useEffect(() => {
     setIos(
@@ -48,22 +48,17 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
   useEffect(() => {
     // Dismissal applies only to this visit. Always offer again on the next login visit.
     // This is our invitation; native prompts still require the matching install document.
-    if (instalado || (android && !canPrompt && !openChrome)) return;
+    if (instalado || inviteShown.current) return;
     const timer = window.setTimeout(() => {
-      if (!requesting.current && !document.querySelector('[role="dialog"][data-state="open"]'))
+      if (!requesting.current && !document.querySelector('[role="dialog"][data-state="open"]')) {
+        inviteShown.current = true;
         setInvite(true);
+      }
     }, 1500);
     return () => window.clearTimeout(timer);
   }, [perfilAtual, instalado, android, canPrompt, openChrome]);
-  useEffect(() => {
-    if (!preparing) return;
-    const timer = window.setTimeout(() => {
-      setPreparing(false);
-      setStatusMessage("O navegador ainda não liberou a instalação. Tente novamente.");
-    }, 45000);
-    return () => window.clearTimeout(timer);
-  }, [preparing]);
   const dismissInvite = () => {
+    inviteShown.current = true;
     setInvite(false);
   };
   useEffect(() => {
@@ -76,7 +71,6 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
       const ready = !!getInstallPrompt(perfilAtual);
       setCanPrompt(ready);
       if (ready) {
-        setPreparing(false);
         setStatusMessage(null);
         setOpenChrome(false);
       }
@@ -84,7 +78,6 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
     const onInstalled = () => {
       if (!isProfileInstallDocument(perfilAtual)) return;
       setCanPrompt(false);
-      setPreparing(false);
       setStatusMessage(null);
       setHelp(false);
       setInvite(false);
@@ -99,6 +92,7 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
   }, [perfilAtual]);
   async function install() {
     if (requesting.current) return;
+    inviteShown.current = true;
     setInvite(false);
     if (openChrome) {
       window.location.assign(chromeInstallUrl(perfilAtual));
@@ -111,16 +105,11 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
     const offer = takeInstallPrompt(perfilAtual);
     setCanPrompt(false);
     if (!offer) {
-      if (android) {
-        setPreparing(true);
-        setStatusMessage("Preparando instalação no Android…");
-        void revalidar();
-      } else {
-        setHelp(true);
-      }
+      setHelp(true);
+      void revalidar();
       return;
     }
-    setPreparing(false);
+    setHelp(false);
     setStatusMessage(null);
     setBusy(true);
     requesting.current = true;
@@ -131,7 +120,7 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
       await revalidar();
     } catch {
       if (android) setStatusMessage("Não foi possível abrir a instalação. Tente novamente.");
-      else setHelp(true);
+      setHelp(true);
       setCanPrompt(!!getInstallPrompt(perfilAtual));
     } finally {
       setBusy(false);
@@ -147,7 +136,6 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
         busy={busy}
         nativeReady={canPrompt}
         android={android}
-        preparing={preparing}
         openChrome={openChrome}
         statusMessage={statusMessage}
         onInstall={() => void install()}
@@ -182,7 +170,7 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
           <Button disabled={busy} onClick={() => void install()}>
             {openChrome
               ? "Abrir no Chrome"
-              : ios
+              : !canPrompt
                 ? "Ver instruções de instalação"
                 : "Instalar aplicativo"}
           </Button>
@@ -191,7 +179,7 @@ export function AppDownloadLinks({ perfilAtual = "cliente" }: { perfilAtual?: Pe
           </Button>
         </DialogContent>
       </Dialog>
-      <Dialog open={help && !android && !instalado} onOpenChange={setHelp}>
+      <Dialog open={help && !instalado} onOpenChange={setHelp}>
         <DialogContent className={app.theme}>
           <DialogHeader>
             <DialogTitle>Instalar {app.name}</DialogTitle>

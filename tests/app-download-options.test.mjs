@@ -40,7 +40,7 @@ test("each role offers only its own app and hides the whole bar when installed",
   }
 });
 
-test("Android preparation stays in the bar and the ready installer remains clickable", () => {
+test("Android without a native offer keeps useful guidance clickable; ready offers install directly", () => {
   for (const current of Object.keys(APP_PROFILES)) {
     const render = (state) =>
       renderToStaticMarkup(
@@ -53,21 +53,14 @@ test("Android preparation stays in the bar and the ready installer remains click
           ...state,
         }),
       );
-    const preparing = render({
-      preparing: true,
-      nativeReady: false,
-      statusMessage: "Preparando instalação no Android…",
-    });
-    assert.ok(preparing.includes('disabled=""'));
-    assert.match(preparing, /aria-busy="true"/);
-    assert.ok(!preparing.includes("instruções"));
-    assert.ok(!preparing.includes("Compartilhar"));
-    const ready = render({ preparing: false, nativeReady: true });
+    const ready = render({ nativeReady: true });
     assert.ok(!ready.includes('disabled=""'));
     assert.ok(ready.includes("Instalar"));
     assert.ok(!ready.includes("Preparando"));
     const unavailable = render({ nativeReady: false });
-    assert.ok(!unavailable.includes("Toque para ver como instalar"));
+    assert.ok(!unavailable.includes('disabled=""'));
+    assert.ok(unavailable.includes("Como instalar"));
+    assert.ok(unavailable.includes("opções de instalação no Chrome"));
   }
 });
 

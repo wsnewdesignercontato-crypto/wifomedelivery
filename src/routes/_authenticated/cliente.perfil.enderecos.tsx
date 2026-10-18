@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ChevronLeft, MapPin, Plus, Trash2, Star, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { notifyDataUpdated } from "@/lib/app-refresh";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { notifyDataUpdated } from "@/lib/app-refresh";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/enderecos")({
   validateSearch: (search: Record<string, unknown>): { checkout?: boolean; cupom?: string } => ({
@@ -45,6 +45,7 @@ function EnderecosPage() {
   const { user } = Route.useRouteContext() as { user: { id: string } };
   const [addrs, setAddrs] = useState<Addr[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [novo, setNovo] = useState({
     label: "Casa",
     rua: "",
@@ -57,12 +58,15 @@ function EnderecosPage() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("addresses")
         .select("*")
         .eq("user_id", user.id)
         .order("is_default", { ascending: false });
-      setAddrs((data ?? []) as Addr[]);
+      if (error) {
+        setLoadError(error.message);
+        toast.error(error.message);
+      } else setAddrs((data ?? []) as Addr[]);
       setLoading(false);
     })();
   }, [user.id]);
@@ -77,14 +81,14 @@ function EnderecosPage() {
       .insert({ user_id: user.id, ...novo, is_default: addrs.length === 0 })
       .select("*")
       .single();
-    if (error) {
-      toast.error(error.message);
+    if (error || !data) {
+      toast.error(error?.message ?? "O endereço não foi salvo. Tente novamente.");
       return;
     }
     setAddrs((prev) => [data as Addr, ...prev]);
     setNovo({ label: "Casa", rua: "", numero: "", bairro: "", cidade: "", estado: "", cep: "" });
     notifyDataUpdated();
-    toast.success("Endereço salvo no cadastro.");
+    toast.success("Endereço adicionado");
     if (checkout) navigate({ to: "/cliente/checkout", search: { cupom } });
   }
   async function delAddr(id: string) {
@@ -101,6 +105,13 @@ function EnderecosPage() {
     return (
       <div className="flex justify-center py-20">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  if (loadError)
+    return (
+      <div role="alert" className="space-y-3">
+        <p>{loadError}</p>
+        <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
       </div>
     );
 

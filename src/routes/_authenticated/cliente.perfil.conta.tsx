@@ -7,8 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { confirmProfileSaved, savedProfileMessage } from "@/lib/profile-completion";
 import { isCheckoutPhone } from "@/lib/customer-access";
+import { notifyDataUpdated } from "@/lib/app-refresh";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/conta")({
   validateSearch: (search: Record<string, unknown>): { checkout?: boolean; cupom?: string } => ({
@@ -38,6 +38,7 @@ function ContaPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [novaSenha, setNovaSenha] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -73,12 +74,16 @@ function ContaPage() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("id,nome,telefone,foto_url")
         .eq("id", user.id)
         .maybeSingle();
-      setProfile(data as Profile | null);
+      if (error || !data) {
+        const message = error?.message ?? "Não foi possível encontrar seu perfil. Tente novamente.";
+        setLoadError(message);
+        toast.error(message);
+      } else setProfile(data as Profile);
       setLoading(false);
     })();
   }, [user.id]);
@@ -87,30 +92,22 @@ function ContaPage() {
     if (!profile) return;
     if ((checkout || profile.telefone?.trim()) && !isCheckoutPhone(profile.telefone))
       return toast.error("Informe um telefone com DDD, entre 10 e 15 dígitos.");
-    if (!profile.nome.trim()) return toast.error("Informe seu nome.");
     setSaving(true);
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({
-          nome: profile.nome.trim(),
-          telefone: profile.telefone?.trim() || null,
-          foto_url: profile.foto_url,
-        })
-        .eq("id", user.id)
-        .select("id,nome,telefone,foto_url")
-        .single();
-      if (error || !data) throw error ?? new Error("Nenhum cadastro foi atualizado.");
-      setProfile(data);
-      const completion = await confirmProfileSaved(user.id, "cliente");
-      toast.success(savedProfileMessage(completion));
-      if (checkout) void navigate({ to: "/cliente/checkout", search: { cupom } });
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Não foi possível salvar e confirmar seus dados.",
-      );
-    } finally {
-      setSaving(false);
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ nome: profile.nome, telefone: profile.telefone, foto_url: profile.foto_url })
+      .eq("id", user.id)
+      .select("id,nome,telefone,foto_url")
+      .single();
+    setSaving(false);
+    if (error || !data) toast.error(error?.message ?? "O perfil não foi salvo. Tente novamente.");
+    else if (checkout && !isCheckoutPhone(data.telefone))
+      toast.error("O telefone não foi salvo. Confira os dados e tente novamente.");
+    else {
+      setProfile(data as Profile);
+      notifyDataUpdated();
+      toast.success("Perfil atualizado");
+      if (checkout) navigate({ to: "/cliente/checkout", search: { cupom } });
     }
   }
 
@@ -131,6 +128,13 @@ function ContaPage() {
     return (
       <div className="flex justify-center py-20">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  if (loadError)
+    return (
+      <div role="alert" className="space-y-3">
+        <p>{loadError}</p>
+        <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
       </div>
     );
 
