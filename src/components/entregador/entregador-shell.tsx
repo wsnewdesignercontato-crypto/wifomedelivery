@@ -24,7 +24,6 @@ import { IFomeLogo } from "@/components/ifome-logo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useMyCourier } from "@/hooks/use-courier";
-import { useNewRideAlert } from "@/hooks/use-new-ride-alert";
 import { NewRideOffer } from "@/components/entregador/new-ride-offer";
 import { toast } from "sonner";
 import { playBellChime } from "@/lib/notification-sound";
@@ -103,8 +102,6 @@ export function EntregadorShell({ children }: { children: React.ReactNode }) {
       supabase.removeChannel(ch);
     };
   }, [courier]);
-
-  useNewRideAlert(courier, true);
 
   if (isLoading) {
     return (

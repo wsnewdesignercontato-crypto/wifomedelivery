@@ -1,3 +1,4 @@
+import { OrderAcceptanceCountdown } from "@/components/order-acceptance-countdown";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -40,6 +41,7 @@ type Order = {
   total_cents: number;
   observacoes: string | null;
   cancellation_reason: string | null;
+  acceptance_deadline?: string | null;
   refund_status: string;
   refund_amount_cents: number;
   establishment_id: string;
@@ -363,6 +365,9 @@ function PedidoPage() {
           );
         })()}
 
+      {order.status === "placed" && (
+        <OrderAcceptanceCountdown deadline={order.acceptance_deadline} customer />
+      )}
       {order.status === "cancelled" ? (
         <div className="rounded-2xl border border-destructive/50 bg-destructive/5 p-4">
           <div className="flex items-center gap-2 text-destructive">

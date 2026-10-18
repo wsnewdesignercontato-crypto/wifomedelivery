@@ -1,3 +1,4 @@
+import { OrderAcceptanceCountdown } from "@/components/order-acceptance-countdown";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { PromoAnnouncement } from "@/components/promo-announcement";
 import {
@@ -107,7 +108,7 @@ function AppSidebar() {
 export function EstabShell({ estab }: { estab: Estab }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  useNewOrderAlert(estab.id);
+  const newOrders = useNewOrderAlert(estab.id);
 
   async function toggleOpen(v: boolean) {
     qc.setQueryData(["myEstab", estab.owner_id], { ...estab, is_open: v });
@@ -153,6 +154,28 @@ export function EstabShell({ estab }: { estab: Estab }) {
             </div>
           </header>
           <main className="flex-1 p-4 md:p-6">
+            {newOrders.pendingCount > 0 && (
+              <div
+                className="mb-4 space-y-2 rounded-2xl border border-primary/30 bg-primary/5 p-4"
+                role="status"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <strong>
+                    {newOrders.pendingCount}{" "}
+                    {newOrders.pendingCount === 1
+                      ? "pedido aguardando atendimento"
+                      : "pedidos aguardando atendimento"}
+                  </strong>
+                  <Link
+                    to="/estabelecimento/pedidos"
+                    className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+                  >
+                    Atender pedidos
+                  </Link>
+                </div>
+                <OrderAcceptanceCountdown deadline={newOrders.firstDeadline} />
+              </div>
+            )}
             <Outlet />
           </main>
           <PromoAnnouncement audience="estabelecimento" />

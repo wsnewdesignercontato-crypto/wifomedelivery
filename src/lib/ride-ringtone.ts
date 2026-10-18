@@ -26,7 +26,7 @@ function getCtx(): AudioContext | null {
       (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AC) return null;
     if (!ctx) ctx = new AC();
-    if (ctx.state === "suspended") void ctx.resume();
+    if (ctx.state === "suspended") void ctx.resume().catch(() => {});
     return ctx;
   } catch {
     return null;
@@ -72,12 +72,12 @@ function burst() {
     try {
       const osc = ac.createOscillator();
       const gain = ac.createGain();
-      osc.type = "square";
-      const base = i % 2 === 0 ? 980 : 1340;
+      osc.type = "triangle";
+      const base = [659, 784, 880, 784][i % 4];
       osc.frequency.setValueAtTime(base, now + t);
-      osc.frequency.linearRampToValueAtTime(base + 460, now + t + 0.11);
+      osc.frequency.linearRampToValueAtTime(base + 40, now + t + 0.11);
       gain.gain.setValueAtTime(0.0001, now + t);
-      gain.gain.exponentialRampToValueAtTime(0.95, now + t + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.28, now + t + 0.012);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.13);
       osc.connect(gain).connect(ac.destination);
       osc.start(now + t);
@@ -113,7 +113,7 @@ export function startRideRingtone() {
 }
 
 function resumeIfPlaying() {
-  if (loopTimer && ctx?.state === "suspended") void ctx.resume();
+  if (loopTimer && ctx?.state === "suspended") void ctx.resume().catch(() => {});
 }
 
 /** Para o toque imediatamente (corta inclusive bipes já agendados). */

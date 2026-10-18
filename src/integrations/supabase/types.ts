@@ -2006,6 +2006,7 @@ export type Database = {
       };
       orders: {
         Row: {
+          acceptance_deadline: string | null;
           cancellation_reason: string | null;
           cancelled_at: string | null;
           cancelled_by: string | null;
@@ -2049,6 +2050,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          acceptance_deadline?: string | null;
           cancellation_reason?: string | null;
           cancelled_at?: string | null;
           cancelled_by?: string | null;
@@ -2092,6 +2094,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          acceptance_deadline?: string | null;
           cancellation_reason?: string | null;
           cancelled_at?: string | null;
           cancelled_by?: string | null;

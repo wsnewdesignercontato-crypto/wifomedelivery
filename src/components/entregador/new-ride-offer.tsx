@@ -1,3 +1,4 @@
+import { bindResumeRefresh } from "@/lib/resume-refresh";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -152,9 +153,15 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
       return;
     }
     let cancelled = false;
+    let sequence = 0;
 
     async function evaluate() {
       if (cancelled || !courier) return;
+      const request = ++sequence;
+      const isCurrent = () => !cancelled && request === sequence;
+      const commitOffer = (value: Offer | null) => {
+        if (isCurrent()) setOffer(value);
+      };
 
       // Não mostra se já tem corrida ativa
       const { data: ativa } = await supabase
@@ -165,8 +172,8 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         .limit(1)
         .maybeSingle();
       if (ativa) {
-        stopRideRingtone();
-        setOffer(null);
+        if (isCurrent()) stopRideRingtone();
+        commitOffer(null);
         return;
       }
 
@@ -180,8 +187,8 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
 
       const candidato = (disp ?? []).find((d) => !dismissedIds.has(d.id));
       if (!candidato) {
-        stopRideRingtone();
-        setOffer(null);
+        if (isCurrent()) stopRideRingtone();
+        commitOffer(null);
         return;
       }
 
@@ -193,7 +200,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         .eq("id", candidato.order_id)
         .maybeSingle();
       if (!order) {
-        setOffer(null);
+        commitOffer(null);
         return;
       }
       const typedOrder = order as OfferOrder;
@@ -204,7 +211,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         .eq("id", typedOrder.establishment_id)
         .maybeSingle();
       if (!estab || estab.lat == null || estab.lng == null) {
-        setOffer(null);
+        commitOffer(null);
         return;
       }
       const typedEstab = estab as OfferEstablishment;
@@ -215,7 +222,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
           "[NewRideOffer] Estabelecimento com coordenadas fora do Brasil, ignorando oferta",
           typedEstab.id,
         );
-        setOffer(null);
+        commitOffer(null);
         return;
       }
 
@@ -256,12 +263,12 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
           estab: typedEstab.id,
           distanciaEntrega,
         });
-        setOffer(null);
+        commitOffer(null);
         return;
       }
 
       if (cancelled) return;
-      setOffer({
+      commitOffer({
         deliveryId: candidato.id,
         orderId: typedOrder.id,
         valorCents: candidato.valor_entrega_cents ?? 0,
@@ -307,12 +314,18 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         { event: "*", schema: "public", table: "deliveries" },
         scheduleEvaluate,
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") void evaluate();
+      });
 
-    // Fallback lento (60s) caso realtime caia
-    const t = setInterval(evaluate, 60000);
+    // Losing couriers may no longer receive the assigned row under RLS.
+    // Reconcile availability promptly even when that UPDATE is not visible.
+    const stopResume = bindResumeRefresh(evaluate);
+    const t = setInterval(evaluate, 4000);
     return () => {
       cancelled = true;
+      sequence++;
+      stopResume();
       if (debounceT) clearTimeout(debounceT);
       supabase.removeChannel(chBroadcast);
       clearInterval(t);

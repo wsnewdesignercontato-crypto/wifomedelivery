@@ -1,3 +1,4 @@
+import { OrderAcceptanceCountdown } from "@/components/order-acceptance-countdown";
 import { ORDER_SELECT } from "@/lib/data-access";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
@@ -58,6 +59,7 @@ type Order = {
   troco_para_cents: number | null;
   observacoes: string | null;
   created_at: string;
+  acceptance_deadline?: string | null;
   endereco_entrega: {
     rua?: string;
     numero?: string | null;
@@ -141,7 +143,7 @@ function PedidosPage() {
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id,cliente_id,status,total_cents,subtotal_cents,frete_cents,desconto_cents,forma_pagamento,troco_para_cents,observacoes,created_at,endereco_entrega,tipo_entrega,cancellation_reason,cancelled_role,refund_status,refund_amount_cents",
+        "id,cliente_id,status,acceptance_deadline,total_cents,subtotal_cents,frete_cents,desconto_cents,forma_pagamento,troco_para_cents,observacoes,created_at,endereco_entrega,tipo_entrega,cancellation_reason,cancelled_role,refund_status,refund_amount_cents",
       )
       .eq("establishment_id", estab.id)
       .order("created_at", { ascending: false })
@@ -204,13 +206,6 @@ function PedidosPage() {
             toast.info("Novo pedido recebido! 🔔", {
               description: "Confira a lista de pedidos.",
             });
-            // Tenta disparar o som de alerta
-            try {
-              const audio = new Audio("/siren.mp3");
-              audio.play();
-            } catch (e) {
-              console.warn("Autoplay bloqueado");
-            }
           } else {
             toast.info("Pedido atualizado");
           }
@@ -247,7 +242,10 @@ function PedidosPage() {
 
   async function mudarStatus(order: Order, novo: "accepted" | "preparing" | "ready") {
     const { error } = await supabase.from("orders").update({ status: novo }).eq("id", order.id);
-    if (error) return toast.error("Falha ao atualizar");
+    if (error) {
+      void reload();
+      return toast.error(error.message || "Falha ao atualizar");
+    }
     if (novo !== "ready") return toast.success("Status atualizado");
     if (order.tipo_entrega === "pickup") return toast.success("Pedido pronto para retirada");
     if (!estab) return toast.success("Pedido pronto");
@@ -475,6 +473,11 @@ function PedidosPage() {
                   </span>
                 </div>
 
+                {o.status === "placed" && (
+                  <div className="mt-3">
+                    <OrderAcceptanceCountdown deadline={o.acceptance_deadline} />
+                  </div>
+                )}
                 {/* Bloco cliente / endereço */}
                 <div className="mt-3 rounded-xl bg-muted/60 p-3 text-sm">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
