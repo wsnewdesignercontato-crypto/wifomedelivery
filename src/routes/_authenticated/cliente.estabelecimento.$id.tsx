@@ -1,3 +1,4 @@
+import { ProductPhotoGallery } from "@/components/product-photo-gallery";
 import { ProductDetails } from "@/components/product-details";
 import { productSummary, productSnapshotName } from "@/lib/product-details";
 import { ESTABLISHMENT_SELECT } from "@/lib/data-access";
@@ -47,6 +48,7 @@ type Produto = {
   nome: string;
   descricao: string | null;
   foto_url: string | null;
+  fotos_adicionais: string[];
   preco_cents: number;
   preco_promo_cents: number | null;
   disponivel: boolean;
@@ -157,7 +159,7 @@ function EstabelecimentoPage() {
         supabase
           .from("products")
           .select(
-            "id,nome,descricao,foto_url,preco_cents,preco_promo_cents,disponivel,menu_category_id,destaque",
+            "id,nome,descricao,foto_url,fotos_adicionais,preco_cents,preco_promo_cents,disponivel,menu_category_id,destaque",
           )
           .eq("establishment_id", id)
           .eq("disponivel", true)
@@ -610,13 +612,12 @@ function EstabelecimentoPage() {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0">
           {openProd && (
             <div className="flex flex-col">
-              {openProd.foto_url && (
-                <img
-                  src={openProd.foto_url}
-                  alt={openProd.nome}
-                  className="h-48 w-full object-cover"
-                />
-              )}
+              <ProductPhotoGallery
+                key={openProd.id}
+                name={openProd.nome}
+                main={openProd.foto_url}
+                extras={openProd.fotos_adicionais}
+              />
               <div className="space-y-4 p-5 pb-32">
                 <DialogHeader>
                   <DialogTitle className="text-xl">{openProd.nome}</DialogTitle>

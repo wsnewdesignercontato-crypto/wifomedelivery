@@ -54,7 +54,13 @@ export function ProductPhotoField({
   disabled,
   onChange,
   onBusy,
+  compact = false,
+  title = "Foto do produto",
+  optional = true,
 }: {
+  compact?: boolean;
+  title?: string;
+  optional?: boolean;
   url: string;
   file: File | null;
   disabled: boolean;
@@ -98,13 +104,25 @@ export function ProductPhotoField({
     }
   }
   return (
-    <section className="flex items-center gap-4 rounded-2xl border border-border bg-gradient-to-br from-muted/30 to-background p-4">
+    <section
+      className={
+        compact
+          ? "min-w-0 space-y-2"
+          : "flex items-center gap-4 rounded-2xl border border-border bg-gradient-to-br from-muted/30 to-background p-4"
+      }
+    >
       <button
         type="button"
-        aria-label={preview || url ? "Trocar foto do produto" : "Adicionar foto do produto"}
+        aria-label={
+          compact
+            ? `${preview || url ? "Trocar" : "Adicionar"} ${title.toLowerCase()}`
+            : preview || url
+              ? "Trocar foto do produto"
+              : "Adicionar foto do produto"
+        }
         disabled={disabled || busy}
         onClick={() => inputRef.current?.click()}
-        className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-primary/30 bg-background text-primary transition-colors hover:bg-primary/5 disabled:opacity-50"
+        className={`relative flex ${compact ? "aspect-square w-full" : "h-24 w-24 shrink-0"} items-center justify-center overflow-hidden rounded-xl border border-dashed border-primary/30 bg-background text-primary transition-colors hover:bg-primary/5 disabled:opacity-50`}
       >
         {busy ? (
           <Loader2 className="h-6 w-6 animate-spin" />
@@ -120,27 +138,51 @@ export function ProductPhotoField({
       </button>
       <div className="min-w-0 space-y-1.5">
         <p className="text-sm font-semibold">
-          Foto do produto <span className="font-normal text-muted-foreground">· opcional</span>
+          {title}{" "}
+          {optional && (
+            <span
+              className={
+                compact
+                  ? "block text-xs font-normal text-muted-foreground"
+                  : "font-normal text-muted-foreground"
+              }
+            >
+              {" "}
+              {compact ? "Opcional" : "· opcional"}
+            </span>
+          )}
         </p>
-        <p id={id + "-help"} className="text-xs leading-relaxed text-muted-foreground">
+        <p
+          id={id + "-help"}
+          className={compact ? "sr-only" : "text-xs leading-relaxed text-muted-foreground"}
+        >
           1.000 × 1.000 px · JPG, PNG ou WebP · até 5 MB
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
             size="sm"
+            className={compact ? "h-8 w-full px-1 text-xs" : undefined}
             variant="outline"
             disabled={disabled || busy}
             onClick={() => inputRef.current?.click()}
           >
-            {busy ? "Preparando..." : preview || url ? "Trocar foto" : "Escolher foto"}
+            {busy
+              ? "Preparando..."
+              : compact
+                ? preview || url
+                  ? "Trocar"
+                  : "Adicionar"
+                : preview || url
+                  ? "Trocar foto"
+                  : "Escolher foto"}
           </Button>
           {(file || url) && (
             <Button
               type="button"
               size="icon"
               variant="ghost"
-              aria-label="Remover foto"
+              aria-label={compact ? `Remover ${title.toLowerCase()}` : "Remover foto"}
               disabled={disabled || busy}
               onClick={() => onChange(null, true)}
             >
@@ -160,7 +202,7 @@ export function ProductPhotoField({
         type="file"
         accept="image/jpeg,image/png,image/webp"
         className="sr-only"
-        aria-label="Arquivo da foto do produto"
+        aria-label={compact ? `Arquivo: ${title}` : "Arquivo da foto do produto"}
         aria-describedby={id + "-help"}
         disabled={disabled || busy}
         onChange={(event) => {

@@ -8,6 +8,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ProductAddonSelector } from "@/components/product-addon-selector";
 import type { CatalogAddonGroup } from "@/lib/catalog-selection";
+import { productPhotos } from "@/lib/product-photos";
 import { ProductPhotoField } from "@/components/product-photo-field";
 import { ProductCategoryPicker } from "@/components/product-category-picker";
 import { priceInCents } from "@/lib/product-configuration";
@@ -60,6 +61,7 @@ type Produto = {
   preco_cents: number;
   preco_promo_cents?: number | null;
   foto_url: string | null;
+  fotos_adicionais: string[];
   disponivel: boolean;
   estoque?: number | null;
   menu_category_id?: string | null;
@@ -84,7 +86,7 @@ function ProdutosPage() {
         supabase
           .from("products")
           .select(
-            "id,nome,descricao,preco_cents,preco_promo_cents,foto_url,disponivel,estoque,menu_category_id,tempo_preparo_min",
+            "id,nome,descricao,preco_cents,preco_promo_cents,foto_url,fotos_adicionais,disponivel,estoque,menu_category_id,tempo_preparo_min",
           )
           .eq("establishment_id", estabId)
           .order("created_at", { ascending: false }),
@@ -131,6 +133,7 @@ function ProdutosPage() {
       preco_cents: p.preco_cents,
       preco_promo_cents: p.preco_promo_cents,
       foto_url: p.foto_url,
+      fotos_adicionais: p.fotos_adicionais,
       disponivel: false,
       menu_category_id: p.menu_category_id,
       estoque: p.estoque,
@@ -354,8 +357,12 @@ function ProdutoForm({
   const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
   const [variants, setVariants] = useState<Variant[]>([]);
   const [saving, setSaving] = useState(false);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoFiles, setPhotoFiles] = useState<(File | null)[]>([null, null, null]);
+  const [photoUrls, setPhotoUrls] = useState<string[]>(
+    [produto?.foto_url ?? "", ...(produto?.fotos_adicionais ?? []), "", ""].slice(0, 3),
+  );
+  const [busyPhotos, setBusyPhotos] = useState<boolean[]>([false, false, false]);
+  const photoBusy = busyPhotos.some(Boolean);
   const [configLoading, setConfigLoading] = useState(!!produto);
   const [configError, setConfigError] = useState(false);
 
@@ -425,7 +432,7 @@ function ProdutoForm({
     if (!form.nome.trim() || !form.menu_category_id)
       return toast.error("Informe o nome e escolha uma categoria.");
     setSaving(true);
-    let uploadedPhoto: string | null = null;
+    let uploadedPhotos: string[] = [];
     try {
       const price = priceInCents(form.preco);
       const promo = form.preco_promo.trim() ? priceInCents(form.preco_promo) : null;
@@ -439,23 +446,28 @@ function ProdutoForm({
       )
         throw new Error("Estoque e tempo de preparo devem ser números inteiros positivos ou zero.");
       const description = writeProductDetails(form.descricao, extras, fields);
-      let photoUrl = form.foto_url;
-      if (photoFile) {
+      const urls = [...photoUrls];
+      for (let index = 0; index < 3; index++) {
+        const file = photoFiles[index];
+        if (!file) continue;
         const path = `${estab.id}/${crypto.randomUUID()}.jpg`;
         const upload = await supabase.storage
           .from("product-photos")
-          .upload(path, photoFile, { contentType: "image/jpeg", upsert: false });
-        if (upload.error) throw new Error("Não foi possível enviar a foto. Tente novamente.");
-        uploadedPhoto = path;
-        photoUrl = supabase.storage.from("product-photos").getPublicUrl(path).data.publicUrl;
+          .upload(path, file, { contentType: "image/jpeg", upsert: false });
+        if (upload.error)
+          throw new Error("Não foi possível enviar a foto " + (index + 1) + ". Tente novamente.");
+        uploadedPhotos.push(path);
+        urls[index] = supabase.storage.from("product-photos").getPublicUrl(path).data.publicUrl;
       }
+      const photos = productPhotos(urls[0], urls.slice(1));
       const payload = {
         establishment_id: estab.id,
         nome: form.nome.trim(),
         descricao: description || null,
         preco_cents: price,
         preco_promo_cents: promo,
-        foto_url: photoUrl || null,
+        foto_url: photos[0] || null,
+        fotos_adicionais: photos.slice(1),
         menu_category_id: form.menu_category_id,
         estoque: stock,
         tempo_preparo_min: time,
@@ -469,13 +481,13 @@ function ProdutoForm({
         p_variant_changes: variants as unknown as Json,
       });
       if (error || !data) throw new Error(error?.message ?? "O banco não confirmou o salvamento.");
-      uploadedPhoto = null;
-      toast.success("Produto, foto, categoria e adicionais salvos.");
+      uploadedPhotos = [];
+      toast.success("Produto, fotos, categoria e adicionais salvos.");
       onSaved();
     } catch (error) {
-      if (uploadedPhoto) {
+      if (uploadedPhotos.length) {
         try {
-          await supabase.storage.from("product-photos").remove([uploadedPhoto]);
+          await supabase.storage.from("product-photos").remove(uploadedPhotos);
         } catch {
           /* Preserve the original save error. */
         }
@@ -488,16 +500,41 @@ function ProdutoForm({
 
   return (
     <div className="space-y-4">
-      <ProductPhotoField
-        url={form.foto_url}
-        file={photoFile}
-        disabled={saving}
-        onBusy={setPhotoBusy}
-        onChange={(file, remove) => {
-          setPhotoFile(file);
-          if (remove) setForm((previous) => ({ ...previous, foto_url: "" }));
-        }}
-      />
+      <section className="space-y-3 rounded-2xl border border-border bg-gradient-to-br from-muted/30 to-background p-4">
+        <div>
+          <h3 className="text-sm font-semibold">Fotos do produto</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Até 3 fotos · 1.000 × 1.000 px · JPG, PNG ou WebP · até 5 MB cada
+          </p>
+        </div>
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          {[0, 1, 2].map((index) => (
+            <ProductPhotoField
+              key={index}
+              compact
+              title={index === 0 ? "Principal" : `Foto ${index + 1}`}
+              optional={index !== 0}
+              url={photoUrls[index]}
+              file={photoFiles[index]}
+              disabled={saving}
+              onBusy={(busy) =>
+                setBusyPhotos((previous) =>
+                  previous.map((value, i) => (i === index ? busy : value)),
+                )
+              }
+              onChange={(file, remove) => {
+                setPhotoFiles((previous) =>
+                  previous.map((value, i) => (i === index ? file : value)),
+                );
+                if (remove)
+                  setPhotoUrls((previous) =>
+                    previous.map((value, i) => (i === index ? "" : value)),
+                  );
+              }}
+            />
+          ))}
+        </div>
+      </section>
       <section className="space-y-4 rounded-2xl border border-border bg-card p-4">
         <h3 className="text-sm font-semibold">Informações do produto</h3>
         <div className="space-y-1.5">

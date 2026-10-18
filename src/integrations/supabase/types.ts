@@ -2418,6 +2418,7 @@ export type Database = {
           establishment_id: string;
           estoque: number | null;
           foto_url: string | null;
+          fotos_adicionais: string[];
           id: string;
           menu_category_id: string | null;
           nome: string;
@@ -2435,6 +2436,7 @@ export type Database = {
           establishment_id: string;
           estoque?: number | null;
           foto_url?: string | null;
+          fotos_adicionais?: string[];
           id?: string;
           menu_category_id?: string | null;
           nome: string;
@@ -2452,6 +2454,7 @@ export type Database = {
           establishment_id?: string;
           estoque?: number | null;
           foto_url?: string | null;
+          fotos_adicionais?: string[];
           id?: string;
           menu_category_id?: string | null;
           nome?: string;
