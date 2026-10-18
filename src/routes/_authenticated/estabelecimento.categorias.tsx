@@ -1,3 +1,4 @@
+import { ProductCategoryPicker } from "@/components/product-category-picker";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -30,6 +31,7 @@ function CategoriasPage() {
   const estabId = estab?.id;
   const [cats, setCats] = useState<Cat[]>([]);
   const [nome, setNome] = useState("");
+  const [selected, setSelected] = useState("");
 
   const reload = useCallback(async () => {
     if (!estabId) return;
@@ -75,6 +77,22 @@ function CategoriasPage() {
   return (
     <div className="space-y-4 max-w-2xl">
       <h1 className="text-2xl font-black tracking-tight">Categorias do cardápio</h1>
+      {estabId && (
+        <div className="rounded-2xl border border-border bg-card p-4 space-y-2">
+          <h2 className="font-semibold">Catálogo de categorias</h2>
+          <p className="text-sm text-muted-foreground">
+            Alimentação, bebidas, mercado, farmácia, floricultura e outros segmentos. Escolha apenas
+            o que sua loja vende.
+          </p>
+          <ProductCategoryPicker
+            establishmentId={estabId}
+            categories={cats}
+            value={selected}
+            onChange={setSelected}
+            onCreated={() => void reload()}
+          />
+        </div>
+      )}
       <div className="flex gap-2">
         <Input
           placeholder="Nova categoria (ex: Pizzas)"

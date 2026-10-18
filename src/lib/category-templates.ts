@@ -1,3 +1,4 @@
+import { catalogCategoryKind, normalizedCategory } from "./product-category-catalog.ts";
 // Templates de configuração por tipo de categoria.
 // A "categoria" da loja (nome da menu_category) determina quais campos e
 // grupos de complementos fazem sentido — bebida pede volume/embalagem,
@@ -39,6 +40,27 @@ const KEYWORDS: Array<[CategoryKind, RegExp]> = [
 
 export function getCategoryKind(name?: string | null): CategoryKind {
   if (!name) return "outro";
+  const preset = catalogCategoryKind(name);
+  if (preset) return preset;
+  name = normalizedCategory(name).replace(
+    /(refrigerantes|bebidas|sucos|cervejas|vinhos|energeticos|salgados|marmitas|sobremesas|hamburgueres|hamburguer|sanduiches|pasteis)\b/g,
+    (word) =>
+      ({
+        refrigerantes: "refrigerante",
+        bebidas: "bebida",
+        sucos: "suco",
+        cervejas: "cerveja",
+        vinhos: "vinho",
+        energeticos: "energetico",
+        salgados: "salgado",
+        marmitas: "marmita",
+        sobremesas: "sobremesa",
+        hamburgueres: "burger",
+        hamburguer: "burger",
+        sanduiches: "sanduiche",
+        pasteis: "pastel",
+      })[word] ?? word,
+  );
   for (const [kind, rx] of KEYWORDS) if (rx.test(name)) return kind;
   return "outro";
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { PartyPopper, ArrowRight, CheckCircle2, AlertCircle } from "lucide-react";
 import { WifomeLoader } from "@/components/wifome-loader";
@@ -54,44 +54,57 @@ export function OnboardingGate({
 }) {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const requestSequence = useRef(0);
   const [state, setState] = useState<{
     loading: boolean;
     complete: boolean;
     missing: string[];
     redirect: string;
+    error?: string;
   }>({ loading: true, complete: false, missing: [], redirect: "/" });
 
   async function check(ensureMinLoader = false) {
+    const requestId = ++requestSequence.current;
     const startedAt = ensureMinLoader ? Date.now() : 0;
-    const { data, error } = await supabase.rpc("check_profile_complete", {
-      _user_id: userId,
-      _role: role,
-    });
-    if (ensureMinLoader) {
-      const elapsed = Date.now() - startedAt;
-      const remaining = MIN_LOADER_MS - elapsed;
-      if (remaining > 0) {
-        await new Promise((resolve) => window.setTimeout(resolve, remaining));
+    try {
+      const { data, error } = await supabase.rpc("check_profile_complete", {
+        _user_id: userId,
+        _role: role,
+      });
+      if (ensureMinLoader) {
+        const elapsed = Date.now() - startedAt;
+        const remaining = MIN_LOADER_MS - elapsed;
+        if (remaining > 0) {
+          await new Promise((resolve) => window.setTimeout(resolve, remaining));
+        }
       }
+      if (requestId !== requestSequence.current) return;
+      if (error) throw error;
+      const d = (data ?? {}) as { complete?: boolean; missing?: string[]; redirect?: string };
+      if (typeof d.complete !== "boolean" || !Array.isArray(d.missing))
+        throw new Error("Resposta inválida");
+      setState((prev) => {
+        const nowComplete = !!d.complete;
+        if (nowComplete && !prev.complete && !prev.loading) {
+          toast.success("Cadastro completo! App liberado 🎉");
+        }
+        return {
+          loading: false,
+          complete: nowComplete,
+          missing: Array.isArray(d.missing) ? d.missing : [],
+          redirect: d.redirect ?? "/",
+        };
+      });
+    } catch {
+      if (requestId === requestSequence.current)
+        setState({
+          loading: false,
+          complete: false,
+          missing: [],
+          redirect: "/",
+          error: "Não foi possível verificar seus dados salvos.",
+        });
     }
-    if (error) {
-      // Em erro, libera para não travar o app
-      setState({ loading: false, complete: true, missing: [], redirect: "/" });
-      return;
-    }
-    const d = (data ?? {}) as { complete?: boolean; missing?: string[]; redirect?: string };
-    setState((prev) => {
-      const nowComplete = !!d.complete;
-      if (nowComplete && !prev.complete && !prev.loading) {
-        toast.success("Cadastro completo! App liberado 🎉");
-      }
-      return {
-        loading: false,
-        complete: nowComplete,
-        missing: Array.isArray(d.missing) ? d.missing : [],
-        redirect: d.redirect ?? "/",
-      };
-    });
   }
 
   useEffect(() => {
@@ -152,6 +165,7 @@ export function OnboardingGate({
       .subscribe();
 
     return () => {
+      requestSequence.current++;
       window.removeEventListener("focus", onFocus);
       window.removeEventListener(PROFILE_UPDATED_EVENT, onProfileUpdated);
       window.removeEventListener(DATA_UPDATED_EVENT, onProfileUpdated);
@@ -217,6 +231,14 @@ export function OnboardingGate({
     ONBOARDING_ALLOWED[role].some((p) => pathname === p || pathname.startsWith(p + "/"));
 
   if (state.complete || isOnAllowedPath) return <>{children}</>;
+
+  if (state.error)
+    return (
+      <div className="mx-auto max-w-md space-y-4 p-6 text-center" role="alert">
+        <p>{state.error} Confira sua conexão e tente novamente.</p>
+        <Button onClick={() => void check()}>Verificar novamente</Button>
+      </div>
+    );
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-gradient-to-br from-background via-background to-primary/10 p-4">

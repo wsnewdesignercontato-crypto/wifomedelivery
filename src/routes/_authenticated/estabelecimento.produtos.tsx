@@ -1,3 +1,8 @@
+import { ProductPhotoField } from "@/components/product-photo-field";
+import { ProductCategoryPicker } from "@/components/product-category-picker";
+import { ProductAddonDrafts, addonDraft, type AddonDraft } from "@/components/product-addon-drafts";
+import { priceInCents, validateAddonDrafts } from "@/lib/product-configuration";
+import type { Json } from "@/integrations/supabase/types";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -75,26 +80,35 @@ function ProdutosPage() {
   const estabId = estab?.id;
   const reload = useCallback(async () => {
     if (!estabId) return;
-    const { data } = await supabase
-      .from("products")
-      .select(
-        "id,nome,descricao,preco_cents,preco_promo_cents,foto_url,disponivel,estoque,menu_category_id,tempo_preparo_min",
-      )
-      .eq("establishment_id", estabId)
-      .order("created_at", { ascending: false });
-    setProdutos((data ?? []) as Produto[]);
-    const { data: c } = await supabase
-      .from("menu_categories")
-      .select("id,nome")
-      .eq("establishment_id", estabId)
-      .order("ordem");
-    setCats((c ?? []) as Categoria[]);
-    const { data: ag } = await supabase
-      .from("addon_groups")
-      .select("id,nome")
-      .eq("establishment_id", estabId)
-      .order("nome");
-    setAddonGroups((ag ?? []) as { id: string; nome: string }[]);
+    try {
+      const [products, categories, groups] = await Promise.all([
+        supabase
+          .from("products")
+          .select(
+            "id,nome,descricao,preco_cents,preco_promo_cents,foto_url,disponivel,estoque,menu_category_id,tempo_preparo_min",
+          )
+          .eq("establishment_id", estabId)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("menu_categories")
+          .select("id,nome")
+          .eq("establishment_id", estabId)
+          .order("ordem"),
+        supabase
+          .from("addon_groups")
+          .select("id,nome")
+          .eq("establishment_id", estabId)
+          .order("nome"),
+      ]);
+      if (products.error || categories.error || groups.error) throw new Error("catalog");
+      setProdutos(products.data ?? []);
+      setCats(categories.data ?? []);
+      setAddonGroups(groups.data ?? []);
+    } catch {
+      toast.error(
+        "Não foi possível atualizar o catálogo. Recarregue a página para tentar novamente.",
+      );
+    }
   }, [estabId]);
   useEffect(() => {
     reload();
@@ -156,6 +170,13 @@ function ProdutosPage() {
             <div className="p-6 pt-4 overflow-y-auto">
               <ProdutoForm
                 cats={cats}
+                onCategoryCreated={(category) =>
+                  setCats((previous) =>
+                    previous.some((item) => item.id === category.id)
+                      ? previous
+                      : [...previous, category],
+                  )
+                }
                 addonGroups={addonGroups}
                 onSaved={() => {
                   setOpenNew(false);
@@ -286,6 +307,13 @@ function ProdutosPage() {
             {editing && (
               <ProdutoForm
                 cats={cats}
+                onCategoryCreated={(category) =>
+                  setCats((previous) =>
+                    previous.some((item) => item.id === category.id)
+                      ? previous
+                      : [...previous, category],
+                  )
+                }
                 addonGroups={addonGroups}
                 produto={editing}
                 onSaved={() => {
@@ -313,11 +341,13 @@ type Variant = {
 
 function ProdutoForm({
   cats,
+  onCategoryCreated,
   addonGroups,
   produto,
   onSaved,
 }: {
   cats: Categoria[];
+  onCategoryCreated: (category: Categoria) => void;
   addonGroups: { id: string; nome: string }[];
   produto?: Produto;
   onSaved: () => void;
@@ -338,7 +368,11 @@ function ProdutoForm({
   const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
   const [variants, setVariants] = useState<Variant[]>([]);
   const [saving, setSaving] = useState(false);
-  const [applyingTpl, setApplyingTpl] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [draftGroups, setDraftGroups] = useState<AddonDraft[]>([]);
+  const [configLoading, setConfigLoading] = useState(!!produto);
+  const [configError, setConfigError] = useState(false);
 
   const catNome = cats.find((c) => c.id === form.menu_category_id)?.nome;
   const kind = getCategoryKind(catNome);
@@ -348,32 +382,50 @@ function ProdutoForm({
 
   useEffect(() => {
     if (!produto?.id) return;
-    supabase
-      .from("product_addon_groups")
-      .select("addon_group_id")
-      .eq("product_id", produto.id)
-      .then(({ data }) => {
-        setSelectedGroups(
-          new Set((data ?? []).map((r) => (r as { addon_group_id: string }).addon_group_id)),
-        );
-      });
-    supabase
-      .from("product_variants")
-      .select("id,nome,preco_cents,ativo,ordem")
-      .eq("product_id", produto.id)
-      .order("ordem")
-      .then(({ data }) => {
-        setVariants(((data ?? []) as Variant[]).map((v) => ({ ...v, _new: false })));
-      });
-    const m = /\[\[extras:([^\]]+)\]\]/.exec(produto.descricao ?? "");
-    if (m) {
-      const obj: Record<string, string> = {};
-      m[1].split(";").forEach((p) => {
-        const [k, ...rest] = p.split("=");
-        if (k && rest.length) obj[k.trim()] = rest.join("=").trim();
-      });
-      setExtras(obj);
-    }
+    let cancelled = false;
+    setConfigLoading(true);
+    void (async () => {
+      try {
+        const [groups, options] = await Promise.all([
+          supabase
+            .from("product_addon_groups")
+            .select("addon_group_id")
+            .eq("product_id", produto.id),
+          supabase
+            .from("product_variants")
+            .select("id,nome,preco_cents,ativo,ordem")
+            .eq("product_id", produto.id)
+            .order("ordem"),
+        ]);
+        if (groups.error || options.error) throw groups.error ?? options.error;
+        if (cancelled) return;
+        setSelectedGroups(new Set((groups.data ?? []).map((item) => item.addon_group_id)));
+        setVariants(((options.data ?? []) as Variant[]).map((item) => ({ ...item, _new: false })));
+        const match = /\[\[extras:([^\]]+)\]\]/.exec(produto.descricao ?? "");
+        if (match)
+          setExtras(
+            Object.fromEntries(
+              match[1].split(";").map((value) => {
+                const [key, ...rest] = value.split("=");
+                return [key.trim(), rest.join("=").trim()];
+              }),
+            ),
+          );
+        setConfigError(false);
+      } catch {
+        if (!cancelled) {
+          setConfigError(true);
+          toast.error(
+            "Não foi possível carregar adicionais e variações. Feche e abra o produto para tentar novamente.",
+          );
+        }
+      } finally {
+        if (!cancelled) setConfigLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [produto?.id, produto?.descricao]);
 
   function toggleGroup(id: string) {
@@ -385,45 +437,13 @@ function ProdutoForm({
     });
   }
 
-  async function aplicarTemplateComplementos() {
-    if (!estab) return;
-    if (!addonTpl.length) return toast.info("Sem template para esta categoria");
-    setApplyingTpl(true);
-    const newIds: string[] = [];
-    for (const tpl of addonTpl) {
-      const existing = addonGroups.find((g) => g.nome.toLowerCase() === tpl.nome.toLowerCase());
-      let gid = existing?.id;
-      if (!gid) {
-        const { data, error } = await supabase
-          .from("addon_groups")
-          .insert({
-            establishment_id: estab.id,
-            nome: tpl.nome,
-            obrigatorio: tpl.obrigatorio,
-            minimo: tpl.minimo,
-            maximo: tpl.maximo,
-          })
-          .select("id")
-          .single();
-        if (error || !data) continue;
-        gid = data.id;
-        const rows = tpl.itens.map((it, i) => ({
-          addon_group_id: gid!,
-          nome: it.nome,
-          preco_extra_cents: it.preco_extra_cents,
-          ordem: i,
-        }));
-        if (rows.length) await supabase.from("addons").insert(rows);
-      }
-      newIds.push(gid);
-    }
-    setSelectedGroups((prev) => {
-      const n = new Set(prev);
-      newIds.forEach((id) => n.add(id));
-      return n;
-    });
-    setApplyingTpl(false);
-    toast.success(`Template de ${KIND_LABEL[kind]} aplicado (${newIds.length} grupos)`);
+  function aplicarTemplateComplementos() {
+    const newDrafts = addonTpl
+      .filter((template) => !draftGroups.some((group) => group.nome === template.nome))
+      .map((template) => addonDraft(template));
+    if (!newDrafts.length) return toast.info("As sugestões já estão no formulário.");
+    setDraftGroups((previous) => [...previous, ...newDrafts]);
+    toast.info("Sugestões adicionadas. Revise os preços e as opções antes de salvar.");
   }
 
   function aplicarTemplateVariacoes() {
@@ -452,100 +472,104 @@ function ProdutoForm({
   }
 
   async function salvar() {
-    if (!estab || !form.nome.trim() || !form.preco) return toast.error("Nome e preço obrigatórios");
+    if (!estab || saving || photoBusy || configLoading || configError) return;
+    if (!form.nome.trim() || !form.menu_category_id)
+      return toast.error("Informe o nome e escolha uma categoria.");
     setSaving(true);
-    const descRaw = (form.descricao ?? "").replace(/\s*\[\[extras:[^\]]+\]\]\s*$/, "").trim();
-    const extraEntries = Object.entries(extras).filter(([, v]) => (v ?? "").trim() !== "");
-    const descFinal = extraEntries.length
-      ? `${descRaw}${descRaw ? "\n\n" : ""}[[extras:${extraEntries.map(([k, v]) => `${k}=${v.replace(/[;\]]/g, "")}`).join(";")}]]`
-      : descRaw;
-
-    const payload = {
-      establishment_id: estab.id,
-      nome: form.nome.trim(),
-      descricao: descFinal || null,
-      preco_cents: Math.round(parseFloat(form.preco) * 100),
-      preco_promo_cents: form.preco_promo ? Math.round(parseFloat(form.preco_promo) * 100) : null,
-      foto_url: form.foto_url || null,
-      menu_category_id: form.menu_category_id || null,
-      estoque: form.estoque ? parseInt(form.estoque) : null,
-      tempo_preparo_min: form.tempo ? parseInt(form.tempo) : null,
-      disponivel: form.disponivel,
-    };
-    let productId = produto?.id;
-    if (produto) {
-      const { error } = await supabase.from("products").update(payload).eq("id", produto.id);
-      if (error) {
-        setSaving(false);
-        return toast.error("Falha ao salvar");
+    let uploadedPhoto: string | null = null;
+    try {
+      const price = priceInCents(form.preco);
+      const promo = form.preco_promo.trim() ? priceInCents(form.preco_promo) : null;
+      if (promo !== null && promo > price)
+        throw new Error("O preço promocional não pode superar o preço base.");
+      const stock = form.estoque.trim() ? Number(form.estoque) : null;
+      const time = form.tempo.trim() ? Number(form.tempo) : null;
+      if (
+        (stock !== null && (!Number.isInteger(stock) || stock < 0)) ||
+        (time !== null && (!Number.isInteger(time) || time < 0))
+      )
+        throw new Error("Estoque e tempo de preparo devem ser números inteiros positivos ou zero.");
+      const newGroups = validateAddonDrafts(draftGroups);
+      const descRaw = form.descricao.replace(/\s*\[\[extras:[^\]]+\]\]\s*$/, "").trim();
+      const extraEntries = Object.entries(extras).filter(([, value]) => value.trim() !== "");
+      const description = extraEntries.length
+        ? `${descRaw}${descRaw ? "\n\n" : ""}[[extras:${extraEntries.map(([key, value]) => `${key}=${value.replace(/[;\]]/g, "")}`).join(";")}]]`
+        : descRaw;
+      let photoUrl = form.foto_url;
+      if (photoFile) {
+        const path = `${estab.id}/${crypto.randomUUID()}.jpg`;
+        const upload = await supabase.storage
+          .from("product-photos")
+          .upload(path, photoFile, { contentType: "image/jpeg", upsert: false });
+        if (upload.error) throw new Error("Não foi possível enviar a foto. Tente novamente.");
+        uploadedPhoto = path;
+        photoUrl = supabase.storage.from("product-photos").getPublicUrl(path).data.publicUrl;
       }
-    } else {
-      const { data, error } = await supabase.from("products").insert(payload).select("id").single();
-      if (error || !data) {
-        setSaving(false);
-        return toast.error("Falha ao salvar");
-      }
-      productId = data.id;
-    }
-    if (productId) {
-      await supabase.from("product_addon_groups").delete().eq("product_id", productId);
-      const rows = Array.from(selectedGroups).map((gid) => ({
-        product_id: productId!,
-        addon_group_id: gid,
-      }));
-      if (rows.length) await supabase.from("product_addon_groups").insert(rows);
-
-      for (const v of variants) {
-        if (v._deleted && v.id) {
-          await supabase.from("product_variants").delete().eq("id", v.id);
-        } else if (v._new && !v._deleted && v.nome.trim()) {
-          await supabase.from("product_variants").insert({
-            product_id: productId!,
-            nome: v.nome.trim(),
-            preco_cents: v.preco_cents,
-            ativo: v.ativo,
-            ordem: v.ordem,
-          });
-        } else if (v.id && !v._deleted) {
-          await supabase
-            .from("product_variants")
-            .update({
-              nome: v.nome.trim(),
-              preco_cents: v.preco_cents,
-              ativo: v.ativo,
-              ordem: v.ordem,
-            })
-            .eq("id", v.id);
+      const payload = {
+        establishment_id: estab.id,
+        nome: form.nome.trim(),
+        descricao: description || null,
+        preco_cents: price,
+        preco_promo_cents: promo,
+        foto_url: photoUrl || null,
+        menu_category_id: form.menu_category_id,
+        estoque: stock,
+        tempo_preparo_min: time,
+        disponivel: form.disponivel,
+      };
+      const { data, error } = await supabase.rpc("save_product_configuration", {
+        p_product_id: produto?.id ?? null,
+        p_product: payload,
+        p_group_ids: [...selectedGroups],
+        p_new_groups: newGroups,
+        p_variant_changes: variants as unknown as Json,
+      });
+      if (error || !data) throw new Error(error?.message ?? "O banco não confirmou o salvamento.");
+      uploadedPhoto = null;
+      toast.success("Produto, foto, categoria e adicionais salvos.");
+      onSaved();
+    } catch (error) {
+      if (uploadedPhoto) {
+        try {
+          await supabase.storage.from("product-photos").remove([uploadedPhoto]);
+        } catch {
+          /* Preserve the original save error. */
         }
       }
+      toast.error(error instanceof Error ? error.message : "Não foi possível salvar o produto.");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    toast.success("Produto salvo");
-    onSaved();
   }
 
   return (
     <div className="space-y-6">
+      <p className="rounded-xl bg-muted/50 p-3 text-sm text-muted-foreground">
+        Preencha o nome, escolha a categoria e informe o preço. Adicione uma foto e complementos se
+        precisar. Ao terminar, clique em Salvar produto.
+      </p>
+      <ProductPhotoField
+        url={form.foto_url}
+        file={photoFile}
+        disabled={saving}
+        onBusy={setPhotoBusy}
+        onChange={(file, remove) => {
+          setPhotoFile(file);
+          if (remove) setForm((previous) => ({ ...previous, foto_url: "" }));
+        }}
+      />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
             Categoria
           </Label>
-          <Select
+          <ProductCategoryPicker
+            establishmentId={estab?.id ?? ""}
+            categories={cats}
             value={form.menu_category_id}
-            onValueChange={(v) => setForm({ ...form, menu_category_id: v })}
-          >
-            <SelectTrigger className="h-11 rounded-xl border-border bg-muted/30 focus:ring-primary/20">
-              <SelectValue placeholder="Escolha a categoria" />
-            </SelectTrigger>
-            <SelectContent>
-              {cats.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={(value) => setForm((previous) => ({ ...previous, menu_category_id: value }))}
+            onCreated={onCategoryCreated}
+          />
         </div>
 
         <div className="space-y-2">
@@ -647,14 +671,10 @@ function ProdutoForm({
                 size="sm"
                 className="h-8 rounded-lg border-primary/30 text-[11px] hover:bg-primary hover:text-white"
                 onClick={aplicarTemplateComplementos}
-                disabled={applyingTpl}
+                disabled={saving || configLoading}
               >
-                {applyingTpl ? (
-                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                ) : (
-                  <Wand2 className="mr-1 h-3 w-3" />
-                )}
-                Importar Complementos
+                <Wand2 className="mr-1 h-3 w-3" />
+                Sugerir adicionais
               </Button>
             )}
             {variantTpl.length > 0 && (
@@ -776,13 +796,22 @@ function ProdutoForm({
         <h3 className="text-sm font-bold flex items-center gap-2 border-b border-border pb-2 text-foreground">
           Complementos{" "}
           <Badge variant="outline" className="text-[10px]">
-            {selectedGroups.size}
+            {selectedGroups.size + draftGroups.length}
           </Badge>
         </h3>
         <div className="grid grid-cols-2 gap-2 max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
           {addonGroups.map((g) => (
             <div
               key={g.id}
+              role="checkbox"
+              aria-checked={selectedGroups.has(g.id)}
+              tabIndex={0}
+              onKeyDown={(event) => {
+                if (event.key === " " || event.key === "Enter") {
+                  event.preventDefault();
+                  toggleGroup(g.id);
+                }
+              }}
               onClick={() => toggleGroup(g.id)}
               className={`flex cursor-pointer items-center justify-between rounded-xl border p-3 transition-all ${
                 selectedGroups.has(g.id)
@@ -797,9 +826,15 @@ function ProdutoForm({
         </div>
       </div>
 
+      <ProductAddonDrafts groups={draftGroups} onChange={setDraftGroups} />
+      {configError && (
+        <p role="alert" className="text-sm text-destructive">
+          A configuração anterior não foi carregada. Reabra o produto antes de salvar.
+        </p>
+      )}
       <Button
         onClick={salvar}
-        disabled={saving}
+        disabled={saving || photoBusy || configLoading || configError}
         className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20"
       >
         {saving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Salvar Alterações"}

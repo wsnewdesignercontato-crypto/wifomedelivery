@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { DATA_UPDATED_EVENT, PROFILE_UPDATED_EVENT } from "@/lib/app-refresh";
 import { missingCheckoutDetails } from "@/lib/customer-access";
 import {
   Dialog,
@@ -92,63 +93,97 @@ function CheckoutPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const missing = useMemo(() => missingCheckoutDetails(phone, addrs), [phone, addrs]);
   useEffect(() => {
-    if (!loading && detailsLoaded && estab && missing.length) setDetailsOpen(true);
+    if (!loading && detailsLoaded) setDetailsOpen(!!estab && missing.length > 0);
   }, [loading, detailsLoaded, estab, missing]);
   const [enviando, setEnviando] = useState(false);
+  const [dataRevision, setDataRevision] = useState(0);
+  useEffect(() => {
+    const refresh = () => setDataRevision((value) => value + 1);
+    const visible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    window.addEventListener(PROFILE_UPDATED_EVENT, refresh);
+    window.addEventListener(DATA_UPDATED_EVENT, refresh);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", visible);
+    return () => {
+      window.removeEventListener(PROFILE_UPDATED_EVENT, refresh);
+      window.removeEventListener(DATA_UPDATED_EVENT, refresh);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", visible);
+    };
+  }, []);
   const [novo, setNovo] = useState({ rua: "", numero: "", bairro: "", cidade: "", estado: "" });
 
   useEffect(() => {
-    (async () => {
-      const [a, c, profile] = await Promise.all([
-        supabase
-          .from("addresses")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("is_default", { ascending: false }),
-        supabase
-          .from("cart_items")
-          .select("id,updated_at,preco_unit_cents,quantidade,establishment_id")
-          .eq("user_id", user.id),
-        supabase.from("profiles").select("telefone").eq("id", user.id).single(),
-      ]);
-      if (a.error || c.error || profile.error) {
-        setLoadError("Não foi possível carregar seus dados e carrinho. Tente novamente.");
-        toast.error(
-          a.error?.message ??
-            c.error?.message ??
-            profile.error?.message ??
-            "Falha ao carregar checkout",
-        );
-        setLoading(false);
-        return;
-      }
-      const arr = (a.data ?? []) as Addr[];
-      setAddrs(arr);
-      setPhone(profile.data.telefone);
-      setDetailsLoaded(true);
-      setAddrId(arr[0]?.id ?? null);
-      const ci = c.data ?? [];
-      const storeItems = ci.filter((item) => item.establishment_id === ci[0]?.establishment_id);
-      setCartFingerprint(
-        JSON.stringify(
-          storeItems.map((item) => [item.id, item.updated_at, item.quantidade]).sort(),
-        ),
-      );
-      if (ci[0]) {
-        const { data: e, error: storeError } = await supabase
-          .from("establishments")
-          .select("id,nome,taxa_entrega_cents,pedido_minimo_cents")
-          .eq("id", ci[0].establishment_id)
-          .maybeSingle();
-        if (storeError) {
-          toast.error(storeError.message);
-          setLoadError("Não foi possível carregar a loja. Tente novamente.");
+    let cancelled = false;
+    setLoadError(null);
+    setDetailsLoaded(false);
+    void (async () => {
+      try {
+        const [a, c, profile] = await Promise.all([
+          supabase
+            .from("addresses")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("is_default", { ascending: false }),
+          supabase
+            .from("cart_items")
+            .select("id,updated_at,preco_unit_cents,quantidade,establishment_id")
+            .eq("user_id", user.id),
+          supabase.from("profiles").select("telefone").eq("id", user.id).single(),
+        ]);
+        if (cancelled) return;
+        if (a.error || c.error || profile.error) {
+          setLoadError("Não foi possível carregar seus dados e carrinho. Tente novamente.");
+          toast.error(
+            a.error?.message ??
+              c.error?.message ??
+              profile.error?.message ??
+              "Falha ao carregar checkout",
+          );
+          setLoading(false);
+          return;
         }
-        setEstab(e as Estab | null);
+        const arr = (a.data ?? []) as Addr[];
+        setAddrs(arr);
+        setPhone(profile.data.telefone);
+        setDetailsLoaded(true);
+        setAddrId((previous) =>
+          arr.some((address) => address.id === previous) ? previous : (arr[0]?.id ?? null),
+        );
+        const ci = c.data ?? [];
+        const storeItems = ci.filter((item) => item.establishment_id === ci[0]?.establishment_id);
+        setCartFingerprint(
+          JSON.stringify(
+            storeItems.map((item) => [item.id, item.updated_at, item.quantidade]).sort(),
+          ),
+        );
+        if (ci[0]) {
+          const { data: e, error: storeError } = await supabase
+            .from("establishments")
+            .select("id,nome,taxa_entrega_cents,pedido_minimo_cents")
+            .eq("id", ci[0].establishment_id)
+            .maybeSingle();
+          if (cancelled) return;
+          if (storeError) {
+            toast.error(storeError.message);
+            setLoadError("Não foi possível carregar a loja. Tente novamente.");
+          }
+          setEstab(e as Estab | null);
+        }
+        setLoading(false);
+      } catch {
+        if (!cancelled) {
+          setLoadError("Não foi possível carregar seus dados. Tente novamente.");
+          setLoading(false);
+        }
       }
-      setLoading(false);
     })();
-  }, [user.id]);
+    return () => {
+      cancelled = true;
+    };
+  }, [user.id, dataRevision]);
 
   const checkoutData = useMemo<Omit<CheckoutQuoteInput, "idempotency_key"> | null>(() => {
     const addr = addrs.find((address) => address.id === addrId);

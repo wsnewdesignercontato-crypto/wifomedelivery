@@ -1,3 +1,4 @@
+import { priceInCents } from "@/lib/product-configuration";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -85,11 +86,18 @@ function ComplementosPage() {
   async function novoAddon(gid: string) {
     const nome = prompt("Nome do item:") ?? "";
     if (!nome.trim()) return;
-    const preco = parseFloat((prompt("Preço extra (R$):", "0") ?? "0").replace(",", "."));
+    const value = prompt("Preço extra (R$). Use 0 para gratuito:", "0");
+    if (value === null) return;
+    let price: number;
+    try {
+      price = priceInCents(value);
+    } catch {
+      return toast.error("Informe um preço válido, como 2,50.");
+    }
     const { error } = await supabase.from("addons").insert({
       addon_group_id: gid,
       nome: nome.trim(),
-      preco_extra_cents: Math.round(preco * 100),
+      preco_extra_cents: price,
     });
     if (error) toast.error("Falha");
     else reload();
@@ -106,6 +114,10 @@ function ComplementosPage() {
 
   return (
     <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Crie opções como Bacon, Queijo ou Molhos. Depois, em Produtos, marque quais grupos cada
+        produto oferece. O preço extra entra no pedido do cliente.
+      </p>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-black tracking-tight">Grupos de complementos</h1>
         <Dialog open={openNew} onOpenChange={setOpenNew}>
@@ -180,12 +192,17 @@ function NovoGrupoForm({ onSaved }: { onSaved: () => void }) {
 
   async function salvar() {
     if (!estab || !form.nome.trim()) return toast.error("Nome obrigatório");
+    const min = Number(form.minimo),
+      max = Number(form.maximo);
+    if (!Number.isInteger(min) || !Number.isInteger(max) || min < 0 || max < 1 || min > max)
+      return toast.error("Informe mínimo e máximo válidos. O máximo deve ser pelo menos 1.");
     const { error } = await supabase.from("addon_groups").insert({
       establishment_id: estab.id,
       nome: form.nome.trim(),
       obrigatorio: form.obrigatorio,
-      minimo: parseInt(form.minimo || "0"),
-      maximo: parseInt(form.maximo || "1"),
+      minimo: form.obrigatorio ? Math.max(1, min) : min,
+      selecao_multipla: max > 1,
+      maximo: max,
     });
     if (error) toast.error("Falha");
     else {

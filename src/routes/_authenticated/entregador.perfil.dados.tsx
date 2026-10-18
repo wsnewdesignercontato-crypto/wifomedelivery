@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMyCourier } from "@/hooks/use-courier";
+import { confirmProfileSaved, savedProfileMessage } from "@/lib/profile-completion";
+import { isCheckoutPhone } from "@/lib/customer-access";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/entregador/perfil/dados")({
@@ -199,7 +201,10 @@ function Perfil() {
   }
 
   async function salvar() {
-    if (!userId) return;
+    if (!userId || saving) return;
+    if (!f.nome.trim()) return toast.error("Informe seu nome.");
+    if (f.telefone.trim() && !isCheckoutPhone(f.telefone))
+      return toast.error("Informe um telefone com DDD.");
     setSaving(true);
     try {
       // Atualiza profiles (nome + foto + telefone)
@@ -210,47 +215,57 @@ function Perfil() {
           foto_url: f.foto_url || null,
           telefone: f.telefone || null,
         })
-        .eq("id", userId);
-      if (p.error) throw p.error;
+        .eq("id", userId)
+        .select("id,nome,telefone,foto_url")
+        .single();
+      if (p.error || !p.data) throw p.error ?? new Error("Nenhum cadastro foi atualizado.");
 
       // Upsert courier_profiles com todos os demais campos
-      const c = await supabase.from("courier_profiles").upsert(
-        {
-          user_id: userId,
-          foto_url: f.foto_url || null,
-          telefone: f.telefone || null,
-          whatsapp: f.whatsapp || null,
-          cpf: f.cpf || null,
-          rg: f.rg || null,
-          nascimento: f.nascimento || null,
-          cnh: f.cnh || null,
-          cnh_categoria: f.cnh_categoria || null,
-          cnh_validade: f.cnh_validade || null,
-          pix_key: f.pix_key || null,
-          pix_tipo: f.pix_tipo || null,
-          banco_nome: f.banco_nome || null,
-          banco_agencia: f.banco_agencia || null,
-          banco_conta: f.banco_conta || null,
-          banco_tipo: f.banco_tipo || null,
-          banco_titular: f.banco_titular || null,
-          contato_emergencia_nome: f.contato_emergencia_nome || null,
-          contato_emergencia_tel: f.contato_emergencia_tel || null,
-          cidade_atuacao: f.cidade.trim() || null,
-          endereco: {
-            cep: f.cep || "",
-            rua: f.rua || "",
-            numero: f.numero || "",
-            complemento: f.complemento || "",
-            bairro: f.bairro || "",
-            cidade: f.cidade.trim() || "",
-            estado: f.estado.trim().toUpperCase() || "",
+      const c = await supabase
+        .from("courier_profiles")
+        .upsert(
+          {
+            user_id: userId,
+            foto_url: f.foto_url || null,
+            telefone: f.telefone || null,
+            whatsapp: f.whatsapp || null,
+            cpf: f.cpf || null,
+            rg: f.rg || null,
+            nascimento: f.nascimento || null,
+            cnh: f.cnh || null,
+            cnh_categoria: f.cnh_categoria || null,
+            cnh_validade: f.cnh_validade || null,
+            pix_key: f.pix_key || null,
+            pix_tipo: f.pix_tipo || null,
+            banco_nome: f.banco_nome || null,
+            banco_agencia: f.banco_agencia || null,
+            banco_conta: f.banco_conta || null,
+            banco_tipo: f.banco_tipo || null,
+            banco_titular: f.banco_titular || null,
+            contato_emergencia_nome: f.contato_emergencia_nome || null,
+            contato_emergencia_tel: f.contato_emergencia_tel || null,
+            cidade_atuacao: f.cidade.trim() || null,
+            endereco: {
+              cep: f.cep || "",
+              rua: f.rua || "",
+              numero: f.numero || "",
+              complemento: f.complemento || "",
+              bairro: f.bairro || "",
+              cidade: f.cidade.trim() || "",
+              estado: f.estado.trim().toUpperCase() || "",
+            },
           },
-        },
-        { onConflict: "user_id" },
-      );
-      if (c.error) throw c.error;
+          { onConflict: "user_id" },
+        )
+        .select("*")
+        .single();
+      if (c.error || !c.data)
+        throw c.error ?? new Error("Não foi possível confirmar os dados do entregador.");
 
-      toast.success("Perfil atualizado com sucesso!");
+      qc.setQueryData(["profile", userId], p.data);
+      qc.setQueryData(["courier", userId], c.data);
+      const completion = await confirmProfileSaved(userId, "entregador");
+      toast.success(savedProfileMessage(completion));
       qc.invalidateQueries({ queryKey: ["courier", userId] });
       qc.invalidateQueries({ queryKey: ["profile", userId] });
       window.dispatchEvent(new CustomEvent("wifome:profile-updated"));

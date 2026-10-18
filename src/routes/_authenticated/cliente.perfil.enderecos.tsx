@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ChevronLeft, MapPin, Plus, Trash2, Star, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyDataUpdated } from "@/lib/app-refresh";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -82,7 +83,8 @@ function EnderecosPage() {
     }
     setAddrs((prev) => [data as Addr, ...prev]);
     setNovo({ label: "Casa", rua: "", numero: "", bairro: "", cidade: "", estado: "", cep: "" });
-    toast.success("Endereço adicionado");
+    notifyDataUpdated();
+    toast.success("Endereço salvo no cadastro.");
     if (checkout) navigate({ to: "/cliente/checkout", search: { cupom } });
   }
   async function delAddr(id: string) {

@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { confirmProfileSaved, savedProfileMessage } from "@/lib/profile-completion";
 import { isCheckoutPhone } from "@/lib/customer-access";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil/conta")({
@@ -86,16 +87,30 @@ function ContaPage() {
     if (!profile) return;
     if ((checkout || profile.telefone?.trim()) && !isCheckoutPhone(profile.telefone))
       return toast.error("Informe um telefone com DDD, entre 10 e 15 dígitos.");
+    if (!profile.nome.trim()) return toast.error("Informe seu nome.");
     setSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ nome: profile.nome, telefone: profile.telefone, foto_url: profile.foto_url })
-      .eq("id", user.id);
-    setSaving(false);
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Perfil atualizado");
-      if (checkout) navigate({ to: "/cliente/checkout", search: { cupom } });
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .update({
+          nome: profile.nome.trim(),
+          telefone: profile.telefone?.trim() || null,
+          foto_url: profile.foto_url,
+        })
+        .eq("id", user.id)
+        .select("id,nome,telefone,foto_url")
+        .single();
+      if (error || !data) throw error ?? new Error("Nenhum cadastro foi atualizado.");
+      setProfile(data);
+      const completion = await confirmProfileSaved(user.id, "cliente");
+      toast.success(savedProfileMessage(completion));
+      if (checkout) void navigate({ to: "/cliente/checkout", search: { cupom } });
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível salvar e confirmar seus dados.",
+      );
+    } finally {
+      setSaving(false);
     }
   }
 

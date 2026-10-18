@@ -3245,6 +3245,18 @@ export type Database = {
       };
     };
     Functions: {
+      ensure_menu_category: { Args: { p_establishment_id: string; p_name: string }; Returns: Json };
+      save_product_configuration: {
+        Args: {
+          p_product_id: string | null;
+          p_product: Json;
+          p_variant_changes: Json;
+          p_group_ids: string[];
+          p_new_groups: Json;
+        };
+        Returns: string;
+      };
+
       observe_pwa_install: {
         Args: {
           p_app_type: "cliente" | "estabelecimento" | "entrega";

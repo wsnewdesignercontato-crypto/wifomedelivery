@@ -1,3 +1,5 @@
+import { confirmProfileSaved, savedProfileMessage } from "@/lib/profile-completion";
+import { isCheckoutPhone } from "@/lib/customer-access";
 import { ESTABLISHMENT_SELECT } from "@/lib/data-access";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
@@ -187,47 +189,54 @@ function ConfigPage() {
   async function salvar() {
     if (!estab) return;
     if (!form.nome.trim()) return toast.error("Nome obrigatório");
+    if (form.telefone.trim() && !isCheckoutPhone(form.telefone))
+      return toast.error("Informe um telefone da loja com DDD.");
     setSaving(true);
-    const patch = {
-      nome: form.nome.trim(),
-      razao_social: form.razao_social || null,
-      descricao: form.descricao || null,
-      slogan: form.slogan || null,
-      telefone: form.telefone || null,
-      whatsapp: form.whatsapp || null,
-      endereco: form.endereco || null,
-      cidade: form.cidade || null,
-      estado: form.estado ? form.estado.trim().toUpperCase().slice(0, 2) : null,
-      cnpj: form.cnpj || null,
-      instagram: form.instagram || null,
-      site: form.site || null,
-      logo_url: form.logo_url || null,
-      capa_url: form.capa_url || null,
-      cor_destaque: form.cor_destaque || null,
-      taxa_entrega_cents: Math.round(parseFloat(form.taxa || "0") * 100),
-      tempo_medio_min: parseInt(form.tempo || "30"),
-      pedido_minimo_cents: Math.round(parseFloat(form.minimo || "0") * 100),
-      pix_key: form.pix_key || null,
-      banco_nome: form.banco_nome || null,
-      banco_agencia: form.banco_agencia || null,
-      banco_conta: form.banco_conta || null,
-      banco_tipo: form.banco_tipo || null,
-      banco_titular: form.banco_titular || null,
-      banco_documento: form.banco_documento || null,
-    };
-    const { data, error } = await supabase
-      .from("establishments")
-      .update(patch)
-      .eq("id", estab.id)
-      .select(ESTABLISHMENT_SELECT)
-      .single();
-    setSaving(false);
-    if (error) return toast.error("Falha ao salvar");
-    if (data)
-      qc.setQueryData(["myEstab", userId], { ...estab, ...data, ...patch } as unknown as Estab);
-    qc.invalidateQueries({ queryKey: ["myEstab", userId] });
-    window.dispatchEvent(new Event("wifome:profile-updated"));
-    toast.success("Configurações salvas ✨");
+    try {
+      const patch = {
+        nome: form.nome.trim(),
+        razao_social: form.razao_social || null,
+        descricao: form.descricao || null,
+        slogan: form.slogan || null,
+        telefone: form.telefone || null,
+        whatsapp: form.whatsapp || null,
+        endereco: form.endereco || null,
+        cidade: form.cidade || null,
+        estado: form.estado ? form.estado.trim().toUpperCase().slice(0, 2) : null,
+        cnpj: form.cnpj || null,
+        instagram: form.instagram || null,
+        site: form.site || null,
+        logo_url: form.logo_url || null,
+        capa_url: form.capa_url || null,
+        cor_destaque: form.cor_destaque || null,
+        taxa_entrega_cents: Math.round(parseFloat(form.taxa || "0") * 100),
+        tempo_medio_min: parseInt(form.tempo || "30"),
+        pedido_minimo_cents: Math.round(parseFloat(form.minimo || "0") * 100),
+        pix_key: form.pix_key || null,
+        banco_nome: form.banco_nome || null,
+        banco_agencia: form.banco_agencia || null,
+        banco_conta: form.banco_conta || null,
+        banco_tipo: form.banco_tipo || null,
+        banco_titular: form.banco_titular || null,
+        banco_documento: form.banco_documento || null,
+      };
+      const { data, error } = await supabase
+        .from("establishments")
+        .update(patch)
+        .eq("id", estab.id)
+        .select(ESTABLISHMENT_SELECT)
+        .single();
+      if (error || !data) throw error ?? new Error("Nenhuma loja foi atualizada.");
+      if (data)
+        qc.setQueryData(["myEstab", userId], { ...estab, ...data, ...patch } as unknown as Estab);
+      qc.invalidateQueries({ queryKey: ["myEstab", userId] });
+      const completion = await confirmProfileSaved(userId, "estabelecimento");
+      toast.success(savedProfileMessage(completion));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível salvar a loja.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!estab) return null;
