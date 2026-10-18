@@ -837,7 +837,7 @@ function ProdutoForm({
         disabled={saving || photoBusy || configLoading || configError}
         className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20"
       >
-        {saving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Salvar Alterações"}
+        {saving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Salvar produto"}
       </Button>
     </div>
   );
