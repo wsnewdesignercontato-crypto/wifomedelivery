@@ -197,7 +197,7 @@ function ContaPage() {
               />
               <Button
                 type="button"
-                variant="outline"
+                variant="default"
                 size="sm"
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading}
@@ -244,7 +244,7 @@ function ContaPage() {
           onChange={(e) => setNovaSenha(e.target.value)}
           placeholder="Nova senha (mín. 6)"
         />
-        <Button variant="outline" onClick={trocarSenha}>
+        <Button variant="default" onClick={trocarSenha}>
           Atualizar senha
         </Button>
       </section>

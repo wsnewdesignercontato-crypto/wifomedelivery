@@ -466,7 +466,7 @@ function PedidoPage() {
       </div>
 
       {CANCELABLE.has(order.status) && (
-        <Button variant="outline" className="w-full" onClick={cancelar}>
+        <Button variant="default" className="w-full" onClick={cancelar}>
           Cancelar pedido
         </Button>
       )}

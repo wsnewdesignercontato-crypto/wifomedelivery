@@ -344,7 +344,7 @@ function BuscarPage() {
       )}
       {!loadError && (estabs.length < totalStores || prods.length < totalProducts) && (
         <Button
-          variant="outline"
+          variant="default"
           className="w-full"
           disabled={loading}
           onClick={() => void run(q.trim(), offset + 24, ++sequence.current)}

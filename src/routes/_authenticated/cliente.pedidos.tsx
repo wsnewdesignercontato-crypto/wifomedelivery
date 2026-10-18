@@ -245,7 +245,7 @@ function PedidosPage() {
                 <div className="mt-3 flex justify-end">
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="default"
                     onClick={(e) => {
                       e.preventDefault();
                       repetir(o);

@@ -449,7 +449,7 @@ function ClienteHome() {
         {showAllCats && (
           <button
             onClick={() => setShowAllCats(false)}
-            className="w-full rounded-xl border border-border bg-card py-2 text-xs font-bold text-primary"
+            className="w-full rounded-xl border border-primary bg-primary py-2 text-xs font-bold text-primary-foreground hover:bg-primary-glow"
           >
             Ver menos
           </button>
@@ -492,7 +492,7 @@ function ClienteHome() {
               className={`rounded-full border px-2 py-1.5 text-[11px] font-semibold transition-colors sm:text-xs ${
                 sortBy === k
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+                  : "border-primary bg-card text-primary hover:bg-primary/10"
               }`}
             >
               {label}

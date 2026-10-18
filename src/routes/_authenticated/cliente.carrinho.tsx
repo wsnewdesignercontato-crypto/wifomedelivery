@@ -191,7 +191,7 @@ function CarrinhoPage() {
               <div className="flex items-center gap-1">
                 <Button
                   size="icon"
-                  variant="outline"
+                  variant="default"
                   className="h-7 w-7"
                   onClick={() => alterar(i.id, i.quantidade - 1)}
                 >
@@ -200,7 +200,7 @@ function CarrinhoPage() {
                 <span className="w-6 text-center text-sm font-bold">{i.quantidade}</span>
                 <Button
                   size="icon"
-                  variant="outline"
+                  variant="default"
                   className="h-7 w-7"
                   onClick={() => alterar(i.id, i.quantidade + 1)}
                 >
@@ -259,8 +259,8 @@ function CarrinhoPage() {
                     onClick={() => setCupom(active ? "" : c.code)}
                     className={`group flex flex-col items-start rounded-xl border px-3 py-2 text-left transition ${
                       active
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-dashed border-primary/40 bg-primary/5 hover:border-primary"
+                        ? "border-primary bg-primary text-primary-foreground [&_.text-muted-foreground]:text-primary-foreground/90"
+                        : "border-primary bg-background text-primary hover:bg-primary/10"
                     }`}
                   >
                     <span className="font-mono text-xs font-bold">{c.code}</span>
@@ -307,7 +307,9 @@ function CarrinhoPage() {
             }
           }}
         >
-          Ir para o checkout
+          {estab && subtotal < estab.pedido_minimo_cents
+            ? `Faltam ${fmt(estab.pedido_minimo_cents - subtotal)} para continuar`
+            : "Ir para o checkout"}
         </Button>
       </Link>
     </div>

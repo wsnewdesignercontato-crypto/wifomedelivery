@@ -543,7 +543,7 @@ function EstabelecimentoPage() {
                       <button
                         type="button"
                         onClick={() => setOpenCats((prev) => ({ ...prev, [g.id]: !isOpen }))}
-                        className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-primary/40 bg-primary/5 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/10"
+                        className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-primary bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary-glow"
                         aria-expanded={isOpen}
                       >
                         {isOpen ? "Recolher opções" : `Abrir mais opções (${rest.length})`}
@@ -589,7 +589,7 @@ function EstabelecimentoPage() {
       </section>
 
       <Dialog open={openReview} onOpenChange={setOpenReview}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="theme-cliente max-w-md">
           <DialogHeader>
             <DialogTitle>Avaliar {estab.nome}</DialogTitle>
           </DialogHeader>
@@ -609,7 +609,7 @@ function EstabelecimentoPage() {
       </Dialog>
 
       <Dialog open={!!openProd} onOpenChange={(o) => !o && setOpenProd(null)}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0">
+        <DialogContent className="theme-cliente max-w-lg max-h-[90vh] overflow-y-auto p-0">
           {openProd && (
             <div className="flex flex-col">
               <ProductPhotoGallery
@@ -660,13 +660,13 @@ function EstabelecimentoPage() {
                 <div className="flex items-center gap-2">
                   <Button
                     size="icon"
-                    variant="outline"
+                    variant="default"
                     onClick={() => setQty(Math.max(1, qty - 1))}
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
                   <span className="w-6 text-center font-bold">{qty}</span>
-                  <Button size="icon" variant="outline" onClick={() => setQty(qty + 1)}>
+                  <Button size="icon" variant="default" onClick={() => setQty(qty + 1)}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>

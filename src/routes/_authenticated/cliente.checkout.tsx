@@ -355,7 +355,7 @@ function CheckoutPage() {
     <div className="space-y-5">
       <h1 className="text-xl font-bold">Finalizar pedido</h1>
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent>
+        <DialogContent className="theme-cliente">
           <DialogHeader>
             <DialogTitle>Complete os dados para fazer seu pedido</DialogTitle>
             <DialogDescription>
@@ -376,7 +376,7 @@ function CheckoutPage() {
               </Button>
             )}
             {(missing.includes("endereco") || !detailsLoaded) && (
-              <Button asChild variant="outline" className="w-full">
+              <Button asChild variant="default" className="w-full">
                 <Link
                   to="/cliente/perfil/enderecos"
                   search={{ checkout: true, cupom: search.cupom }}
@@ -397,7 +397,7 @@ function CheckoutPage() {
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => setTipoEntrega("delivery")}
-            className={`flex items-center gap-2 rounded-2xl border p-3 text-sm font-medium transition ${tipoEntrega === "delivery" ? "border-primary bg-primary/5 text-primary" : "border-border bg-card"}`}
+            className={`flex items-center gap-2 rounded-2xl border p-3 text-sm font-medium transition ${tipoEntrega === "delivery" ? "border-primary bg-primary text-primary-foreground shadow-sm [&_.text-muted-foreground]:text-primary-foreground/90" : "border-primary bg-card text-primary hover:bg-primary/5"}`}
           >
             <Bike className="h-4 w-4" />
             <div className="text-left">
@@ -409,7 +409,7 @@ function CheckoutPage() {
           </button>
           <button
             onClick={() => setTipoEntrega("pickup")}
-            className={`flex items-center gap-2 rounded-2xl border p-3 text-sm font-medium transition ${tipoEntrega === "pickup" ? "border-primary bg-primary/5 text-primary" : "border-border bg-card"}`}
+            className={`flex items-center gap-2 rounded-2xl border p-3 text-sm font-medium transition ${tipoEntrega === "pickup" ? "border-primary bg-primary text-primary-foreground shadow-sm [&_.text-muted-foreground]:text-primary-foreground/90" : "border-primary bg-card text-primary hover:bg-primary/5"}`}
           >
             <Store className="h-4 w-4" />
             <div className="text-left">
@@ -429,7 +429,7 @@ function CheckoutPage() {
             {addrs.map((a) => (
               <label
                 key={a.id}
-                className={`block cursor-pointer rounded-2xl border p-3 text-sm ${addrId === a.id ? "border-primary bg-primary/5" : "border-border bg-card"}`}
+                className={`block cursor-pointer rounded-2xl border p-3 text-sm ${addrId === a.id ? "border-primary bg-primary text-primary-foreground shadow-sm [&_.text-muted-foreground]:text-primary-foreground/90" : "border-primary bg-card text-primary hover:bg-primary/5"}`}
               >
                 <input
                   type="radio"
@@ -479,7 +479,7 @@ function CheckoutPage() {
                 onChange={(e) => setNovo({ ...novo, estado: e.target.value })}
               />
             </div>
-            <Button size="sm" variant="outline" className="mt-2" onClick={criarEndereco}>
+            <Button size="sm" variant="default" className="mt-2" onClick={criarEndereco}>
               Adicionar endereço
             </Button>
           </div>
@@ -493,7 +493,7 @@ function CheckoutPage() {
             <button
               key={key}
               onClick={() => setPagto(key)}
-              className={`flex items-center gap-2 rounded-2xl border p-3 text-sm font-medium transition ${pagto === key ? "border-primary bg-primary/5 text-primary" : "border-border bg-card"}`}
+              className={`flex items-center gap-2 rounded-2xl border p-3 text-sm font-medium transition ${pagto === key ? "border-primary bg-primary text-primary-foreground shadow-sm [&_.text-muted-foreground]:text-primary-foreground/90" : "border-primary bg-card text-primary hover:bg-primary/5"}`}
             >
               <Icon className="h-4 w-4" />
               {label}
@@ -541,7 +541,7 @@ function CheckoutPage() {
       {quoteError ? (
         <div role="alert" className="space-y-2 text-sm text-destructive">
           <p>{quoteError}</p>
-          <Button variant="outline" size="sm" onClick={refreshQuote}>
+          <Button variant="default" size="sm" onClick={refreshQuote}>
             Conferir novamente
           </Button>
         </div>

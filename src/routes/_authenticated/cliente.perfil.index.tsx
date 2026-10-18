@@ -234,7 +234,7 @@ function PerfilHub() {
       ))}
 
       {/* Sair */}
-      <Button variant="outline" className="w-full" onClick={sair} disabled={signingOut}>
+      <Button variant="default" className="w-full" onClick={sair} disabled={signingOut}>
         {signingOut ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (

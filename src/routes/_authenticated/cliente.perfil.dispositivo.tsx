@@ -83,7 +83,7 @@ function DispositivoPage() {
         ))}
       </div>
 
-      <Button variant="outline" className="w-full" onClick={limparCache}>
+      <Button variant="default" className="w-full" onClick={limparCache}>
         <Trash2 className="mr-2 h-4 w-4" /> Limpar cache do aplicativo
       </Button>
     </div>
