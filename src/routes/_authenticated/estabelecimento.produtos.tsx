@@ -1,3 +1,10 @@
+import { ProductSpecificFields } from "@/components/product-specific-fields";
+import {
+  productFields,
+  productSummary,
+  readProductDetails,
+  writeProductDetails,
+} from "@/lib/product-details";
 import { Badge } from "@/components/ui/badge";
 import { ProductAddonSelector } from "@/components/product-addon-selector";
 import type { CatalogAddonGroup } from "@/lib/catalog-selection";
@@ -30,7 +37,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Loader2, Plus, Trash2, Copy, Pencil, Sparkles } from "lucide-react";
-import { getCategoryKind, EXTRA_FIELDS } from "@/lib/category-templates";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/produtos")({
   head: () => ({
@@ -341,7 +347,10 @@ function ProdutoForm({
     tempo: produto?.tempo_preparo_min?.toString() ?? "",
     disponivel: produto?.disponivel ?? true,
   });
-  const [extras, setExtras] = useState<Record<string, string>>({});
+  const [extras, setExtras] = useState<Record<string, string>>(
+    () => readProductDetails(produto?.descricao).attributes,
+  );
+  const [showAddons, setShowAddons] = useState(false);
   const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
   const [variants, setVariants] = useState<Variant[]>([]);
   const [saving, setSaving] = useState(false);
@@ -351,8 +360,7 @@ function ProdutoForm({
   const [configError, setConfigError] = useState(false);
 
   const catNome = cats.find((c) => c.id === form.menu_category_id)?.nome;
-  const kind = getCategoryKind(catNome);
-  const extraDefs = EXTRA_FIELDS[kind];
+  const fields = productFields(catNome);
 
   useEffect(() => {
     if (!produto?.id) return;
@@ -375,16 +383,6 @@ function ProdutoForm({
         if (cancelled) return;
         setSelectedGroups(new Set((groups.data ?? []).map((item) => item.addon_group_id)));
         setVariants(((options.data ?? []) as Variant[]).map((item) => ({ ...item, _new: false })));
-        const match = /\[\[extras:([^\]]+)\]\]/.exec(produto.descricao ?? "");
-        if (match)
-          setExtras(
-            Object.fromEntries(
-              match[1].split(";").map((value) => {
-                const [key, ...rest] = value.split("=");
-                return [key.trim(), rest.join("=").trim()];
-              }),
-            ),
-          );
         setConfigError(false);
       } catch {
         if (!cancelled) {
@@ -440,11 +438,7 @@ function ProdutoForm({
         (time !== null && (!Number.isInteger(time) || time < 0))
       )
         throw new Error("Estoque e tempo de preparo devem ser números inteiros positivos ou zero.");
-      const descRaw = form.descricao.replace(/\s*\[\[extras:[^\]]+\]\]\s*$/, "").trim();
-      const extraEntries = Object.entries(extras).filter(([, value]) => value.trim() !== "");
-      const description = extraEntries.length
-        ? `${descRaw}${descRaw ? "\n\n" : ""}[[extras:${extraEntries.map(([key, value]) => `${key}=${value.replace(/[;\]]/g, "")}`).join(";")}]]`
-        : descRaw;
+      const description = writeProductDetails(form.descricao, extras, fields);
       let photoUrl = form.foto_url;
       if (photoFile) {
         const path = `${estab.id}/${crypto.randomUUID()}.jpg`;
@@ -561,7 +555,7 @@ function ProdutoForm({
           </Label>
           <Textarea
             id="product-description"
-            value={form.descricao.replace(/\s*\[\[extras:[^\]]+\]\]\s*$/, "")}
+            value={readProductDetails(form.descricao).description}
             onChange={(event) => setForm({ ...form, descricao: event.target.value })}
             placeholder="Ingredientes ou detalhes do produto"
             className="min-h-20 resize-y"
@@ -580,14 +574,34 @@ function ProdutoForm({
           />
         </div>
       </section>
-      <ProductAddonSelector
-        groups={addonGroups}
-        categories={cats}
-        categoryId={form.menu_category_id}
-        selected={selectedGroups}
-        onToggle={toggleGroup}
-        disabled={saving || configLoading || configError}
+      <ProductSpecificFields
+        fields={fields}
+        values={extras}
+        onChange={setExtras}
+        disabled={saving}
       />
+      <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
+        <Label htmlFor="offer-addons">Oferecer complementos</Label>
+        <Switch
+          id="offer-addons"
+          checked={showAddons || selectedGroups.size > 0}
+          disabled={saving || configLoading}
+          onCheckedChange={(value) => {
+            setShowAddons(value);
+            if (!value) setSelectedGroups(new Set());
+          }}
+        />
+      </div>
+      {(showAddons || selectedGroups.size > 0) && (
+        <ProductAddonSelector
+          groups={addonGroups}
+          categories={cats}
+          categoryId={form.menu_category_id}
+          selected={selectedGroups}
+          onToggle={toggleGroup}
+          disabled={saving || configLoading || configError}
+        />
+      )}
       <details className="rounded-2xl border border-border bg-card px-4">
         <summary className="cursor-pointer py-4 text-sm font-medium">
           Mais opções{" "}
@@ -620,21 +634,6 @@ function ProdutoForm({
               />
             </div>
           </div>
-          {extraDefs.length > 0 && (
-            <div className="grid grid-cols-2 gap-3">
-              {extraDefs.map((field) => (
-                <div key={field.key} className="space-y-1.5">
-                  <Label htmlFor={"extra-" + field.key}>{field.label}</Label>
-                  <Input
-                    id={"extra-" + field.key}
-                    placeholder={field.placeholder}
-                    value={extras[field.key] ?? ""}
-                    onChange={(event) => setExtras({ ...extras, [field.key]: event.target.value })}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-semibold">
               Variações ({variants.filter((item) => !item._deleted).length})

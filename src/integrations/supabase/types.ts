@@ -1592,6 +1592,7 @@ export type Database = {
       };
       global_categories: {
         Row: {
+          search_terms: string[];
           ativo: boolean;
           created_at: string;
           icone: string | null;
@@ -1601,6 +1602,7 @@ export type Database = {
           slug: string;
         };
         Insert: {
+          search_terms?: string[];
           ativo?: boolean;
           created_at?: string;
           icone?: string | null;
@@ -1610,6 +1612,7 @@ export type Database = {
           slug: string;
         };
         Update: {
+          search_terms?: string[];
           ativo?: boolean;
           created_at?: string;
           icone?: string | null;
@@ -3248,6 +3251,15 @@ export type Database = {
       };
     };
     Functions: {
+      ensure_menu_categories: {
+        Args: { p_establishment_id: string; p_names: string[] };
+        Returns: Json;
+      };
+      search_delivery_catalog: {
+        Args: { p_query: string; p_city?: string | null; p_offset?: number; p_limit?: number };
+        Returns: Json;
+      };
+      normalize_delivery_text: { Args: { value: string }; Returns: string };
       ensure_menu_category: { Args: { p_establishment_id: string; p_name: string }; Returns: Json };
       save_addon_group_configuration: {
         Args: {

@@ -1,3 +1,5 @@
+import { ProductDetails } from "@/components/product-details";
+import { productSummary, productSnapshotName } from "@/lib/product-details";
 import { ESTABLISHMENT_SELECT } from "@/lib/data-access";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -367,7 +369,7 @@ function EstabelecimentoPage() {
       user_id: user.id,
       establishment_id: estab.id,
       product_id: openProd.id,
-      nome_snapshot: openProd.nome,
+      nome_snapshot: productSnapshotName(openProd.nome, openProd.descricao),
       preco_unit_cents: precoUnit,
       quantidade: qty,
       observacoes: obs || null,
@@ -395,7 +397,10 @@ function EstabelecimentoPage() {
 
   const q = busca.trim().toLowerCase();
   const visiveis = prods.filter(
-    (p) => !q || p.nome.toLowerCase().includes(q) || (p.descricao ?? "").toLowerCase().includes(q),
+    (p) =>
+      !q ||
+      p.nome.toLowerCase().includes(q) ||
+      productSummary(p.descricao).toLowerCase().includes(q),
   );
   const semCat = visiveis.filter((p) => !p.menu_category_id);
 
@@ -616,9 +621,7 @@ function EstabelecimentoPage() {
                 <DialogHeader>
                   <DialogTitle className="text-xl">{openProd.nome}</DialogTitle>
                 </DialogHeader>
-                {openProd.descricao && (
-                  <p className="text-sm text-muted-foreground">{openProd.descricao}</p>
-                )}
+                {openProd.descricao && <ProductDetails value={openProd.descricao} />}
                 <div className="text-lg font-bold text-primary">
                   {fmt(precoBase)}
                   {openProd.preco_promo_cents != null && (
@@ -731,7 +734,7 @@ function ProdRow({ p, onClick, q = "" }: { p: Produto; onClick: () => void; q?: 
         </p>
         {p.descricao && (
           <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-            <Highlight text={p.descricao} q={q} />
+            <Highlight text={productSummary(p.descricao)} q={q} />
           </p>
         )}
         <p className="mt-1 text-sm font-bold text-primary">

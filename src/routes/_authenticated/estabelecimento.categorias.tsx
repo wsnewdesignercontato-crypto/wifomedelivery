@@ -1,3 +1,6 @@
+import { NicheCategoryPresets, presetExists } from "@/components/niche-category-presets";
+import { useNicheCatalog } from "@/hooks/use-niche-catalog";
+import { recommendedCategories } from "@/lib/delivery-niches";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -24,11 +27,7 @@ import {
   Search,
   Loader2,
 } from "lucide-react";
-import {
-  CATEGORY_CATALOG,
-  categoryLabel,
-  normalizedCategory,
-} from "@/lib/product-category-catalog";
+import { categoryLabel, normalizedCategory } from "@/lib/product-category-catalog";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/categorias")({
   head: () => ({ meta: [{ title: "Loja - Categorias | PedeTrem" }] }),
@@ -45,7 +44,18 @@ function CategoriasPage() {
     [name, setName] = useState(""),
     [saving, setSaving] = useState(false),
     [loading, setLoading] = useState(true);
-  const [presetSearch, setPresetSearch] = useState("");
+  const { data: niches = [] } = useNicheCatalog();
+  const [presetSlug, setPresetSlug] = useState("");
+  const [mode, setMode] = useState<"presets" | "custom">("presets");
+  const [chosen, setChosen] = useState<string[]>([]);
+  function selectNiche(slug: string) {
+    setPresetSlug(slug);
+    setChosen(
+      recommendedCategories(slug)
+        .map(categoryLabel)
+        .filter((label) => !presetExists(label, cats)),
+    );
+  }
   const reload = useCallback(async () => {
     if (!estabId) return;
     const { data, error } = await supabase
@@ -63,15 +73,17 @@ function CategoriasPage() {
   function show(category: Cat | null) {
     setEditing(category);
     setName(category?.nome ?? "");
-    setPresetSearch("");
+    setMode(category ? "custom" : "presets");
+    selectNiche(niches.find((item) => item.id === estab?.categoria_id)?.slug ?? "");
     setOpen(true);
   }
   async function save() {
     if (!estabId || saving) return;
     const cleaned = name.trim();
-    if (cleaned.length < 2 || cleaned.length > 100)
+    if (mode === "custom" && (cleaned.length < 2 || cleaned.length > 100))
       return toast.error("Use um nome entre 2 e 100 caracteres.");
     if (
+      mode === "custom" &&
       cats.some(
         (category) =>
           category.id !== editing?.id &&
@@ -79,6 +91,8 @@ function CategoriasPage() {
       )
     )
       return toast.error("Essa categoria já está cadastrada.");
+    if (!editing && mode === "presets" && !chosen.length)
+      return toast.error("Selecione ao menos uma categoria.");
     setSaving(true);
     try {
       if (editing) {
@@ -91,9 +105,9 @@ function CategoriasPage() {
           .single();
         if (error || !data) throw new Error("Não foi possível atualizar a categoria.");
       } else {
-        const { data, error } = await supabase.rpc("ensure_menu_category", {
+        const { data, error } = await supabase.rpc("ensure_menu_categories", {
           p_establishment_id: estabId,
-          p_name: cleaned,
+          p_names: mode === "presets" ? chosen : [cleaned],
         });
         if (error || !data) throw new Error("Não foi possível cadastrar a categoria.");
       }
@@ -146,9 +160,6 @@ function CategoriasPage() {
   }
   const filtered = cats.filter((category) =>
     normalizedCategory(category.nome).includes(normalizedCategory(search)),
-  );
-  const presets = CATEGORY_CATALOG.filter((preset) =>
-    normalizedCategory(categoryLabel(preset)).includes(normalizedCategory(presetSearch)),
   );
   return (
     <div className="mx-auto max-w-4xl space-y-5">
@@ -253,60 +264,82 @@ function CategoriasPage() {
         <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-2xl sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{editing ? "Editar categoria" : "Nova categoria"}</DialogTitle>
-            <DialogDescription>Use um nome próprio ou escolha uma sugestão.</DialogDescription>
+            <DialogDescription>
+              {editing
+                ? "Ajuste o nome da categoria."
+                : "Comece com modelos prontos para seu segmento ou crie uma categoria personalizada."}
+            </DialogDescription>
           </DialogHeader>
           {!editing && (
-            <details className="rounded-xl border border-border p-3">
-              <summary className="cursor-pointer text-sm font-medium">
-                Escolher uma sugestão
-              </summary>
-              <div className="mt-3 space-y-2">
-                <Input
-                  aria-label="Buscar sugestão de categoria"
-                  placeholder="Ex.: refrigerante, farmácia..."
-                  value={presetSearch}
-                  onChange={(event) => setPresetSearch(event.target.value)}
-                />
-                <select
-                  aria-label="Sugestão de categoria"
-                  value=""
-                  onChange={(event) => setName(event.target.value)}
-                  className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
-                >
-                  <option value="">Selecione uma sugestão</option>
-                  {[...new Set(presets.map((item) => item.section))].map((section) => (
-                    <optgroup label={section} key={section}>
-                      {presets
-                        .filter((item) => item.section === section)
-                        .map((item) => (
-                          <option key={categoryLabel(item)} value={categoryLabel(item)}>
-                            {item.name}
-                          </option>
-                        ))}
-                    </optgroup>
-                  ))}
-                </select>
-              </div>
-            </details>
+            <div
+              role="tablist"
+              aria-label="Tipo de categoria"
+              className="grid grid-cols-2 rounded-xl bg-muted/40 p-1"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === "presets"}
+                onClick={() => setMode("presets")}
+                className={
+                  mode === "presets"
+                    ? "rounded-lg bg-background p-2 text-sm font-medium shadow-sm"
+                    : "p-2 text-sm text-muted-foreground"
+                }
+              >
+                Modelos prontos
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === "custom"}
+                onClick={() => setMode("custom")}
+                className={
+                  mode === "custom"
+                    ? "rounded-lg bg-background p-2 text-sm font-medium shadow-sm"
+                    : "p-2 text-sm text-muted-foreground"
+                }
+              >
+                Personalizada
+              </button>
+            </div>
           )}
-          <div className="space-y-2">
-            <Label htmlFor="category-name">Nome da categoria</Label>
-            <Input
-              id="category-name"
-              placeholder="Ex.: Pizzas"
-              maxLength={100}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              disabled={saving}
+          {mode === "presets" && !editing ? (
+            <NicheCategoryPresets
+              niches={niches}
+              slug={presetSlug}
+              onNicheChange={selectNiche}
+              selected={chosen}
+              onChange={setChosen}
+              existing={cats}
             />
-          </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="category-name">Nome da categoria</Label>
+              <Input
+                id="category-name"
+                placeholder="Ex.: Pizzas"
+                maxLength={100}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                disabled={saving}
+              />
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>
               Cancelar
             </Button>
-            <Button onClick={save} disabled={saving || !name.trim()}>
+            <Button
+              onClick={save}
+              disabled={saving || (mode === "presets" && !editing ? !chosen.length : !name.trim())}
+            >
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {editing ? "Salvar categoria" : "Cadastrar categoria"}
+              {editing
+                ? "Salvar categoria"
+                : mode === "presets"
+                  ? "Adicionar " + chosen.length + " categoria(s)"
+                  : "Cadastrar categoria"}
             </Button>
           </DialogFooter>
         </DialogContent>

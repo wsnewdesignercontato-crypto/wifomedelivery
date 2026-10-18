@@ -1,3 +1,5 @@
+import { recommendedCategories } from "@/lib/delivery-niches";
+import { categoryLabel } from "@/lib/product-category-catalog";
 import { ESTABLISHMENT_SELECT } from "@/lib/data-access";
 import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -36,7 +38,7 @@ export const Route = createFileRoute("/_authenticated/estabelecimento")({
   component: EstabLayout,
 });
 
-type Categoria = { id: string; nome: string };
+type Categoria = { id: string; nome: string; slug: string };
 
 function EstabLayout() {
   const location = useLocation();
@@ -81,6 +83,7 @@ function EstabWorkspace() {
 function SetupForm({ userId }: { userId: string }) {
   const qc = useQueryClient();
   const [cats, setCats] = useState<Categoria[]>([]);
+  const [prepareCategories, setPrepareCategories] = useState(true);
   const [form, setForm] = useState({
     nome: "",
     descricao: "",
@@ -97,7 +100,7 @@ function SetupForm({ userId }: { userId: string }) {
   useEffect(() => {
     supabase
       .from("global_categories")
-      .select("id,nome")
+      .select("id,nome,slug")
       .eq("ativo", true)
       .order("ordem")
       .then(({ data }) => setCats((data ?? []) as Categoria[]));
@@ -105,6 +108,7 @@ function SetupForm({ userId }: { userId: string }) {
 
   async function salvar() {
     if (!form.nome.trim()) return toast.error("Nome obrigatório");
+    if (!form.categoria_id) return toast.error("Escolha o segmento da loja.");
     setSaving(true);
     const { data, error } = await supabase
       .from("establishments")
@@ -124,8 +128,23 @@ function SetupForm({ userId }: { userId: string }) {
       })
       .select(ESTABLISHMENT_SELECT)
       .single();
+    if (error || !data) {
+      setSaving(false);
+      return toast.error("Falha ao cadastrar");
+    }
+    if (prepareCategories) {
+      const names = recommendedCategories(
+        cats.find((item) => item.id === form.categoria_id)?.slug,
+      ).map(categoryLabel);
+      if (names.length) {
+        const result = await supabase.rpc("ensure_menu_categories", {
+          p_establishment_id: data.id,
+          p_names: names,
+        });
+        if (result.error) toast.error("Loja criada. Revise os modelos no módulo Categorias.");
+      }
+    }
     setSaving(false);
-    if (error || !data) return toast.error("Falha ao cadastrar");
     toast.success("Estabelecimento enviado para aprovacao!");
     qc.setQueryData(["myEstab", userId], data as unknown as Estab);
   }
@@ -162,7 +181,7 @@ function SetupForm({ userId }: { userId: string }) {
             />
           </div>
           <div>
-            <Label>Categoria</Label>
+            <Label>Segmento da loja</Label>
             <Select
               value={form.categoria_id}
               onValueChange={(v) => setForm({ ...form, categoria_id: v })}
@@ -211,6 +230,22 @@ function SetupForm({ userId }: { userId: string }) {
           <Label>Tempo médio de preparo (min)</Label>
           <Input value={form.tempo} onChange={(e) => setForm({ ...form, tempo: e.target.value })} />
         </div>
+        {!!form.categoria_id && (
+          <label className="flex cursor-pointer items-start gap-2 rounded-xl bg-muted/40 p-3 text-sm">
+            <input
+              type="checkbox"
+              checked={prepareCategories}
+              onChange={(event) => setPrepareCategories(event.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              Preparar categorias sugeridas para meu segmento
+              <span className="mt-1 block text-xs text-muted-foreground">
+                Você poderá revisar e editar depois, em Categorias.
+              </span>
+            </span>
+          </label>
+        )}
         <Button className="mt-2" size="lg" onClick={salvar} disabled={saving}>
           {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Criar estabelecimento

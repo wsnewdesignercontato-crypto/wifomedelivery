@@ -1,5 +1,7 @@
+import { productSummary } from "@/lib/product-details";
+import { Button } from "@/components/ui/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, Loader2, Star, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -20,6 +22,7 @@ export const Route = createFileRoute("/_authenticated/cliente/buscar")({
 });
 
 type Estab = {
+  categoria_nome?: string | null;
   id: string;
   nome: string;
   descricao: string | null;
@@ -35,6 +38,7 @@ type Prod = {
   descricao: string | null;
   foto_url: string | null;
   preco_cents: number;
+  preco_promo_cents?: number | null;
   establishment_id: string;
 };
 
@@ -49,6 +53,11 @@ function BuscarPage() {
   const [sortBy, setSortBy] = useState<"relevancia" | "rating" | "reviews">("relevancia");
   const [loading, setLoading] = useState(false);
   const [activeCidade, setActiveCidade] = useState<string | null>(null);
+  const sequence = useRef(0);
+  const [offset, setOffset] = useState(0);
+  const [totalStores, setTotalStores] = useState(0),
+    [totalProducts, setTotalProducts] = useState(0);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -63,57 +72,99 @@ function BuscarPage() {
     })();
   }, []);
 
+  const run = useCallback(
+    async (term: string, pageOffset: number, request: number) => {
+      setLoading(true);
+      setLoadError(false);
+      setOffset(pageOffset);
+      try {
+        const response = await supabase.rpc("search_delivery_catalog", {
+          p_query: term,
+          p_city: activeCidade,
+          p_offset: pageOffset,
+          p_limit: 24,
+        });
+        if (response.error) throw response.error;
+        const result = response.data as unknown as {
+          establishments: Estab[];
+          products: Prod[];
+          establishment_total: number;
+          product_total: number;
+        };
+        if (!result || !Array.isArray(result.establishments) || !Array.isArray(result.products))
+          throw new Error("invalid");
+        if (sequence.current !== request) return;
+        setEstabs((previous) =>
+          pageOffset
+            ? [
+                ...new Map(
+                  [...previous, ...result.establishments].map((item) => [item.id, item]),
+                ).values(),
+              ]
+            : result.establishments,
+        );
+        setProds((previous) =>
+          pageOffset
+            ? [
+                ...new Map(
+                  [...previous, ...result.products].map((item) => [item.id, item]),
+                ).values(),
+              ]
+            : result.products,
+        );
+        setTotalStores(result.establishment_total);
+        setTotalProducts(result.product_total);
+        setOffset(pageOffset);
+        const ids = result.establishments.map((item) => item.id);
+        const counts: Record<string, number> = {};
+        if (ids.length) {
+          const reviews = await supabase
+            .from("public_reviews")
+            .select("establishment_id")
+            .in("establishment_id", ids);
+          for (const row of reviews.data ?? [])
+            if (row.establishment_id)
+              counts[row.establishment_id] = (counts[row.establishment_id] ?? 0) + 1;
+        }
+        if (sequence.current === request)
+          setReviewCounts((previous) => (pageOffset ? { ...previous, ...counts } : counts));
+      } catch {
+        if (sequence.current === request) {
+          setLoadError(true);
+          if (!pageOffset) {
+            setEstabs([]);
+            setProds([]);
+            setReviewCounts({});
+            setTotalStores(0);
+            setTotalProducts(0);
+          }
+        }
+      } finally {
+        if (sequence.current === request) setLoading(false);
+      }
+    },
+    [activeCidade],
+  );
   useEffect(() => {
-    const t = setTimeout(() => run(q.trim()), 250);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, activeCidade]);
-
-  async function run(term: string) {
+    const requests = sequence;
+    const request = ++requests.current;
+    const term = q.trim();
     if (term.length < 2) {
       setEstabs([]);
       setProds([]);
       setReviewCounts({});
+      setTotalStores(0);
+      setTotalProducts(0);
+      setLoadError(false);
+      setLoading(false);
       return;
     }
-    setLoading(true);
-    let eq = supabase
-      .from("establishments")
-      .select(
-        "id,nome,descricao,capa_url,taxa_entrega_cents,tempo_medio_min,avaliacao,is_open,cidade",
-      )
-      .eq("status", "aprovado")
-      .ilike("nome", `%${term}%`)
-      .limit(20);
-    if (activeCidade) eq = eq.ilike("cidade", activeCidade);
-    const [e, p] = await Promise.all([
-      eq,
-      supabase
-        .from("products")
-        .select("id,nome,descricao,foto_url,preco_cents,establishment_id")
-        .eq("disponivel", true)
-        .ilike("nome", `%${term}%`)
-        .limit(30),
-    ]);
-    const estabList = (e.data ?? []) as Estab[];
-    setEstabs(estabList);
-    setProds((p.data ?? []) as Prod[]);
-    const ids = estabList.map((x) => x.id);
-    if (ids.length) {
-      const { data: revs } = await supabase
-        .from("public_reviews")
-        .select("establishment_id")
-        .in("establishment_id", ids);
-      const rc: Record<string, number> = {};
-      ((revs ?? []) as Array<{ establishment_id: string | null }>).forEach((r) => {
-        if (r.establishment_id) rc[r.establishment_id] = (rc[r.establishment_id] ?? 0) + 1;
-      });
-      setReviewCounts(rc);
-    } else {
-      setReviewCounts({});
-    }
-    setLoading(false);
-  }
+    const timeout = setTimeout(() => void run(term, 0, request), 250);
+    return () => {
+      clearTimeout(timeout);
+      if (requests.current === request) requests.current++;
+    };
+  }, [q, run]);
 
   const sortedEstabs = useMemo(() => {
     if (sortBy === "relevancia") return estabs;
@@ -155,7 +206,7 @@ function BuscarPage() {
         </div>
       )}
 
-      {!loading && q.length >= 2 && !hasResult && (
+      {!loading && !loadError && q.length >= 2 && !hasResult && (
         <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
           Nada encontrado.
         </div>
@@ -164,7 +215,7 @@ function BuscarPage() {
       {estabs.length > 0 && (
         <section className="space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-sm font-bold">Restaurantes</h2>
+            <h2 className="text-sm font-bold">Estabelecimentos</h2>
             <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
               {(
                 [
@@ -208,6 +259,11 @@ function BuscarPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="truncate font-semibold">{e.nome}</p>
+                    {e.categoria_nome && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        {e.categoria_nome}
+                      </Badge>
+                    )}
                     {!e.is_open && (
                       <Badge variant="secondary" className="text-[10px]">
                         Fechado
@@ -239,7 +295,7 @@ function BuscarPage() {
 
       {prods.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-sm font-bold">Pratos</h2>
+          <h2 className="text-sm font-bold">Produtos</h2>
           <div className="grid gap-2 sm:grid-cols-2">
             {prods.map((p) => (
               <Link
@@ -262,15 +318,39 @@ function BuscarPage() {
                   <p className="truncate font-semibold">{p.nome}</p>
                   {p.descricao && (
                     <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
-                      {p.descricao}
+                      {productSummary(p.descricao)}
                     </p>
                   )}
-                  <p className="mt-1 text-sm font-bold text-primary">{fmt(p.preco_cents)}</p>
+                  <p className="mt-1 text-sm font-bold text-primary">
+                    {fmt(p.preco_promo_cents ?? p.preco_cents)}
+                  </p>
                 </div>
               </Link>
             ))}
           </div>
         </section>
+      )}
+      {loadError && (
+        <div role="alert" className="rounded-xl border border-destructive/20 p-4 text-sm">
+          Não foi possível carregar a busca.{" "}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => void run(q.trim(), offset, ++sequence.current)}
+          >
+            Tentar novamente
+          </Button>
+        </div>
+      )}
+      {!loadError && (estabs.length < totalStores || prods.length < totalProducts) && (
+        <Button
+          variant="outline"
+          className="w-full"
+          disabled={loading}
+          onClick={() => void run(q.trim(), offset + 24, ++sequence.current)}
+        >
+          Carregar mais resultados
+        </Button>
       )}
     </div>
   );

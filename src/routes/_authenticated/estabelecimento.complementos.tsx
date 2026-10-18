@@ -1,3 +1,4 @@
+import { categoryAddonTemplates } from "@/lib/product-details";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -18,12 +19,7 @@ import {
 import { Plus, Trash2, Pencil, Layers3, Loader2 } from "lucide-react";
 import { addonDraft, type AddonDraft } from "@/components/product-addon-drafts";
 import { validateAddonDrafts } from "@/lib/product-configuration";
-import {
-  getCategoryKind,
-  ADDON_TEMPLATES,
-  KIND_LABEL,
-  type CategoryKind,
-} from "@/lib/category-templates";
+
 import type { CatalogAddonGroup, ProductCategory } from "@/lib/catalog-selection";
 export const Route = createFileRoute("/_authenticated/estabelecimento/complementos")({
   head: () => ({ meta: [{ title: "Loja - Complementos | PedeTrem" }] }),
@@ -301,18 +297,9 @@ function GroupEditor({
       : addonDraft(),
   );
   const [saving, setSaving] = useState(false);
-  const kind = getCategoryKind(categories.find((item) => item.id === category)?.nome);
-  const templates = (
-    Object.entries(ADDON_TEMPLATES) as [CategoryKind, (typeof ADDON_TEMPLATES)[CategoryKind]][]
-  ).flatMap(([key, values]) =>
-    kind === "outro" || key === kind
-      ? values.map((template, index) => ({
-          id: key + ":" + index,
-          label: KIND_LABEL[key] + " · " + template.nome,
-          template,
-        }))
-      : [],
-  );
+  const templates = categoryAddonTemplates(
+    categories.find((item) => item.id === category)?.nome,
+  ).map((template, index) => ({ id: String(index), label: template.nome, template }));
   async function save() {
     if (saving) return;
     setSaving(true);

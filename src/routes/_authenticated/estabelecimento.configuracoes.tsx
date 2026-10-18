@@ -1,3 +1,4 @@
+import { useNicheCatalog } from "@/hooks/use-niche-catalog";
 import { confirmProfileSaved, savedProfileMessage } from "@/lib/profile-completion";
 import { isCheckoutPhone } from "@/lib/customer-access";
 import { ESTABLISHMENT_SELECT } from "@/lib/data-access";
@@ -43,6 +44,7 @@ export const Route = createFileRoute("/_authenticated/estabelecimento/configurac
 });
 
 type FormState = {
+  categoria_id: string;
   nome: string;
   razao_social: string;
   descricao: string;
@@ -71,6 +73,7 @@ type FormState = {
 };
 
 const EMPTY: FormState = {
+  categoria_id: "",
   nome: "",
   razao_social: "",
   descricao: "",
@@ -101,6 +104,7 @@ const EMPTY: FormState = {
 function ConfigPage() {
   const { estab, userId } = useMyEstab();
   const qc = useQueryClient();
+  const { data: niches = [], isError: nicheError } = useNicheCatalog();
   const [form, setForm] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -113,6 +117,7 @@ function ConfigPage() {
     if (!estab || initializedId.current === estab.id) return;
     initializedId.current = estab.id;
     setForm({
+      categoria_id: estab.categoria_id ?? "",
       nome: estab.nome,
       razao_social: estab.razao_social ?? "",
       descricao: estab.descricao ?? "",
@@ -194,6 +199,7 @@ function ConfigPage() {
     setSaving(true);
     try {
       const patch = {
+        categoria_id: form.categoria_id || null,
         nome: form.nome.trim(),
         razao_social: form.razao_social || null,
         descricao: form.descricao || null,
@@ -335,6 +341,29 @@ function ConfigPage() {
       </section>
 
       <Section icon={Store} title="Identidade" subtitle="Como sua loja aparece no app">
+        <div className="md:col-span-2">
+          <Label htmlFor="store-niche" className="mb-1 block text-xs">
+            Segmento da loja
+          </Label>
+          <select
+            id="store-niche"
+            value={form.categoria_id}
+            onChange={(event) => setForm({ ...form, categoria_id: event.target.value })}
+            className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
+          >
+            <option value="">Selecione o segmento</option>
+            {niches.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.nome}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {nicheError
+              ? "Não foi possível carregar os segmentos. Tente atualizar a página."
+              : "Ajuda o cliente a encontrar sua loja e orienta os modelos disponíveis em Categorias."}
+          </p>
+        </div>
         <Field
           label="Nome público"
           value={form.nome}
