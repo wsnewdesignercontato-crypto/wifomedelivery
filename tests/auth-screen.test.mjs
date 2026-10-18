@@ -31,7 +31,7 @@ runtime.auth = {
   },
   signUp: async (input) => {
     runtime.calls.push(["signup", input]);
-    return { data: { session: null }, error: null };
+    return runtime.signupResult ?? { data: { session: null }, error: null };
   },
   resend: async (input) => {
     runtime.calls.push(["resend", input]);
@@ -70,6 +70,7 @@ const settle = () => new Promise((resolve) => setImmediate(resolve));
 async function mount(profile) {
   Object.assign(runtime, { states: [], cursor: 0, effects: [], notices: [], calls: [] });
   runtime.recoveryError = null;
+  runtime.signupResult = null;
   const previousWindow = globalThis.window,
     previousFormData = globalThis.FormData;
   globalThis.window = {
@@ -243,6 +244,71 @@ test("a refused password recovery remains on the form and never reports a link w
         ),
       );
       assert.equal(runtime.calls.length, 1);
+    } finally {
+      app.cleanup();
+    }
+  }
+});
+
+for (const response of [
+  { data: { session: null, user: { identities: [] } }, error: null },
+  {
+    data: { session: null, user: null },
+    error: { code: "user_already_exists", message: "User already registered" },
+  },
+]) {
+  test(`a repeated signup offers existing-account access instead of waiting for another confirmation (${response.error?.code ?? "obfuscated"})`, async () => {
+    for (const profile of ["estabelecimento", "entregador"]) {
+      const app = await mount(profile);
+      try {
+        runtime.signupResult = response;
+        const form = find(
+          app.render(),
+          (node) =>
+            node.type === "form" && !!find(node, (input) => input.props?.id === "email-cad"),
+        );
+        await form.props.onSubmit({
+          preventDefault() {},
+          currentTarget: { nome: "Teste", email: "person@gmail.com", senha: "SenhaForte123!" },
+        });
+        assert.ok(!find(app.render(), (node) => node.props?.children === "Reenviar confirmação"));
+        const enter = find(
+          app.render(),
+          (node) => node.props?.children === "Entrar com minha conta",
+        );
+        assert.ok(enter, "A repeated signup must offer access with the existing credentials");
+        assert.equal(runtime.calls.length, 1, "Do not send/retry mail or sign in automatically");
+        enter.props.onClick();
+        const email = find(app.render(), (node) => node.props?.id === "email");
+        assert.equal(email.props.defaultValue, "person@gmail.com");
+        assert.ok(!runtime.notices.some((notice) => notice.message === "User already registered"));
+      } finally {
+        app.cleanup();
+      }
+    }
+  });
+}
+
+test("existing-account guidance keeps password recovery available for the chosen app", async () => {
+  for (const profile of ["estabelecimento", "entregador"]) {
+    const app = await mount(profile);
+    try {
+      runtime.signupResult = { data: { session: null, user: { identities: [] } }, error: null };
+      const form = find(
+        app.render(),
+        (node) => node.type === "form" && !!find(node, (input) => input.props?.id === "email-cad"),
+      );
+      await form.props.onSubmit({
+        preventDefault() {},
+        currentTarget: { nome: "Teste", email: "person@gmail.com", senha: "SenhaForte123!" },
+      });
+      const recovery = find(app.render(), (node) => node.props?.children === "Esqueci minha senha");
+      assert.ok(recovery);
+      recovery.props.onClick();
+      assert.equal(
+        find(app.render(), (node) => node.props?.id === "email-rec").props.defaultValue,
+        "person@gmail.com",
+      );
     } finally {
       app.cleanup();
     }

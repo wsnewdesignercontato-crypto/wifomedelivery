@@ -75,11 +75,18 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
   const [checkingSession, setCheckingSession] = useState(true);
   const [emailSalvo, setEmailSalvo] = useState("");
   const resendPending = useRef(false);
-  const [modo, setModo] = useState<"form" | "confirmar-email" | "recuperar" | "link-enviado">(
-    "form",
-  );
+  const [modo, setModo] = useState<
+    "form" | "confirmar-email" | "recuperar" | "link-enviado" | "acessar-conta"
+  >("form");
 
   const confirmationUrl = () => confirmationRedirectUrl(window.location.origin, perfil, returnPath);
+
+  function offerAccountAccess(email: string) {
+    setEmailSalvo(email);
+    setSenhaCad("");
+    setTab("login");
+    setModo("acessar-conta");
+  }
 
   async function handleReenviar() {
     const email = emailSchema.safeParse(emailSalvo);
@@ -253,7 +260,8 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
         },
       });
       if (error) {
-        toast.error(error.message);
+        if (error.code === "user_already_exists") offerAccountAccess(parsed.data.email);
+        else toast.error(error.message);
         return;
       }
       try {
@@ -265,6 +273,12 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
       if (data.session) {
         toast.success("Conta criada! Bem-vindo ao PedeTrem.");
         finishLogin();
+        return;
+      }
+      // Never treat the provider's obfuscated duplicate response as a new account
+      // awaiting mail. It proves no identity and grants no session or app role.
+      if (Array.isArray(data.user?.identities) && data.user.identities.length === 0) {
+        offerAccountAccess(parsed.data.email);
         return;
       }
       setModo("confirmar-email");
@@ -365,7 +379,36 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
         </div>
 
         <div className="mt-6 rounded-3xl border border-border bg-card p-5 shadow-card sm:p-6">
-          {modo === "confirmar-email" || modo === "link-enviado" ? (
+          {modo === "acessar-conta" ? (
+            <div className="space-y-4 py-2 text-center">
+              <h2 className="text-lg font-bold text-foreground">Acesse sua conta PedeTrem</h2>
+              <p className="text-sm text-muted-foreground">
+                Se você já tem conta com este e-mail, entre com a senha que cadastrou. O mesmo
+                acesso pode ser usado nos aplicativos de Cliente, Estabelecimento e Entregador.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Para usar outro aplicativo, você não precisa criar uma nova senha. Se não lembrar da
+                senha, solicite a recuperação abaixo.
+              </p>
+              <Button className="w-full" onClick={() => setModo("form")}>
+                Entrar com minha conta
+              </Button>
+              <Button className="w-full" variant="outline" onClick={() => setModo("recuperar")}>
+                Esqueci minha senha
+              </Button>
+              <Button
+                className="w-full"
+                variant="ghost"
+                onClick={() => {
+                  setEmailSalvo("");
+                  setTab("cadastro");
+                  setModo("form");
+                }}
+              >
+                Cadastrar com outro e-mail
+              </Button>
+            </div>
+          ) : modo === "confirmar-email" || modo === "link-enviado" ? (
             <div className="space-y-4 py-2 text-center">
               <MailCheck className="mx-auto h-12 w-12 text-primary" />
 
