@@ -151,6 +151,7 @@ export async function sendWebPush(target: PushTarget, payload: PushPayload): Pro
   const body = await encryptPayload(JSON.stringify(payload), target.p256dh, target.auth);
   const res = await fetch(target.endpoint, {
     method: "POST",
+    signal: AbortSignal.timeout(10_000),
     headers: {
       Authorization: await vapidHeader(target.endpoint),
       "Content-Encoding": "aes128gcm",
@@ -161,4 +162,24 @@ export async function sendWebPush(target: PushTarget, payload: PushPayload): Pro
     body: body as BodyInit,
   });
   return res.status;
+}
+
+/** Checks runtime credentials without sending a message or exposing private key material. */
+export async function validateWebPushConfiguration(): Promise<void> {
+  const publicKey = process.env.VAPID_PUBLIC_KEY;
+  const raw = process.env.VAPID_PRIVATE_JWK;
+  if (!publicKey || !raw) throw new Error("Push signing credentials are missing");
+  const jwk = JSON.parse(raw) as JsonWebKey;
+  if (!jwk.x || !jwk.y || !jwk.d) throw new Error("Invalid push signing key");
+  const derived = bytesToB64url(
+    concat(Uint8Array.of(4), b64urlToBytes(jwk.x), b64urlToBytes(jwk.y)),
+  );
+  if (derived !== publicKey) throw new Error("Push signing key pair does not match");
+  await crypto.subtle.importKey(
+    "jwk",
+    { ...jwk, key_ops: ["sign"], ext: true },
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"],
+  );
 }

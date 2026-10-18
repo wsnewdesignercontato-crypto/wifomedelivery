@@ -34,6 +34,10 @@ self.addEventListener("push", (event) => {
     badge: ICON,
     tag: data.tag || undefined,
     renotify: !!data.tag,
+    silent: false,
+    requireInteraction:
+      profile !== "cliente" &&
+      (String(data.url || "").includes("/pedidos") || String(data.url || "").includes("/corridas")),
     data: { url: data.url || "/" },
     vibrate: [90, 40, 90],
     timestamp: Date.now(),

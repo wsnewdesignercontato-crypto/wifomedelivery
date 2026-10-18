@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { notificationErrorMessage } from "@/lib/notification-errors";
 import { PUSH_SW_URL, pushSupported } from "@/lib/push-config";
 import { devicePushSubscription, setDevicePushEnabled } from "@/lib/push-subscription";
 import { savePushSubscription, removePushSubscription, sendTestPush } from "@/lib/push.functions";
@@ -78,11 +79,13 @@ export function usePushNotifications() {
       setDevicePushEnabled(true);
 
       setSubscribed(true);
-      toast.success("Notificações ativadas! Você será avisado mesmo com o app fechado.");
+      toast.success(
+        "Alertas ativados! Envie um teste para conferir as notificações neste celular.",
+      );
       return true;
     } catch (err) {
       console.error(err);
-      toast.error("Não foi possível ativar as notificações.");
+      toast.error(notificationErrorMessage(err, "Não foi possível ativar as notificações."));
       return false;
     } finally {
       setBusy(false);
@@ -111,8 +114,11 @@ export function usePushNotifications() {
   const test = useCallback(async () => {
     setBusy(true);
     try {
+      toast.info("Teste em 5 segundos. Minimize o aplicativo para conferir o aviso.");
       const res = (await sendTestPush()) as { ok: boolean; sent: number; reason?: string };
-      if (res.reason === "sem-aparelhos") {
+      if (res.reason === "configuracao") {
+        toast.error("O serviço de notificações precisa de ajuste no servidor. Avise o suporte.");
+      } else if (res.reason === "sem-aparelhos") {
         toast.error("Nenhum aparelho ativo. Toque em Ativar primeiro.");
       } else if (res.ok) {
         toast.success(

@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { notificationErrorMessage } from "@/lib/notification-errors";
 import { IFomeLogo } from "@/components/ifome-logo";
 
 export const Route = createFileRoute("/_authenticated/admin/notificacoes")({
@@ -102,7 +103,8 @@ async function fetchNotifs() {
 }
 
 async function fetchUserIds(role: Audience) {
-  const { data } = await supabase.from("user_roles").select("user_id").eq("role", role);
+  const { data, error } = await supabase.from("user_roles").select("user_id").eq("role", role);
+  if (error) throw error;
   return (data ?? []).map((r) => r.user_id as string);
 }
 
@@ -257,7 +259,9 @@ function AudiencePanel({
 
       const { error } = await supabase.from("notifications").insert(rows);
       if (error) throw error;
-      toast.success(`Enviado para ${ids.length} ${label.toLowerCase()}`);
+      toast.success(
+        `Mensagem registrada para ${ids.length} ${label.toLowerCase()}. Os aparelhos com alertas ativos receberão o aviso.`,
+      );
       setTitulo("");
       setMensagem("");
       setLinkUrl("");
@@ -265,7 +269,7 @@ function AudiencePanel({
       setBanner(EMPTY_BANNER);
       qc.invalidateQueries({ queryKey: ["notifs"] });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao enviar");
+      toast.error(notificationErrorMessage(e));
     } finally {
       setSending(false);
     }

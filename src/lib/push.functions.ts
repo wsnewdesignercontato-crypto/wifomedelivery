@@ -39,13 +39,19 @@ export const removePushSubscription = createServerFn({ method: "POST" })
 export const sendTestPush = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { sendWebPush } = await import("@/lib/web-push.server");
+    const { sendWebPush, validateWebPushConfiguration } = await import("@/lib/web-push.server");
+    try {
+      await validateWebPushConfiguration();
+    } catch {
+      return { ok: false, sent: 0, reason: "configuracao" as const };
+    }
 
-    const { data: subs } = await context.supabase
+    const { data: subs, error: subscriptionError } = await context.supabase
       .from("push_subscriptions")
       .select("id,endpoint,p256dh,auth")
       .eq("user_id", context.userId);
 
+    if (subscriptionError) throw new Error(subscriptionError.message);
     if (!subs?.length) return { ok: false, sent: 0, reason: "sem-aparelhos" as const };
 
     const { count } = await context.supabase
@@ -54,6 +60,8 @@ export const sendTestPush = createServerFn({ method: "POST" })
       .eq("user_id", context.userId)
       .eq("lida", false);
 
+    // The user can minimize the app before the test notification arrives.
+    await new Promise<void>((resolve) => setTimeout(resolve, 5000));
     let sent = 0;
     const dead: string[] = [];
     for (const s of subs) {

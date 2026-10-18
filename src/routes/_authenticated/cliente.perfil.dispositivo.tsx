@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { PushToggleCard } from "@/components/push-toggle-card";
 import { toast } from "sonner";
 import { ChevronLeft, Smartphone, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
@@ -23,23 +23,6 @@ export const Route = createFileRoute("/_authenticated/cliente/perfil/dispositivo
 
 function DispositivoPage() {
   const { prefs, updatePreference } = useDevicePreferences();
-  const [permNotif, setPermNotif] = useState<string>("default");
-
-  useEffect(() => {
-    if (typeof Notification !== "undefined") setPermNotif(Notification.permission);
-  }, []);
-
-  async function pedirPermissao() {
-    if (typeof Notification === "undefined") {
-      toast.error("Este navegador não suporta notificações");
-      return;
-    }
-    const p = await Notification.requestPermission();
-    setPermNotif(p);
-    if (p === "granted") toast.success("Notificações habilitadas");
-    else toast.info("Permissão não concedida");
-  }
-
   async function limparCache() {
     try {
       await clearDeviceCache();
@@ -77,24 +60,7 @@ function DispositivoPage() {
         <Smartphone className="h-5 w-5 text-primary" /> Configurações do dispositivo
       </h1>
 
-      <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
-        <div>
-          <p className="text-sm font-semibold">Permissão de notificação do navegador</p>
-          <p className="text-xs text-muted-foreground">
-            Status atual:{" "}
-            <span className="font-semibold text-foreground">
-              {permNotif === "granted"
-                ? "Permitido"
-                : permNotif === "denied"
-                  ? "Bloqueado"
-                  : "Não solicitado"}
-            </span>
-          </p>
-        </div>
-        <Button size="sm" onClick={pedirPermissao} disabled={permNotif === "granted"}>
-          {permNotif === "granted" ? "Já ativado" : "Ativar notificações"}
-        </Button>
-      </section>
+      <PushToggleCard />
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
         {rows.map((r, i) => (

@@ -9,6 +9,10 @@ function worker(clients) {
     calls = [];
   const self = {
     location: { origin: "https://pedetrem.vercel.app" },
+    navigator: {},
+    registration: {
+      showNotification: async (title, options) => calls.push(["notification", title, options]),
+    },
     clients: {
       matchAll: async () => clients,
       openWindow: async (url) => calls.push(["open", url]),
@@ -20,6 +24,16 @@ function worker(clients) {
   vm.runInNewContext(source, { self, URL });
   return {
     calls,
+    async push(payload) {
+      let finished;
+      handlers.push({
+        data: { json: () => payload },
+        waitUntil(promise) {
+          finished = promise;
+        },
+      });
+      await finished;
+    },
     async click(url) {
       let finished;
       handlers.notificationclick({
@@ -58,4 +72,26 @@ test("a courier notification opens its own scope when only a customer window exi
   ]);
   await service.click("/entregador/corridas");
   assert.deepEqual(service.calls, [["open", "/entregador/corridas"]]);
+});
+
+test("background push displays an audible store alert even without an open app window", async () => {
+  const service = worker([]);
+  await service.push({
+    title: "Novo pedido",
+    body: "Atenda seu pedido",
+    url: "/estabelecimento/pedidos",
+    tag: "order-test",
+  });
+  const [kind, title, options] = service.calls[0];
+  assert.equal(kind, "notification");
+  assert.equal(title, "Novo pedido");
+  assert.equal(options.silent, false);
+  assert.equal(options.requireInteraction, true);
+  assert.match(options.icon, /estabelecimento/);
+});
+test("background courier push uses its own icon and opens the offer list", async () => {
+  const service = worker([]);
+  await service.push({ title: "Nova corrida", url: "/entregador/corridas" });
+  assert.match(service.calls[0][2].icon, /entregador/);
+  assert.equal(service.calls[0][2].data.url, "/entregador/corridas");
 });

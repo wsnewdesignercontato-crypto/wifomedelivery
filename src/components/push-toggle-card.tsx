@@ -1,4 +1,5 @@
 import { BellOff, BellRing } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { PermissionHelpDialog } from "@/components/permission-help-dialog";
@@ -23,8 +24,8 @@ export function PushToggleCard({ className = "" }: { className?: string }) {
             </p>
             <p className="text-xs text-muted-foreground">
               {push.subscribed
-                ? "Você recebe avisos mesmo com o app fechado."
-                : "Receba avisos na tela mesmo com o app fechado."}
+                ? "Receba avisos mesmo usando outro aplicativo."
+                : "Permita notificações para receber avisos em segundo plano."}
             </p>
           </div>
         </div>
@@ -36,6 +37,18 @@ export function PushToggleCard({ className = "" }: { className?: string }) {
           className="shrink-0"
         />
       </div>
+
+      {push.subscribed && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={push.busy}
+          onClick={() => push.test()}
+        >
+          Enviar notificação de teste
+        </Button>
+      )}
 
       {push.permission === "denied" && (
         <p className="rounded-xl bg-destructive/10 p-3 text-xs text-destructive">
