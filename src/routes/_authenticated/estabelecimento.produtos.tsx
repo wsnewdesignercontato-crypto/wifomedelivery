@@ -163,7 +163,7 @@ function ProdutosPage() {
               <Plus className="mr-2 h-4 w-4" /> Novo produto
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl sm:max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl">
+          <DialogContent className="max-w-2xl max-h-[90dvh] overflow-hidden flex flex-col p-0 border-none shadow-2xl">
             <DialogHeader className="p-6 pb-0">
               <DialogTitle className="text-xl font-black">Adicionar Novo Produto</DialogTitle>
             </DialogHeader>
@@ -299,7 +299,7 @@ function ProdutosPage() {
       )}
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="max-w-2xl sm:max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl">
+        <DialogContent className="max-w-2xl max-h-[90dvh] overflow-hidden flex flex-col p-0 border-none shadow-2xl">
           <DialogHeader className="p-6 pb-0">
             <DialogTitle className="text-xl font-black">Editar Produto</DialogTitle>
           </DialogHeader>
