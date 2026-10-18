@@ -162,12 +162,21 @@ function CheckoutPage() {
     const refresh = () => {
       void reload();
     };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
     window.addEventListener(PROFILE_UPDATED_EVENT, refresh);
     window.addEventListener("focus", refresh);
+    window.addEventListener("online", refresh);
+    window.addEventListener("pageshow", refresh);
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       active = false;
       window.removeEventListener(PROFILE_UPDATED_EVENT, refresh);
       window.removeEventListener("focus", refresh);
+      window.removeEventListener("online", refresh);
+      window.removeEventListener("pageshow", refresh);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [user.id]);
 

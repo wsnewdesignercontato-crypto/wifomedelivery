@@ -37,6 +37,10 @@ runtime.auth = {
     runtime.calls.push(["resend", input]);
     return { data: {}, error: null };
   },
+  resetPasswordForEmail: async (email, options) => {
+    runtime.calls.push(["recovery", { email, ...options }]);
+    return { data: {}, error: runtime.recoveryError };
+  },
 };
 const hooks = registerHooks({
   resolve(name, context, next) {
@@ -65,6 +69,7 @@ function find(node, predicate) {
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 async function mount(profile) {
   Object.assign(runtime, { states: [], cursor: 0, effects: [], notices: [], calls: [] });
+  runtime.recoveryError = null;
   const previousWindow = globalThis.window,
     previousFormData = globalThis.FormData;
   globalThis.window = {
@@ -177,6 +182,67 @@ test("each fresh signup can request confirmation again without a frontend countd
       resend.props.onClick();
       await settle();
       assert.equal(runtime.calls.filter(([kind]) => kind === "resend").length, 1);
+    } finally {
+      app.cleanup();
+    }
+  }
+});
+
+test("password recovery uses the entered email and the corresponding app origin for every profile", async () => {
+  for (const profile of Object.keys(APP_PROFILES)) {
+    const app = await mount(profile);
+    try {
+      find(app.render(), (node) => node.props?.children === "Esqueci minha senha").props.onClick();
+      const form = find(
+        app.render(),
+        (node) => node.type === "form" && !!find(node, (input) => input.props?.id === "email-rec"),
+      );
+      const email = `${profile}@example.com`;
+      await form.props.onSubmit({ preventDefault() {}, currentTarget: { email } });
+      assert.deepEqual(runtime.calls, [
+        [
+          "recovery",
+          {
+            email,
+            redirectTo: APP_PROFILES[profile].origin + "/redefinir-senha?perfil=" + profile,
+          },
+        ],
+      ]);
+      assert.ok(find(app.render(), (node) => node.props?.children === "Link enviado!"));
+    } finally {
+      app.cleanup();
+    }
+  }
+});
+
+test("a refused password recovery remains on the form and never reports a link was sent", async () => {
+  for (const profile of Object.keys(APP_PROFILES)) {
+    const app = await mount(profile);
+    try {
+      runtime.recoveryError = { message: "Envio indisponível" };
+      find(app.render(), (node) => node.props?.children === "Esqueci minha senha").props.onClick();
+      const form = find(
+        app.render(),
+        (node) => node.type === "form" && !!find(node, (input) => input.props?.id === "email-rec"),
+      );
+      await form.props.onSubmit({
+        preventDefault() {},
+        currentTarget: { email: `${profile}@example.com` },
+      });
+      assert.ok(!find(app.render(), (node) => node.props?.children === "Link enviado!"));
+      assert.ok(
+        find(
+          app.render(),
+          (node) =>
+            node.type === "form" && !!find(node, (input) => input.props?.id === "email-rec"),
+        ),
+      );
+      assert.ok(
+        runtime.notices.some(
+          (notice) => notice.kind === "error" && notice.message === "Envio indisponível",
+        ),
+      );
+      assert.equal(runtime.calls.length, 1);
     } finally {
       app.cleanup();
     }

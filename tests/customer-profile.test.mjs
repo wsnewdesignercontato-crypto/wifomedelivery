@@ -248,76 +248,87 @@ test("a saved address returns to checkout and preserves the coupon", async () =>
   assert.deepEqual(runtime.navigations, [{ to: "/cliente/checkout", search: { cupom: "VOLTA" } }]);
 });
 
-test("an open checkout rechecks saved phone/address after a profile update", async () => {
-  Object.assign(runtime, { states: [], cursor: 0, effects: [], notices: [], navigations: [] });
-  const previousWindow = globalThis.window;
-  globalThis.window = new EventTarget();
-  let savedPhone = null;
-  const savedAddresses = [];
-  runtime.from = (table) => {
-    const result = () => ({
-      data:
-        table === "profiles"
-          ? { telefone: savedPhone }
-          : table === "addresses"
-            ? savedAddresses.slice()
-            : table === "cart_items"
-              ? [{ id: "cart-test", establishment_id: "store-test", quantidade: 1 }]
-              : { id: "store-test", nome: "Loja", taxa_entrega_cents: 0, pedido_minimo_cents: 0 },
-      error: null,
-    });
-    const query = {
-      select() {
-        return query;
-      },
-      eq() {
-        return query;
-      },
-      order() {
-        return query;
-      },
-      single() {
-        return Promise.resolve(result());
-      },
-      maybeSingle() {
-        return Promise.resolve(result());
-      },
-      then(resolve, reject) {
-        return Promise.resolve(result()).then(resolve, reject);
-      },
+for (const trigger of ["profile update", "visible", "pageshow", "online"]) {
+  test(`an open checkout rechecks saved phone/address after ${trigger}`, async () => {
+    Object.assign(runtime, { states: [], cursor: 0, effects: [], notices: [], navigations: [] });
+    const previousWindow = globalThis.window;
+    const previousDocument = globalThis.document;
+    globalThis.window = new EventTarget();
+    globalThis.document = Object.assign(new EventTarget(), { visibilityState: "visible" });
+    const refresh = () => {
+      if (trigger === "profile update") notifyDataUpdated();
+      else if (trigger === "visible")
+        globalThis.document.dispatchEvent(new Event("visibilitychange"));
+      else globalThis.window.dispatchEvent(new Event(trigger));
     };
-    return query;
-  };
-  const cleanups = [];
-  const renderCheckout = () => {
-    runtime.cursor = 0;
-    return CheckoutRoute.component();
-  };
-  try {
-    renderCheckout();
-    for (const effect of runtime.effects.splice(0)) cleanups.push(effect());
-    await new Promise((resolve) => setImmediate(resolve));
-    savedPhone = "31999999999";
-    notifyDataUpdated();
-    await new Promise((resolve) => setImmediate(resolve));
-    const phoneSaved = renderCheckout();
-    assert.ok(!find(phoneSaved, (node) => node.props?.children === "Preencher telefone"));
-    assert.ok(
-      find(phoneSaved, (node) =>
-        [node.props?.children]
-          .flat()
-          .includes("Cadastre seu endereço de entrega para concluir o pedido."),
-      ),
-      "The notice must ask only for the address when the phone is already saved",
-    );
-    savedAddresses.push({ id: "address-test", rua: "Rua A", cidade: "BH" });
-    notifyDataUpdated();
-    await new Promise((resolve) => setImmediate(resolve));
-    const tree = renderCheckout();
-    assert.ok(!find(tree, (node) => node.props?.children === "Preencher telefone"));
-    assert.ok(!find(tree, (node) => node.props?.children === "Cadastrar endereço"));
-  } finally {
-    for (const cleanup of cleanups) if (typeof cleanup === "function") cleanup();
-    globalThis.window = previousWindow;
-  }
-});
+    let savedPhone = null;
+    const savedAddresses = [];
+    runtime.from = (table) => {
+      const result = () => ({
+        data:
+          table === "profiles"
+            ? { telefone: savedPhone }
+            : table === "addresses"
+              ? savedAddresses.slice()
+              : table === "cart_items"
+                ? [{ id: "cart-test", establishment_id: "store-test", quantidade: 1 }]
+                : { id: "store-test", nome: "Loja", taxa_entrega_cents: 0, pedido_minimo_cents: 0 },
+        error: null,
+      });
+      const query = {
+        select() {
+          return query;
+        },
+        eq() {
+          return query;
+        },
+        order() {
+          return query;
+        },
+        single() {
+          return Promise.resolve(result());
+        },
+        maybeSingle() {
+          return Promise.resolve(result());
+        },
+        then(resolve, reject) {
+          return Promise.resolve(result()).then(resolve, reject);
+        },
+      };
+      return query;
+    };
+    const cleanups = [];
+    const renderCheckout = () => {
+      runtime.cursor = 0;
+      return CheckoutRoute.component();
+    };
+    try {
+      renderCheckout();
+      for (const effect of runtime.effects.splice(0)) cleanups.push(effect());
+      await new Promise((resolve) => setImmediate(resolve));
+      savedPhone = "31999999999";
+      refresh();
+      await new Promise((resolve) => setImmediate(resolve));
+      const phoneSaved = renderCheckout();
+      assert.ok(!find(phoneSaved, (node) => node.props?.children === "Preencher telefone"));
+      assert.ok(
+        find(phoneSaved, (node) =>
+          [node.props?.children]
+            .flat()
+            .includes("Cadastre seu endereço de entrega para concluir o pedido."),
+        ),
+        "The notice must ask only for the address when the phone is already saved",
+      );
+      savedAddresses.push({ id: "address-test", rua: "Rua A", cidade: "BH" });
+      refresh();
+      await new Promise((resolve) => setImmediate(resolve));
+      const tree = renderCheckout();
+      assert.ok(!find(tree, (node) => node.props?.children === "Preencher telefone"));
+      assert.ok(!find(tree, (node) => node.props?.children === "Cadastrar endereço"));
+    } finally {
+      for (const cleanup of cleanups) if (typeof cleanup === "function") cleanup();
+      globalThis.window = previousWindow;
+      globalThis.document = previousDocument;
+    }
+  });
+}
