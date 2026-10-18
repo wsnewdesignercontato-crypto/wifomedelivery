@@ -1,3 +1,4 @@
+import { SponsorshipPlanCard } from "@/components/sponsorship-plan-card";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -187,66 +188,27 @@ function PlanosPage() {
               <div key={i} className="h-56 animate-pulse rounded-2xl bg-muted" />
             ))}
           {plans.map((p) => (
-            <div key={p.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="h-3 w-3 shrink-0 rounded-full"
-                      style={{ background: p.cor ?? "#FF6B00" }}
-                    />
-                    <h3 className="truncate text-lg font-black">{p.nome}</h3>
-                    {!p.ativo && <Badge variant="secondary">Inativo</Badge>}
-                  </div>
-                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                    {p.descricao ?? "—"}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xl font-black text-primary">{brl(p.preco_cents)}</p>
-                  <p className="text-[11px] text-muted-foreground">/ {p.duracao_dias} dias</p>
-                </div>
-              </div>
-              <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
-                <li>
-                  • Prioridade: <b>{p.prioridade}</b>
-                </li>
-                <li>
-                  • Máx. anúncios: <b>{p.max_anuncios}</b>
-                </li>
-
-                <li className="flex flex-wrap gap-1 pt-1">
-                  {p.destaque_home && (
-                    <Badge variant="outline" className="text-[10px]">
-                      Home
-                    </Badge>
-                  )}
-                  {p.destaque_categoria && (
-                    <Badge variant="outline" className="text-[10px]">
-                      Categoria
-                    </Badge>
-                  )}
-                  {p.destaque_busca && (
-                    <Badge variant="outline" className="text-[10px]">
-                      Busca
-                    </Badge>
-                  )}
-                </li>
-              </ul>
-              <div className="mt-4 flex gap-2">
-                <Button size="sm" variant="outline" className="flex-1" onClick={() => openEdit(p)}>
-                  <Pencil className="mr-1 h-3.5 w-3.5" /> Editar
+            <SponsorshipPlanCard key={p.id} plan={p} admin>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-10 flex-1 rounded-xl"
+                  onClick={() => openEdit(p)}
+                >
+                  <Pencil className="mr-1.5 h-4 w-4" /> Editar plano
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="text-rose-600"
+                  className="h-10 rounded-xl text-rose-600"
+                  aria-label={"Excluir plano " + p.nome}
                   onClick={() => remover(p.id)}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
+            </SponsorshipPlanCard>
           ))}
           {!isLoading && plans.length === 0 && (
             <div className="col-span-full rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground">

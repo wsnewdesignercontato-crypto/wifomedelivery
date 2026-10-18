@@ -1,10 +1,10 @@
+import { SponsorshipPlanCard } from "@/components/sponsorship-plan-card";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   Megaphone,
   Sparkles,
-  Check,
   Clock,
   ShieldAlert,
   XCircle,
@@ -318,45 +318,15 @@ function AnunciosEstabPage() {
               <div key={i} className="h-64 animate-pulse rounded-2xl bg-muted" />
             ))}
           {plans.map((p) => (
-            <div
-              key={p.id}
-              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-card transition hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              <div
-                className="absolute inset-x-0 top-0 h-1"
-                style={{ background: p.cor ?? "#FF6B00" }}
-              />
-              <h3 className="text-lg font-black">{p.nome}</h3>
-              <p className="mt-1 line-clamp-2 min-h-10 text-xs text-muted-foreground">
-                {p.descricao ?? "—"}
-              </p>
-              <div className="mt-3">
-                <p className="text-3xl font-black text-primary">{brl(p.preco_cents)}</p>
-                <p className="text-[11px] text-muted-foreground">
-                  por {p.duracao_dias} dias · até {p.max_anuncios} anúncio(s)
-                </p>
-              </div>
-              <ul className="mt-3 space-y-1 text-xs">
-                {p.destaque_home && (
-                  <li className="flex items-center gap-1.5 text-emerald-600">
-                    <Check className="h-3.5 w-3.5" /> Destaque na Home
-                  </li>
-                )}
-                {p.destaque_categoria && (
-                  <li className="flex items-center gap-1.5 text-emerald-600">
-                    <Check className="h-3.5 w-3.5" /> Destaque na Categoria
-                  </li>
-                )}
-                {p.destaque_busca && (
-                  <li className="flex items-center gap-1.5 text-emerald-600">
-                    <Check className="h-3.5 w-3.5" /> Destaque na Busca
-                  </li>
-                )}
-              </ul>
-              <Button className="mt-4 w-full" onClick={() => setPick(p)} disabled={!!ativo}>
-                {ativo ? "Já existe plano ativo" : "Contratar"}
+            <SponsorshipPlanCard key={p.id} plan={p}>
+              <Button
+                className="h-11 w-full rounded-xl font-semibold"
+                onClick={() => setPick(p)}
+                disabled={!!ativo}
+              >
+                {ativo ? "Já existe plano ativo" : "Contratar plano"}
               </Button>
-            </div>
+            </SponsorshipPlanCard>
           ))}
           {!isLoading && plans.length === 0 && (
             <div className="col-span-full rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground">
