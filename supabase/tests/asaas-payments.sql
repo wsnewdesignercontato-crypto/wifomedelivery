@@ -17,6 +17,7 @@ INSERT INTO public.coupons(id,establishment_id,code,type,percent,usage_limit) VA
 SELECT public.asaas_settings_save('production','notify@example.invalid',repeat('k',64),repeat('t',64));
 SELECT public.asaas_connection_complete('production',(public.asaas_settings_get('production')->>'revision')::uuid,true);
 SELECT public.asaas_webhook_complete('production',(public.asaas_settings_get('production')->>'revision')::uuid,'hook_fixture');
+DO $$ BEGIN BEGIN PERFORM public.asaas_online_set_enabled(true);RAISE EXCEPTION 'FAIL old webhook enabled checkout';EXCEPTION WHEN invalid_parameter_value THEN NULL;END;END $$;
 UPDATE asaas_private.settings SET registered_payment_contract=1 WHERE environment='production';
 SELECT public.asaas_online_set_enabled(true);
 INSERT INTO public.cart_items(user_id,establishment_id,product_id,nome_snapshot,preco_unit_cents,quantidade) VALUES((SELECT id FROM ap_ids WHERE kind='customer'),(SELECT id FROM ap_ids WHERE kind='store'),(SELECT id FROM ap_ids WHERE kind='product'),'Forged price',1,1);

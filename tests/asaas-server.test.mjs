@@ -223,6 +223,25 @@ test("status DTO never includes secrets even when the service row contains them"
   assert.ok(!JSON.stringify(status).includes(runtime.row.apiKey));
   assert.ok(!JSON.stringify(status).includes(runtime.row.webhookToken));
 });
+test("payment administration denies stale identity or absent admin role before service or provider access", async () => {
+  for (const name of [
+    "getAsaasOnlineStatus",
+    "setAsaasOnlineEnabled",
+    "getAsaasPayments",
+    "reconcileAsaasOrder",
+    "diagnoseAsaasSandbox",
+  ])
+    for (const failure of [
+      { authenticatedUser: null },
+      { role: false },
+      { authenticatedUser: { id: "different", email_confirmed_at: "yes" } },
+    ]) {
+      reset();
+      Object.assign(runtime, failure);
+      await assert.rejects(handlers[name]({ data: {} }), /Unauthorized|Forbidden/);
+      assert.deepEqual(runtime.events, []);
+    }
+});
 
 test("registration A blocks save and registration B until release, then B uses only the new revision", async () => {
   reset();

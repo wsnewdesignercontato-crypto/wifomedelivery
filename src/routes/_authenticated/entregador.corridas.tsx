@@ -1,3 +1,4 @@
+import { OrderPaymentBadge } from "@/components/order-payment-badge";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -70,6 +71,9 @@ type Delivery = {
   entregue_em: string | null;
 };
 type OrderLite = {
+  is_test?: boolean;
+  payment_channel?: string;
+  online_payment_state?: string | null;
   id: string;
   establishment_id: string;
   total_cents: number;
@@ -259,7 +263,7 @@ function Corridas() {
       const { data: o, error: orderError } = await supabase
         .from("orders")
         .select(
-          "id,establishment_id,total_cents,cliente_id,endereco_entrega,observacoes,forma_pagamento,troco_para_cents,is_test",
+          "id,establishment_id,total_cents,cliente_id,endereco_entrega,observacoes,forma_pagamento,troco_para_cents,is_test,payment_channel,online_payment_state",
         )
         .eq("id", at.order_id)
         .maybeSingle();
@@ -626,6 +630,11 @@ function Corridas() {
                   <strong>Observações:</strong> {order.observacoes}
                 </div>
               )}
+              <OrderPaymentBadge
+                channel={order.payment_channel}
+                state={order.online_payment_state}
+                isTest={order.is_test}
+              />
               {order.forma_pagamento === "dinheiro" && (
                 <div className="md:col-span-2 rounded-xl border-2 border-emerald-500/50 bg-emerald-500/10 p-3 text-sm">
                   <p className="flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400">

@@ -1,3 +1,4 @@
+import { OrderPaymentBadge } from "@/components/order-payment-badge";
 import { bindResumeRefresh } from "@/lib/resume-refresh";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
@@ -33,6 +34,8 @@ type Offer = {
   valorCents: number;
   totalPedidoCents: number;
   formaPagamento: string;
+  paymentChannel?: string | null;
+  paymentState?: string | null;
   pickup: { lat: number | null; lng: number | null; nome: string; endereco: string | null };
   dropoff: {
     lat: number | null;
@@ -73,6 +76,8 @@ type OfferOrder = {
   total_cents: number | null;
   endereco_entrega: OrderAddress | null;
   forma_pagamento: string | null;
+  payment_channel?: string | null;
+  online_payment_state?: string | null;
   observacoes: string | null;
 };
 
@@ -200,7 +205,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
       const { data: order } = await supabase
         .from("orders")
         .select(
-          "id, cliente_id, establishment_id, total_cents, endereco_entrega, forma_pagamento, observacoes,is_test",
+          "id, cliente_id, establishment_id, total_cents, endereco_entrega, forma_pagamento, observacoes,is_test,payment_channel,online_payment_state",
         )
         .eq("id", candidato.order_id)
         .maybeSingle();
@@ -275,6 +280,8 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         valorCents: candidato.valor_entrega_cents ?? 0,
         totalPedidoCents: typedOrder.total_cents ?? 0,
         formaPagamento: typedOrder.forma_pagamento ?? "-",
+        paymentChannel: typedOrder.payment_channel,
+        paymentState: typedOrder.online_payment_state,
         pickup,
         dropoff,
         cliente: { nome: cli?.nome || "Cliente", telefone: cli?.telefone ?? null },
@@ -566,7 +573,12 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-muted/40 px-3 py-2 text-xs">
-              <span className="flex items-center gap-1.5 font-semibold">
+              <span className="flex min-w-0 flex-wrap items-center gap-1.5 font-semibold">
+                <OrderPaymentBadge
+                  channel={offer?.paymentChannel}
+                  state={offer?.paymentState}
+                  isTest={offer?.is_test}
+                />
                 {offer?.formaPagamento === "dinheiro" ? (
                   <>
                     <Banknote className="h-3.5 w-3.5 text-emerald-600" /> Dinheiro

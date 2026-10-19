@@ -35,7 +35,12 @@ export async function createPaymentDatabase() {
     );
     await db.exec(await read("supabase/migrations/20261019172448_asaas_transparent_payments.sql"));
     await db.exec("GRANT SELECT ON public.orders TO service_role");
-    await db.exec((await read("supabase/migrations/20261019173636_asaas_payment_reconciliation.sql")).split("-- Hosted scheduling;")[0]);
+    await db.exec(
+      (await read("supabase/migrations/20261019173636_asaas_payment_reconciliation.sql")).split(
+        "-- Hosted scheduling;",
+      )[0],
+    );
+    await db.exec(await read("supabase/migrations/20261019174720_asaas_payment_operations.sql"));
     return db;
   } catch (error) {
     await db.close();

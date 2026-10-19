@@ -1,3 +1,4 @@
+import { OrderPaymentBadge } from "@/components/order-payment-badge";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -50,6 +51,9 @@ type Delivery = {
   entregador_id: string | null;
 };
 type OrderLite = {
+  is_test?: boolean;
+  payment_channel?: string;
+  online_payment_state?: string | null;
   id: string;
   establishment_id: string;
   total_cents: number;
@@ -173,7 +177,9 @@ function Home() {
     setAtiva(data as Delivery);
     const { data: o, error: orderError } = await supabase
       .from("orders")
-      .select("id,establishment_id,total_cents,endereco_entrega,is_test")
+      .select(
+        "id,establishment_id,total_cents,endereco_entrega,is_test,payment_channel,online_payment_state",
+      )
       .eq("id", data.order_id)
       .maybeSingle();
     if (!isCurrent() || orderError) return;
@@ -353,6 +359,11 @@ function Home() {
           </div>
           {order && estab && (
             <div className="mt-3 space-y-2 text-sm">
+              <OrderPaymentBadge
+                channel={order.payment_channel}
+                state={order.online_payment_state}
+                isTest={order.is_test}
+              />
               <p className="flex items-start gap-2">
                 <Package className="mt-0.5 h-4 w-4 text-primary" />
                 <span>

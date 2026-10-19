@@ -10,6 +10,7 @@ import { sumLedgerAmounts } from "@/lib/commerce";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AsaasPayments } from "@/components/admin/asaas-payments";
 import {
   Dialog,
   DialogContent,
@@ -181,6 +182,7 @@ function FinanceiroPage() {
         <KpiCard label="Repasse lojas" value={fmtBRL(totals.merchant)} icon={Wallet} />
         <KpiCard label="Take-rate" value={`${takeRate.toFixed(1)}%`} icon={Percent} />
       </div>
+      <AsaasPayments />
       {error && (
         <p className="text-sm text-destructive">Falha ao carregar financeiro: {error.message}</p>
       )}

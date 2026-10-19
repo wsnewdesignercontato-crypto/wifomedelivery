@@ -13,6 +13,7 @@ import {
   registerAsaasWebhook,
 } from "@/lib/admin-asaas.functions";
 import type { AsaasEnvironment, AsaasStatus } from "@/lib/asaas-config";
+import { AsaasOnlineControls } from "./asaas-online-controls";
 
 type Action = "save" | "test" | "register";
 const settingsKey = (environment: AsaasEnvironment) => ["admin-asaas-settings", environment];
@@ -285,6 +286,7 @@ export function AsaasSettings() {
           </p>
         </form>
       )}
+      <AsaasOnlineControls />
     </section>
   );
 }

@@ -1,3 +1,4 @@
+import { OrderPaymentBadge } from "@/components/order-payment-badge";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -20,6 +21,8 @@ export const Route = createFileRoute("/_authenticated/admin/pedidos")({
 });
 
 type Order = {
+  payment_channel?: string;
+  online_payment_state?: string | null;
   is_test?: boolean;
   id: string;
   status: string;
@@ -30,6 +33,7 @@ type Order = {
 };
 
 const COLUMNS: { key: string; label: string; color: string }[] = [
+  { key: "pending_payment", label: "Aguard. pagamento", color: "bg-slate-500" },
   { key: "placed", label: "Recebido", color: "bg-blue-500" },
   { key: "accepted", label: "Aceito", color: "bg-indigo-500" },
   { key: "preparing", label: "Preparando", color: "bg-amber-500" },
@@ -43,7 +47,9 @@ const COLUMNS: { key: string; label: string; color: string }[] = [
 async function fetchOrders() {
   const { data, error } = await supabase
     .from("orders")
-    .select("id,status,total_cents,created_at,establishment_id,cliente_id,is_test")
+    .select(
+      "id,status,total_cents,created_at,establishment_id,cliente_id,is_test,payment_channel,online_payment_state",
+    )
     .order("created_at", { ascending: false })
     .limit(300);
   if (error) throw error;
@@ -127,6 +133,11 @@ function PedidosPage() {
                         {brl(o.total_cents)}
                       </span>
                     </div>
+                    <OrderPaymentBadge
+                      channel={o.payment_channel}
+                      state={o.online_payment_state}
+                      isTest={o.is_test}
+                    />
                     <p className="text-[10px] text-muted-foreground">{dateTime(o.created_at)}</p>
                   </div>
                 ))}

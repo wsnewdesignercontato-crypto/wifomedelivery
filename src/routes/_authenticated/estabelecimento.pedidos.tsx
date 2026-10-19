@@ -1,3 +1,4 @@
+import { OrderPaymentBadge } from "@/components/order-payment-badge";
 import { OrderAcceptanceCountdown } from "@/components/order-acceptance-countdown";
 import { ORDER_SELECT } from "@/lib/data-access";
 import { createFileRoute } from "@tanstack/react-router";
@@ -48,6 +49,8 @@ export const Route = createFileRoute("/_authenticated/estabelecimento/pedidos")(
 
 type Addon = { id?: string; nome: string; preco_extra_cents?: number; group_nome?: string };
 type Order = {
+  payment_channel?: string;
+  online_payment_state?: string | null;
   is_test?: boolean;
   id: string;
   cliente_id: string;
@@ -145,13 +148,13 @@ function PedidosPage() {
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id,cliente_id,status,acceptance_deadline,total_cents,subtotal_cents,frete_cents,desconto_cents,forma_pagamento,troco_para_cents,observacoes,created_at,endereco_entrega,tipo_entrega,cancellation_reason,cancelled_role,refund_status,refund_amount_cents,is_test",
+        "id,cliente_id,status,acceptance_deadline,total_cents,subtotal_cents,frete_cents,desconto_cents,forma_pagamento,troco_para_cents,observacoes,created_at,endereco_entrega,tipo_entrega,cancellation_reason,cancelled_role,refund_status,refund_amount_cents,is_test,payment_channel,online_payment_state",
       )
       .eq("establishment_id", estab.id)
       .order("created_at", { ascending: false })
       .limit(80);
     if (!isCurrent() || error) return;
-    const list = (data ?? []) as Order[];
+    const list = ((data ?? []) as Order[]).filter((o) => o.status !== "pending_payment");
     setOrders(list);
     if (list.length) {
       const ids = list.map((o) => o.id);
@@ -471,6 +474,11 @@ function PedidosPage() {
                       >
                         {o.tipo_entrega === "pickup" ? "🏪 Retirada" : "🛵 Entrega"}
                       </Badge>
+                      <OrderPaymentBadge
+                        channel={o.payment_channel}
+                        state={o.online_payment_state}
+                        isTest={o.is_test}
+                      />
                       <Badge variant="secondary">
                         {PAY_LABEL[o.forma_pagamento] ?? o.forma_pagamento}
                       </Badge>

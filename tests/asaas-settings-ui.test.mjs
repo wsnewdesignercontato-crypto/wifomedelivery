@@ -8,6 +8,7 @@ globalThis.__asaasSettingsTest = runtime;
 const jsx = loadTsx();
 const react = import.meta.resolve("react");
 const modules = {
+  "./asaas-online-controls": `export const AsaasOnlineControls='aside';`,
   react: `export * from ${JSON.stringify(react)};const r=globalThis.__asaasSettingsTest;
     export function useState(initial){const i=r.cursor++;if(!(i in r.states))r.states[i]=typeof initial==='function'?initial():initial;return[r.states[i],value=>r.states[i]=typeof value==='function'?value(r.states[i]):value]}
     export function useRef(initial){const i=r.cursor++;return r.states[i]??={current:initial}}

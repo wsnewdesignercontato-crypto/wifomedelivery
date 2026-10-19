@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { validateAsaasEnvironment, validateAsaasSettings } from "./asaas-config";
 import type { AsaasEnvironment, AsaasStatus } from "./asaas-config";
 import { resolveAppUrl } from "./app-url";
+import { z } from "zod";
 
 const requireAdmin = createMiddleware({ type: "function" })
   .middleware([requireSupabaseAuth])
@@ -13,6 +14,116 @@ const requireAdmin = createMiddleware({ type: "function" })
     const role = await context.supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
     if (role.error || role.data !== true) throw new Error("Forbidden");
     return next();
+  });
+
+export const getAsaasOnlineStatus = createServerFn({ method: "POST" })
+  .middleware([requireAdmin])
+  .handler(async () => {
+    const { paymentRpc } = await import("./asaas-payment-store.server");
+    return paymentRpc<{ enabled: boolean; requestedEnabled: boolean; canEnable: boolean }>(
+      "asaas_online_status",
+    );
+  });
+export const setAsaasOnlineEnabled = createServerFn({ method: "POST" })
+  .middleware([requireAdmin])
+  .validator((input: unknown) => z.object({ enabled: z.boolean() }).strict().parse(input))
+  .handler(async ({ data }) => {
+    const { paymentRpc } = await import("./asaas-payment-store.server");
+    await paymentRpc("asaas_online_set_enabled", { _enabled: data.enabled });
+    return paymentRpc<{ enabled: boolean; requestedEnabled: boolean; canEnable: boolean }>(
+      "asaas_online_status",
+    );
+  });
+export const getAsaasPayments = createServerFn({ method: "POST" })
+  .middleware([requireAdmin])
+  .validator((input: unknown) =>
+    z
+      .object({
+        before: z.string().datetime().optional(),
+        limit: z.number().int().min(1).max(100).default(50),
+      })
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data }) => {
+    const { paymentRpc } = await import("./asaas-payment-store.server");
+    return paymentRpc<import("./asaas-payment-store.server").AdminPayments>(
+      "asaas_payments_admin",
+      { _before: data.before, _limit: data.limit },
+    );
+  });
+export const reconcileAsaasOrder = createServerFn({ method: "POST" })
+  .middleware([requireAdmin])
+  .validator((input: unknown) => z.object({ orderId: z.string().uuid() }).strict().parse(input))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { paymentStore, paymentContext } = await import("./asaas-payment-store.server");
+    const { createPaymentService } = await import("./asaas-payment-service.server");
+    const row = await supabaseAdmin
+      .from("orders")
+      .select("cliente_id")
+      .eq("id", data.orderId)
+      .single();
+    if (row.error || !row.data?.cliente_id) throw new Error("Pedido indisponível.");
+    const a = await paymentContext(row.data.cliente_id, data.orderId);
+    if (!a) throw new Error("Ainda não há cobrança para conferir.");
+    return createPaymentService(paymentStore).reconcilePayment(a);
+  });
+export const diagnoseAsaasSandbox = createServerFn({ method: "POST" })
+  .middleware([requireAdmin])
+  .handler(async ({ context }) => {
+    const { getAsaasCredentials } = await import("./asaas-storage.server");
+    const { findOrCreateAsaasCustomer, createAsaasPayment, getAsaasPix } =
+      await import("./asaas-payment-api.server");
+    const { randomUUID } = await import("node:crypto");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const lease = await supabaseAdmin.rpc("asaas_operation_acquire", { _environment: "sandbox" });
+    if (lease.error || typeof lease.data !== "string")
+      throw new Error("Aguarde a operação de teste atual.");
+    try {
+      const credentials = await getAsaasCredentials("sandbox");
+      if (!credentials.tested || !credentials.apiKey)
+        throw new Error("Configure e teste a chave Sandbox primeiro.");
+      const c = { ...credentials, apiKey: credentials.apiKey };
+      const payer = {
+        name: "PedeTrem TESTE SEM VALOR",
+        cpfCnpj: "24971563792",
+        email: "teste-pedetrem@example.invalid",
+        phone: "47999999999",
+      };
+      const customerId = await findOrCreateAsaasCustomer(
+        c,
+        "diagnostic-user-" + context.userId,
+        payer,
+      );
+      const payment = await createAsaasPayment(
+        c,
+        {
+          customerId,
+          externalReference: "diagnostic-" + randomUUID(),
+          billingType: "PIX",
+          valueCents: 1000,
+        },
+        payer,
+        undefined,
+        "",
+      );
+      return {
+        paymentId: payment.id,
+        state: payment.status,
+        pix: await getAsaasPix(c, payment.id),
+        message:
+          "Somente Sandbox: cobrança fictícia de R$ 10,00. Nenhum pedido, estoque ou saldo real foi alterado.",
+      };
+    } catch {
+      throw new Error(
+        "Não foi possível gerar o Pix Sandbox. Confira a chave e as permissões do ambiente de testes.",
+      );
+    } finally {
+      await supabaseAdmin.rpc("asaas_operation_release", {
+        _environment: "sandbox",
+        _operation_id: lease.data,
+      });
+    }
   });
 
 async function readStatus(environment: AsaasEnvironment): Promise<AsaasStatus> {
