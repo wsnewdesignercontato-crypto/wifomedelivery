@@ -42,6 +42,7 @@ export const Route = createFileRoute("/_authenticated/entregador/")({
 });
 
 type Delivery = {
+  is_test?: boolean;
   id: string;
   order_id: string;
   status: string;
@@ -100,7 +101,8 @@ function Home() {
     start.setHours(0, 0, 0, 0);
     const { data: hoje, error: todayError } = await supabase
       .from("deliveries")
-      .select("valor_entrega_cents")
+      .select("valor_entrega_cents,is_test")
+      .eq("is_test", false)
       .eq("entregador_id", courier.user_id)
       .eq("status", "delivered")
       .gte("entregue_em", start.toISOString());
@@ -119,7 +121,8 @@ function Home() {
       .reduce((s, l: { courier_payout_cents: number }) => s + (l.courier_payout_cents ?? 0), 0);
     const { data: myDeliv, error: deliveriesError } = await supabase
       .from("deliveries")
-      .select("order_id")
+      .select("order_id,is_test")
+      .eq("is_test", false)
       .eq("entregador_id", courier.user_id)
       .eq("status", "delivered");
     if (!isCurrent() || deliveriesError) return;
@@ -150,7 +153,7 @@ function Home() {
       request === lifetime.activeSequence;
     const { data, error } = await supabase
       .from("deliveries")
-      .select("id,order_id,status,valor_entrega_cents,entregador_id")
+      .select("id,order_id,status,valor_entrega_cents,entregador_id,is_test")
       .eq("entregador_id", courier.user_id)
       .not("status", "in", "(delivered,cancelled)")
       .maybeSingle();
@@ -170,7 +173,7 @@ function Home() {
     setAtiva(data as Delivery);
     const { data: o, error: orderError } = await supabase
       .from("orders")
-      .select("id,establishment_id,total_cents,endereco_entrega")
+      .select("id,establishment_id,total_cents,endereco_entrega,is_test")
       .eq("id", data.order_id)
       .maybeSingle();
     if (!isCurrent() || orderError) return;
@@ -200,7 +203,7 @@ function Home() {
 
     const { data, error } = await supabase
       .from("deliveries")
-      .select("id,order_id,status,valor_entrega_cents,entregador_id")
+      .select("id,order_id,status,valor_entrega_cents,entregador_id,is_test")
       .eq("status", "broadcasting")
       .order("created_at", { ascending: false })
       .limit(10);

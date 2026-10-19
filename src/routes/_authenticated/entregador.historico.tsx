@@ -38,6 +38,7 @@ function Historico() {
     let q = supabase
       .from("deliveries")
       .select("id,status,valor_entrega_cents,entregue_em,aceito_em,order_id")
+      .eq("is_test", false)
       .eq("entregador_id", courier.user_id)
       .order("aceito_em", { ascending: false })
       .limit(100);

@@ -59,6 +59,7 @@ export const Route = createFileRoute("/_authenticated/entregador/corridas")({
 });
 
 type Delivery = {
+  is_test?: boolean;
   id: string;
   order_id: string;
   status: string;
@@ -186,7 +187,7 @@ function Corridas() {
       const { data: dv, error: availableError } = await supabase
         .from("deliveries")
         .select(
-          "id,order_id,status,valor_entrega_cents,entregador_id,aceito_em,coletado_em,entregue_em",
+          "id,order_id,status,valor_entrega_cents,entregador_id,aceito_em,coletado_em,entregue_em,is_test",
         )
         .eq("status", "broadcasting")
         .or(`entregador_id.is.null,entregador_id.eq.${courier.user_id}`)
@@ -200,7 +201,7 @@ function Corridas() {
         const orderIds = dvList.map((d) => d.order_id);
         const { data: ords } = await supabase
           .from("orders")
-          .select("id, establishment_id")
+          .select("id, establishment_id,is_test")
           .in("id", orderIds);
         if (!isCurrent()) return;
         const orderRows = (ords ?? []) as OrderMeta[];
@@ -237,7 +238,7 @@ function Corridas() {
     const { data: at, error: activeError } = await supabase
       .from("deliveries")
       .select(
-        "id,order_id,status,valor_entrega_cents,entregador_id,aceito_em,coletado_em,entregue_em",
+        "id,order_id,status,valor_entrega_cents,entregador_id,aceito_em,coletado_em,entregue_em,is_test",
       )
       .eq("entregador_id", courier.user_id)
       .not("status", "in", "(delivered,cancelled)")
@@ -258,7 +259,7 @@ function Corridas() {
       const { data: o, error: orderError } = await supabase
         .from("orders")
         .select(
-          "id,establishment_id,total_cents,cliente_id,endereco_entrega,observacoes,forma_pagamento,troco_para_cents",
+          "id,establishment_id,total_cents,cliente_id,endereco_entrega,observacoes,forma_pagamento,troco_para_cents,is_test",
         )
         .eq("id", at.order_id)
         .maybeSingle();
@@ -504,6 +505,11 @@ function Corridas() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-2">
+          {ativa?.is_test && (
+            <p className="mb-2 rounded-xl bg-amber-500/10 p-3 text-sm font-semibold text-amber-700 dark:text-amber-400">
+              TESTE · Corrida simulada, sem entrega ou pagamento real.
+            </p>
+          )}
           <h1 className="truncate text-2xl font-black">Corridas</h1>
           <Badge variant="outline" className="border-border bg-background/70 text-foreground">
             {getCourierApprovalLabel(courier)}

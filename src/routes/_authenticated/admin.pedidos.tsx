@@ -20,6 +20,7 @@ export const Route = createFileRoute("/_authenticated/admin/pedidos")({
 });
 
 type Order = {
+  is_test?: boolean;
   id: string;
   status: string;
   total_cents: number;
@@ -42,7 +43,7 @@ const COLUMNS: { key: string; label: string; color: string }[] = [
 async function fetchOrders() {
   const { data, error } = await supabase
     .from("orders")
-    .select("id,status,total_cents,created_at,establishment_id,cliente_id")
+    .select("id,status,total_cents,created_at,establishment_id,cliente_id,is_test")
     .order("created_at", { ascending: false })
     .limit(300);
   if (error) throw error;
@@ -118,7 +119,7 @@ function PedidosPage() {
                   >
                     <div className="mb-1 flex items-center justify-between">
                       <span className="font-mono text-[10px] text-muted-foreground">
-                        #{o.id.slice(0, 8)}
+                        {o.is_test ? "TESTE · " : ""}#{o.id.slice(0, 8)}
                       </span>
                       <span
                         className={`font-bold tabular-nums ${o.status === "delivered" ? "text-success" : "text-foreground"}`}

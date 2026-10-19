@@ -38,6 +38,7 @@ function Ganhos() {
       const { data } = await supabase
         .from("deliveries")
         .select("valor_entrega_cents,entregue_em")
+        .eq("is_test", false)
         .eq("entregador_id", courier.user_id)
         .eq("status", "delivered")
         .order("entregue_em", { ascending: false })

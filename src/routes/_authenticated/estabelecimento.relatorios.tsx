@@ -35,6 +35,7 @@ function RelatoriosPage() {
       const { data: o } = await supabase
         .from("orders")
         .select("id,created_at,status,total_cents")
+        .eq("is_test", false)
         .eq("establishment_id", estabId)
         .order("created_at", { ascending: false })
         .limit(300);

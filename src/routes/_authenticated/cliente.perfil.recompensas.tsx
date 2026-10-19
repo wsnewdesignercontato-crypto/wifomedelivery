@@ -53,6 +53,7 @@ function RecompensasPage() {
       const { data } = await supabase
         .from("orders")
         .select("total_cents,status")
+        .eq("is_test", false)
         .eq("cliente_id", user.id)
         .eq("status", "delivered");
       const rows = data ?? [];
