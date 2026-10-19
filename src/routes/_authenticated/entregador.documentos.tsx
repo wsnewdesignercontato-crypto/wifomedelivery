@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -54,40 +54,69 @@ const TIPOS = [
 function Docs() {
   const { courier } = useMyCourier();
   const courierId = courier?.user_id;
+  const loadSequence = useRef(0);
+  const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [docs, setDocs] = useState<Doc[]>([]);
   const [form, setForm] = useState({ tipo: "cnh_frente", url: "", validade: "" });
 
   const load = useCallback(async () => {
     if (!courierId) return;
-    const { data } = await supabase
+    const request = ++loadSequence.current;
+    const { data, error } = await supabase
       .from("courier_documents")
       .select("*")
       .eq("courier_id", courierId)
       .order("enviado_em", { ascending: false });
+    if (request !== loadSequence.current) return;
+    if (error) {
+      setLoadError(true);
+      return;
+    }
+    setLoadError(false);
     setDocs((data ?? []) as Doc[]);
   }, [courierId]);
 
   useEffect(() => {
     void load();
+    return () => {
+      // Request counter intentionally invalidates late responses during cleanup.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      loadSequence.current++;
+    };
   }, [load]);
 
   async function enviar() {
+    if (saving) return;
     if (!courierId || !form.url) return toast.error("Informe a URL do documento");
-    const { error } = await supabase.from("courier_documents").insert({
-      courier_id: courierId,
-      tipo: form.tipo,
-      url: form.url,
-      validade: form.validade || null,
-      status: "em_analise",
-    });
-    if (error) return toast.error(error.message);
+    setSaving(true);
+    const { data, error } = await supabase
+      .from("courier_documents")
+      .insert({
+        courier_id: courierId,
+        tipo: form.tipo,
+        url: form.url,
+        validade: form.validade || null,
+        status: "em_analise",
+      })
+      .select("id")
+      .single();
+    setSaving(false);
+    if (error || !data)
+      return toast.error(error?.message || "Não foi possível confirmar o documento salvo.");
     toast.success("Documento enviado para análise");
     setForm({ tipo: "cnh_frente", url: "", validade: "" });
     void load();
   }
 
   async function remover(id: string) {
-    await supabase.from("courier_documents").delete().eq("id", id);
+    const { data, error } = await supabase
+      .from("courier_documents")
+      .delete()
+      .eq("id", id)
+      .select("id")
+      .single();
+    if (error || !data) return toast.error(error?.message || "O documento não foi removido.");
     void load();
   }
 
@@ -130,15 +159,21 @@ function Docs() {
             />
           </div>
         </div>
-        <Button className="mt-3" onClick={enviar}>
+        <Button className="mt-3" onClick={enviar} disabled={saving}>
           <Plus className="mr-2 h-4 w-4" />
           Enviar
         </Button>
       </section>
 
+      {loadError && (
+        <div role="alert">
+          <p>Não foi possível carregar os documentos salvos.</p>
+          <Button onClick={() => void load()}>Tentar novamente</Button>
+        </div>
+      )}
       <section>
         <h2 className="mb-3 text-sm font-semibold text-muted-foreground">Enviados</h2>
-        {docs.length === 0 ? (
+        {docs.length === 0 && !loadError ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
             <FileText className="mx-auto h-10 w-10 text-muted-foreground" />
             <p className="mt-3 text-sm text-muted-foreground">Nenhum documento enviado ainda.</p>

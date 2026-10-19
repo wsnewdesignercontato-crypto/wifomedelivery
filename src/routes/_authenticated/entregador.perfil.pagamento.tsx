@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/select";
 import { useMyCourier } from "@/hooks/use-courier";
 import { useQueryClient } from "@tanstack/react-query";
+import { registrationChanges, saveCourierRegistration } from "@/lib/courier-registration";
+import { notifyDataUpdated } from "@/lib/app-refresh";
 import { CreditCard, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/entregador/perfil/pagamento")({
@@ -31,9 +33,9 @@ export const Route = createFileRoute("/_authenticated/entregador/perfil/pagament
 });
 
 function Pagamento() {
-  const { courier, userId } = useMyCourier();
+  const { courier, userId, isLoading, error: loadError, refetch } = useMyCourier();
   const qc = useQueryClient();
-  const [f, setF] = useState({
+  const [f, rawSetF] = useState({
     pix_tipo: "cpf",
     pix_key: "",
     banco_nome: "",
@@ -42,11 +44,21 @@ function Pagamento() {
     banco_tipo: "corrente",
     banco_titular: "",
   });
+  const dirty = useRef(false);
+  const baseline = useRef<{ form: typeof f; courier: typeof courier; userId: string } | null>(null);
+  const setF: typeof rawSetF = (next) => {
+    dirty.current = true;
+    rawSetF(next);
+  };
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!courier) return;
-    setF({
+    if (baseline.current?.userId !== userId) {
+      dirty.current = false;
+      baseline.current = null;
+    }
+    if (!courier || dirty.current || loadError || isLoading) return;
+    const hydrated = {
       pix_tipo: courier.pix_tipo ?? "cpf",
       pix_key: courier.pix_key ?? "",
       banco_nome: courier.banco_nome ?? "",
@@ -54,22 +66,58 @@ function Pagamento() {
       banco_conta: courier.banco_conta ?? "",
       banco_tipo: courier.banco_tipo ?? "corrente",
       banco_titular: courier.banco_titular ?? "",
-    });
-  }, [courier]);
+    };
+    baseline.current = { form: hydrated, courier, userId };
+    rawSetF(hydrated);
+  }, [courier, userId, loadError, isLoading]);
 
   async function salvar() {
-    if (!f.pix_key) return toast.error("Informe a chave PIX");
-    if (!f.banco_titular) return toast.error("Informe o titular da conta");
+    if (saving || isLoading || loadError || !baseline.current || baseline.current.userId !== userId)
+      return;
+    if (!f.pix_key.trim()) return toast.error("Informe a chave PIX");
+    if (!f.banco_titular.trim()) return toast.error("Informe o titular da conta");
     setSaving(true);
-    const { error } = await supabase.from("courier_profiles").update(f).eq("user_id", userId);
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success("Dados de pagamento atualizados");
-    qc.invalidateQueries({ queryKey: ["courier", userId] });
+    try {
+      const changes = registrationChanges(f, baseline.current.form, {
+        courier: baseline.current.courier,
+        profile: { nome: null, telefone: null, foto_url: null },
+      });
+      if (!Object.keys(changes.patch).length) {
+        toast.success("Seus dados já estão salvos.");
+        return;
+      }
+      const saved = await saveCourierRegistration(userId, changes.patch, changes.expected);
+      await Promise.all([
+        qc.cancelQueries({ queryKey: ["courier", userId] }),
+        qc.cancelQueries({ queryKey: ["profile", userId] }),
+      ]);
+      qc.setQueryData(["courier", userId], saved.courier);
+      qc.setQueryData(["profile", userId], saved.profile);
+      dirty.current = false;
+      notifyDataUpdated();
+      toast.success("Dados de pagamento salvos e confirmados.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível salvar. Seus dados digitados foram mantidos.",
+      );
+    } finally {
+      setSaving(false);
+    }
   }
+  if (loadError)
+    return (
+      <div role="alert" className="space-y-3">
+        <p>Não foi possível carregar os dados de pagamento salvos.</p>
+        <Button onClick={() => void refetch()}>Tentar novamente</Button>
+      </div>
+    );
+  if (isLoading) return <p role="status">Carregando dados salvos…</p>;
+  if (!courier) return <p>Complete seus dados pessoais antes de cadastrar o pagamento.</p>;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5">
+    <fieldset disabled={saving} className="min-w-0 max-w-2xl mx-auto space-y-5">
       <header className="flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <CreditCard className="h-5 w-5" />
@@ -162,6 +210,6 @@ function Pagamento() {
       <Button size="lg" className="w-full" onClick={salvar} disabled={saving}>
         Salvar dados de pagamento
       </Button>
-    </div>
+    </fieldset>
   );
 }

@@ -42,21 +42,34 @@ export function courierQueryOptions(userId: string) {
   return {
     queryKey: ["courier", userId] as const,
     queryFn: async (): Promise<Courier | null> => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("courier_profiles")
         .select("*")
         .eq("user_id", userId)
         .maybeSingle();
+      if (error) throw new Error(error.message);
       return (data as unknown as Courier) ?? null;
     },
     staleTime: 15_000,
   };
 }
 
-export function useMyCourier(): { courier: Courier | null; userId: string; isLoading: boolean } {
+export function useMyCourier(): {
+  courier: Courier | null;
+  userId: string;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => Promise<unknown>;
+} {
   const ctx = useRouteContext({ from: "/_authenticated" }) as { user: { id: string } };
   const q = useQuery(courierQueryOptions(ctx.user.id));
-  return { courier: q.data ?? null, userId: ctx.user.id, isLoading: q.isLoading };
+  return {
+    courier: q.data ?? null,
+    userId: ctx.user.id,
+    isLoading: q.isLoading,
+    error: q.error,
+    refetch: q.refetch,
+  };
 }
 
 export const fmt = (c: number) =>

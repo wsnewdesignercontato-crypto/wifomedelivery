@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import {
   CheckCircle2,
   Clock,
   ShieldCheck,
-  Sparkles,
+  Shield,
   HelpCircle,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -92,6 +92,8 @@ function statusMeta(status: string) {
 
 function Veiculo() {
   const { courier } = useMyCourier();
+  const loadSequence = useRef(0);
+  const [loadError, setLoadError] = useState(false);
   const [list, setList] = useState<V[]>([]);
   const [docs, setDocs] = useState<{ tipo: string; status: string }[]>([]);
   const [form, setForm] = useState<Partial<V>>({
@@ -106,17 +108,25 @@ function Veiculo() {
 
   async function load() {
     if (!courier) return;
-    const { data } = await supabase
+    const request = ++loadSequence.current;
+    const { data, error } = await supabase
       .from("courier_vehicles")
       .select("*")
       .eq("courier_id", courier.user_id)
       .order("created_at", { ascending: false });
+    if (request !== loadSequence.current) return;
+    if (error) {
+      setLoadError(true);
+      return;
+    }
+    setLoadError(false);
     setList((data ?? []) as V[]);
-    const { data: d } = await supabase
+    const { data: d, error: docsError } = await supabase
       .from("courier_documents")
       .select("tipo,status")
       .eq("courier_id", courier.user_id);
-    setDocs((d ?? []) as { tipo: string; status: string }[]);
+    if (request !== loadSequence.current) return;
+    if (!docsError) setDocs((d ?? []) as { tipo: string; status: string }[]);
   }
   useEffect(() => {
     load();
@@ -148,33 +158,41 @@ function Veiculo() {
       )
       .subscribe();
     return () => {
+      // Request counter intentionally invalidates late responses during cleanup.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      loadSequence.current++;
       window.removeEventListener(DATA_UPDATED_EVENT, onUpdate);
       window.removeEventListener("focus", onUpdate);
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courier]);
+  }, [courier?.user_id]);
 
   async function salvar() {
-    if (!courier) return;
+    if (!courier || saving) return;
     const comPlaca = precisaPlaca(form.tipo);
     const placaLimpa = (form.placa ?? "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
     if (comPlaca && placaLimpa.length < 7) {
       return toast.error("Informe a placa completa (ex.: ABC1D23)");
     }
     setSaving(true);
-    const { error } = await supabase.from("courier_vehicles").insert({
-      courier_id: courier.user_id,
-      tipo: form.tipo!,
-      marca: form.marca,
-      modelo: form.modelo,
-      ano: form.ano,
-      cor: form.cor,
-      placa: comPlaca ? placaLimpa : null,
-      ativo: list.length === 0,
-    });
+    const { data, error } = await supabase
+      .from("courier_vehicles")
+      .insert({
+        courier_id: courier.user_id,
+        tipo: form.tipo!,
+        marca: form.marca,
+        modelo: form.modelo,
+        ano: form.ano,
+        cor: form.cor,
+        placa: comPlaca ? placaLimpa : null,
+        ativo: list.length === 0,
+      })
+      .select("id")
+      .single();
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error || !data)
+      return toast.error(error?.message || "Não foi possível confirmar o veículo salvo.");
     toast.success(
       comPlaca
         ? "Veículo cadastrado — aguardando aprovação"
@@ -187,11 +205,8 @@ function Veiculo() {
 
   async function ativar(id: string) {
     if (!courier) return;
-    await supabase
-      .from("courier_vehicles")
-      .update({ ativo: false })
-      .eq("courier_id", courier.user_id);
-    await supabase.from("courier_vehicles").update({ ativo: true }).eq("id", id);
+    const { data, error } = await supabase.rpc("activate_my_courier_vehicle", { p_vehicle: id });
+    if (error || !data) return toast.error(error?.message || "O veículo ativo não foi alterado.");
     toast.success("Veículo ativo alterado");
     await load();
     notifyDataUpdated();
@@ -199,7 +214,13 @@ function Veiculo() {
 
   async function remover(id: string) {
     if (!confirm("Remover este veículo?")) return;
-    await supabase.from("courier_vehicles").delete().eq("id", id);
+    const { data, error } = await supabase
+      .from("courier_vehicles")
+      .delete()
+      .eq("id", id)
+      .select("id")
+      .single();
+    if (error || !data) return toast.error(error?.message || "O veículo não foi removido.");
     await load();
     notifyDataUpdated();
   }
@@ -299,7 +320,7 @@ function Veiculo() {
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5" /> Garagem
+              <Shield className="h-3.5 w-3.5" /> Garagem
             </div>
             <h1 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">Meus veículos</h1>
             <p className="mt-1 max-w-md text-sm text-white/85">
@@ -549,6 +570,12 @@ function Veiculo() {
         </div>
       </section>
 
+      {loadError && (
+        <div role="alert">
+          <p>Não foi possível carregar seus veículos salvos.</p>
+          <Button onClick={() => void load()}>Tentar novamente</Button>
+        </div>
+      )}
       {/* List */}
       <section className="space-y-3">
         <div className="flex items-end justify-between">
@@ -556,7 +583,7 @@ function Veiculo() {
           <span className="text-xs text-muted-foreground">{list.length} veículo(s)</span>
         </div>
 
-        {list.length === 0 ? (
+        {list.length === 0 && !loadError ? (
           <div className="rounded-3xl border border-dashed border-border bg-gradient-to-b from-card to-muted/30 p-12 text-center">
             <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-primary/10 text-primary">
               <Car className="h-8 w-8" />

@@ -3260,6 +3260,9 @@ export type Database = {
       };
     };
     Functions: {
+      save_courier_registration: { Args: { p_patch: Json; p_expected: Json }; Returns: Json };
+      activate_my_courier_vehicle: { Args: { p_vehicle: string }; Returns: Json };
+
       customer_payment_test_context: { Args: { p_store: string }; Returns: Json };
       checkout_test_order: {
         Args: {
