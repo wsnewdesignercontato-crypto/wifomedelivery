@@ -17,20 +17,24 @@ async function assertAdmin(context: { supabase: SupabaseClient<Database>; userId
 
 export const listAppUsers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d: { search?: string; page?: number }) =>
+  .validator((d: { search?: string; page?: number; role?: string; status?: string }) =>
     z
       .object({
         search: z.string().trim().max(254).default(""),
         page: z.number().int().min(1).max(100000).default(1),
+        role: z.enum(["all", "cliente", "estabelecimento", "entregador", "admin"]).default("all"),
+        status: z.enum(["all", "active", "blocked", "pending"]).default("all"),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { data: result, error } = await context.supabase.rpc("admin_search_users", {
+    const { data: result, error } = await context.supabase.rpc("admin_users_directory", {
       p_search: data.search,
       p_page: data.page,
-      p_per_page: 50,
+      p_per_page: 20,
+      p_role: data.role,
+      p_status: data.status,
     });
     if (error) throw new Error(error.message);
     return result as {
@@ -46,6 +50,7 @@ export const listAppUsers = createServerFn({ method: "POST" })
       page: number;
       total: number;
       totalPages: number;
+      summary: Record<AppRole | "total" | "active" | "blocked" | "pending", number>;
     };
   });
 

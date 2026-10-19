@@ -3508,6 +3508,16 @@ export type Database = {
         Args: { p_page?: number; p_per_page?: number; p_search?: string };
         Returns: Json;
       };
+      admin_users_directory: {
+        Args: {
+          p_page?: number;
+          p_per_page?: number;
+          p_search?: string;
+          p_role?: string;
+          p_status?: string;
+        };
+        Returns: Json;
+      };
       apply_score_penalty: {
         Args: {
           _entity_id: string;
