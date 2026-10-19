@@ -17,7 +17,7 @@ import {
   Palette,
   Save,
   ImageIcon,
-  Sparkles,
+  Image,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -112,11 +112,14 @@ function ConfigPage() {
   const logoRef = useRef<HTMLInputElement>(null);
   const capaRef = useRef<HTMLInputElement>(null);
 
+  const baselineForm = useRef<FormState | null>(null);
+  const baselineRow = useRef<Estab | null>(null);
+  const busy = useRef(false);
   const initializedId = useRef<string | null>(null);
   useEffect(() => {
     if (!estab || initializedId.current === estab.id) return;
     initializedId.current = estab.id;
-    setForm({
+    const loaded = {
       categoria_id: estab.categoria_id ?? "",
       nome: estab.nome,
       razao_social: estab.razao_social ?? "",
@@ -143,21 +146,11 @@ function ConfigPage() {
       banco_tipo: estab.banco_tipo ?? "corrente",
       banco_titular: estab.banco_titular ?? "",
       banco_documento: estab.banco_documento ?? "",
-    });
+    };
+    baselineForm.current = loaded;
+    baselineRow.current = estab;
+    setForm(loaded);
   }, [estab]);
-
-  // Fill missing location fields without overwriting edits in progress.
-  const savedState = estab?.estado;
-  const savedCity = estab?.cidade;
-  const savedAddress = estab?.endereco;
-  useEffect(() => {
-    setForm((prev) => ({
-      ...prev,
-      estado: prev.estado || savedState || "",
-      cidade: prev.cidade || savedCity || "",
-      endereco: prev.endereco || savedAddress || "",
-    }));
-  }, [savedState, savedCity, savedAddress]);
 
   async function uploadImage(file: File, kind: "logo" | "capa") {
     if (!file.type.startsWith("image/")) {
@@ -192,13 +185,24 @@ function ConfigPage() {
   }
 
   async function salvar() {
-    if (!estab) return;
+    if (!estab || busy.current || uploadingLogo || uploadingCapa) return;
     if (!form.nome.trim()) return toast.error("Nome obrigatório");
     if (form.telefone.trim() && !isCheckoutPhone(form.telefone))
       return toast.error("Informe um telefone da loja com DDD.");
+    const taxa = Number(form.taxa.replace(",", "."));
+    const minimo = Number(form.minimo.replace(",", "."));
+    const tempo = Number(form.tempo);
+    if (
+      ![taxa, minimo].every((n) => Number.isFinite(n) && n >= 0 && n <= 1000000) ||
+      !Number.isInteger(tempo) ||
+      tempo < 1 ||
+      tempo > 1440
+    )
+      return toast.error("Confira taxa, pedido mínimo e tempo de preparo.");
+    busy.current = true;
     setSaving(true);
     try {
-      const patch = {
+      const values = {
         categoria_id: form.categoria_id || null,
         nome: form.nome.trim(),
         razao_social: form.razao_social || null,
@@ -215,9 +219,9 @@ function ConfigPage() {
         logo_url: form.logo_url || null,
         capa_url: form.capa_url || null,
         cor_destaque: form.cor_destaque || null,
-        taxa_entrega_cents: Math.round(parseFloat(form.taxa || "0") * 100),
-        tempo_medio_min: parseInt(form.tempo || "30"),
-        pedido_minimo_cents: Math.round(parseFloat(form.minimo || "0") * 100),
+        taxa_entrega_cents: Math.round(taxa * 100),
+        tempo_medio_min: tempo,
+        pedido_minimo_cents: Math.round(minimo * 100),
         pix_key: form.pix_key || null,
         banco_nome: form.banco_nome || null,
         banco_agencia: form.banco_agencia || null,
@@ -226,21 +230,65 @@ function ConfigPage() {
         banco_titular: form.banco_titular || null,
         banco_documento: form.banco_documento || null,
       };
-      const { data, error } = await supabase
+      // Only write edited fields. The snapshot belongs to the form, not a
+      // later background refetch, so concurrent changes cannot be overwritten.
+      const patch: Partial<typeof values> = {};
+      const formKeys: Record<string, keyof FormState> = {
+        taxa_entrega_cents: "taxa",
+        tempo_medio_min: "tempo",
+        pedido_minimo_cents: "minimo",
+      };
+      for (const key of Object.keys(values) as (keyof typeof values)[]) {
+        const field = formKeys[key] ?? (key as keyof FormState);
+        if (form[field] !== baselineForm.current?.[field])
+          Object.assign(patch, { [key]: values[key] });
+      }
+      if (!Object.keys(patch).length) {
+        toast.success("Os dados já estão salvos.");
+        return;
+      }
+      let query = supabase
         .from("establishments")
         .update(patch)
         .eq("id", estab.id)
-        .select(ESTABLISHMENT_SELECT)
-        .single();
-      if (error || !data) throw error ?? new Error("Nenhuma loja foi atualizada.");
-      if (data)
-        qc.setQueryData(["myEstab", userId], { ...estab, ...data, ...patch } as unknown as Estab);
+        .eq("owner_id", userId);
+      const privateFields = new Set([
+        "cnpj",
+        "pix_key",
+        "banco_nome",
+        "banco_agencia",
+        "banco_conta",
+        "banco_tipo",
+        "banco_titular",
+        "banco_documento",
+      ]);
+      for (const key of Object.keys(patch)) {
+        // Private columns are readable only through the ownership-scoped RPC.
+        // Keep those grants restricted; never add a REST SELECT just to save.
+        if (privateFields.has(key)) continue;
+        const previous = baselineRow.current?.[key as keyof Estab];
+        if (previous === null || previous === undefined) query = query.is(key, null);
+        else query = query.eq(key, previous);
+      }
+      const { data, error } = await query.select(ESTABLISHMENT_SELECT).single();
+      if (error || !data)
+        throw (
+          error ?? new Error("A loja não foi atualizada. Confira alterações feitas em outra tela.")
+        );
+      await qc.cancelQueries({ queryKey: ["myEstab", userId] });
+      // Public columns come from the database response; private fields are the
+      // confirmed write merged into the last snapshot, never default blanks.
+      const saved = { ...estab, ...patch, ...data } as Estab;
+      baselineRow.current = saved;
+      baselineForm.current = { ...form };
+      qc.setQueryData(["myEstab", userId], saved);
       qc.invalidateQueries({ queryKey: ["myEstab", userId] });
       const completion = await confirmProfileSaved(userId, "estabelecimento");
       toast.success(savedProfileMessage(completion));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível salvar a loja.");
     } finally {
+      busy.current = false;
       setSaving(false);
     }
   }
@@ -255,7 +303,10 @@ function ConfigPage() {
     .toUpperCase();
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 pb-32">
+    <fieldset
+      disabled={saving || uploadingLogo || uploadingCapa}
+      className="mx-auto min-w-0 max-w-3xl space-y-6 pb-32"
+    >
       <PushToggleCard operationalSound />
       {/* Header com preview de capa e logo */}
       <section className="relative rounded-3xl border border-border bg-card shadow-sm">
@@ -333,7 +384,7 @@ function ConfigPage() {
                 {uploadingLogo ? "Enviando…" : "Trocar logo"}
               </Button>
               <span className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">
-                <Sparkles className="h-3 w-3" /> JPG/PNG até 5MB
+                <Image className="h-3 w-3" /> JPG/PNG até 5MB
               </span>
             </div>
           </div>
@@ -526,7 +577,12 @@ function ConfigPage() {
       </Section>
 
       <div className="sticky bottom-4 z-10">
-        <Button size="lg" className="w-full shadow-lg" onClick={salvar} disabled={saving}>
+        <Button
+          size="lg"
+          className="w-full shadow-lg"
+          onClick={salvar}
+          disabled={saving || uploadingLogo || uploadingCapa}
+        >
           {saving ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
@@ -535,7 +591,7 @@ function ConfigPage() {
           {saving ? "Salvando…" : "Salvar todas as alterações"}
         </Button>
       </div>
-    </div>
+    </fieldset>
   );
 }
 

@@ -25,7 +25,7 @@ const modules = {
     export const createFileRoute=()=>options=>({...options,useSearch:()=>({checkout:true,cupom:'VOLTA'}),useRouteContext:()=>({user:{id:'customer-test',email:'test@example.invalid'}})});
     export const useNavigate=()=>value=>r.navigations.push(value);
     export const Link='a';`,
-  "@/integrations/supabase/client": `export const supabase={rpc:async()=>({data:{enabled:false},error:null}),from:(...args)=>globalThis.__customerProfileTest.from(...args)};`,
+  "@/integrations/supabase/client": `const r=globalThis.__customerProfileTest;export const supabase={rpc:async(...args)=>r.rpc ? r.rpc(...args) : ({data:{enabled:false},error:null}),from:(...args)=>globalThis.__customerProfileTest.from(...args)};`,
   sonner: `const r=globalThis.__customerProfileTest;export const toast={success:message=>r.notices.push({kind:'success',message}),error:message=>r.notices.push({kind:'error',message})};`,
   "@tanstack/react-start": "export const useServerFn=fn=>fn;",
   "@/lib/checkout.functions":
@@ -62,7 +62,14 @@ async function mount({
   writeError = null,
   returnedPhone,
 } = {}) {
-  Object.assign(runtime, { states: [], cursor: 0, effects: [], notices: [], navigations: [] });
+  Object.assign(runtime, {
+    states: [],
+    cursor: 0,
+    effects: [],
+    notices: [],
+    navigations: [],
+    rpc: null,
+  });
   let persisted = { ...initial };
   runtime.from = (table) => {
     assert.equal(table, "profiles");
@@ -76,8 +83,10 @@ async function mount({
         return query;
       },
       eq(column, value) {
-        assert.equal(column, "id");
-        assert.equal(value, "customer-test");
+        if (column === "id") assert.equal(value, "customer-test");
+        return query;
+      },
+      is() {
         return query;
       },
       update(value) {
@@ -190,10 +199,22 @@ async function mountAddresses({
   readError = null,
   insertData = { id: "address-test", rua: "Rua A", cidade: "BH" },
   insertError = null,
+  saved = [],
+  deleteError = null,
+  deleteData = { id: "address-test" },
 } = {}) {
-  Object.assign(runtime, { states: [], cursor: 0, effects: [], notices: [], navigations: [] });
+  Object.assign(runtime, {
+    states: [],
+    cursor: 0,
+    effects: [],
+    notices: [],
+    navigations: [],
+    rpc: null,
+  });
+  runtime.rpc = async () => ({ data: null, error: { message: "Sem permissão" } });
   runtime.from = (table) => {
     assert.equal(table, "addresses");
+    let deleting = false;
     const query = {
       select() {
         return query;
@@ -202,13 +223,21 @@ async function mountAddresses({
         return query;
       },
       order() {
-        return Promise.resolve({ data: null, error: readError });
+        return Promise.resolve({ data: saved, error: readError });
+      },
+      delete() {
+        deleting = true;
+        return query;
       },
       insert() {
         return query;
       },
       single() {
-        return Promise.resolve({ data: insertData, error: insertError });
+        return Promise.resolve(
+          deleting
+            ? { data: deleteData, error: deleteError }
+            : { data: insertData, error: insertError },
+        );
       },
     };
     return query;
@@ -252,7 +281,14 @@ test("a saved address returns to checkout and preserves the coupon", async () =>
 
 for (const trigger of ["profile update", "visible", "pageshow", "online"]) {
   test(`an open checkout rechecks saved phone/address after ${trigger}`, async () => {
-    Object.assign(runtime, { states: [], cursor: 0, effects: [], notices: [], navigations: [] });
+    Object.assign(runtime, {
+      states: [],
+      cursor: 0,
+      effects: [],
+      notices: [],
+      navigations: [],
+      rpc: null,
+    });
     const previousWindow = globalThis.window;
     const previousDocument = globalThis.document;
     globalThis.window = new EventTarget();
@@ -334,3 +370,93 @@ for (const trigger of ["profile update", "visible", "pageshow", "online"]) {
     }
   });
 }
+
+test("a rejected address removal keeps the saved address visible and emits no success", async () => {
+  await mountAddresses({
+    saved: [{ id: "address-test", rua: "Rua A", cidade: "BH", label: "Casa", is_default: true }],
+    deleteError: { message: "Sem permissão" },
+    deleteData: null,
+  });
+  await find(
+    renderAddress(),
+    (n) => n.props?.["aria-label"] === "Remover endereço",
+  ).props.onClick();
+  assert.ok(find(renderAddress(), (n) => n.props?.children?.includes?.("Casa")));
+  assert.ok(runtime.notices.some((n) => n.kind === "error"));
+  assert.ok(!runtime.notices.some((n) => n.kind === "success"));
+});
+
+test("a rejected atomic default change never changes the visible default", async () => {
+  await mountAddresses({
+    saved: [
+      { id: "address-test", rua: "Rua A", cidade: "BH", label: "Trabalho", is_default: false },
+    ],
+  });
+  await find(renderAddress(), (n) => n.props?.children === "Padrão").props.onClick();
+  assert.ok(find(renderAddress(), (n) => n.props?.children === "Padrão"));
+  assert.ok(runtime.notices.some((n) => n.kind === "error"));
+  assert.ok(!runtime.notices.some((n) => n.kind === "success"));
+});
+
+test("a profile save writes only edited fields, preserving a photo saved in another app", async () => {
+  await mount();
+  let patch;
+  const from = runtime.from;
+  runtime.from = (table) => {
+    const q = from(table),
+      update = q.update;
+    q.update = (v) => {
+      patch = v;
+      return update(v);
+    };
+    return q;
+  };
+  await fillAndSavePhone();
+  assert.deepEqual(patch, { telefone: "(31) 99999-9999" });
+});
+
+test("a thrown network failure keeps the phone draft and releases the save button", async () => {
+  await mount();
+  const from = runtime.from;
+  runtime.from = (table) => {
+    const q = from(table);
+    q.single = async () => {
+      throw new Error("Offline");
+    };
+    return q;
+  };
+  await fillAndSavePhone();
+  assert.equal(
+    find(render(), (n) => n.props?.id === "profile-phone").props.value,
+    "(31) 99999-9999",
+  );
+  assert.equal(find(render(), (n) => n.props?.children === "Salvar").props.disabled, false);
+  assert.ok(!runtime.notices.some((n) => n.kind === "success"));
+});
+
+test("repeated taps while a save is pending produce only one write", async () => {
+  await mount();
+  find(render(), (n) => n.props?.id === "profile-phone").props.onChange({
+    target: { value: "31988888888" },
+  });
+  const from = runtime.from;
+  let release,
+    writes = 0;
+  runtime.from = (table) => {
+    const q = from(table),
+      single = q.single;
+    q.single = () =>
+      new Promise((resolve) => {
+        writes++;
+        release = () => resolve(single());
+      });
+    return q;
+  };
+  const save = find(render(), (n) => n.props?.children === "Salvar").props.onClick;
+  const pending = save();
+  await save();
+  assert.equal(writes, 1);
+  release();
+  await pending;
+  assert.equal(runtime.notices.filter((n) => n.kind === "success").length, 1);
+});

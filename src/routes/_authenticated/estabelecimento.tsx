@@ -1,8 +1,9 @@
+import { isCheckoutPhone } from "@/lib/customer-access";
 import { recommendedCategories } from "@/lib/delivery-niches";
 import { categoryLabel } from "@/lib/product-category-catalog";
 import { ESTABLISHMENT_SELECT } from "@/lib/data-access";
 import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Store } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -48,7 +49,7 @@ function EstabLayout() {
 
 function EstabWorkspace() {
   const { user } = Route.useRouteContext() as { user: { id: string } };
-  const { data: estab, isLoading } = useEstab(user.id);
+  const { data: estab, isLoading, error, refetch } = useEstab(user.id);
 
   if (isLoading) {
     return (
@@ -57,6 +58,14 @@ function EstabWorkspace() {
       </div>
     );
   }
+
+  if (error)
+    return (
+      <div role="alert" className="mx-auto max-w-lg space-y-3 p-6">
+        <p>Não foi possível carregar seu estabelecimento. Seu cadastro não foi apagado.</p>
+        <Button onClick={() => refetch()}>Tentar novamente</Button>
+      </div>
+    );
 
   if (!estab) {
     return (
@@ -96,6 +105,7 @@ function SetupForm({ userId }: { userId: string }) {
     minimo: "20.00",
   });
   const [saving, setSaving] = useState(false);
+  const busy = useRef(false);
 
   useEffect(() => {
     supabase
@@ -107,46 +117,70 @@ function SetupForm({ userId }: { userId: string }) {
   }, []);
 
   async function salvar() {
+    if (busy.current) return;
     if (!form.nome.trim()) return toast.error("Nome obrigatório");
+    if (form.telefone.trim() && !isCheckoutPhone(form.telefone))
+      return toast.error("Informe um telefone com DDD.");
     if (!form.categoria_id) return toast.error("Escolha o segmento da loja.");
+    const taxa = Number(form.taxa.replace(",", "."));
+    const minimo = Number(form.minimo.replace(",", "."));
+    const tempo = Number(form.tempo);
+    if (
+      ![taxa, minimo].every((n) => Number.isFinite(n) && n >= 0 && n <= 1000000) ||
+      !Number.isInteger(tempo) ||
+      tempo < 1 ||
+      tempo > 1440
+    )
+      return toast.error("Confira taxa, pedido mínimo e tempo de preparo.");
+    busy.current = true;
     setSaving(true);
-    const { data, error } = await supabase
-      .from("establishments")
-      .insert({
-        owner_id: userId,
-        nome: form.nome.trim(),
-        descricao: form.descricao || null,
-        telefone: form.telefone || null,
-        categoria_id: form.categoria_id || null,
-        endereco: form.endereco || null,
-        cidade: form.cidade || null,
-        taxa_entrega_cents: Math.round(parseFloat(form.taxa || "0") * 100),
-        tempo_medio_min: parseInt(form.tempo || "30"),
-        pedido_minimo_cents: Math.round(parseFloat(form.minimo || "0") * 100),
-        is_open: false,
-        status: "pendente",
-      })
-      .select(ESTABLISHMENT_SELECT)
-      .single();
-    if (error || !data) {
-      setSaving(false);
-      return toast.error("Falha ao cadastrar");
-    }
-    if (prepareCategories) {
-      const names = recommendedCategories(
-        cats.find((item) => item.id === form.categoria_id)?.slug,
-      ).map(categoryLabel);
-      if (names.length) {
-        const result = await supabase.rpc("ensure_menu_categories", {
-          p_establishment_id: data.id,
-          p_names: names,
-        });
-        if (result.error) toast.error("Loja criada. Revise os modelos no módulo Categorias.");
+    try {
+      const { data, error } = await supabase
+        .from("establishments")
+        .insert({
+          owner_id: userId,
+          nome: form.nome.trim(),
+          descricao: form.descricao || null,
+          telefone: form.telefone || null,
+          categoria_id: form.categoria_id || null,
+          endereco: form.endereco || null,
+          cidade: form.cidade || null,
+          taxa_entrega_cents: Math.round(taxa * 100),
+          tempo_medio_min: tempo,
+          pedido_minimo_cents: Math.round(minimo * 100),
+          is_open: false,
+          status: "pendente",
+        })
+        .select(ESTABLISHMENT_SELECT)
+        .single();
+      if (error || !data) {
+        setSaving(false);
+        return toast.error("Falha ao cadastrar");
       }
+      // Commit the confirmed store before optional suggestions; a failed category
+      // request must never leave the user in the create-store screen.
+      await qc.cancelQueries({ queryKey: ["myEstab", userId] });
+      qc.setQueryData(["myEstab", userId], data as unknown as Estab);
+      if (prepareCategories) {
+        const names = recommendedCategories(
+          cats.find((item) => item.id === form.categoria_id)?.slug,
+        ).map(categoryLabel);
+        if (names.length) {
+          const result = await supabase.rpc("ensure_menu_categories", {
+            p_establishment_id: data.id,
+            p_names: names,
+          });
+          if (result.error) toast.error("Loja criada. Revise os modelos no módulo Categorias.");
+        }
+      }
+      setSaving(false);
+      toast.success("Estabelecimento enviado para aprovacao!");
+    } catch {
+      toast.error("Não foi possível concluir. Confira sua conexão e tente novamente.");
+    } finally {
+      busy.current = false;
+      setSaving(false);
     }
-    setSaving(false);
-    toast.success("Estabelecimento enviado para aprovacao!");
-    qc.setQueryData(["myEstab", userId], data as unknown as Estab);
   }
 
   return (
@@ -160,7 +194,7 @@ function SetupForm({ userId }: { userId: string }) {
           Configure os dados básicos para começar a receber pedidos.
         </p>
       </div>
-      <div className="grid gap-3">
+      <fieldset disabled={saving} className="grid gap-3">
         <div>
           <Label>Nome</Label>
           <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
@@ -250,7 +284,7 @@ function SetupForm({ userId }: { userId: string }) {
           {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Criar estabelecimento
         </Button>
-      </div>
+      </fieldset>
     </div>
   );
 }
