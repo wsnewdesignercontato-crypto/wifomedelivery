@@ -27,7 +27,7 @@ const quoteOrderInput = z.object({
   coupon_code: z.string().trim().max(50).optional().nullable(),
 });
 
-const placeOrderInput = quoteOrderInput.extend({
+export const placeOrderInput = quoteOrderInput.extend({
   expected_total_cents: z.number().int().nonnegative(),
   test_mode: z.boolean().default(false),
 });
