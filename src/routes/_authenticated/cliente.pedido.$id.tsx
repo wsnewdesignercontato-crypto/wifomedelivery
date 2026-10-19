@@ -33,6 +33,7 @@ export const Route = createFileRoute("/_authenticated/cliente/pedido/$id")({
 });
 
 type Order = {
+  is_test?: boolean;
   id: string;
   status: string;
   subtotal_cents: number;
@@ -120,7 +121,7 @@ function PedidoPage() {
       const { data: o, error: orderError } = await supabase
         .from("orders")
         .select(
-          "id,status,subtotal_cents,frete_cents,desconto_cents,total_cents,observacoes,cancellation_reason,refund_status,refund_amount_cents,establishment_id,forma_pagamento,codigo_expira_em,tipo_entrega,created_at",
+          "id,status,subtotal_cents,frete_cents,desconto_cents,total_cents,observacoes,cancellation_reason,refund_status,refund_amount_cents,establishment_id,forma_pagamento,codigo_expira_em,tipo_entrega,created_at,is_test",
         )
         .eq("id", id)
         .maybeSingle();
@@ -160,7 +161,7 @@ function PedidoPage() {
           .maybeSingle(),
         supabase
           .from("deliveries")
-          .select("id,status,entregador_id,lat,lng")
+          .select("id,status,entregador_id,lat,lng,is_test")
           .eq("order_id", id)
           .maybeSingle(),
         supabase.from("reviews").select("id").eq("order_id", id).maybeSingle(),
@@ -285,6 +286,11 @@ function PedidoPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="min-w-0 flex-1">
+          {order.is_test && (
+            <p className="mb-2 rounded-xl bg-amber-500/10 p-3 text-sm font-semibold text-amber-700 dark:text-amber-400">
+              TESTE · Pedido com pagamento simulado, sem cobrança real.
+            </p>
+          )}
           <h1 className="text-xl font-bold">{loja?.nome ?? "Pedido"}</h1>
           <p className="text-xs text-muted-foreground">
             #{order.id.slice(0, 8)} · {new Date(order.created_at).toLocaleString("pt-BR")}

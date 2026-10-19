@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { PaymentTestSettings } from "@/components/admin/payment-test-settings";
 import { BrevoSettings } from "@/components/admin/brevo-settings";
 
 export const Route = createFileRoute("/_authenticated/admin/configuracoes")({
@@ -116,6 +117,7 @@ function ConfigPage() {
         <p className="text-sm text-muted-foreground">Regras globais da plataforma.</p>
       </div>
 
+      <PaymentTestSettings />
       <BrevoSettings />
       <section className="max-w-2xl space-y-3 rounded-2xl border bg-card p-6">
         <h2 className="font-semibold">Contatos do suporte</h2>

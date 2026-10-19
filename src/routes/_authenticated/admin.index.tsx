@@ -71,6 +71,7 @@ async function fetchOverview() {
       supabase
         .from("orders")
         .select("id,status,total_cents,created_at,establishment_id,cancelled_at")
+        .eq("is_test", false)
         .gte("created_at", start30.toISOString())
         .order("created_at", { ascending: false })
         .limit(2000),

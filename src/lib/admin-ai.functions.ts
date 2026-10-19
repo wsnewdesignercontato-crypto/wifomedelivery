@@ -16,6 +16,7 @@ export const generateAdminInsights = createServerFn({ method: "POST" })
       context.supabase
         .from("orders")
         .select("status,total_cents,created_at")
+        .eq("is_test", false)
         .gte("created_at", since),
       context.supabase.from("establishments").select("id,nome,status,avaliacao"),
       context.supabase.from("courier_profiles").select("status"),

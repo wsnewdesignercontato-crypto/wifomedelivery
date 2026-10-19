@@ -27,6 +27,7 @@ import { watchDeviceLocation } from "@/lib/device-preferences";
 import type { Courier } from "@/hooks/use-courier";
 
 type Offer = {
+  is_test: boolean;
   deliveryId: string;
   orderId: string;
   valorCents: number;
@@ -65,6 +66,7 @@ type OrderAddress = {
 };
 
 type OfferOrder = {
+  is_test?: boolean;
   id: string;
   cliente_id: string;
   establishment_id: string;
@@ -162,7 +164,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
       // Não mostra se já tem corrida ativa
       const { data: ativa } = await supabase
         .from("deliveries")
-        .select("id")
+        .select("id,is_test")
         .eq("entregador_id", courier.user_id)
         .not("status", "in", "(delivered,cancelled)")
         .limit(1)
@@ -175,7 +177,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
 
       const { data: disp } = await supabase
         .from("deliveries")
-        .select("id,order_id,valor_entrega_cents")
+        .select("id,order_id,valor_entrega_cents,is_test")
         .eq("status", "broadcasting")
         .or(`entregador_id.is.null,entregador_id.eq.${courier.user_id}`)
         .order("created_at", { ascending: false })
@@ -191,7 +193,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
       const { data: order } = await supabase
         .from("orders")
         .select(
-          "id, cliente_id, establishment_id, total_cents, endereco_entrega, forma_pagamento, observacoes",
+          "id, cliente_id, establishment_id, total_cents, endereco_entrega, forma_pagamento, observacoes,is_test",
         )
         .eq("id", candidato.order_id)
         .maybeSingle();
@@ -271,6 +273,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         cliente: { nome: cli?.nome || "Cliente", telefone: cli?.telefone ?? null },
         distanciaColeta,
         distanciaEntrega,
+        is_test: typedOrder.is_test === true,
         observacoes: typedOrder.observacoes ?? null,
       });
     }
@@ -435,10 +438,13 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
               </div>
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wider opacity-90">
-                  Nova corrida
+                  {offer?.is_test ? "Corrida de teste" : "Nova corrida"}
                 </p>
                 <p className="text-xs font-semibold opacity-80 flex items-center gap-1">
-                  <Timer className="h-3 w-3" /> Aceite rápido — outros entregadores estão vendo
+                  <Timer className="h-3 w-3" />{" "}
+                  {offer?.is_test
+                    ? "Simulação sem entrega ou pagamento real"
+                    : "Aceite rápido — outros entregadores estão vendo"}
                 </p>
               </div>
             </div>

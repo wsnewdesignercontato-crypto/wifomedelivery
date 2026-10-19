@@ -35,6 +35,7 @@ function DashboardPage() {
       const { data: orders } = await supabase
         .from("orders")
         .select("status,total_cents,created_at")
+        .eq("is_test", false)
         .eq("establishment_id", estabId)
         .gte("created_at", startDay.toISOString());
       const list = orders ?? [];

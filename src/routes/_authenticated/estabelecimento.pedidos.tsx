@@ -48,6 +48,7 @@ export const Route = createFileRoute("/_authenticated/estabelecimento/pedidos")(
 
 type Addon = { id?: string; nome: string; preco_extra_cents?: number; group_nome?: string };
 type Order = {
+  is_test?: boolean;
   id: string;
   cliente_id: string;
   status: string;
@@ -144,7 +145,7 @@ function PedidosPage() {
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id,cliente_id,status,acceptance_deadline,total_cents,subtotal_cents,frete_cents,desconto_cents,forma_pagamento,troco_para_cents,observacoes,created_at,endereco_entrega,tipo_entrega,cancellation_reason,cancelled_role,refund_status,refund_amount_cents",
+        "id,cliente_id,status,acceptance_deadline,total_cents,subtotal_cents,frete_cents,desconto_cents,forma_pagamento,troco_para_cents,observacoes,created_at,endereco_entrega,tipo_entrega,cancellation_reason,cancelled_role,refund_status,refund_amount_cents,is_test",
       )
       .eq("establishment_id", estab.id)
       .order("created_at", { ascending: false })
@@ -457,7 +458,9 @@ function PedidosPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <Badge className={tone.badge}>{STATUS_LABEL[o.status] ?? o.status}</Badge>
+                      <Badge className={tone.badge}>
+                        {`${o.is_test ? "TESTE · " : ""}${STATUS_LABEL[o.status] ?? o.status}`}
+                      </Badge>
                       <Badge
                         variant="outline"
                         className={

@@ -918,6 +918,7 @@ export type Database = {
       };
       deliveries: {
         Row: {
+          is_test: boolean;
           aceito_em: string | null;
           coletado_em: string | null;
           created_at: string;
@@ -2006,6 +2007,8 @@ export type Database = {
       };
       orders: {
         Row: {
+          is_test: boolean;
+          test_sale_id: string | null;
           acceptance_deadline: string | null;
           cancellation_reason: string | null;
           cancelled_at: string | null;
@@ -3257,6 +3260,7 @@ export type Database = {
       };
     };
     Functions: {
+      admin_payment_test: { Args: { p_action: string; p_payload?: Json }; Returns: Json };
       customer_store_directory: {
         Args: { p_city?: string | null; p_state?: string | null };
         Returns: {

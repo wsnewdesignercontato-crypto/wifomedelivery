@@ -119,6 +119,7 @@ function EstabelecimentoPage() {
       const { data: orders } = await supabase
         .from("orders")
         .select("id")
+        .eq("is_test", false)
         .eq("cliente_id", user.id)
         .eq("establishment_id", id)
         .eq("status", "delivered")
@@ -139,6 +140,7 @@ function EstabelecimentoPage() {
       const { data: del } = await supabase
         .from("deliveries")
         .select("entregador_id")
+        .eq("is_test", false)
         .eq("order_id", pending.id)
         .maybeSingle();
       setPendingReview({ order_id: pending.id, entregador_id: del?.entregador_id ?? null });
