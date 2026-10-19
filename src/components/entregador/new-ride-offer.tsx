@@ -32,7 +32,7 @@ type Offer = {
   valorCents: number;
   totalPedidoCents: number;
   formaPagamento: string;
-  pickup: { lat: number; lng: number; nome: string; endereco: string | null };
+  pickup: { lat: number | null; lng: number | null; nome: string; endereco: string | null };
   dropoff: {
     lat: number | null;
     lng: number | null;
@@ -105,10 +105,6 @@ function fmtEndereco(
   const cep = cleanPart(e.cep);
   const parts = [rua, numero, bairro, cidade, estado, cep, "Brasil"].filter(Boolean);
   return parts.length > 1 ? parts.join(", ") : "Endereço do cliente";
-}
-
-function inBrazilBounds(lat: number, lng: number): boolean {
-  return lat >= -34 && lat <= 6 && lng >= -74 && lng <= -34;
 }
 
 function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
@@ -210,21 +206,12 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         .select("id, nome, endereco, lat, lng, cidade, estado")
         .eq("id", typedOrder.establishment_id)
         .maybeSingle();
-      if (!estab || estab.lat == null || estab.lng == null) {
+      if (!estab) {
         commitOffer(null);
         return;
       }
       const typedEstab = estab as OfferEstablishment;
-      const pickupLat = Number(typedEstab.lat);
-      const pickupLng = Number(typedEstab.lng);
-      if (!inBrazilBounds(pickupLat, pickupLng)) {
-        console.warn(
-          "[NewRideOffer] Estabelecimento com coordenadas fora do Brasil, ignorando oferta",
-          typedEstab.id,
-        );
-        commitOffer(null);
-        return;
-      }
+      const pickupPoint = deliveryPoint(typedEstab);
 
       const { data: cli } = await supabase
         .from("profiles")
@@ -234,10 +221,14 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
 
       const endereco = typedOrder.endereco_entrega ?? {};
       const pickup = {
-        lat: pickupLat,
-        lng: pickupLng,
+        lat: pickupPoint?.lat ?? null,
+        lng: pickupPoint?.lng ?? null,
         nome: typedEstab.nome,
-        endereco: typedEstab.endereco ?? null,
+        endereco:
+          [typedEstab.endereco, typedEstab.cidade, typedEstab.estado]
+            .map(cleanPart)
+            .filter(Boolean)
+            .join(", ") || null,
       };
       const enderecoFmt = fmtEndereco(endereco, {
         cidade: typedEstab.cidade,
@@ -254,8 +245,9 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         referencia: endereco.referencia ?? endereco.ponto_referencia ?? null,
       };
 
-      const distanciaColeta = myPos ? distanceKm(myPos, pickup) : null;
-      const distanciaEntrega = storedPoint ? distanceKm(pickup, storedPoint) : null;
+      const distanciaColeta = myPos && pickupPoint ? distanceKm(myPos, pickupPoint) : null;
+      const distanciaEntrega =
+        storedPoint && pickupPoint ? distanceKm(pickupPoint, storedPoint) : null;
 
       // Sanity: nenhuma entrega real ultrapassa o limite entre loja e cliente.
       if (distanciaEntrega != null && distanciaEntrega > MAX_DELIVERY_DISTANCE_KM) {
@@ -344,9 +336,15 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
 
   const offerMarkers = useMemo<MapMarker[]>(() => {
     if (!offer) return [];
-    const points: MapMarker[] = [
-      { id: "pickup", ...offer.pickup, title: "A · " + offer.pickup.nome, color: "#10B981" },
-    ];
+    const points: MapMarker[] = [];
+    if (validMapPoint(offer.pickup))
+      points.push({
+        id: "pickup",
+        lat: offer.pickup.lat,
+        lng: offer.pickup.lng,
+        title: "A · " + offer.pickup.nome,
+        color: "#10B981",
+      });
     if (validMapPoint(offer.dropoff))
       points.push({
         id: "dropoff",
@@ -409,7 +407,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
   // Distância e ETA ao vivo — recomputa a cada atualização de posição
   const distanciaColetaLive = useMemo(() => {
     if (!offer) return null;
-    if (!myPos) return offer.distanciaColeta;
+    if (!myPos || !validMapPoint(offer.pickup)) return offer.distanciaColeta;
     return distanceKm(myPos, offer.pickup);
     // The memo is keyed by stable offer identity to avoid recomputing on unrelated object changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -424,7 +422,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
   return (
     <Dialog open={!!offer} onOpenChange={(o) => !o && recusar()}>
       <DialogContent
-        className="max-w-md p-0 overflow-hidden gap-0 border-2 border-primary shadow-brand"
+        className="theme-entregador max-w-md p-0 overflow-y-auto gap-0 border-2 border-primary shadow-brand"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -569,7 +567,11 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
           <div className="grid grid-cols-2 gap-2 px-3 pb-3">
             <Button variant="outline" asChild>
               <a
-                href={navigationUrl(`${offer.pickup.lat},${offer.pickup.lng}`)}
+                href={navigationUrl(
+                  validMapPoint(offer.pickup)
+                    ? `${offer.pickup.lat},${offer.pickup.lng}`
+                    : offer.pickup.endereco || offer.pickup.nome,
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -589,7 +591,7 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         )}
 
         {/* Ações */}
-        <div className="grid grid-cols-[auto_1fr] gap-2 border-t border-border bg-card p-3">
+        <div className="sticky bottom-0 z-10 grid grid-cols-[auto_1fr] gap-2 border-t border-border bg-card p-3">
           <Button variant="outline" size="lg" onClick={recusar} disabled={accepting}>
             Recusar
           </Button>

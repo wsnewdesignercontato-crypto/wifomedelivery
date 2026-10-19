@@ -1,3 +1,4 @@
+import { RingtoneTestButton } from "@/components/ringtone-test-button";
 import { BellOff, BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -5,9 +6,15 @@ import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { PermissionHelpDialog } from "@/components/permission-help-dialog";
 
 /** Cartão para ligar/desligar as notificações que aparecem na tela do celular. */
-export function PushToggleCard({ className = "" }: { className?: string }) {
+export function PushToggleCard({
+  className = "",
+  operationalSound = false,
+}: {
+  className?: string;
+  operationalSound?: boolean;
+}) {
   const push = usePushNotifications();
-  if (!push.supported) return null;
+  if (!push.supported) return operationalSound ? <RingtoneTestButton /> : null;
 
   return (
     <div
@@ -38,17 +45,20 @@ export function PushToggleCard({ className = "" }: { className?: string }) {
         />
       </div>
 
-      {push.subscribed && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={push.busy}
-          onClick={() => push.test()}
-        >
-          Enviar notificação de teste
-        </Button>
-      )}
+      <div className="flex flex-wrap gap-2">
+        {operationalSound && <RingtoneTestButton />}
+        {push.subscribed && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={push.busy}
+            onClick={() => push.test()}
+          >
+            Enviar notificação de teste
+          </Button>
+        )}
+      </div>
 
       {push.permission === "denied" && (
         <p className="rounded-xl bg-destructive/10 p-3 text-xs text-destructive">

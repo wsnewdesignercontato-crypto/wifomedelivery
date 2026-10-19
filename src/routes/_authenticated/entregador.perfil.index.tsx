@@ -214,7 +214,7 @@ function PerfilHub() {
         <h2 className="px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
           Permissões do aparelho
         </h2>
-        <PushToggleCard />
+        <PushToggleCard operationalSound />
         <LocationToggleCard />
       </section>
 

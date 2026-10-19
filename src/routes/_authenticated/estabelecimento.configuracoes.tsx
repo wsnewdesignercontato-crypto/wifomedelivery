@@ -256,7 +256,7 @@ function ConfigPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 pb-32">
-      <PushToggleCard />
+      <PushToggleCard operationalSound />
       {/* Header com preview de capa e logo */}
       <section className="relative rounded-3xl border border-border bg-card shadow-sm">
         <div

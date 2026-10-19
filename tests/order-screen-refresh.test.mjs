@@ -28,7 +28,8 @@ const modules = {
     "export function getCurrentDevicePosition(){};export function watchDeviceLocation(){return ()=>{}};",
   "@/components/reviews": "export const ReviewForm='form';",
   "@/components/order-history": "export const OrderHistory='aside';",
-  "@/lib/delivery-dispatch": "export async function dispatchOrderDelivery(){}",
+  "@/lib/delivery-dispatch":
+    "export const dispatchOrderDelivery=(...args)=>globalThis.__orderRefreshTest.dispatch(...args);",
   "@/lib/print-receipt":
     "export function printOrderReceipt(...args){globalThis.__orderRefreshTest.printed=args;return true}export function buildReceiptHtml(){return ''}",
 };
@@ -242,6 +243,11 @@ async function mount(name, status = "placed") {
     deferNextDelivery: false,
     resolveDelivery: null,
     availableDeliveries: [],
+    dispatchCalls: [],
+    dispatch: async (...args) => {
+      runtime.dispatchCalls.push(args);
+      return "dispatched";
+    },
   });
   const previousWindow = globalThis.window,
     previousDocument = globalThis.document;
@@ -578,3 +584,46 @@ for (const name of ["rides", "courierHome"]) {
     }
   });
 }
+
+test("a ready delivery order offers dispatch recovery after a failed call", async () => {
+  const app = await mount("store", "ready");
+  try {
+    const findButton = () =>
+      nodes(app.render()).find(
+        (node) => node.type === "button" && texts(node).join(" ").includes("Chamar entregador"),
+      );
+    assert.ok(findButton(), "ready orders need an actionable retry");
+    runtime.dispatch = async (...args) => {
+      runtime.dispatchCalls.push(args);
+      throw Error("network offline");
+    };
+    await findButton().props.onClick();
+    await settle();
+    assert.ok(findButton(), "a failed dispatch must remain retryable");
+    runtime.dispatch = async (...args) => {
+      runtime.dispatchCalls.push(args);
+      return "exists";
+    };
+    await findButton().props.onClick();
+    await settle();
+    assert.equal(runtime.dispatchCalls.length, 2);
+    assert.equal(runtime.dispatchCalls[0][0].orderId, "order-1");
+  } finally {
+    app.cleanup();
+  }
+});
+test("pickup-ready orders never display a courier dispatch action", async () => {
+  const app = await mount("store", "ready");
+  try {
+    runtime.order.tipo_entrega = "pickup";
+    globalThis.window.dispatchEvent(new Event("focus"));
+    await settle();
+    assert.ok(
+      !nodes(app.render()).some(
+        (node) => node.type === "button" && texts(node).join(" ").includes("Chamar entregador"),
+      ),
+    );
+  } finally {
+    app.cleanup();
+  }
+});

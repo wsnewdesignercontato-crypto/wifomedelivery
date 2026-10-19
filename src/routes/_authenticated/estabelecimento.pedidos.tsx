@@ -115,6 +115,7 @@ function PedidosPage() {
   const [contacts, setContacts] = useState<Record<string, Contact>>({});
   const [openHistory, setOpenHistory] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<string>("todos");
+  const [dispatching, setDispatching] = useState<Set<string>>(new Set());
   const printedRef = useRef<Set<string>>(new Set());
   const refreshLifetime = useRef<{
     active: boolean;
@@ -250,17 +251,30 @@ function PedidosPage() {
     if (order.tipo_entrega === "pickup") return toast.success("Pedido pronto para retirada");
     if (!estab) return toast.success("Pedido pronto");
 
+    await chamarEntregador(order);
+  }
+
+  async function chamarEntregador(order: Pick<Order, "id">) {
+    if (!estab || dispatching.has(order.id)) return;
+    setDispatching((previous) => new Set(previous).add(order.id));
     try {
       const result = await dispatchOrderDelivery({
         orderId: order.id,
         feeCents: estab.taxa_entrega_cents,
       });
-      if (result === "exists") return toast.info("Já existe uma corrida ativa para este pedido");
-      toast.success("Corrida enviada aos entregadores");
+      if (result === "exists") toast.info("Já existe uma corrida ativa para este pedido");
+      else toast.success("Corrida enviada aos entregadores");
     } catch (dispatchError) {
       const message =
         dispatchError instanceof Error ? dispatchError.message : "Falha ao chamar entregador";
-      toast.error(message);
+      toast.error("Pedido pronto. Tente chamar o entregador novamente.", { description: message });
+    } finally {
+      setDispatching((previous) => {
+        const next = new Set(previous);
+        next.delete(order.id);
+        return next;
+      });
+      void reload();
     }
   }
 
@@ -564,12 +578,23 @@ function PedidosPage() {
                     <Button
                       size="sm"
                       onClick={() => mudarStatus(o, step.next)}
+                      disabled={dispatching.has(o.id)}
                       className="h-10 px-4 rounded-xl shadow-lg shadow-primary/20 transition-transform active:scale-95"
                     >
                       {step.next === "ready" && <Bike className="mr-2 h-4 w-4" />}
                       {step.next === "ready" && o.tipo_entrega === "pickup"
                         ? "Pronto para retirada"
                         : step.label}
+                    </Button>
+                  )}
+                  {o.tipo_entrega !== "pickup" && o.status === "ready" && (
+                    <Button
+                      size="sm"
+                      loading={dispatching.has(o.id)}
+                      onClick={() => void chamarEntregador(o)}
+                      className="h-10 rounded-xl px-4"
+                    >
+                      <Bike className="mr-2 h-4 w-4" /> Chamar entregador
                     </Button>
                   )}
                   {o.tipo_entrega === "pickup" && o.status === "ready" && (

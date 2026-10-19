@@ -8,7 +8,6 @@ import {
 
 let ctx: AudioContext | null = null;
 let loopTimer: ReturnType<typeof setInterval> | null = null;
-let unlocked = false;
 let activeNodes: { osc: OscillatorNode; gain: GainNode }[] = [];
 let listenersBound = false;
 let stopPreferenceListener: (() => void) | null = null;
@@ -25,8 +24,8 @@ function getCtx(): AudioContext | null {
       ).AudioContext ||
       (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AC) return null;
-    if (!ctx) ctx = new AC();
-    if (ctx.state === "suspended") void ctx.resume().catch(() => {});
+    if (!ctx || ctx.state === "closed") ctx = new AC();
+    if (ctx.state !== "running") void ctx.resume().catch(() => {});
     return ctx;
   } catch {
     return null;
@@ -39,20 +38,17 @@ export function ensureRingtoneUnlocked() {
   listenersBound = true;
   const handler = () => {
     if (!readDevicePreferences().som) return;
-    if (unlocked) return;
-    unlocked = true;
+    const needsResume = !ctx || ctx.state !== "running";
+    if (!needsResume) return;
     const ac = getCtx();
     if (!ac) return;
-    try {
-      const osc = ac.createOscillator();
-      const g = ac.createGain();
-      g.gain.value = 0.0001;
-      osc.connect(g).connect(ac.destination);
-      osc.start();
-      osc.stop(ac.currentTime + 0.02);
-    } catch {
-      /* ignore */
-    }
+    // Every later gesture may retry if the browser rejected an earlier unlock.
+    void ac
+      .resume()
+      .then(() => {
+        if (loopTimer) burst();
+      })
+      .catch(() => {});
   };
   window.addEventListener("click", handler);
   window.addEventListener("touchstart", handler);
@@ -64,7 +60,7 @@ function burst() {
   vibrateDevice([300, 100, 300, 100, 300, 100, 500]);
   if (!readDevicePreferences().som) return;
   const ac = getCtx();
-  if (!ac) return;
+  if (!ac || ac.state !== "running") return;
   const now = ac.currentTime;
   // 8 bipes alternados, bem audíveis (~1.3s)
   const pattern = [0, 0.14, 0.28, 0.42, 0.58, 0.74, 0.9, 1.06];
@@ -85,6 +81,8 @@ function burst() {
       activeNodes.push({ osc, gain });
       osc.onended = () => {
         activeNodes = activeNodes.filter((n) => n.osc !== osc);
+        osc.disconnect();
+        gain.disconnect();
       };
     } catch {
       /* ignore */
@@ -113,7 +111,7 @@ export function startRideRingtone() {
 }
 
 function resumeIfPlaying() {
-  if (loopTimer && ctx?.state === "suspended") void ctx.resume().catch(() => {});
+  if (loopTimer && ctx && ctx.state !== "running") void ctx.resume().catch(() => {});
 }
 
 /** Para o toque imediatamente (corta inclusive bipes já agendados). */
@@ -154,4 +152,28 @@ function silenceActiveNodes() {
       /* ignore */
     }
   });
+}
+
+/** Short local preview; never stops or replaces an actual pending-order loop. */
+export async function previewRideRingtone(): Promise<
+  "playing" | "muted" | "unsupported" | "blocked"
+> {
+  if (!readDevicePreferences().som) return "muted";
+  ensureRingtoneUnlocked();
+  const ac = getCtx();
+  if (!ac) return "unsupported";
+  let watchdog: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      ac.resume().catch(() => {}),
+      new Promise<void>((resolve) => {
+        watchdog = setTimeout(resolve, 1200);
+      }),
+    ]);
+  } finally {
+    if (watchdog) clearTimeout(watchdog);
+  }
+  if (ac.state !== "running") return "blocked";
+  if (!loopTimer) burst();
+  return "playing";
 }
