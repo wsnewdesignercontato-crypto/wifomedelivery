@@ -21,7 +21,7 @@ export function StoreLocationEditor({
         Ajustar localização
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl">
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-x-hidden overflow-y-auto sm:max-w-xl">
           <DialogTitle>Localização de {store.nome}</DialogTitle>
           <DialogDescription>
             Marque a entrada da loja no mapa e salve. Esse ponto será usado na coleta e no
@@ -81,8 +81,14 @@ function LocationForm({
   }
   return (
     <div className="space-y-3">
-      <Button type="button" variant="outline" onClick={search} disabled={busy}>
-        Localizar endereço cadastrado
+      <Button
+        className="h-auto min-h-11 w-full whitespace-normal"
+        type="button"
+        variant="outline"
+        onClick={search}
+        disabled={busy}
+      >
+        Localizar endereço da loja
       </Button>
       <p className="text-xs text-muted-foreground">
         Toque no mapa para posicionar o ponto. Use + para aproximar.
