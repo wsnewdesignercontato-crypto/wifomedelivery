@@ -95,3 +95,14 @@ test("background courier push uses its own icon and opens the offer list", async
   assert.match(service.calls[0][2].icon, /entregador/);
   assert.equal(service.calls[0][2].data.url, "/entregador/corridas");
 });
+
+test("push wakes only matching app windows and never navigates another profile", async () => {
+  const messages = [];
+  const page = (role) => ({
+    url: "https://pedetrem.vercel.app/" + role,
+    postMessage: (data) => messages.push([role, data.type]),
+  });
+  const service = worker([page("cliente"), page("entregador"), page("estabelecimento")]);
+  await service.push({ title: "Nova corrida", url: "/entregador/corridas" });
+  assert.deepEqual(messages, [["entregador", "pedetrem:push-received"]]);
+});

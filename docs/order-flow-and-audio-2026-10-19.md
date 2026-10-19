@@ -18,3 +18,5 @@ Evidence:
 
 Limits:
 The current apps are PWAs. The in-page melody depends on browser autoplay permission and a running page. A minimized page may be suspended. Web Push can notify without the page running, with OS-controlled sound. Custom continuous ringing on a locked/background phone requires native platform support and real device validation. This release does not claim physical Android/iOS audio delivery or Uber-equivalent background behavior.
+
+The service worker also signals matching live app windows after a push. Resume handlers reconcile server state immediately when that message is delivered; frozen pages wait for OS/browser resumption. This is not a background keep-alive or a guarantee of continuous sound.

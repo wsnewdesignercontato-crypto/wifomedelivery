@@ -46,6 +46,18 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     (async () => {
       await self.registration.showNotification(title, options);
+      // Wake the corresponding live page's reconciliation when the OS permits it.
+      // A frozen/discarded page still relies on the visible system notification.
+      try {
+        const pages = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+        for (const page of pages) {
+          const current = new URL(page.url);
+          if (current.origin === self.location.origin && current.pathname.split("/")[1] === profile)
+            page.postMessage({ type: "pedetrem:push-received", profile });
+        }
+      } catch {
+        /* The notification remains delivered even if a page has closed. */
+      }
       if (typeof data.unread === "number" && "setAppBadge" in self.navigator) {
         try {
           if (data.unread > 0) await self.navigator.setAppBadge(data.unread);
