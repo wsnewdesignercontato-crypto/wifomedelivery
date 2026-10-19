@@ -95,6 +95,7 @@ import { Route as AuthenticatedEstabelecimentoSaquesRouteImport } from './routes
 import { Route as AuthenticatedEstabelecimentoScoreRouteImport } from './routes/_authenticated/estabelecimento.score'
 import { Route as AuthenticatedEstabelecimentoSuporteRouteImport } from './routes/_authenticated/estabelecimento.suporte'
 import { Route as ApiAuthSendEmailRouteImport } from './routes/api/auth/send-email'
+import { Route as ApiInternalAsaasReconcileRouteImport } from './routes/api/internal/asaas-reconcile'
 import { Route as ApiInternalPushDispatchRouteImport } from './routes/api/internal/push-dispatch'
 import { Route as AuthenticatedClienteEstabelecimentoIdRouteImport } from './routes/_authenticated/cliente.estabelecimento.$id'
 import { Route as AuthenticatedClientePedidoIdRouteImport } from './routes/_authenticated/cliente.pedido.$id'
@@ -605,6 +606,12 @@ const ApiAuthSendEmailRoute = ApiAuthSendEmailRouteImport.update({
   path: '/api/auth/send-email',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiInternalAsaasReconcileRoute =
+  ApiInternalAsaasReconcileRouteImport.update({
+    id: '/api/internal/asaas-reconcile',
+    path: '/api/internal/asaas-reconcile',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiInternalPushDispatchRoute = ApiInternalPushDispatchRouteImport.update({
   id: '/api/internal/push-dispatch',
   path: '/api/internal/push-dispatch',
@@ -782,6 +789,7 @@ export interface FileRoutesByFullPath {
   '/estabelecimento/score': typeof AuthenticatedEstabelecimentoScoreRoute
   '/estabelecimento/suporte': typeof AuthenticatedEstabelecimentoSuporteRoute
   '/api/auth/send-email': typeof ApiAuthSendEmailRoute
+  '/api/internal/asaas-reconcile': typeof ApiInternalAsaasReconcileRoute
   '/api/internal/push-dispatch': typeof ApiInternalPushDispatchRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/cliente/': typeof AuthenticatedClienteIndexRoute
@@ -881,6 +889,7 @@ export interface FileRoutesByTo {
   '/estabelecimento/score': typeof AuthenticatedEstabelecimentoScoreRoute
   '/estabelecimento/suporte': typeof AuthenticatedEstabelecimentoSuporteRoute
   '/api/auth/send-email': typeof ApiAuthSendEmailRoute
+  '/api/internal/asaas-reconcile': typeof ApiInternalAsaasReconcileRoute
   '/api/internal/push-dispatch': typeof ApiInternalPushDispatchRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/cliente': typeof AuthenticatedClienteIndexRoute
@@ -986,6 +995,7 @@ export interface FileRoutesById {
   '/_authenticated/estabelecimento/score': typeof AuthenticatedEstabelecimentoScoreRoute
   '/_authenticated/estabelecimento/suporte': typeof AuthenticatedEstabelecimentoSuporteRoute
   '/api/auth/send-email': typeof ApiAuthSendEmailRoute
+  '/api/internal/asaas-reconcile': typeof ApiInternalAsaasReconcileRoute
   '/api/internal/push-dispatch': typeof ApiInternalPushDispatchRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/cliente/': typeof AuthenticatedClienteIndexRoute
@@ -1091,6 +1101,7 @@ export interface FileRouteTypes {
     | '/estabelecimento/score'
     | '/estabelecimento/suporte'
     | '/api/auth/send-email'
+    | '/api/internal/asaas-reconcile'
     | '/api/internal/push-dispatch'
     | '/admin/'
     | '/cliente/'
@@ -1190,6 +1201,7 @@ export interface FileRouteTypes {
     | '/estabelecimento/score'
     | '/estabelecimento/suporte'
     | '/api/auth/send-email'
+    | '/api/internal/asaas-reconcile'
     | '/api/internal/push-dispatch'
     | '/admin'
     | '/cliente'
@@ -1294,6 +1306,7 @@ export interface FileRouteTypes {
     | '/_authenticated/estabelecimento/score'
     | '/_authenticated/estabelecimento/suporte'
     | '/api/auth/send-email'
+    | '/api/internal/asaas-reconcile'
     | '/api/internal/push-dispatch'
     | '/_authenticated/admin/'
     | '/_authenticated/cliente/'
@@ -1330,6 +1343,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermosRoute: typeof TermosRoute
   ApiAuthSendEmailRoute: typeof ApiAuthSendEmailRoute
+  ApiInternalAsaasReconcileRoute: typeof ApiInternalAsaasReconcileRoute
   ApiInternalPushDispatchRoute: typeof ApiInternalPushDispatchRoute
   ApiPaymentsAsaasWebhookRoute: typeof ApiPaymentsAsaasWebhookRoute
 }
@@ -1938,6 +1952,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSendEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/internal/asaas-reconcile': {
+      id: '/api/internal/asaas-reconcile'
+      path: '/api/internal/asaas-reconcile'
+      fullPath: '/api/internal/asaas-reconcile'
+      preLoaderRoute: typeof ApiInternalAsaasReconcileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/internal/push-dispatch': {
       id: '/api/internal/push-dispatch'
       path: '/api/internal/push-dispatch'
@@ -2329,6 +2350,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermosRoute: TermosRoute,
   ApiAuthSendEmailRoute: ApiAuthSendEmailRoute,
+  ApiInternalAsaasReconcileRoute: ApiInternalAsaasReconcileRoute,
   ApiInternalPushDispatchRoute: ApiInternalPushDispatchRoute,
   ApiPaymentsAsaasWebhookRoute: ApiPaymentsAsaasWebhookRoute,
 }

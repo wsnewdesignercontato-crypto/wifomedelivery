@@ -12,6 +12,8 @@ globalThis.__customerProfileTest = runtime;
 const jsxHooks = loadTsx();
 const reactUrl = import.meta.resolve("react");
 const modules = {
+  "@/lib/asaas-payment.functions": `export const getOnlinePaymentAvailability=async()=>({enabled:false,methods:[]});export const startOnlineOrder=async()=>{throw Error('online is disabled in profile regression')};`,
+  "@/components/checkout/online-payment-form": `export const OnlinePaymentForm='form';`,
   react: `export * from ${JSON.stringify(reactUrl)};
     const r=globalThis.__customerProfileTest;
     export function useState(initial){const i=r.cursor++;if(!(i in r.states))r.states[i]=initial;return [r.states[i],v=>r.states[i]=typeof v==='function'?v(r.states[i]):v]}

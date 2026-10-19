@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ReviewForm } from "@/components/reviews";
 import { bindResumeRefresh } from "@/lib/resume-refresh";
+import { OrderOnlinePayment } from "@/components/checkout/order-online-payment";
 
 export const Route = createFileRoute("/_authenticated/cliente/pedido/$id")({
   head: () => ({
@@ -33,6 +34,8 @@ export const Route = createFileRoute("/_authenticated/cliente/pedido/$id")({
 });
 
 type Order = {
+  payment_channel?: string;
+  online_payment_state?: string | null;
   is_test?: boolean;
   id: string;
   status: string;
@@ -121,7 +124,7 @@ function PedidoPage() {
       const { data: o, error: orderError } = await supabase
         .from("orders")
         .select(
-          "id,status,subtotal_cents,frete_cents,desconto_cents,total_cents,observacoes,cancellation_reason,refund_status,refund_amount_cents,establishment_id,forma_pagamento,codigo_expira_em,tipo_entrega,created_at,is_test",
+          "id,status,subtotal_cents,frete_cents,desconto_cents,total_cents,observacoes,cancellation_reason,refund_status,refund_amount_cents,establishment_id,forma_pagamento,codigo_expira_em,tipo_entrega,created_at,is_test,acceptance_deadline,payment_channel,online_payment_state",
         )
         .eq("id", id)
         .maybeSingle();
@@ -310,7 +313,7 @@ function PedidoPage() {
       </div>
 
       {order.codigo_entrega &&
-        !["delivered", "cancelled", "refunded"].includes(order.status) &&
+        !["pending_payment", "delivered", "cancelled", "refunded"].includes(order.status) &&
         (() => {
           const expired = order.codigo_expira_em
             ? new Date(order.codigo_expira_em) < new Date()
@@ -371,10 +374,22 @@ function PedidoPage() {
           );
         })()}
 
+      {order.payment_channel === "asaas" && (
+        <OrderOnlinePayment
+          key={`${user.id}:${order.id}`}
+          userId={user.id}
+          orderId={order.id}
+          method={order.forma_pagamento === "pix" ? "pix" : "cartao"}
+        />
+      )}
       {order.status === "placed" && (
         <OrderAcceptanceCountdown deadline={order.acceptance_deadline} customer />
       )}
-      {order.status === "cancelled" ? (
+      {order.status === "pending_payment" ? (
+        <div role="status" className="rounded-xl border p-4 text-sm">
+          Aguardando confirmação do pagamento. O preparo ainda não começou.
+        </div>
+      ) : order.status === "cancelled" ? (
         <div className="rounded-2xl border border-destructive/50 bg-destructive/5 p-4">
           <div className="flex items-center gap-2 text-destructive">
             <XCircle className="h-5 w-5" />

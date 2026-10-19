@@ -52,7 +52,7 @@ function paymentInput(data: unknown) {
     throw new Error("Escolha Pix ou cartão para o pagamento online.");
   return {
     ...input,
-    payer: validatePayer(input.payer),
+    payer: input.checkout.expected_total_cents === 0 ? undefined : validatePayer(input.payer),
     card: input.card === undefined ? undefined : validateCard(input.card),
   };
 }

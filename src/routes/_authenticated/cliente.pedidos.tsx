@@ -31,6 +31,7 @@ type Order = {
 };
 
 const STATUS_LABEL: Record<string, string> = {
+  pending_payment: "Aguardando pagamento",
   placed: "Recebido",
   accepted: "Aceito",
   preparing: "Em preparo",
@@ -112,6 +113,7 @@ function PedidosPage() {
   }, [user.id]);
 
   const ACTIVE = new Set([
+    "pending_payment",
     "placed",
     "accepted",
     "preparing",

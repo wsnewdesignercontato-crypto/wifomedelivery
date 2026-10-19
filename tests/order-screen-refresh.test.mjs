@@ -8,6 +8,7 @@ globalThis.__orderRefreshTest = runtime;
 const jsx = loadTsx();
 const react = import.meta.resolve("react");
 const modules = {
+  "@/components/checkout/order-online-payment": `export const OrderOnlinePayment='aside';`,
   react: `export * from ${JSON.stringify(react)};
     const r=globalThis.__orderRefreshTest;
     export function useState(initial){const i=r.cursor++;if(!(i in r.states))r.states[i]=typeof initial==='function'?initial():initial;return[r.states[i],value=>{r.writes++;r.states[i]=typeof value==='function'?value(r.states[i]):value}]}

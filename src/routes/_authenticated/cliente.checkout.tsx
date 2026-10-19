@@ -18,6 +18,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { placeOrder, quoteOrder, type CheckoutQuoteInput } from "@/lib/checkout.functions";
+import { getOnlinePaymentAvailability, startOnlineOrder } from "@/lib/asaas-payment.functions";
+import { OnlinePaymentForm } from "@/components/checkout/online-payment-form";
+import type { PayerInput, CardInput } from "@/lib/asaas-payment-contract";
 import {
   checkoutFailure,
   checkoutQuoteReducer,
@@ -62,7 +65,7 @@ const fmt = (c: number) =>
   (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 type Pay = "pix" | "cartao" | "dinheiro";
 const PAYS: { key: Pay; label: string; Icon: typeof QrCode }[] = [
-  { key: "pix", label: "Pix", Icon: QrCode },
+  { key: "pix", label: "Pix na entrega", Icon: QrCode },
   { key: "cartao", label: "Cartão na entrega", Icon: CreditCard },
   { key: "dinheiro", label: "Dinheiro", Icon: Banknote },
 ];
@@ -73,6 +76,26 @@ function CheckoutPage() {
   const navigate = useNavigate();
   const call = useServerFn(placeOrder);
   const callQuote = useServerFn(quoteOrder);
+  const onlineAvailability = useServerFn(getOnlinePaymentAvailability);
+  const callOnline = useServerFn(startOnlineOrder);
+  const [onlineAvailable, setOnlineAvailable] = useState(false);
+  const [online, setOnline] = useState(false);
+  const submitLock = useRef(false);
+  const identity = useRef(user.id);
+  identity.current = user.id;
+  useEffect(() => {
+    let active = true;
+    setOnline(false);
+    setOnlineAvailable(false);
+    void onlineAvailability()
+      .then((value) => {
+        if (active) setOnlineAvailable(value.enabled);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [onlineAvailability, user.id]);
   const checkoutAttempt = useRef<{ fingerprint: string; key: string } | null>(null);
   const quoteSequence = useRef(0);
   const [quoteState, updateQuote] = useReducer(checkoutQuoteReducer, initialCheckoutQuote);
@@ -168,7 +191,23 @@ function CheckoutPage() {
           if (enabled) setPagto((pay) => (pay === "dinheiro" ? "pix" : pay));
         }
         setEstab(e as Estab | null);
-      } else setEstab(null);
+      } else {
+        const pending = await supabase
+          .from("orders")
+          .select("id")
+          .eq("cliente_id", user.id)
+          .eq("status", "pending_payment")
+          .eq("payment_channel", "asaas")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (!active || request !== sequence) return;
+        if (pending.data) {
+          void navigate({ to: "/cliente/pedido/$id", params: { id: pending.data.id } });
+          return;
+        }
+        setEstab(null);
+      }
       setLoading(false);
     };
     void reload();
@@ -191,7 +230,7 @@ function CheckoutPage() {
       window.removeEventListener("pageshow", refresh);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [user.id]);
+  }, [user.id, navigate]);
 
   const checkoutData = useMemo<Omit<CheckoutQuoteInput, "idempotency_key"> | null>(() => {
     const addr = addrs.find((address) => address.id === addrId);
@@ -278,12 +317,16 @@ function CheckoutPage() {
     setNovo({ rua: "", numero: "", bairro: "", cidade: "", estado: "" });
   }
 
-  async function confirmar() {
+  async function confirmar(payment?: { payer: PayerInput; card?: CardInput }) {
     if (!detailsLoaded || missing.length) {
       setDetailsOpen(true);
       return;
     }
-    if (!checkoutData || !currentQuote || enviando || testMode === null) return;
+    if (!checkoutData || !currentQuote || submitLock.current || enviando || testMode === null)
+      return;
+    if (online && (!onlineAvailable || testMode)) return;
+    submitLock.current = true;
+    const submittedUser = user.id;
     setEnviando(true);
     try {
       const expected_total_cents = currentQuote.total_cents;
@@ -292,6 +335,7 @@ function CheckoutPage() {
         cartFingerprint,
         expected_total_cents,
         testMode,
+        channel: online ? "asaas" : "delivery",
       });
       const storageKey = `wifome-pending-checkout-${user.id}`;
       let attempt = checkoutAttempt.current;
@@ -317,6 +361,25 @@ function CheckoutPage() {
         sessionStorage.setItem(storageKey, JSON.stringify(attempt));
       } catch {
         /* Optional persistence. */
+      }
+      if (online) {
+        const view = await callOnline({
+          data: {
+            checkout: {
+              ...checkoutData,
+              expected_total_cents,
+              idempotency_key: attempt.key,
+              test_mode: false,
+            },
+            payer: payment?.payer,
+            card: payment?.card,
+          },
+        });
+        if (identity.current !== submittedUser) return;
+        sessionStorage.removeItem(storageKey);
+        checkoutAttempt.current = null;
+        await navigate({ to: "/cliente/pedido/$id", params: { id: view.orderId } });
+        return;
       }
       const res = await call({
         data: {
@@ -346,6 +409,7 @@ function CheckoutPage() {
         refreshQuote();
       } else setUncertainAttempt(quoteFingerprint);
     } finally {
+      submitLock.current = false;
       setEnviando(false);
     }
   }
@@ -524,22 +588,55 @@ function CheckoutPage() {
 
       <section>
         <h2 className="mb-2 text-sm font-semibold">Forma de pagamento</h2>
-        <div className="grid grid-cols-2 gap-2">
-          {PAYS.filter((pay) => !testMode || pay.key !== "dinheiro").map(({ key, label, Icon }) => (
-            <button
-              key={key}
-              onClick={() => setPagto(key)}
-              className={`flex items-center gap-2 rounded-2xl border p-3 text-sm font-medium transition ${pagto === key ? "border-primary bg-primary text-primary-foreground shadow-sm [&_.text-muted-foreground]:text-primary-foreground/90" : "border-primary bg-card text-primary hover:bg-primary/5"}`}
+        {onlineAvailable && !testMode && (
+          <div className="mb-3 grid grid-cols-2 gap-2">
+            <Button
+              variant={online ? "outline" : "default"}
+              disabled={enviando}
+              onClick={() => setOnline(false)}
             >
-              <Icon className="h-4 w-4" />
-              {testMode ? (key === "pix" ? "Pix de teste" : "Cartão de teste") : label}
-            </button>
-          ))}
+              Pagar na entrega
+            </Button>
+            <Button
+              variant={online ? "default" : "outline"}
+              disabled={enviando}
+              onClick={() => {
+                setOnline(true);
+                if (pagto === "dinheiro") setPagto("pix");
+              }}
+            >
+              Pagar online
+            </Button>
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-2">
+          {PAYS.filter((pay) => !(testMode || online) || pay.key !== "dinheiro").map(
+            ({ key, label, Icon }) => (
+              <button
+                key={key}
+                onClick={() => setPagto(key)}
+                className={`flex items-center gap-2 rounded-2xl border p-3 text-sm font-medium transition ${pagto === key ? "border-primary bg-primary text-primary-foreground shadow-sm [&_.text-muted-foreground]:text-primary-foreground/90" : "border-primary bg-card text-primary hover:bg-primary/5"}`}
+              >
+                <Icon className="h-4 w-4" />
+                {testMode
+                  ? key === "pix"
+                    ? "Pix de teste"
+                    : "Cartão de teste"
+                  : online
+                    ? key === "pix"
+                      ? "Pix online"
+                      : "Cartão online · à vista"
+                    : label}
+              </button>
+            ),
+          )}
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">
           {testMode
             ? "Pagamento aprovado apenas no simulador, sem Pix, cartão ou dinheiro real."
-            : "Pagamento processado na entrega (Pix e cartão online em breve)."}
+            : online
+              ? "Pagamento dentro do PedeTrem, processado pela Asaas. A loja recebe o pedido após a confirmação."
+              : "Pague à loja ou ao entregador ao receber seu pedido."}
         </p>
       </section>
 
@@ -596,22 +693,36 @@ function CheckoutPage() {
         </p>
       )}
 
-      <Button
-        className="w-full"
-        size="lg"
-        onClick={confirmar}
-        disabled={enviando || !currentQuote || !detailsLoaded || testMode === null}
-      >
-        {enviando ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : uncertainAttempt === quoteFingerprint ? (
-          "Verificar tentativa anterior"
-        ) : testMode ? (
-          "Confirmar pedido de teste"
-        ) : (
-          "Confirmar pedido"
-        )}
-      </Button>
+      {online && pagto !== "dinheiro" && currentQuote && currentQuote.total_cents > 0 ? (
+        <OnlinePaymentForm
+          key={`${user.id}:${pagto}`}
+          method={pagto}
+          busy={enviando}
+          disabled={!detailsLoaded || missing.length > 0}
+          submitLabel={`Pagar ${fmt(currentQuote.total_cents)}`}
+          onSubmit={async (payer, card) => {
+            await confirmar({ payer, card });
+          }}
+          onError={() => toast.error("Confira os dados de pagamento informados.")}
+        />
+      ) : (
+        <Button
+          className="w-full"
+          size="lg"
+          onClick={() => void confirmar()}
+          disabled={enviando || !currentQuote || !detailsLoaded || testMode === null}
+        >
+          {enviando ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : uncertainAttempt === quoteFingerprint ? (
+            "Verificar tentativa anterior"
+          ) : testMode ? (
+            "Confirmar pedido de teste"
+          ) : (
+            "Confirmar pedido"
+          )}
+        </Button>
+      )}
     </div>
   );
 }
