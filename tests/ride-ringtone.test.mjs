@@ -28,10 +28,14 @@ async function setup() {
     contexts: [],
     nodes: [],
     allow: false,
+    music: false,
+    sources: [],
+    fetches: [],
     timers: new Map(),
     nextTimer: 0,
   };
   const previous = {
+    fetch: globalThis.fetch,
     window: globalThis.window,
     document: globalThis.document,
     interval: globalThis.setInterval,
@@ -48,6 +52,26 @@ async function setup() {
       if (!fixture.allow) return Promise.reject(Error("autoplay blocked"));
       this.state = "running";
       return Promise.resolve();
+    }
+    decodeAudioData() {
+      return Promise.resolve({ duration: 53 });
+    }
+    createBufferSource() {
+      const source = {
+        loop: false,
+        connect() {},
+        start() {
+          this.started = true;
+        },
+        stop() {
+          this.stopped = true;
+        },
+        disconnect() {
+          this.disconnected = true;
+        },
+      };
+      fixture.sources.push(source);
+      return source;
     }
     createOscillator() {
       const node = {
@@ -80,6 +104,11 @@ async function setup() {
       };
     }
   }
+  globalThis.fetch = async (url) => {
+    fixture.fetches.push(url);
+    if (!fixture.music) throw Error("offline");
+    return { ok: true, arrayBuffer: async () => new ArrayBuffer(4) };
+  };
   globalThis.window = Object.assign(new EventTarget(), { AudioContext: Context });
   globalThis.document = new EventTarget();
   globalThis.setInterval = (fn) => {
@@ -94,6 +123,7 @@ async function setup() {
     cleanup() {
       mod.stopRideRingtone();
       Object.assign(globalThis, {
+        fetch: previous.fetch,
         window: previous.window,
         document: previous.document,
         setInterval: previous.interval,
@@ -155,6 +185,95 @@ test("muted preference is respected and an interrupted context resumes on a late
     fixture.prefs.som = false;
     fixture.listeners.forEach((fn) => fn());
     assert.ok(fixture.nodes.every((x) => x.stopped));
+  } finally {
+    app.cleanup();
+  }
+});
+
+async function settleMusic() {
+  for (let i = 0; i < 15; i++) await Promise.resolve();
+}
+
+test("uploaded music loops once, is cached and stops immediately with the order alert", async () => {
+  const app = await setup();
+  try {
+    fixture.music = true;
+    fixture.allow = true;
+    app.mod.startRideRingtone();
+    await settleMusic();
+    assert.deepEqual(fixture.fetches, ["/audio/pedetrem-alert-v1.mp3"]);
+    assert.equal(fixture.sources.length, 1);
+    assert.equal(fixture.sources[0].loop, true);
+    assert.equal(fixture.sources[0].started, true);
+    assert.ok(fixture.nodes.every((n) => n.stopped));
+    app.mod.startRideRingtone();
+    assert.equal(fixture.sources.length, 1);
+    fixture.timers.values().next().value();
+    assert.equal(fixture.sources.length, 1);
+    app.mod.stopRideRingtone();
+    assert.equal(fixture.sources[0].stopped, true);
+    assert.equal(fixture.sources[0].disconnected, true);
+    app.mod.startRideRingtone();
+    await settleMusic();
+    assert.equal(fixture.fetches.length, 1);
+  } finally {
+    app.cleanup();
+  }
+});
+
+test("a late music download never starts after the order alert was stopped", async () => {
+  const app = await setup();
+  const normalFetch = globalThis.fetch;
+  let release;
+  globalThis.fetch = () =>
+    new Promise((resolve) => {
+      release = () => resolve({ ok: true, arrayBuffer: async () => new ArrayBuffer(4) });
+    });
+  try {
+    fixture.allow = true;
+    app.mod.startRideRingtone();
+    app.mod.stopRideRingtone();
+    release();
+    await settleMusic();
+    assert.equal(fixture.sources.length, 0);
+  } finally {
+    globalThis.fetch = normalFetch;
+    app.cleanup();
+  }
+});
+
+test("music preview becomes the real alert without the preview timer stopping it", async () => {
+  const app = await setup();
+  try {
+    fixture.music = true;
+    fixture.allow = true;
+    assert.equal(await app.mod.previewRideRingtone(), "playing");
+    assert.equal(fixture.sources.length, 1);
+    assert.equal(fixture.sources[0].loop, false);
+    app.mod.startRideRingtone();
+    assert.equal(fixture.sources.length, 1);
+    assert.equal(fixture.sources[0].loop, true);
+    fixture.prefs.som = false;
+    fixture.listeners.forEach((fn) => fn());
+    assert.equal(fixture.sources[0].stopped, true);
+    fixture.prefs.som = true;
+    fixture.listeners.forEach((fn) => fn());
+    assert.equal(fixture.sources.length, 2);
+  } finally {
+    app.cleanup();
+  }
+});
+
+test("muting a music preview stops it without waiting for the preview deadline", async () => {
+  const app = await setup();
+  try {
+    fixture.music = true;
+    fixture.allow = true;
+    assert.equal(await app.mod.previewRideRingtone(), "playing");
+    fixture.prefs.som = false;
+    fixture.listeners.forEach((fn) => fn());
+    assert.equal(fixture.sources[0].stopped, true);
+    assert.equal(fixture.listeners.size, 0);
   } finally {
     app.cleanup();
   }
