@@ -9,9 +9,11 @@ import { PermissionHelpDialog } from "@/components/permission-help-dialog";
 export function PushToggleCard({
   className = "",
   operationalSound = false,
+  showTest = true,
 }: {
   className?: string;
   operationalSound?: boolean;
+  showTest?: boolean;
 }) {
   const push = usePushNotifications();
   if (!push.supported) return operationalSound ? <RingtoneTestButton /> : null;
@@ -45,20 +47,22 @@ export function PushToggleCard({
         />
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {operationalSound && <RingtoneTestButton />}
-        {push.subscribed && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={push.busy}
-            onClick={() => push.test()}
-          >
-            Enviar notificação de teste
-          </Button>
-        )}
-      </div>
+      {(operationalSound || (showTest && push.subscribed)) && (
+        <div className="flex flex-wrap gap-2">
+          {operationalSound && <RingtoneTestButton />}
+          {showTest && push.subscribed && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={push.busy}
+              onClick={() => push.test()}
+            >
+              Enviar notificação de teste
+            </Button>
+          )}
+        </div>
+      )}
 
       {push.permission === "denied" && (
         <p className="rounded-xl bg-destructive/10 p-3 text-xs text-destructive">

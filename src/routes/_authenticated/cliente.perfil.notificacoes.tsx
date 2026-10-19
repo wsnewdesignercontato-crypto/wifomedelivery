@@ -86,7 +86,7 @@ function NotifPage() {
         Escolha como o PedeTrem pode te avisar sobre pedidos, promoções e novidades.
       </p>
 
-      <PushToggleCard />
+      <PushToggleCard showTest={false} />
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
         {rows.map((r, i) => (

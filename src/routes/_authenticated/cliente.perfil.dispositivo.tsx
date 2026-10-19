@@ -60,7 +60,7 @@ function DispositivoPage() {
         <Smartphone className="h-5 w-5 text-primary" /> Configurações do dispositivo
       </h1>
 
-      <PushToggleCard />
+      <PushToggleCard showTest={false} />
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
         {rows.map((r, i) => (
