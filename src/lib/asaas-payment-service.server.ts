@@ -58,7 +58,11 @@ export class PaymentReconciliationError extends Error {
     super("Não foi possível conferir a cobrança. Aguarde a conciliação.");
   }
 }
-export function createPaymentService(store: PaymentStore, api: typeof transport = transport) {
+export function createPaymentService(
+  store: PaymentStore,
+  api: typeof transport = transport,
+  options: { signal?: AbortSignal } = {},
+) {
   async function credentials(a: PaymentAttempt) {
     const c = await store.credentials(a.environment);
     if (c.revision !== a.revision) throw new PaymentReconciliationError();
@@ -85,7 +89,10 @@ export function createPaymentService(store: PaymentStore, api: typeof transport 
       Date.parse(a.expiresAt) > Date.now()
     ) {
       try {
-        await store.pixSave(a.attemptId, await api.getAsaasPix(await credentials(a), s.id));
+        await store.pixSave(
+          a.attemptId,
+          await api.getAsaasPix(await credentials(a), s.id, options),
+        );
       } catch {
         /* A missing QR can be retried by refresh; it does not invalidate the charge. */
       }
@@ -95,8 +102,8 @@ export function createPaymentService(store: PaymentStore, api: typeof transport 
   async function reconcilePayment(a: PaymentAttempt, eventId?: string) {
     const c = await credentials(a);
     const found = a.paymentId
-      ? [await api.getAsaasPayment(c, a.paymentId)]
-      : await api.findAsaasPayments(c, a.externalReference);
+      ? [await api.getAsaasPayment(c, a.paymentId, options)]
+      : await api.findAsaasPayments(c, a.externalReference, options);
     if (found.length === 0) return store.view(a.userId, a.orderId);
     if (found.length !== 1) throw new PaymentReconciliationError();
     return apply(a, found[0], eventId);
@@ -130,7 +137,12 @@ export function createPaymentService(store: PaymentStore, api: typeof transport 
       let customerId = customer.customerId;
       if (!customerId) {
         if (!customer.operationId) throw new PaymentReconciliationError();
-        customerId = await api.findOrCreateAsaasCustomer(c, customer.externalReference, payer);
+        customerId = await api.findOrCreateAsaasCustomer(
+          c,
+          customer.externalReference,
+          payer,
+          options,
+        );
         if (
           !(await store.customerComplete(userId, a.environment, customer.operationId, customerId))
         )
@@ -149,6 +161,7 @@ export function createPaymentService(store: PaymentStore, api: typeof transport 
         payer,
         a.billingType === "CREDIT_CARD" ? card : undefined,
         request.remoteIp,
+        options,
       );
       if (!(await store.attach(a.attemptId, a.operationId!, snapshot)))
         throw new PaymentReconciliationError();
@@ -167,11 +180,11 @@ export function createPaymentService(store: PaymentStore, api: typeof transport 
     let view = await reconcilePayment(a);
     if (view.state === "cancel_pending" && a.paymentId) {
       const c = await credentials(a);
-      const snapshot = await api.getAsaasPayment(c, a.paymentId);
+      const snapshot = await api.getAsaasPayment(c, a.paymentId, options);
       match(a, snapshot);
       // Never turn a DELETE response into a refund. Only an unpaid pending charge is removable.
       if (snapshot.status === "PENDING") {
-        await api.cancelAsaasPayment(c, snapshot.id);
+        await api.cancelAsaasPayment(c, snapshot.id, options);
         view = await apply(a, { ...snapshot, status: "DELETED" });
       }
     }

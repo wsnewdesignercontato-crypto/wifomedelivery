@@ -123,6 +123,7 @@ export const registerAsaasWebhook = createServerFn({ method: "POST" })
         _environment: data.environment,
         _revision: credentials.revision,
         _webhook_id: id,
+        _payment_contract: 1,
       });
       if (result.error || result.data !== true)
         throw new Error("A configuração mudou durante o registro. Atualize e registre novamente.");

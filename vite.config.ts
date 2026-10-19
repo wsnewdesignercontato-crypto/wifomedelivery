@@ -17,6 +17,7 @@ const serverEnvNames = [
   "VERCEL_OIDC_TOKEN",
   "APP_URL",
   "PUSH_DISPATCH_SECRET",
+  "ASAAS_RECONCILE_SECRET",
   "VAPID_PRIVATE_JWK",
   "VAPID_PUBLIC_KEY",
   "VAPID_SUBJECT",
@@ -44,6 +45,7 @@ export default defineConfig(({ mode }) => {
       nitro({
         preset: process.env.NITRO_PRESET || (process.env.VERCEL ? "vercel" : "node-server"),
         compatibilityDate: "2026-10-12",
+        vercel: { functions: { maxDuration: 120 } },
       }),
       viteReact(),
     ],

@@ -18,6 +18,15 @@ const make = (payload = body, token = secret, environment = "sandbox") =>
     headers: { "Content-Type": "application/json", "asaas-access-token": token },
     body: JSON.stringify(payload),
   });
+test("documented ampersand event is accepted and deduplicated", async () => {
+  const d = deps();
+  const payload = { ...body, id: "evt_05b708f961d739ea7eba7e4db318f621&368604920" };
+  assert.equal((await hook.handleAsaasWebhook(make(payload), d)).status, 200);
+  assert.deepEqual(await (await hook.handleAsaasWebhook(make(payload), d)).json(), {
+    received: true,
+    duplicate: true,
+  });
+});
 function deps() {
   const calls = [];
   const ids = new Set();

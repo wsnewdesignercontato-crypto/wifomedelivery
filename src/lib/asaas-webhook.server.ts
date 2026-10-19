@@ -75,7 +75,7 @@ export async function handleAsaasWebhook(request: Request, deps: Dependencies): 
   }
   if (
     typeof payload.id !== "string" ||
-    !/^[a-zA-Z0-9_-]{1,240}$/.test(payload.id) ||
+    !/^[a-zA-Z0-9_&-]{1,240}$/.test(payload.id) ||
     typeof payload.event !== "string" ||
     !/^[A-Z][A-Z0-9_]{1,95}$/.test(payload.event)
   )

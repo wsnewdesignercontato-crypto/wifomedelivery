@@ -187,6 +187,6 @@ export function validatePaymentSnapshot(value: unknown): PaymentSnapshot {
     netValueCents:
       row.netValue === undefined || row.netValue === null ? null : paymentCents(row.netValue),
     refundedValueCents,
-    status: row.status,
+    status: row.deleted === true ? "DELETED" : row.status,
   };
 }

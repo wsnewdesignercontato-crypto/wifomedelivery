@@ -153,8 +153,28 @@ DO $$ DECLARE uid uuid:=(SELECT id FROM ap_ids WHERE kind='customer');oid uuid;a
  s:=s||jsonb_build_object('id','pay_late_first','externalReference',a->>'externalReference','status','CONFIRMED');
  PERFORM public.asaas_payment_apply((a->>'attemptId')::uuid,s);
  IF public.asaas_payment_view(uid,oid)->>'state'<>'refund_pending' THEN RAISE EXCEPTION 'FAIL duplicate payment not held';END IF;
+ PERFORM public.asaas_payment_apply((b->>'attemptId')::uuid,s||jsonb_build_object('id','pay_second','externalReference',b->>'externalReference','status','RECEIVED'));
+ IF public.asaas_payment_view(uid,oid)->>'state'<>'refund_pending' THEN RAISE EXCEPTION 'FAIL primary reconciliation removed duplicate hold';END IF;
  PERFORM public.asaas_payment_apply((a->>'attemptId')::uuid,s||'{"status":"REFUNDED","refundedValueCents":1000}'::jsonb);
  IF public.asaas_payment_view(uid,oid)->>'state'<>'received' OR NOT EXISTS(SELECT FROM public.orders WHERE id=oid AND status='placed') THEN RAISE EXCEPTION 'FAIL duplicate refund cancelled valid order';END IF;
+END $$;
+RESET ROLE;
+-- Synthetic historical row, inserted directly; never mutate immutable checkout timestamps.
+INSERT INTO ap_extra VALUES('expiry',gen_random_uuid());
+SELECT set_config('request.jwt.claim.sub','',true),set_config('request.jwt.claims','{}',true);
+INSERT INTO public.orders(id,cliente_id,establishment_id,status,payment_channel,online_payment_state,subtotal_cents,total_cents,forma_pagamento,tipo_entrega,created_at)
+VALUES((SELECT id FROM ap_extra WHERE kind='expiry'),(SELECT id FROM ap_ids WHERE kind='customer'),(SELECT id FROM ap_ids WHERE kind='store'),'pending_payment','asaas','creating',1000,1000,'pix','pickup',clock_timestamp()-interval '11 minutes');
+SELECT private.expire_unpaid_asaas_orders();
+DO $$ BEGIN IF NOT EXISTS(SELECT FROM public.orders WHERE id=(SELECT id FROM ap_extra WHERE kind='expiry') AND status='cancelled' AND online_payment_state='cancel_pending') THEN RAISE EXCEPTION 'FAIL operational expiry';END IF;END $$;
+SET LOCAL ROLE service_role;
+DO $$ DECLARE work jsonb;w jsonb;BEGIN
+ work:=public.asaas_payment_work_claim(10);
+ IF jsonb_array_length(work)>10 THEN RAISE EXCEPTION 'FAIL batch limit';END IF;
+ IF jsonb_array_length(public.asaas_payment_work_claim(10))<>0 THEN RAISE EXCEPTION 'FAIL concurrent work lease';END IF;
+ FOR w IN SELECT * FROM jsonb_array_elements(work) LOOP
+  IF public.asaas_payment_work_complete((w->>'workId')::uuid,gen_random_uuid(),'done') THEN RAISE EXCEPTION 'FAIL stale work lease';END IF;
+  IF NOT public.asaas_payment_work_complete((w->>'workId')::uuid,(w->>'operationId')::uuid,'retry') THEN RAISE EXCEPTION 'FAIL current work lease';END IF;
+ END LOOP;
 END $$;
 RESET ROLE;
 DO $$ DECLARE p regprocedure; BEGIN
