@@ -88,7 +88,7 @@ export function AsaasPayments() {
                     if (busy) return;
                     setBusy(p.id);
                     try {
-                      await reconcile({ data: { orderId: p.order_id } });
+                      await reconcile({ data: { orderId: p.order_id, attemptId: p.id } });
                       await refetch();
                       toast.success("Estado consultado na Asaas.");
                     } catch {

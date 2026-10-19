@@ -53,6 +53,15 @@ test("webhook rejects missing/wrong token and wrong environment before persisten
   assert.equal((await hook.handleAsaasWebhook(make(body, secret, "unknown"), d)).status, 400);
   assert.equal(d.calls.length, 0);
 });
+test("historical account webhook tokens authenticate only persisted provider reconciliation events", async () => {
+  const d = deps();
+  d.getCredentials = async () => ({
+    webhookToken: "n".repeat(64),
+    webhookTokens: [secret, "n".repeat(64)],
+  });
+  assert.equal((await hook.handleAsaasWebhook(make(), d)).status, 200);
+  assert.equal((await hook.handleAsaasWebhook(make(body, "x".repeat(64)), d)).status, 401);
+});
 test("authenticated webhook persists only event metadata and acknowledges duplicate deliveries", async () => {
   assert.ok(hook);
   const d = deps();

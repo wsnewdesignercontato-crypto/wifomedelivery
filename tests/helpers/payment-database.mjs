@@ -41,6 +41,7 @@ export async function createPaymentDatabase() {
       )[0],
     );
     await db.exec(await read("supabase/migrations/20261019174720_asaas_payment_operations.sql"));
+    await db.exec(await read("supabase/migrations/20261019175709_asaas_payment_review_fixes.sql"));
     return db;
   } catch (error) {
     await db.close();

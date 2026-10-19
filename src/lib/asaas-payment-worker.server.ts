@@ -22,7 +22,14 @@ type Dependencies = {
   claim: (limit: number) => Promise<PaymentWork[]>;
   complete: (work: PaymentWork, outcome: "done" | "retry" | "review") => Promise<boolean>;
   context: (user: string, order: string) => Promise<PaymentAttempt | null>;
-  credentials: (environment: "sandbox" | "production") => Promise<PaymentCredentials>;
+  credentials: (
+    environment: "sandbox" | "production",
+    revision?: string,
+  ) => Promise<PaymentCredentials>;
+  eventContext?: (
+    environment: "sandbox" | "production",
+    paymentId: string,
+  ) => Promise<PaymentAttempt | null>;
   fetchPayment: typeof getAsaasPayment;
   match: (environment: string, snapshot: PaymentSnapshot) => Promise<PaymentAttempt | null>;
   service: {
@@ -39,7 +46,7 @@ export function createPaymentWorker(deps: Dependencies) {
     const result = { processed: 0, pending: 0, failed: 0 };
     const works = await deps.claim(Math.min(10, Math.max(1, limit)));
     for (const work of works) {
-      if (end - now() < 33000) {
+      if (end - now() < 48000) {
         await deps.complete(work, "retry");
         result.pending++;
         continue;
@@ -51,12 +58,13 @@ export function createPaymentWorker(deps: Dependencies) {
             result.processed++;
             continue;
           }
+          const known = await deps.eventContext?.(work.environment, work.paymentId);
           const snapshot = await deps.fetchPayment(
-            await deps.credentials(work.environment),
+            await deps.credentials(work.environment, known?.revision),
             work.paymentId,
             { signal },
           );
-          const a = await deps.match(work.environment, snapshot);
+          const a = known ?? (await deps.match(work.environment, snapshot));
           if (!a) {
             if (snapshot.externalReference.startsWith("pedetrem-")) {
               await deps.complete(work, "retry");
@@ -84,8 +92,18 @@ export function createPaymentWorker(deps: Dependencies) {
               "cancelled",
               "expired",
             ].includes(view.state)
-          )
-            await deps.service.cancelPayment(a);
+          ) {
+            const cancelled = await deps.service.cancelPayment(a);
+            if (
+              !a.paymentId &&
+              cancelled.state === "cancel_pending" &&
+              Date.parse(a.expiresAt) <= now()
+            ) {
+              await deps.complete(work, "review");
+              result.pending++;
+              continue;
+            }
+          }
         }
         // apply() commits the event and clears its lease atomically; completion is also safe for no-op work.
         await deps.complete(work, "done");
@@ -99,8 +117,14 @@ export function createPaymentWorker(deps: Dependencies) {
   };
 }
 export async function runAsaasPaymentWorker(options: { limit?: number; budgetMs?: number } = {}) {
-  const { paymentStore, paymentContext, paymentMatch, paymentWorkClaim, paymentWorkComplete } =
-    await import("./asaas-payment-store.server");
+  const {
+    paymentStore,
+    paymentContext,
+    paymentMatch,
+    paymentWorkClaim,
+    paymentWorkComplete,
+    paymentEventContext,
+  } = await import("./asaas-payment-store.server");
   const signal = AbortSignal.timeout(Math.min(70000, options.budgetMs ?? 70000));
   return createPaymentWorker({
     claim: paymentWorkClaim,
@@ -109,6 +133,7 @@ export async function runAsaasPaymentWorker(options: { limit?: number; budgetMs?
     credentials: paymentStore.credentials,
     fetchPayment: getAsaasPayment,
     match: paymentMatch,
+    eventContext: paymentEventContext,
     service: createPaymentService(paymentStore, undefined, { signal }),
   })(options);
 }

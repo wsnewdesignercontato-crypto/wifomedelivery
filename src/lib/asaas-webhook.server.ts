@@ -8,7 +8,9 @@ export type AsaasEvent = {
   paymentStatus: string | null;
 };
 type Dependencies = {
-  getCredentials: (environment: AsaasEnvironment) => Promise<{ webhookToken: string | null }>;
+  getCredentials: (
+    environment: AsaasEnvironment,
+  ) => Promise<{ webhookToken: string | null; webhookTokens?: string[] }>;
   record: (event: AsaasEvent) => Promise<boolean>;
 };
 const failure = (status: number) =>
@@ -52,12 +54,19 @@ export async function handleAsaasWebhook(request: Request, deps: Dependencies): 
   const received = request.headers.get("asaas-access-token") ?? "";
   if (received.length < 32 || received.length > 255) return failure(401);
   try {
-    const { webhookToken } = await deps.getCredentials(environment);
-    if (!webhookToken) return failure(503);
-    const expected = Buffer.from(webhookToken),
-      provided = Buffer.from(received);
-    if (provided.length !== expected.length || !timingSafeEqual(expected, provided))
-      return failure(401);
+    const { webhookToken, webhookTokens = [] } = await deps.getCredentials(environment);
+    const tokens = webhookToken ? [webhookToken, ...webhookTokens] : webhookTokens;
+    if (!tokens.length) return failure(503);
+    const provided = Buffer.from(received);
+    let accepted = false;
+    for (const token of tokens) {
+      const expected = Buffer.from(token);
+      if (provided.length === expected.length) {
+        const matches = timingSafeEqual(expected, provided);
+        accepted = matches || accepted;
+      }
+    }
+    if (!accepted) return failure(401);
   } catch {
     return failure(503);
   }

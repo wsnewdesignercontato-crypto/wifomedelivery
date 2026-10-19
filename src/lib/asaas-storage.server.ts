@@ -33,3 +33,16 @@ export async function recordAsaasEvent(event: AsaasEvent): Promise<boolean> {
   if (error || typeof data !== "boolean") throw new Error("Não foi possível registrar o evento.");
   return data;
 }
+export async function getAsaasWebhookCredentials(environment: AsaasEnvironment) {
+  const { data, error } = await supabaseAdmin.rpc("asaas_webhook_tokens", {
+    _environment: environment,
+  });
+  if (error || !Array.isArray(data)) throw new Error("Autenticação indisponível.");
+  return {
+    webhookToken: null,
+    webhookTokens: data.filter(
+      (value): value is string =>
+        typeof value === "string" && value.length >= 32 && value.length <= 255,
+    ),
+  };
+}

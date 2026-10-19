@@ -30,6 +30,7 @@ export type PaymentStore = {
   claim: (userId: string, orderId: string, retry?: boolean) => Promise<PaymentAttempt>;
   credentials: (
     environment: AsaasEnvironment,
+    revision?: string,
   ) => Promise<transport.PaymentCredentials & { revision: string }>;
   customerClaim: (
     userId: string,
@@ -64,7 +65,7 @@ export function createPaymentService(
   options: { signal?: AbortSignal } = {},
 ) {
   async function credentials(a: PaymentAttempt) {
-    const c = await store.credentials(a.environment);
+    const c = await store.credentials(a.environment, a.revision);
     if (c.revision !== a.revision) throw new PaymentReconciliationError();
     return c;
   }

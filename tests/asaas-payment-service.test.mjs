@@ -211,3 +211,12 @@ test("resuming a pending Pix retrieves its QR without creating a charge", async 
   assert.equal(cached.payload, "000201fixture");
   assert.equal(f.count, 0);
 });
+test("reconciliation selects the immutable credential revision of a historical attempt", async () => {
+  const f = fixture();
+  f.store.credentials = async (environment, revision) => {
+    assert.equal(environment, "production");
+    assert.equal(revision, "rev");
+    return { environment, revision, apiKey: "fixture-history" };
+  };
+  await f.service().reconcilePayment({ ...f.attempt, paymentId: "pay_fixture" });
+});

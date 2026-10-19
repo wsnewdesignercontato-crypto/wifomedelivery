@@ -3335,6 +3335,19 @@ export type Database = {
         };
         Returns: Json;
       };
+      asaas_payment_credentials: {
+        Args: { _environment: string; _revision: string };
+        Returns: Json;
+      };
+      asaas_webhook_tokens: { Args: { _environment: string }; Returns: Json };
+      asaas_payment_event_context: {
+        Args: { _environment: string; _payment_id: string };
+        Returns: Json;
+      };
+      asaas_payment_admin_context: {
+        Args: { _order_id: string; _attempt_id?: string };
+        Returns: Json;
+      };
       asaas_online_set_enabled: { Args: { _enabled: boolean }; Returns: boolean };
       asaas_online_status: { Args: Record<PropertyKey, never>; Returns: Json };
       asaas_customer_claim: { Args: { _user_id: string; _environment: string }; Returns: Json };

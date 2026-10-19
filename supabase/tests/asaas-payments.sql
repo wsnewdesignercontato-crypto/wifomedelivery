@@ -145,6 +145,7 @@ DO $$ DECLARE uid uuid:=(SELECT id FROM ap_ids WHERE kind='customer');oid uuid;a
  oid:=(SELECT id FROM ap_extra WHERE kind='cancel');a:=public.asaas_payment_claim(uid,oid);
  PERFORM public.asaas_payment_fail((a->>'attemptId')::uuid,(a->>'operationId')::uuid,'declined');
  PERFORM public.asaas_payment_cancel_request(uid,oid);
+ PERFORM public.asaas_payment_cancel_request(uid,oid);
  BEGIN PERFORM public.asaas_payment_claim(uid,oid,true);RAISE EXCEPTION 'FAIL retry after cancellation intent';EXCEPTION WHEN object_not_in_prerequisite_state THEN NULL;END;
  oid:=(SELECT id FROM ap_extra WHERE kind='duplicate');a:=public.asaas_payment_claim(uid,oid);
  PERFORM public.asaas_payment_fail((a->>'attemptId')::uuid,(a->>'operationId')::uuid,'declined');
@@ -160,13 +161,17 @@ DO $$ DECLARE uid uuid:=(SELECT id FROM ap_ids WHERE kind='customer');oid uuid;a
  IF public.asaas_payment_view(uid,oid)->>'state'<>'received' OR NOT EXISTS(SELECT FROM public.orders WHERE id=oid AND status='placed') THEN RAISE EXCEPTION 'FAIL duplicate refund cancelled valid order';END IF;
 END $$;
 RESET ROLE;
+SELECT set_config('request.jwt.claim.sub',(SELECT id::text FROM ap_ids WHERE kind='admin'),true),set_config('request.jwt.claims',json_build_object('sub',(SELECT id FROM ap_ids WHERE kind='admin'),'role','authenticated')::text,true);
+SET LOCAL ROLE authenticated;
+DO $$ BEGIN BEGIN UPDATE public.orders SET refund_status='completed',refund_amount_cents=total_cents,refunded_at=now() WHERE id=(SELECT id FROM ap_extra WHERE kind='cancel');RAISE EXCEPTION 'FAIL admin fabricated refund metadata';EXCEPTION WHEN insufficient_privilege THEN NULL;END;END $$;
+RESET ROLE;
 -- Synthetic historical row, inserted directly; never mutate immutable checkout timestamps.
 INSERT INTO ap_extra VALUES('expiry',gen_random_uuid());
 SELECT set_config('request.jwt.claim.sub','',true),set_config('request.jwt.claims','{}',true);
 INSERT INTO public.orders(id,cliente_id,establishment_id,status,payment_channel,online_payment_state,subtotal_cents,total_cents,forma_pagamento,tipo_entrega,created_at)
 VALUES((SELECT id FROM ap_extra WHERE kind='expiry'),(SELECT id FROM ap_ids WHERE kind='customer'),(SELECT id FROM ap_ids WHERE kind='store'),'pending_payment','asaas','creating',1000,1000,'pix','pickup',clock_timestamp()-interval '11 minutes');
 SELECT private.expire_unpaid_asaas_orders();
-DO $$ BEGIN IF NOT EXISTS(SELECT FROM public.orders WHERE id=(SELECT id FROM ap_extra WHERE kind='expiry') AND status='cancelled' AND online_payment_state='cancel_pending') THEN RAISE EXCEPTION 'FAIL operational expiry';END IF;END $$;
+DO $$ BEGIN IF NOT EXISTS(SELECT FROM public.orders WHERE id=(SELECT id FROM ap_extra WHERE kind='expiry') AND status='cancelled' AND online_payment_state='expired') THEN RAISE EXCEPTION 'FAIL operational expiry';END IF;END $$;
 SET LOCAL ROLE service_role;
 DO $$ DECLARE work jsonb;w jsonb;BEGIN
  work:=public.asaas_payment_work_claim(10);

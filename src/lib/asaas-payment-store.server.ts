@@ -12,7 +12,17 @@ export async function paymentRpc<T>(name: Rpc, args: Record<string, unknown> = {
 export const paymentStore: PaymentStore = {
   claim: (u, o, retry = false) =>
     paymentRpc("asaas_payment_claim", { _user_id: u, _order_id: o, _retry: retry }),
-  credentials: async (environment) => {
+  credentials: async (environment, revision) => {
+    if (revision) {
+      const row = await paymentRpc<{
+        environment: typeof environment;
+        revision: string;
+        apiKey: string;
+      }>("asaas_payment_credentials", { _environment: environment, _revision: revision });
+      if (row.environment !== environment || row.revision !== revision || !row.apiKey)
+        throw new Error("Credencial histórica indisponível.");
+      return row;
+    }
     const c = await getAsaasCredentials(environment);
     if (!c.apiKey) throw new Error("Pagamento indisponível.");
     return { ...c, apiKey: c.apiKey };
@@ -38,6 +48,11 @@ export const paymentStore: PaymentStore = {
 };
 export const paymentContext = (u: string, o: string) =>
   paymentRpc<PaymentAttempt | null>("asaas_payment_context", { _user_id: u, _order_id: o });
+export const paymentEventContext = (environment: string, paymentId: string) =>
+  paymentRpc<PaymentAttempt | null>("asaas_payment_event_context", {
+    _environment: environment,
+    _payment_id: paymentId,
+  });
 export const paymentMatch = (environment: string, snapshot: PaymentSnapshot) =>
   paymentRpc<PaymentAttempt | null>("asaas_payment_match", {
     _environment: environment,

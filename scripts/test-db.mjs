@@ -53,6 +53,7 @@ for (const file of [
   "commerce-integrity",
   "checkout-lifecycle",
   "support-admin",
+  "asaas-payments",
 ]) {
   await checked(
     await readFile(new URL(`../supabase/tests/${file}.sql`, import.meta.url), "utf8"),

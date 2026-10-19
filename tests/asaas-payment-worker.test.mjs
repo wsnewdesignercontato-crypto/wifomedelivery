@@ -110,3 +110,16 @@ test("budget exhaustion defers work without beginning another provider call", as
   assert.equal(f.applies, 0);
   assert.equal(f.completions[0].outcome, "retry");
 });
+test("historical webhook work selects the known attempt account before fetching the provider", async () => {
+  const f = fixture();
+  f.work.kind = "event";
+  f.work.eventId = "evt_history";
+  f.deps.eventContext = async () => ({ ...f.work.attempt, revision: "old-account" });
+  f.deps.credentials = async (environment, revision) => {
+    assert.equal(revision, "old-account");
+    return { environment, apiKey: "fixture" };
+  };
+  await mod.createPaymentWorker(f.deps)({ limit: 10, budgetMs: 70000 });
+  assert.equal(f.completions[0].outcome, "done");
+  assert.equal(f.applies, 1);
+});

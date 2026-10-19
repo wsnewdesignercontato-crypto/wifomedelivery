@@ -53,18 +53,19 @@ export const getAsaasPayments = createServerFn({ method: "POST" })
   });
 export const reconcileAsaasOrder = createServerFn({ method: "POST" })
   .middleware([requireAdmin])
-  .validator((input: unknown) => z.object({ orderId: z.string().uuid() }).strict().parse(input))
+  .validator((input: unknown) =>
+    z
+      .object({ orderId: z.string().uuid(), attemptId: z.string().uuid().optional() })
+      .strict()
+      .parse(input),
+  )
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { paymentStore, paymentContext } = await import("./asaas-payment-store.server");
+    const { paymentStore, paymentRpc } = await import("./asaas-payment-store.server");
     const { createPaymentService } = await import("./asaas-payment-service.server");
-    const row = await supabaseAdmin
-      .from("orders")
-      .select("cliente_id")
-      .eq("id", data.orderId)
-      .single();
-    if (row.error || !row.data?.cliente_id) throw new Error("Pedido indisponível.");
-    const a = await paymentContext(row.data.cliente_id, data.orderId);
+    const a = await paymentRpc<import("./asaas-payment-service.server").PaymentAttempt | null>(
+      "asaas_payment_admin_context",
+      { _order_id: data.orderId, _attempt_id: data.attemptId },
+    );
     if (!a) throw new Error("Ainda não há cobrança para conferir.");
     return createPaymentService(paymentStore).reconcilePayment(a);
   });
