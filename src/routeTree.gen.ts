@@ -110,6 +110,7 @@ import { Route as AuthenticatedClientePerfilTermosRouteImport } from './routes/_
 import { Route as AuthenticatedEntregadorPerfilIndexRouteImport } from './routes/_authenticated/entregador.perfil.index'
 import { Route as AuthenticatedEntregadorPerfilDadosRouteImport } from './routes/_authenticated/entregador.perfil.dados'
 import { Route as AuthenticatedEntregadorPerfilPagamentoRouteImport } from './routes/_authenticated/entregador.perfil.pagamento'
+import { Route as ApiPaymentsAsaasWebhookRouteImport } from './routes/api/payments/asaas/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -693,6 +694,11 @@ const AuthenticatedEntregadorPerfilPagamentoRoute =
     path: '/perfil/pagamento',
     getParentRoute: () => AuthenticatedEntregadorRoute,
   } as any)
+const ApiPaymentsAsaasWebhookRoute = ApiPaymentsAsaasWebhookRouteImport.update({
+  id: '/api/payments/asaas/webhook',
+  path: '/api/payments/asaas/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -793,6 +799,7 @@ export interface FileRoutesByFullPath {
   '/cliente/perfil/termos': typeof AuthenticatedClientePerfilTermosRoute
   '/entregador/perfil/dados': typeof AuthenticatedEntregadorPerfilDadosRoute
   '/entregador/perfil/pagamento': typeof AuthenticatedEntregadorPerfilPagamentoRoute
+  '/api/payments/asaas/webhook': typeof ApiPaymentsAsaasWebhookRoute
   '/cliente/perfil/': typeof AuthenticatedClientePerfilIndexRoute
   '/entregador/perfil/': typeof AuthenticatedEntregadorPerfilIndexRoute
 }
@@ -891,6 +898,7 @@ export interface FileRoutesByTo {
   '/cliente/perfil/termos': typeof AuthenticatedClientePerfilTermosRoute
   '/entregador/perfil/dados': typeof AuthenticatedEntregadorPerfilDadosRoute
   '/entregador/perfil/pagamento': typeof AuthenticatedEntregadorPerfilPagamentoRoute
+  '/api/payments/asaas/webhook': typeof ApiPaymentsAsaasWebhookRoute
   '/cliente/perfil': typeof AuthenticatedClientePerfilIndexRoute
   '/entregador/perfil': typeof AuthenticatedEntregadorPerfilIndexRoute
 }
@@ -995,6 +1003,7 @@ export interface FileRoutesById {
   '/_authenticated/cliente/perfil/termos': typeof AuthenticatedClientePerfilTermosRoute
   '/_authenticated/entregador/perfil/dados': typeof AuthenticatedEntregadorPerfilDadosRoute
   '/_authenticated/entregador/perfil/pagamento': typeof AuthenticatedEntregadorPerfilPagamentoRoute
+  '/api/payments/asaas/webhook': typeof ApiPaymentsAsaasWebhookRoute
   '/_authenticated/cliente/perfil/': typeof AuthenticatedClientePerfilIndexRoute
   '/_authenticated/entregador/perfil/': typeof AuthenticatedEntregadorPerfilIndexRoute
 }
@@ -1099,6 +1108,7 @@ export interface FileRouteTypes {
     | '/cliente/perfil/termos'
     | '/entregador/perfil/dados'
     | '/entregador/perfil/pagamento'
+    | '/api/payments/asaas/webhook'
     | '/cliente/perfil/'
     | '/entregador/perfil/'
   fileRoutesByTo: FileRoutesByTo
@@ -1197,6 +1207,7 @@ export interface FileRouteTypes {
     | '/cliente/perfil/termos'
     | '/entregador/perfil/dados'
     | '/entregador/perfil/pagamento'
+    | '/api/payments/asaas/webhook'
     | '/cliente/perfil'
     | '/entregador/perfil'
   id:
@@ -1300,6 +1311,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cliente/perfil/termos'
     | '/_authenticated/entregador/perfil/dados'
     | '/_authenticated/entregador/perfil/pagamento'
+    | '/api/payments/asaas/webhook'
     | '/_authenticated/cliente/perfil/'
     | '/_authenticated/entregador/perfil/'
   fileRoutesById: FileRoutesById
@@ -1319,6 +1331,7 @@ export interface RootRouteChildren {
   TermosRoute: typeof TermosRoute
   ApiAuthSendEmailRoute: typeof ApiAuthSendEmailRoute
   ApiInternalPushDispatchRoute: typeof ApiInternalPushDispatchRoute
+  ApiPaymentsAsaasWebhookRoute: typeof ApiPaymentsAsaasWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2030,6 +2043,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEntregadorPerfilPagamentoRouteImport
       parentRoute: typeof AuthenticatedEntregadorRoute
     }
+    '/api/payments/asaas/webhook': {
+      id: '/api/payments/asaas/webhook'
+      path: '/api/payments/asaas/webhook'
+      fullPath: '/api/payments/asaas/webhook'
+      preLoaderRoute: typeof ApiPaymentsAsaasWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -2310,6 +2330,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermosRoute: TermosRoute,
   ApiAuthSendEmailRoute: ApiAuthSendEmailRoute,
   ApiInternalPushDispatchRoute: ApiInternalPushDispatchRoute,
+  ApiPaymentsAsaasWebhookRoute: ApiPaymentsAsaasWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

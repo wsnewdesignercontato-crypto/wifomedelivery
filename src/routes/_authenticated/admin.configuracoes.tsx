@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { BrevoSettings } from "@/components/admin/brevo-settings";
+import { AsaasSettings } from "@/components/admin/asaas-settings";
 
 export const Route = createFileRoute("/_authenticated/admin/configuracoes")({
   head: () => ({
@@ -117,6 +118,7 @@ function ConfigPage() {
       </div>
 
       <BrevoSettings />
+      <AsaasSettings />
       <section className="max-w-2xl space-y-3 rounded-2xl border bg-card p-6">
         <h2 className="font-semibold">Contatos do suporte</h2>
         <p className="text-sm text-muted-foreground">
