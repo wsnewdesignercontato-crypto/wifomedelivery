@@ -2036,6 +2036,9 @@ export type Database = {
           inventory_released_at: string | null;
           observacoes: string | null;
           payment_received_at: string | null;
+          payment_channel: string;
+          online_payment_state: string | null;
+          online_paid_at: string | null;
           payment_received_by: string | null;
           payment_reference: string | null;
           prova_assinatura: string | null;
@@ -2080,6 +2083,9 @@ export type Database = {
           inventory_released_at?: string | null;
           observacoes?: string | null;
           payment_received_at?: string | null;
+          payment_channel?: string;
+          online_payment_state?: string | null;
+          online_paid_at?: string | null;
           payment_received_by?: string | null;
           payment_reference?: string | null;
           prova_assinatura?: string | null;
@@ -2124,6 +2130,9 @@ export type Database = {
           inventory_released_at?: string | null;
           observacoes?: string | null;
           payment_received_at?: string | null;
+          payment_channel?: string;
+          online_payment_state?: string | null;
+          online_paid_at?: string | null;
           payment_received_by?: string | null;
           payment_reference?: string | null;
           prova_assinatura?: string | null;
@@ -3308,8 +3317,68 @@ export type Database = {
         Args: { _environment: string; _revision: string; _success: boolean };
         Returns: boolean;
       };
+      checkout_online_order: {
+        Args: {
+          p_establishment_id: string;
+          p_idempotency_key: string;
+          p_forma_pagamento: string;
+          p_tipo_entrega: string;
+          p_endereco?: Json;
+          p_observacoes?: string;
+          p_coupon_code?: string;
+          p_expected_total_cents?: number;
+        };
+        Returns: Json;
+      };
+      asaas_online_set_enabled: { Args: { _enabled: boolean }; Returns: boolean };
+      asaas_online_status: { Args: Record<PropertyKey, never>; Returns: Json };
+      asaas_customer_claim: { Args: { _user_id: string; _environment: string }; Returns: Json };
+      asaas_customer_complete: {
+        Args: {
+          _user_id: string;
+          _environment: string;
+          _operation_id: string;
+          _customer_id: string;
+        };
+        Returns: boolean;
+      };
+      asaas_payment_claim: {
+        Args: { _user_id: string; _order_id: string; _retry?: boolean };
+        Returns: Json;
+      };
+      asaas_payment_attach: {
+        Args: { _attempt_id: string; _operation_id: string; _snapshot: Json };
+        Returns: boolean;
+      };
+      asaas_payment_apply: {
+        Args: { _attempt_id: string; _snapshot: Json; _source_event_id?: string };
+        Returns: Json;
+      };
+      asaas_payment_view: { Args: { _user_id: string; _order_id: string }; Returns: Json };
+      asaas_payment_context: { Args: { _user_id: string; _order_id: string }; Returns: Json };
+      asaas_payment_match: { Args: { _environment: string; _snapshot: Json }; Returns: Json };
+      asaas_payment_fail: {
+        Args: { _attempt_id: string; _operation_id: string; _kind: string };
+        Returns: boolean;
+      };
+      asaas_payment_pix_save: { Args: { _attempt_id: string; _pix: Json }; Returns: boolean };
+      asaas_payment_cancel_request: {
+        Args: { _user_id: string; _order_id: string };
+        Returns: Json;
+      };
+      asaas_payment_work_claim: { Args: { _limit: number }; Returns: Json };
+      asaas_payment_work_complete: {
+        Args: { _work_id: string; _operation_id: string; _outcome: string };
+        Returns: boolean;
+      };
+      asaas_payments_admin: { Args: { _before?: string; _limit?: number }; Returns: Json };
       asaas_webhook_complete: {
-        Args: { _environment: string; _revision: string; _webhook_id: string };
+        Args: {
+          _environment: string;
+          _revision: string;
+          _webhook_id: string;
+          _payment_contract?: number;
+        };
         Returns: boolean;
       };
       asaas_webhook_record: {
