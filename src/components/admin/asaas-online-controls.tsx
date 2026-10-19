@@ -23,7 +23,7 @@ export function AsaasOnlineControls() {
   });
   return (
     <div className="mt-4 min-w-0 space-y-3 rounded-xl border p-4">
-      <h3 className="font-semibold">Pagamento online no checkout</h3>
+      <h3 className="text-base font-semibold">Pagamento online no checkout</h3>
       <p className="text-sm">
         Produção: <strong>{data?.enabled ? "Ativada" : "Desativada"}</strong>. Selecionar Produção
         acima não ativa o checkout.

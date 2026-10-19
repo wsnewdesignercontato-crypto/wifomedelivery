@@ -138,11 +138,13 @@ export function AsaasSettings() {
   return (
     <section
       aria-labelledby="asaas-title"
-      className="max-w-2xl space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm"
+      className="w-full min-w-0 space-y-5 rounded-2xl border border-border/80 bg-card p-4 shadow-sm sm:p-6"
     >
       <div className="flex items-start gap-3">
-        <CreditCard className="mt-1 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-        <div>
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/8 text-primary">
+          <CreditCard className="size-5" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
           <h2 id="asaas-title" className="text-lg font-semibold">
             Conexão de pagamentos · Asaas
           </h2>

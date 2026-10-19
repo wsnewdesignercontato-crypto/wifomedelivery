@@ -78,11 +78,13 @@ export function BrevoSettings() {
   return (
     <section
       aria-labelledby="brevo-title"
-      className="max-w-2xl space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm"
+      className="w-full min-w-0 space-y-5 rounded-2xl border border-border/80 bg-card p-4 shadow-sm sm:p-6"
     >
       <div className="flex items-start gap-3">
-        <Mail className="mt-1 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-        <div>
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/8 text-primary">
+          <Mail className="size-5" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
           <h2 id="brevo-title" className="text-lg font-semibold">
             Integrações · Brevo
           </h2>
@@ -103,110 +105,115 @@ export function BrevoSettings() {
           </Button>
         </div>
       ) : (
-        <form onSubmit={saveConfig} className="space-y-4">
-          <div
-            role="status"
-            className="space-y-1 rounded-xl border border-border bg-background/50 p-4 text-sm"
-          >
-            <p className="font-medium">
-              {data?.tested
-                ? "Envio de teste aceito pela Brevo"
-                : data?.configured
-                  ? "Chave salva · teste pendente"
-                  : "Brevo ainda não configurada"}
-            </p>
-            <p className="text-muted-foreground">
-              {data?.tested && data.authHookReady
-                ? "Envio automático de autenticação preparado."
-                : "Envio automático: ativação pendente. Configure e teste a conexão primeiro."}
-            </p>
-          </div>
-          <div>
-            <Label htmlFor="brevo-api-key">Chave API da Brevo</Label>
-            <Input
-              id="brevo-api-key"
-              type="password"
-              autoComplete="new-password"
-              spellCheck={false}
-              value={apiKey}
-              onChange={(event) => setApiKey(event.target.value)}
-              placeholder={
-                data?.configured
-                  ? "Chave salva. Cole outra somente para substituir."
-                  : "Cole sua chave API aqui"
-              }
-              className="mt-1.5"
-              disabled={!!busy}
-              aria-describedby="brevo-key-help"
-            />
-            <p id="brevo-key-help" className="mt-1 text-xs text-muted-foreground">
-              Use a chave da aba API, não a chave SMTP. Após salvar, ela fica oculta. Deixe em
-              branco para manter a chave existente.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="brevo-sender-name">Nome do remetente</Label>
-              <Input
-                id="brevo-sender-name"
-                value={senderName}
-                onChange={(event) => setSenderName(event.target.value)}
-                maxLength={80}
-                required
-                disabled={!!busy}
-                className="mt-1.5"
-              />
-            </div>
-            <div>
-              <Label htmlFor="brevo-sender-email">E-mail do remetente</Label>
-              <Input
-                id="brevo-sender-email"
-                type="email"
-                value={senderEmail}
-                onChange={(event) => setSenderEmail(event.target.value)}
-                maxLength={254}
-                required
-                disabled={!!busy}
-                className="mt-1.5"
-              />
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Verifique esse remetente na Brevo. Sem domínio próprio, a Brevo pode substituir o
-            endereço exibido. O plano gratuito permite 300 e-mails por dia.
-          </p>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden="true" />A chave é guardada
-            criptografada e usada somente pelo servidor.
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Button type="submit" disabled={!!busy || !dirty}>
-              <Save className="mr-2 h-4 w-4" aria-hidden="true" />
-              {busy === "save" ? "Salvando…" : "Salvar Brevo"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={sendTest}
-              disabled={!!busy || !data?.configured || dirty}
+        <form onSubmit={saveConfig} className="grid items-start gap-6 xl:grid-cols-2">
+          <div className="min-w-0 space-y-4">
+            <div
+              role="status"
+              className="space-y-1 rounded-xl border border-border bg-background/50 p-4 text-sm"
             >
-              <Send className="mr-2 h-4 w-4" aria-hidden="true" />
-              {busy === "test" ? "Enviando…" : "Enviar teste para meu e-mail"}
-            </Button>
-          </div>
-          {dirty && data?.configured && (
+              <p className="font-medium">
+                {data?.tested
+                  ? "Envio de teste aceito pela Brevo"
+                  : data?.configured
+                    ? "Chave salva · teste pendente"
+                    : "Brevo ainda não configurada"}
+              </p>
+              <p className="text-muted-foreground">
+                {data?.tested && data.authHookReady
+                  ? "Envio automático de autenticação preparado."
+                  : "Envio automático: ativação pendente. Configure e teste a conexão primeiro."}
+              </p>
+            </div>
             <p className="text-xs text-muted-foreground">
-              Salve as alterações antes de enviar o teste.
+              Verifique esse remetente na Brevo. Sem domínio próprio, a Brevo pode substituir o
+              endereço exibido. O plano gratuito permite 300 e-mails por dia.
             </p>
-          )}
-          <a
-            href="https://app.brevo.com/settings/keys/smtp"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block text-sm text-primary underline underline-offset-4"
-          >
-            Abrir Brevo · selecione a aba API
-          </a>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden="true" />A chave é guardada
+              criptografada e usada somente pelo servidor.
+            </div>
+            <a
+              href="https://app.brevo.com/settings/keys/smtp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block text-sm text-primary underline underline-offset-4"
+            >
+              Abrir Brevo · selecione a aba API
+            </a>
+          </div>
+          <div className="min-w-0 space-y-5 rounded-xl border border-border/70 bg-muted/15 p-4 sm:p-5">
+            <p className="text-sm font-semibold">Remetente e credenciais</p>{" "}
+            <div>
+              <Label htmlFor="brevo-api-key">Chave API da Brevo</Label>
+              <Input
+                id="brevo-api-key"
+                type="password"
+                autoComplete="new-password"
+                spellCheck={false}
+                value={apiKey}
+                onChange={(event) => setApiKey(event.target.value)}
+                placeholder={
+                  data?.configured
+                    ? "Chave salva. Cole outra somente para substituir."
+                    : "Cole sua chave API aqui"
+                }
+                className="mt-1.5"
+                disabled={!!busy}
+                aria-describedby="brevo-key-help"
+              />
+              <p id="brevo-key-help" className="mt-1 text-xs text-muted-foreground">
+                Use a chave da aba API, não a chave SMTP. Após salvar, ela fica oculta. Deixe em
+                branco para manter a chave existente.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="brevo-sender-name">Nome do remetente</Label>
+                <Input
+                  id="brevo-sender-name"
+                  value={senderName}
+                  onChange={(event) => setSenderName(event.target.value)}
+                  maxLength={80}
+                  required
+                  disabled={!!busy}
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <Label htmlFor="brevo-sender-email">E-mail do remetente</Label>
+                <Input
+                  id="brevo-sender-email"
+                  type="email"
+                  value={senderEmail}
+                  onChange={(event) => setSenderEmail(event.target.value)}
+                  maxLength={254}
+                  required
+                  disabled={!!busy}
+                  className="mt-1.5"
+                />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button type="submit" disabled={!!busy || !dirty}>
+                <Save className="mr-2 h-4 w-4" aria-hidden="true" />
+                {busy === "save" ? "Salvando…" : "Salvar Brevo"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={sendTest}
+                disabled={!!busy || !data?.configured || dirty}
+              >
+                <Send className="mr-2 h-4 w-4" aria-hidden="true" />
+                {busy === "test" ? "Enviando…" : "Enviar teste para meu e-mail"}
+              </Button>
+            </div>
+            {dirty && data?.configured && (
+              <p className="text-xs text-muted-foreground">
+                Salve as alterações antes de enviar o teste.
+              </p>
+            )}
+          </div>
         </form>
       )}
     </section>

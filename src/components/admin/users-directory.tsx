@@ -308,7 +308,7 @@ export function UsersDirectory(props: Props) {
     },
   ];
   return (
-    <div className="mx-auto w-full min-w-0 max-w-7xl space-y-6 pb-8">
+    <div className="w-full min-w-0 space-y-6 pb-8">
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">

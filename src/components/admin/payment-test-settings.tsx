@@ -120,10 +120,10 @@ export function PaymentTestSettings() {
     }
   }
 
-  if (isLoading) return <div className="h-32 max-w-3xl animate-pulse rounded-2xl bg-muted" />;
+  if (isLoading) return <div className="h-32 w-full min-w-0 animate-pulse rounded-2xl bg-muted" />;
   if (error || !data)
     return (
-      <section className="max-w-3xl rounded-2xl border p-5">
+      <section className="w-full min-w-0 rounded-2xl border p-5">
         <p>Não foi possível carregar o simulador de pagamentos.</p>
         <Button className="mt-3" variant="outline" onClick={() => void refetch()}>
           Tentar novamente
@@ -132,12 +132,14 @@ export function PaymentTestSettings() {
     );
 
   return (
-    <section className="max-w-3xl space-y-5 rounded-2xl border border-amber-500/30 bg-card p-5 shadow-sm sm:p-6">
+    <section className="w-full min-w-0 space-y-5 rounded-2xl border border-amber-500/30 bg-card p-4 shadow-sm sm:p-6">
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 gap-3">
-          <FlaskConical className="mt-0.5 h-6 w-6 shrink-0 text-amber-600" aria-hidden="true" />
-          <div>
-            <h2 className="font-bold">Pagamentos · modo de teste</h2>
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+            <FlaskConical className="size-5" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold">Pagamentos · modo de teste</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Simule a venda e acompanhe o pedido até a entrega.
             </p>
