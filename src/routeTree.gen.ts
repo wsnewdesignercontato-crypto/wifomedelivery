@@ -45,6 +45,7 @@ import { Route as AuthenticatedAdminMapaRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAdminNotificacoesRouteImport } from './routes/_authenticated/admin.notificacoes'
 import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin.pedidos'
 import { Route as AuthenticatedAdminPlanosAnuncioRouteImport } from './routes/_authenticated/admin.planos-anuncio'
+import { Route as AuthenticatedAdminPreviaCorridaRouteImport } from './routes/_authenticated/admin.previa-corrida'
 import { Route as AuthenticatedAdminSaquesRouteImport } from './routes/_authenticated/admin.saques'
 import { Route as AuthenticatedAdminSuporteRouteImport } from './routes/_authenticated/admin.suporte'
 import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin.usuarios'
@@ -305,6 +306,12 @@ const AuthenticatedAdminPlanosAnuncioRoute =
   AuthenticatedAdminPlanosAnuncioRouteImport.update({
     id: '/planos-anuncio',
     path: '/planos-anuncio',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminPreviaCorridaRoute =
+  AuthenticatedAdminPreviaCorridaRouteImport.update({
+    id: '/previa-corrida',
+    path: '/previa-corrida',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminSaquesRoute =
@@ -742,6 +749,7 @@ export interface FileRoutesByFullPath {
   '/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/admin/planos-anuncio': typeof AuthenticatedAdminPlanosAnuncioRoute
+  '/admin/previa-corrida': typeof AuthenticatedAdminPreviaCorridaRoute
   '/admin/saques': typeof AuthenticatedAdminSaquesRoute
   '/admin/suporte': typeof AuthenticatedAdminSuporteRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
@@ -842,6 +850,7 @@ export interface FileRoutesByTo {
   '/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/admin/planos-anuncio': typeof AuthenticatedAdminPlanosAnuncioRoute
+  '/admin/previa-corrida': typeof AuthenticatedAdminPreviaCorridaRoute
   '/admin/saques': typeof AuthenticatedAdminSaquesRoute
   '/admin/suporte': typeof AuthenticatedAdminSuporteRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
@@ -948,6 +957,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/_authenticated/admin/planos-anuncio': typeof AuthenticatedAdminPlanosAnuncioRoute
+  '/_authenticated/admin/previa-corrida': typeof AuthenticatedAdminPreviaCorridaRoute
   '/_authenticated/admin/saques': typeof AuthenticatedAdminSaquesRoute
   '/_authenticated/admin/suporte': typeof AuthenticatedAdminSuporteRoute
   '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
@@ -1054,6 +1064,7 @@ export interface FileRouteTypes {
     | '/admin/notificacoes'
     | '/admin/pedidos'
     | '/admin/planos-anuncio'
+    | '/admin/previa-corrida'
     | '/admin/saques'
     | '/admin/suporte'
     | '/admin/usuarios'
@@ -1154,6 +1165,7 @@ export interface FileRouteTypes {
     | '/admin/notificacoes'
     | '/admin/pedidos'
     | '/admin/planos-anuncio'
+    | '/admin/previa-corrida'
     | '/admin/saques'
     | '/admin/suporte'
     | '/admin/usuarios'
@@ -1259,6 +1271,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/notificacoes'
     | '/_authenticated/admin/pedidos'
     | '/_authenticated/admin/planos-anuncio'
+    | '/_authenticated/admin/previa-corrida'
     | '/_authenticated/admin/saques'
     | '/_authenticated/admin/suporte'
     | '/_authenticated/admin/usuarios'
@@ -1600,6 +1613,13 @@ declare module '@tanstack/react-router' {
       path: '/planos-anuncio'
       fullPath: '/admin/planos-anuncio'
       preLoaderRoute: typeof AuthenticatedAdminPlanosAnuncioRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/previa-corrida': {
+      id: '/_authenticated/admin/previa-corrida'
+      path: '/previa-corrida'
+      fullPath: '/admin/previa-corrida'
+      preLoaderRoute: typeof AuthenticatedAdminPreviaCorridaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/saques': {
@@ -2092,6 +2112,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminNotificacoesRoute: typeof AuthenticatedAdminNotificacoesRoute
   AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
   AuthenticatedAdminPlanosAnuncioRoute: typeof AuthenticatedAdminPlanosAnuncioRoute
+  AuthenticatedAdminPreviaCorridaRoute: typeof AuthenticatedAdminPreviaCorridaRoute
   AuthenticatedAdminSaquesRoute: typeof AuthenticatedAdminSaquesRoute
   AuthenticatedAdminSuporteRoute: typeof AuthenticatedAdminSuporteRoute
   AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
@@ -2117,6 +2138,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminNotificacoesRoute: AuthenticatedAdminNotificacoesRoute,
   AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
   AuthenticatedAdminPlanosAnuncioRoute: AuthenticatedAdminPlanosAnuncioRoute,
+  AuthenticatedAdminPreviaCorridaRoute: AuthenticatedAdminPreviaCorridaRoute,
   AuthenticatedAdminSaquesRoute: AuthenticatedAdminSaquesRoute,
   AuthenticatedAdminSuporteRoute: AuthenticatedAdminSuporteRoute,
   AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,

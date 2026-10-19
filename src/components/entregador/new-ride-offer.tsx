@@ -27,7 +27,7 @@ import { ensureRingtoneUnlocked, startRideRingtone, stopRideRingtone } from "@/l
 import { watchDeviceLocation } from "@/lib/device-preferences";
 import type { Courier } from "@/hooks/use-courier";
 
-type Offer = {
+export type Offer = {
   is_test: boolean;
   deliveryId: string;
   orderId: string;
@@ -437,227 +437,272 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
   const eta = estMin(distanciaColetaLive);
 
   return (
-    <Dialog open={!!offer} onOpenChange={(o) => !o && recusar()}>
+    <Dialog open={!!offer} onOpenChange={(o) => !o && !accepting && recusar()}>
       <DialogContent
-        className="theme-entregador flex w-[calc(100%-1.5rem)] min-w-0 max-w-md max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden gap-0 rounded-2xl border-2 border-primary p-0 shadow-brand sm:p-0"
+        className="theme-entregador flex w-[calc(100%-2rem)] min-w-0 max-w-[26rem] max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden rounded-3xl border border-white/10 p-0 shadow-2xl sm:w-[calc(100%-2rem)] sm:p-0"
         showCloseButton={false}
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        {/* Header estilo Uber */}
-        <div className="relative shrink-0 bg-gradient-to-r from-primary to-orange-500 px-4 py-3 text-primary-foreground">
-          <div className="flex min-w-0 items-start justify-between gap-3">
-            <div className="flex min-w-0 items-start gap-2">
-              <div className="shrink-0 animate-pulse rounded-full bg-white/25 p-1.5">
-                <Bike className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-[11px] font-bold uppercase tracking-wider opacity-90">
-                  {offer?.is_test ? "Corrida de teste" : "Nova corrida"}
-                </DialogTitle>
-                <DialogDescription className="mt-1 flex items-start gap-1 text-xs font-semibold text-primary-foreground/80">
-                  <Timer className="mt-0.5 h-3 w-3 shrink-0" />
-                  <span className="min-w-0 [overflow-wrap:anywhere]">
-                    {offer?.is_test
-                      ? "Simulação sem entrega ou pagamento real"
-                      : "Aceite rápido — outros entregadores estão vendo"}
-                  </span>
-                </DialogDescription>
-              </div>
+        <RideOfferCard
+          offer={offer}
+          myPos={myPos}
+          offerMarkers={offerMarkers}
+          distanciaColetaLive={distanciaColetaLive}
+          totalKm={totalKm}
+          eta={eta}
+          accepting={accepting}
+          canAccept={canCourierAccessRides(courier)}
+          aceitar={aceitar}
+          recusar={recusar}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function RideOfferCard({
+  offer,
+  myPos,
+  offerMarkers,
+  distanciaColetaLive,
+  totalKm,
+  eta,
+  accepting,
+  canAccept,
+  aceitar,
+  recusar,
+}: {
+  offer: Offer | null;
+  myPos: { lat: number; lng: number } | null;
+  offerMarkers: MapMarker[];
+  distanciaColetaLive: number | null;
+  totalKm: number | null;
+  eta: number | null;
+  accepting: boolean;
+  canAccept: boolean;
+  aceitar: () => void;
+  recusar: () => void;
+}) {
+  return (
+    <>
+      {/* Cabeçalho compacto */}
+      <div className="relative shrink-0 bg-emerald-950 px-5 py-4 text-primary-foreground">
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-2">
+            <div className="shrink-0 rounded-2xl bg-emerald-400/20 p-2.5">
+              <Bike className="h-5 w-5 text-emerald-300" />
             </div>
-            <button
-              onClick={recusar}
-              className="shrink-0 rounded-full bg-white/15 p-1.5 transition hover:bg-white/25"
-              aria-label="Recusar"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <div className="min-w-0">
+              <DialogTitle className="text-sm font-bold tracking-tight text-white">
+                {offer?.is_test ? "Corrida de teste" : "Nova corrida"}
+              </DialogTitle>
+              <DialogDescription className="mt-1 flex items-start gap-1 text-xs font-semibold text-emerald-100/85">
+                <Timer className="mt-0.5 h-3 w-3 shrink-0" />
+                <span className="min-w-0 [overflow-wrap:anywhere]">
+                  {offer?.is_test
+                    ? "Simulação sem entrega ou pagamento real"
+                    : "Disponível para os entregadores da região"}
+                </span>
+              </DialogDescription>
+            </div>
           </div>
+          <button
+            onClick={recusar}
+            className="shrink-0 rounded-full bg-white/15 p-1.5 transition hover:bg-white/25"
+            aria-label="Recusar"
+            disabled={accepting}
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
+      </div>
 
-        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
-          {/* Mapa */}
-          <div className="h-[clamp(8rem,24dvh,13rem)] w-full min-w-0 overflow-hidden bg-muted [&_.leaflet-bottom]:max-w-full [&_.leaflet-control-attribution]:whitespace-normal">
-            {offer && (
-              <OpenStreetMap key={offer.deliveryId} markers={offerMarkers} userLocation={myPos} />
-            )}
-          </div>
-          <p className="px-4 pt-2 text-xs text-muted-foreground">
-            Distâncias aproximadas em linha reta. Abra o GPS para navegar pelas ruas.
-          </p>
+      <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
+        {/* Mapa */}
+        <div className="h-[clamp(7rem,20dvh,11rem)] w-full min-w-0 overflow-hidden bg-muted [&_.leaflet-bottom]:max-w-full [&_.leaflet-control-attribution]:whitespace-normal">
+          {offer && (
+            <OpenStreetMap key={offer.deliveryId} markers={offerMarkers} userLocation={myPos} />
+          )}
+        </div>
+        <p className="px-5 pt-2 text-[10px] leading-relaxed text-muted-foreground">
+          Distâncias aproximadas em linha reta. Abra o GPS para navegar pelas ruas.
+        </p>
 
-          {/* Valores em destaque */}
-          <div className="grid grid-cols-3 divide-x divide-border border-b border-border bg-card">
-            <div className="min-w-0 px-1 py-3 text-center">
-              <p className="text-[10px] font-bold uppercase text-muted-foreground">Ganho</p>
-              <p className="break-words text-base font-black text-primary sm:text-lg">
+        <div className="mx-4 mt-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4">
+          <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Você recebe
+              </p>
+              <p className="mt-1 break-words text-3xl font-black tracking-tight text-emerald-600">
                 {fmtBrl(offer?.valorCents ?? 0)}
               </p>
             </div>
-            <div className="min-w-0 px-1 py-3 text-center">
-              <p className="text-[10px] font-bold uppercase text-muted-foreground">Distância</p>
-              <p className="break-words text-base font-black sm:text-lg">{fmtKm(totalKm)}</p>
+            <div className="flex shrink-0 gap-4 text-right">
+              <div>
+                <p className="text-[10px] font-semibold uppercase text-muted-foreground">
+                  Distância total
+                </p>
+                <p className="mt-1 text-sm font-bold">{fmtKm(totalKm)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase text-muted-foreground">
+                  Até a coleta
+                </p>
+                <p className="mt-1 text-sm font-bold">{eta ? `${eta} min` : "—"}</p>
+              </div>
             </div>
-            <div className="min-w-0 px-1 py-3 text-center">
-              <p className="text-[10px] font-bold uppercase text-muted-foreground">Tempo coleta</p>
-              <p className="break-words text-base font-black sm:text-lg">
-                {eta ? `${eta} min` : "—"}
+          </div>
+        </div>
+
+        {/* Rota */}
+        <div className="space-y-4 p-4">
+          <div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card p-3">
+            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-xs font-black text-emerald-700">
+              A
+            </span>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                <Package className="h-3 w-3 shrink-0" />
+                Coleta{" "}
+                {distanciaColetaLive != null && (
+                  <span className="text-foreground">· {fmtKm(distanciaColetaLive)} de você</span>
+                )}
+              </p>
+              <p className="text-sm font-bold [overflow-wrap:anywhere]">{offer?.pickup.nome}</p>
+              <p className="text-xs leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">
+                {offer?.pickup.endereco ?? "—"}
               </p>
             </div>
           </div>
-
-          {/* Rota */}
-          <div className="space-y-3 p-4">
-            <div className="flex items-start gap-3">
-              <div className="mt-1 flex shrink-0 flex-col items-center">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-black text-white">
-                  A
-                </div>
-                <div className="my-1 h-8 w-0.5 bg-border" />
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white">
-                  B
-                </div>
-              </div>
-              <div className="min-w-0 flex-1 space-y-3">
-                <div>
-                  <p className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold uppercase text-muted-foreground">
-                    <Package className="h-3 w-3 shrink-0" /> Coleta{" "}
-                    {distanciaColetaLive != null && (
-                      <span className="text-foreground">
-                        · {fmtKm(distanciaColetaLive)} de você
-                      </span>
-                    )}
-                  </p>
-                  <p className="[overflow-wrap:anywhere] text-sm font-bold">{offer?.pickup.nome}</p>
-                  <p className="[overflow-wrap:anywhere] text-xs text-muted-foreground">
-                    {offer?.pickup.endereco ?? "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold uppercase text-muted-foreground">
-                    <MapPin className="h-3 w-3 shrink-0" /> Entrega
-                    <span className="text-foreground">
-                      · {fmtKm(offer?.distanciaEntrega ?? null)}
-                    </span>
-                  </p>
-                  <p className="flex min-w-0 flex-wrap items-center gap-1.5 text-sm font-bold">
-                    <User className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">
-                      {offer?.cliente.nome}
-                    </span>
-                    {offer?.cliente.telefone && (
-                      <a
-                        href={`tel:${offer.cliente.telefone}`}
-                        className="flex max-w-full items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-bold text-emerald-600 [overflow-wrap:anywhere]"
-                      >
-                        <Phone className="h-3 w-3" /> {offer.cliente.telefone}
-                      </a>
-                    )}
-                  </p>
-                  <p className="[overflow-wrap:anywhere] text-sm font-semibold">
-                    {offer?.dropoff.endereco}
-                  </p>
-                  {offer?.dropoff.bairro && (
-                    <p className="[overflow-wrap:anywhere] text-xs text-muted-foreground">
-                      {offer.dropoff.bairro}
-                      {offer.dropoff.complemento ? ` · ${offer.dropoff.complemento}` : ""}
-                    </p>
-                  )}
-                  {offer?.dropoff.referencia && (
-                    <p className="mt-1 [overflow-wrap:anywhere] text-xs italic text-muted-foreground">
-                      Ref.: {offer.dropoff.referencia}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-muted/40 px-3 py-2 text-xs">
-              <span className="flex min-w-0 flex-wrap items-center gap-1.5 font-semibold">
-                <OrderPaymentBadge
-                  channel={offer?.paymentChannel}
-                  state={offer?.paymentState}
-                  isTest={offer?.is_test}
-                />
-                {offer?.formaPagamento === "dinheiro" ? (
-                  <>
-                    <Banknote className="h-3.5 w-3.5 text-emerald-600" /> Dinheiro
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="h-3.5 w-3.5 text-primary" /> {offer?.formaPagamento}
-                  </>
+          <div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card p-3">
+            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-orange-500/10 text-xs font-black text-orange-600">
+              B
+            </span>
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <p className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                <MapPin className="h-3 w-3 shrink-0" />
+                Entrega{" "}
+                <span className="text-foreground">· {fmtKm(offer?.distanciaEntrega ?? null)}</span>
+              </p>
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <p className="flex min-w-0 flex-1 items-start gap-1.5 text-sm font-bold">
+                  <User className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                  <span className="min-w-0 [overflow-wrap:anywhere]">{offer?.cliente.nome}</span>
+                </p>
+                {offer?.cliente.telefone && (
+                  <a
+                    href={`tel:${offer.cliente.telefone}`}
+                    aria-label="Ligar para o cliente"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-700"
+                  >
+                    <Phone className="h-3 w-3" />
+                    Ligar
+                  </a>
                 )}
-              </span>
-              <span className="text-muted-foreground">
-                Pedido:{" "}
-                <strong className="text-foreground">{fmtBrl(offer?.totalPedidoCents ?? 0)}</strong>
-              </span>
-            </div>
-
-            {offer?.observacoes && (
-              <div className="[overflow-wrap:anywhere] rounded-xl border border-amber-500/40 bg-amber-500/10 p-2 text-xs">
-                <strong>Obs.:</strong> {offer.observacoes}
               </div>
-            )}
+              <p className="text-xs leading-relaxed [overflow-wrap:anywhere]">
+                {offer?.dropoff.endereco}
+              </p>
+              {(offer?.dropoff.bairro || offer?.dropoff.complemento) && (
+                <p className="text-xs leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">
+                  {[offer.dropoff.bairro, offer.dropoff.complemento].filter(Boolean).join(" · ")}
+                </p>
+              )}
+              {offer?.dropoff.referencia && (
+                <p className="text-xs italic text-muted-foreground [overflow-wrap:anywhere]">
+                  Ref.: {offer.dropoff.referencia}
+                </p>
+              )}
+            </div>
           </div>
 
-          {offer && (
-            <div className="grid grid-cols-2 gap-2 px-3 pb-3">
-              <Button variant="outline" asChild className="min-w-0 px-2 text-xs sm:text-sm">
-                <a
-                  href={navigationUrl(
-                    validMapPoint(offer.pickup)
-                      ? `${offer.pickup.lat},${offer.pickup.lng}`
-                      : offer.pickup.endereco || offer.pickup.nome,
-                  )}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Navigation className="h-4 w-4" /> GPS coleta
-                </a>
-              </Button>
-              <Button variant="outline" asChild className="min-w-0 px-2 text-xs sm:text-sm">
-                <a
-                  href={navigationUrl(offer.dropoff.endereco)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Navigation className="h-4 w-4" /> GPS entrega
-                </a>
-              </Button>
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-muted/40 px-3 py-2 text-xs">
+            <span className="flex min-w-0 flex-wrap items-center gap-1.5 font-semibold">
+              <OrderPaymentBadge
+                channel={offer?.paymentChannel}
+                state={offer?.paymentState}
+                isTest={offer?.is_test}
+              />
+              {offer?.formaPagamento === "dinheiro" ? (
+                <>
+                  <Banknote className="h-3.5 w-3.5 text-emerald-600" /> Dinheiro
+                </>
+              ) : (
+                <>
+                  <CreditCard className="h-3.5 w-3.5 text-primary" /> {offer?.formaPagamento}
+                </>
+              )}
+            </span>
+            <span className="text-muted-foreground">
+              Pedido:{" "}
+              <strong className="text-foreground">{fmtBrl(offer?.totalPedidoCents ?? 0)}</strong>
+            </span>
+          </div>
+
+          {offer?.observacoes && (
+            <div className="[overflow-wrap:anywhere] rounded-xl border border-amber-500/40 bg-amber-500/10 p-2 text-xs">
+              <strong>Obs.:</strong> {offer.observacoes}
             </div>
           )}
         </div>
-        {/* Ações sempre visíveis; apenas o conteúdo acima rola verticalmente. */}
-        <div className="z-10 grid shrink-0 grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-2 border-t border-border bg-card p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          <Button
-            variant="outline"
-            size="lg"
-            className="min-w-0 px-2"
-            onClick={recusar}
-            disabled={accepting}
-          >
-            Recusar
-          </Button>
-          <Button
-            size="lg"
-            onClick={aceitar}
-            disabled={accepting || !canCourierAccessRides(courier)}
-            className="min-w-0 gap-1 px-2 text-sm font-black shadow-brand sm:text-base"
-          >
-            {accepting ? (
-              <>
-                <RouteIcon className="h-4 w-4 animate-pulse" /> Aceitando...
-              </>
-            ) : (
-              <>
-                <Navigation className="h-4 w-4" /> Aceitar corrida
-              </>
-            )}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+
+        {offer && (
+          <div className="grid grid-cols-2 gap-2 px-4 pb-4">
+            <Button variant="outline" asChild className="min-w-0 px-2 text-xs sm:text-sm">
+              <a
+                href={navigationUrl(
+                  validMapPoint(offer.pickup)
+                    ? `${offer.pickup.lat},${offer.pickup.lng}`
+                    : offer.pickup.endereco || offer.pickup.nome,
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Navigation className="h-4 w-4" /> GPS coleta
+              </a>
+            </Button>
+            <Button variant="outline" asChild className="min-w-0 px-2 text-xs sm:text-sm">
+              <a
+                href={navigationUrl(offer.dropoff.endereco)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Navigation className="h-4 w-4" /> GPS entrega
+              </a>
+            </Button>
+          </div>
+        )}
+      </div>
+      {/* Ações sempre visíveis; apenas o conteúdo acima rola verticalmente. */}
+      <div className="z-10 grid shrink-0 grid-cols-[minmax(0,1fr)_minmax(0,1.7fr)] gap-2 border-t border-border bg-background p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <Button
+          variant="outline"
+          size="lg"
+          className="h-12 min-w-0 rounded-xl px-2 font-semibold"
+          onClick={recusar}
+          disabled={accepting}
+        >
+          Recusar
+        </Button>
+        <Button
+          size="lg"
+          onClick={aceitar}
+          disabled={accepting || !canAccept}
+          className="h-12 min-w-0 gap-2 rounded-xl bg-emerald-600 px-2 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 sm:text-base"
+        >
+          {accepting ? (
+            <>
+              <RouteIcon className="h-4 w-4 animate-pulse" /> Aceitando...
+            </>
+          ) : (
+            <>
+              <Navigation className="h-4 w-4" /> Aceitar corrida
+            </>
+          )}
+        </Button>
+      </div>
+    </>
   );
 }

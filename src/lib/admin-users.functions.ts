@@ -40,6 +40,7 @@ export const listAppUsers = createServerFn({ method: "POST" })
         created_at: string;
         last_sign_in_at: string | null;
         confirmed: boolean;
+        blocked: boolean;
         roles: string[];
       }[];
       page: number;
@@ -101,4 +102,27 @@ export const revokeAppRole = createServerFn({ method: "POST" })
       metadata: { role: data.role },
     });
     return { ok: true };
+  });
+
+export const manageAppUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(
+    (data: {
+      targetUserId: string;
+      action: "block" | "unblock" | "delete";
+      confirmedEmail: string;
+    }) =>
+      z
+        .object({
+          targetUserId: z.string().uuid(),
+          action: z.enum(["block", "unblock", "delete"]),
+          confirmedEmail: z.string().trim().min(1).max(254),
+        })
+        .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { applyAccountAction } = await import("@/lib/admin-account-actions.server");
+    return applyAccountAction(supabaseAdmin, context.userId, data);
   });

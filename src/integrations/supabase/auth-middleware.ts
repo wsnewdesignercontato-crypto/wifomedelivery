@@ -86,6 +86,11 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
       throw new Error("Unauthorized: No user ID found in token");
     }
 
+    // getClaims verifies JWT integrity; this check also rejects a still-valid
+    // JWT belonging to an account blocked or deleted after it was issued.
+    const { error: accountError } = await supabase.rpc("check_account_access");
+    if (accountError) throw new Error("Unauthorized: Conta bloqueada ou excluída");
+
     return next({
       context: {
         supabase,

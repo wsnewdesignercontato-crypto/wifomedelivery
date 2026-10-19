@@ -3269,6 +3269,7 @@ export type Database = {
       };
     };
     Functions: {
+      check_account_access: { Args: Record<string, never>; Returns: undefined };
       set_my_default_address: {
         Args: { p_address_id: string };
         Returns: Json;
