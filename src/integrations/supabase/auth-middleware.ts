@@ -86,6 +86,13 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
       throw new Error("Unauthorized: No user ID found in token");
     }
 
+    // Verify the current Auth record: a cached session is not proof of email confirmation.
+    const { data: verified, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !verified.user || verified.user.id !== data.claims.sub)
+      throw new Error("Unauthorized: Não foi possível verificar a conta");
+    if (!verified.user.email_confirmed_at)
+      throw new Error("Unauthorized: Confirme seu e-mail antes de continuar");
+
     // getClaims verifies JWT integrity; this check also rejects a still-valid
     // JWT belonging to an account blocked or deleted after it was issued.
     const { error: accountError } = await supabase.rpc("check_account_access");

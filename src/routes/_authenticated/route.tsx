@@ -9,7 +9,9 @@ export const Route = createFileRoute("/_authenticated")({
     if (isProfileLoginPath(location.pathname))
       return { user: { id: "", email: undefined }, isGuest: true };
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) {
+    const unconfirmed = !!data.user && !data.user.email_confirmed_at;
+    if (unconfirmed) await supabase.auth.signOut({ scope: "local" });
+    if (error || !data.user || unconfirmed) {
       if (isPublicCustomerPath(location.pathname))
         return { user: { id: "", email: undefined }, isGuest: true };
       throw redirect({

@@ -16,7 +16,7 @@ const modules = {
     export function useEffect(fn){const i=r.cursor++;if(!(i in r.states)){r.states[i]=true;r.effects.push(fn)}}
     export const useCallback=fn=>fn;`,
   "@tanstack/react-router":
-    "export const Link='a';export const useNavigate=()=>()=>{};export const useLocation=()=>({pathname:'/cliente/entrar',searchStr:''});",
+    "export const Link='a';export const useNavigate=()=>options=>globalThis.__authScreenTest.calls.push(['navigate',options]);export const useLocation=()=>({pathname:'/cliente/entrar',searchStr:''});",
   "@/components/theme-toggle": "export const ThemeToggle='button';",
   "@/integrations/supabase/client":
     "export const supabase={auth:globalThis.__authScreenTest.auth};",
@@ -24,10 +24,28 @@ const modules = {
     "const r=globalThis.__authScreenTest;export const toast=Object.fromEntries(['success','error','info'].map(kind=>[kind,message=>r.notices.push({kind,message})]));",
 };
 runtime.auth = {
-  getSession: async () => ({ data: { session: null } }),
+  getSession: async () => ({ data: { session: runtime.session ?? null } }),
+  getUser: async () => ({
+    data: {
+      user: runtime.verifiedUser ?? {
+        id: "user",
+        email: "person@example.com",
+        email_confirmed_at: "2026-10-19T00:00:00Z",
+      },
+    },
+    error: null,
+  }),
+  signOut: async (input) => {
+    runtime.calls.push(["signout", input]);
+    return { error: null };
+  },
   signInWithPassword: async (input) => {
     runtime.calls.push(["login", input]);
-    return { error: { code: "email_not_confirmed", message: "Email not confirmed" } };
+    return (
+      runtime.loginResult ?? {
+        error: { code: "email_not_confirmed", message: "Email not confirmed" },
+      }
+    );
   },
   signUp: async (input) => {
     runtime.calls.push(["signup", input]);
@@ -68,10 +86,14 @@ function find(node, predicate) {
   }
 }
 const settle = () => new Promise((resolve) => setImmediate(resolve));
-async function mount(profile) {
+async function mount(profile, initial = {}) {
   Object.assign(runtime, { states: [], cursor: 0, effects: [], notices: [], calls: [] });
   runtime.recoveryError = null;
   runtime.signupResult = null;
+  runtime.loginResult = null;
+  runtime.session = null;
+  runtime.verifiedUser = null;
+  Object.assign(runtime, initial);
   const previousWindow = globalThis.window,
     previousFormData = globalThis.FormData;
   globalThis.window = {
@@ -447,3 +469,69 @@ test("closing the account popup focuses the visible login, recovery or registrat
     }
   }
 });
+for (const profile of Object.keys(APP_PROFILES)) {
+  test(`${profile}: a restored unconfirmed session shows resend and never enters the app`, async () => {
+    const app = await mount(profile, {
+      session: { user: { id: "user" } },
+      verifiedUser: { id: "user", email: "pending@example.com", email_confirmed_at: null },
+    });
+    try {
+      assert.ok(find(app.render(), (n) => n.props?.children === "Reenviar confirmação"));
+      assert.equal(runtime.calls.filter(([kind]) => kind === "navigate").length, 0);
+      assert.deepEqual(runtime.calls.find(([kind]) => kind === "signout")?.[1], { scope: "local" });
+    } finally {
+      app.cleanup();
+    }
+  });
+  test(`${profile}: even a successful password response cannot bypass email confirmation`, async () => {
+    const app = await mount(profile);
+    try {
+      runtime.loginResult = { data: { session: { user: { id: "user" } } }, error: null };
+      runtime.verifiedUser = { id: "user", email: "pending@example.com", email_confirmed_at: null };
+      const form = find(
+        app.render(),
+        (n) => n.type === "form" && !!find(n, (f) => f.props?.id === "email"),
+      );
+      await form.props.onSubmit({
+        preventDefault() {},
+        currentTarget: { email: "pending@example.com", senha: "SenhaForte123!" },
+      });
+      assert.ok(find(app.render(), (n) => n.props?.children === "Reenviar confirmação"));
+      assert.equal(runtime.calls.filter(([kind]) => kind === "navigate").length, 0);
+      assert.ok(!runtime.notices.some((n) => n.message === "Bem-vindo de volta!"));
+    } finally {
+      app.cleanup();
+    }
+  });
+  test(`${profile}: signup with an unexpected unconfirmed session still requires confirmation`, async () => {
+    const app = await mount(profile);
+    try {
+      runtime.signupResult = {
+        data: { session: { user: { id: "user" } }, user: { identities: [{ id: "user" }] } },
+        error: null,
+      };
+      runtime.verifiedUser = { id: "user", email: "pending@example.com", email_confirmed_at: null };
+      const form = find(
+        app.render(),
+        (n) => n.type === "form" && !!find(n, (f) => f.props?.id === "email-cad"),
+      );
+      await form.props.onSubmit({
+        preventDefault() {},
+        currentTarget: { nome: "Teste", email: "pending@example.com", senha: "SenhaForte123!" },
+      });
+      assert.ok(find(app.render(), (n) => n.props?.children === "Reenviar confirmação"));
+      assert.equal(runtime.calls.filter(([kind]) => kind === "navigate").length, 0);
+    } finally {
+      app.cleanup();
+    }
+  });
+  test(`${profile}: a server-verified confirmed session enters normally`, async () => {
+    const app = await mount(profile, { session: { user: { id: "user" } } });
+    try {
+      assert.equal(runtime.calls.filter(([kind]) => kind === "navigate").length, 1);
+      assert.equal(runtime.calls.filter(([kind]) => kind === "signout").length, 0);
+    } finally {
+      app.cleanup();
+    }
+  });
+}

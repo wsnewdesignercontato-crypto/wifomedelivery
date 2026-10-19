@@ -125,6 +125,16 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
     }
   }
 
+  const holdForConfirmation = useCallback(async (email: string) => {
+    setEmailSalvo(email);
+    setSenhaCad("");
+    setModo("confirmar-email");
+    await supabase.auth.signOut({ scope: "local" });
+    toast.info(
+      "Confirme seu e-mail para ativar sua conta. Se precisar, solicite outro envio abaixo.",
+    );
+  }, []);
+
   // Se já autenticado, encaminhar para /app
   const confirmado = search.confirmado === "1";
 
@@ -154,11 +164,11 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
               await supabase.auth.signOut({ scope: "local" });
             return;
           }
+          if (!verified.user.email_confirmed_at) {
+            await holdForConfirmation(verified.user.email ?? "");
+            return;
+          }
           if (confirmado) {
-            if (!verified.user.email_confirmed_at) {
-              toast.error("Seu e-mail ainda precisa ser confirmado.");
-              return;
-            }
             if (verified.user.email) {
               setEmailSalvo(verified.user.email);
               try {
@@ -188,7 +198,7 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
     return () => {
       cancelled = true;
     };
-  }, [finishLogin, confirmado]);
+  }, [finishLogin, confirmado, holdForConfirmation]);
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -222,6 +232,15 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
                 : "Não foi possível entrar. Confira os dados e tente novamente.",
           );
         }
+        return;
+      }
+      const { data: verified, error: verificationError } = await supabase.auth.getUser();
+      if (verificationError || !verified.user) {
+        toast.error("Não foi possível verificar sua conta. Tente entrar novamente.");
+        return;
+      }
+      if (!verified.user.email_confirmed_at) {
+        await holdForConfirmation(verified.user.email ?? parsed.data.email);
         return;
       }
     } catch {
@@ -278,6 +297,16 @@ export function AuthScreen({ search, profile }: { search: AuthSearch; profile?: 
       }
       setEmailSalvo(parsed.data.email);
       if (data.session) {
+        const { data: verified, error: verificationError } = await supabase.auth.getUser();
+        if (verificationError || !verified.user) {
+          await supabase.auth.signOut({ scope: "local" });
+          toast.error("Não foi possível verificar sua conta. Entre novamente para continuar.");
+          return;
+        }
+        if (!verified.user.email_confirmed_at) {
+          await holdForConfirmation(verified.user.email ?? parsed.data.email);
+          return;
+        }
         toast.success("Conta criada! Bem-vindo ao PedeTrem.");
         finishLogin();
         return;
