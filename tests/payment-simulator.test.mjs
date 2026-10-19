@@ -20,6 +20,7 @@ test("payment simulator rejects non-admins, isolates receipts and cleans only te
         "supabase/migrations/20261019035427_realistic_checkout_test_and_notification_inbox.sql",
       ),
     );
+    await db.exec(await load("supabase/migrations/20261019231556_payment_test_safe_cleanup.sql"));
     const admin = "93000000-0000-4000-8000-000000000001",
       customer = "93000000-0000-4000-8000-000000000002",
       shop = "93000000-0000-4000-8000-000000000003";
@@ -227,6 +228,19 @@ test("payment simulator rejects non-admins, isolates receipts and cleans only te
     await user(admin);
     await command("cleanup", { confirmation: "LIMPAR TESTES" });
     assert.equal((await command("state")).testers.length, 0);
+    // Empty cleanup must stay idempotent and never remove real customer profiles.
+    state = await command("cleanup", { confirmation: "LIMPAR TESTES" });
+    assert.equal(state.count, 0);
+    assert.equal(state.testers.length, 0);
+    assert.equal(
+      (
+        await db.query("SELECT count(*)::int n FROM public.profiles WHERE id IN($1,$2)", [
+          admin,
+          customer,
+        ])
+      ).rows[0].n,
+      2,
+    );
   } finally {
     await db.close();
   }
