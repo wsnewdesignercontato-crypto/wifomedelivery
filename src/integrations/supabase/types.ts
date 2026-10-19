@@ -3261,6 +3261,49 @@ export type Database = {
     };
     Functions: {
       admin_payment_test: { Args: { p_action: string; p_payload?: Json }; Returns: Json };
+      asaas_settings_get: {
+        Args: { _environment: string };
+        Returns: Json;
+      };
+      asaas_operation_acquire: {
+        Args: { _environment: string };
+        Returns: string;
+      };
+      asaas_operation_release: {
+        Args: { _environment: string; _operation_id: string };
+        Returns: boolean;
+      };
+      asaas_credentials_get: {
+        Args: { _environment: string };
+        Returns: Json;
+      };
+      asaas_settings_save: {
+        Args: {
+          _environment: string;
+          _notification_email: string;
+          _api_key?: string | null;
+          _webhook_token?: string | null;
+        };
+        Returns: Json;
+      };
+      asaas_connection_complete: {
+        Args: { _environment: string; _revision: string; _success: boolean };
+        Returns: boolean;
+      };
+      asaas_webhook_complete: {
+        Args: { _environment: string; _revision: string; _webhook_id: string };
+        Returns: boolean;
+      };
+      asaas_webhook_record: {
+        Args: {
+          _environment: string;
+          _event_id: string;
+          _event_type: string;
+          _payment_id?: string | null;
+          _payment_status?: string | null;
+        };
+        Returns: boolean;
+      };
       customer_store_directory: {
         Args: { p_city?: string | null; p_state?: string | null };
         Returns: {
