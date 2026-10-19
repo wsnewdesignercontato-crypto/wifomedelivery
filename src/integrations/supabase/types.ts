@@ -3260,6 +3260,11 @@ export type Database = {
       };
     };
     Functions: {
+      set_my_default_address: {
+        Args: { p_address_id: string };
+        Returns: Json;
+      };
+
       save_courier_registration: { Args: { p_patch: Json; p_expected: Json }; Returns: Json };
       activate_my_courier_vehicle: { Args: { p_vehicle: string }; Returns: Json };
 

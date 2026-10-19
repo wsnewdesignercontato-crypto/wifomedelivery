@@ -42,6 +42,8 @@ function ContaPage() {
   const [saving, setSaving] = useState(false);
   const [novaSenha, setNovaSenha] = useState("");
   const [uploading, setUploading] = useState(false);
+  const baseline = useRef<Profile | null>(null);
+  const busy = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function uploadFoto(file: File) {
@@ -53,61 +55,119 @@ function ContaPage() {
       toast.error("Imagem muito grande (máx. 5MB)");
       return;
     }
+    if (saving || uploading) return;
     setUploading(true);
-    const ext = file.name.split(".").pop() || "jpg";
-    const path = `${user.id}/avatar-${Date.now()}.${ext}`;
-    const up = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
-    if (up.error) {
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const up = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (up.error) {
+        setUploading(false);
+        toast.error(up.error.message);
+        return;
+      }
+      const signed = await supabase.storage
+        .from("avatars")
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
       setUploading(false);
-      toast.error(up.error.message);
-      return;
+      if (signed.error || !signed.data) {
+        toast.error(signed.error?.message ?? "Falha ao gerar URL");
+        return;
+      }
+      setProfile((p) => (p ? { ...p, foto_url: signed.data!.signedUrl } : p));
+      toast.success("Foto carregada — clique em Salvar");
+    } catch {
+      toast.error("Não foi possível enviar a foto. Tente novamente.");
+    } finally {
+      setUploading(false);
     }
-    const signed = await supabase.storage.from("avatars").createSignedUrl(path, 60 * 60 * 24 * 365);
-    setUploading(false);
-    if (signed.error || !signed.data) {
-      toast.error(signed.error?.message ?? "Falha ao gerar URL");
-      return;
-    }
-    setProfile((p) => (p ? { ...p, foto_url: signed.data!.signedUrl } : p));
-    toast.success("Foto carregada — clique em Salvar");
   }
 
   useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setLoadError(null);
+    setProfile(null);
+    baseline.current = null;
     (async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id,nome,telefone,foto_url")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (error || !data) {
-        const message = error?.message ?? "Não foi possível encontrar seu perfil. Tente novamente.";
-        setLoadError(message);
-        toast.error(message);
-      } else setProfile(data as Profile);
-      setLoading(false);
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id,nome,telefone,foto_url")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (!active) return;
+        if (error || !data)
+          throw error ?? new Error("Não foi possível encontrar seu perfil. Tente novamente.");
+        baseline.current = data as Profile;
+        setProfile(data as Profile);
+      } catch (error) {
+        if (active) {
+          const message =
+            error && typeof error === "object" && "message" in error
+              ? String(error.message)
+              : "Não foi possível carregar seu perfil.";
+          setLoadError(message);
+          toast.error(message);
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
     })();
+    return () => {
+      active = false;
+    };
   }, [user.id]);
 
   async function salvarPerfil() {
-    if (!profile) return;
+    if (!profile || profile.id !== user.id || !baseline.current || busy.current || uploading)
+      return;
+    if (!profile.nome.trim()) return toast.error("Informe seu nome.");
     if ((checkout || profile.telefone?.trim()) && !isCheckoutPhone(profile.telefone))
       return toast.error("Informe um telefone com DDD, entre 10 e 15 dígitos.");
+    busy.current = true;
     setSaving(true);
-    const { data, error } = await supabase
-      .from("profiles")
-      .update({ nome: profile.nome, telefone: profile.telefone, foto_url: profile.foto_url })
-      .eq("id", user.id)
-      .select("id,nome,telefone,foto_url")
-      .single();
-    setSaving(false);
-    if (error || !data) toast.error(error?.message ?? "O perfil não foi salvo. Tente novamente.");
-    else if (checkout && !isCheckoutPhone(data.telefone))
-      toast.error("O telefone não foi salvo. Confira os dados e tente novamente.");
-    else {
+    try {
+      const patch: Partial<Profile> = {};
+      for (const key of ["nome", "telefone", "foto_url"] as const) {
+        if (profile[key] !== baseline.current[key]) patch[key] = profile[key] as string;
+      }
+      let query = supabase.from("profiles").update(patch).eq("id", user.id);
+      for (const key of Object.keys(patch) as (keyof Profile)[]) {
+        const previous = baseline.current[key];
+        query = previous === null ? query.is(key, null) : query.eq(key, previous);
+      }
+      // Do not overwrite a phone or photo changed by another app while this form was open.
+      const { data, error } = Object.keys(patch).length
+        ? await query.select("id,nome,telefone,foto_url").single()
+        : await supabase
+            .from("profiles")
+            .select("id,nome,telefone,foto_url")
+            .eq("id", user.id)
+            .single();
+      if (error || !data)
+        throw (
+          error ??
+          new Error(
+            "O perfil não foi salvo. Reabra a tela para conferir alterações feitas em outro aplicativo.",
+          )
+        );
+      if (checkout && !isCheckoutPhone(data.telefone))
+        throw new Error("O telefone não foi salvo. Confira os dados e tente novamente.");
+      baseline.current = data as Profile;
       setProfile(data as Profile);
       notifyDataUpdated();
       toast.success("Perfil atualizado");
       if (checkout) navigate({ to: "/cliente/checkout", search: { cupom } });
+    } catch (error) {
+      toast.error(
+        error && typeof error === "object" && "message" in error
+          ? String(error.message)
+          : "Não foi possível salvar. Seus dados continuam no formulário.",
+      );
+    } finally {
+      busy.current = false;
+      setSaving(false);
     }
   }
 
@@ -149,7 +209,10 @@ function ContaPage() {
 
       <h1 className="text-xl font-bold">Minha conta</h1>
 
-      <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
+      <fieldset
+        disabled={saving || uploading}
+        className="space-y-3 rounded-2xl border border-border bg-card p-4"
+      >
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <User className="h-4 w-4 text-primary" /> Dados pessoais
         </h2>
@@ -200,7 +263,7 @@ function ContaPage() {
                 variant="default"
                 size="sm"
                 onClick={() => fileRef.current?.click()}
-                disabled={uploading}
+                disabled={uploading || saving}
               >
                 {uploading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -230,11 +293,11 @@ function ContaPage() {
             />
           </div>
         </div>
-        <Button onClick={salvarPerfil} disabled={saving}>
+        <Button onClick={salvarPerfil} disabled={saving || uploading}>
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
         </Button>
         <p className="text-xs text-muted-foreground">E-mail: {user.email}</p>
-      </section>
+      </fieldset>
 
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <h2 className="text-sm font-semibold">Trocar senha</h2>

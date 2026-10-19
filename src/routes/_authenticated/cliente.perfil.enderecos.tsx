@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ChevronLeft, MapPin, Plus, Trash2, Star, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +44,8 @@ function EnderecosPage() {
   const navigate = useNavigate();
   const { user } = Route.useRouteContext() as { user: { id: string } };
   const [addrs, setAddrs] = useState<Addr[]>([]);
+  const busy = useRef(false);
+  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [novo, setNovo] = useState({
@@ -57,48 +59,113 @@ function EnderecosPage() {
   });
 
   useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setLoadError(null);
+    setAddrs([]);
     (async () => {
-      const { data, error } = await supabase
-        .from("addresses")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("is_default", { ascending: false });
-      if (error) {
-        setLoadError(error.message);
-        toast.error(error.message);
-      } else setAddrs((data ?? []) as Addr[]);
-      setLoading(false);
+      try {
+        const { data, error } = await supabase
+          .from("addresses")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("is_default", { ascending: false });
+        if (!active) return;
+        if (error) throw error;
+        setAddrs((data ?? []) as Addr[]);
+      } catch (error) {
+        if (active)
+          setLoadError(
+            error && typeof error === "object" && "message" in error
+              ? String(error.message)
+              : "Não foi possível carregar seus endereços.",
+          );
+      } finally {
+        if (active) setLoading(false);
+      }
     })();
+    return () => {
+      active = false;
+    };
   }, [user.id]);
 
   async function addAddr() {
+    if (busy.current || loading || loadError) return;
     if (!novo.rua.trim() || !novo.cidade.trim()) {
       toast.error("Rua e cidade obrigatórios");
       return;
     }
-    const { data, error } = await supabase
-      .from("addresses")
-      .insert({ user_id: user.id, ...novo, is_default: addrs.length === 0 })
-      .select("*")
-      .single();
-    if (error || !data) {
-      toast.error(error?.message ?? "O endereço não foi salvo. Tente novamente.");
-      return;
+    busy.current = true;
+    setSaving(true);
+    try {
+      const { data, error } = await supabase
+        .from("addresses")
+        .insert({ user_id: user.id, ...novo, is_default: addrs.length === 0 })
+        .select("*")
+        .single();
+      if (error || !data) {
+        toast.error(error?.message ?? "O endereço não foi salvo. Tente novamente.");
+        return;
+      }
+      setAddrs((prev) => [data as Addr, ...prev]);
+      setNovo({ label: "Casa", rua: "", numero: "", bairro: "", cidade: "", estado: "", cep: "" });
+      notifyDataUpdated();
+      toast.success("Endereço adicionado");
+      if (checkout) navigate({ to: "/cliente/checkout", search: { cupom } });
+    } catch {
+      toast.error("Não foi possível salvar. Seus dados continuam no formulário.");
+    } finally {
+      busy.current = false;
+      setSaving(false);
     }
-    setAddrs((prev) => [data as Addr, ...prev]);
-    setNovo({ label: "Casa", rua: "", numero: "", bairro: "", cidade: "", estado: "", cep: "" });
-    notifyDataUpdated();
-    toast.success("Endereço adicionado");
-    if (checkout) navigate({ to: "/cliente/checkout", search: { cupom } });
   }
   async function delAddr(id: string) {
-    await supabase.from("addresses").delete().eq("id", id);
-    setAddrs((prev) => prev.filter((a) => a.id !== id));
+    if (busy.current) return;
+    busy.current = true;
+    setSaving(true);
+    try {
+      const { data, error } = await supabase
+        .from("addresses")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .select("id")
+        .single();
+      if (error || !data) throw error ?? new Error("O endereço não foi removido.");
+      setAddrs((prev) => prev.filter((a) => a.id !== id));
+      notifyDataUpdated();
+      toast.success("Endereço removido");
+    } catch {
+      toast.error("Não foi possível remover o endereço. Tente novamente.");
+    } finally {
+      busy.current = false;
+      setSaving(false);
+    }
   }
   async function setDefault(id: string) {
-    await supabase.from("addresses").update({ is_default: false }).eq("user_id", user.id);
-    await supabase.from("addresses").update({ is_default: true }).eq("id", id);
-    setAddrs((prev) => prev.map((a) => ({ ...a, is_default: a.id === id })));
+    if (busy.current) return;
+    busy.current = true;
+    setSaving(true);
+    try {
+      const { data, error } = await supabase.rpc("set_my_default_address", { p_address_id: id });
+      if (
+        error ||
+        !data ||
+        typeof data !== "object" ||
+        Array.isArray(data) ||
+        data.id !== id ||
+        data.is_default !== true
+      )
+        throw error ?? new Error("O endereço padrão não foi salvo.");
+      setAddrs((prev) => prev.map((a) => ({ ...a, is_default: a.id === id })));
+      notifyDataUpdated();
+      toast.success("Endereço padrão atualizado");
+    } catch {
+      toast.error("Não foi possível alterar o endereço padrão. Tente novamente.");
+    } finally {
+      busy.current = false;
+      setSaving(false);
+    }
   }
 
   if (loading)
@@ -150,11 +217,22 @@ function EnderecosPage() {
             </div>
             <div className="flex gap-1">
               {!a.is_default && (
-                <Button size="sm" variant="ghost" onClick={() => setDefault(a.id)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={saving}
+                  onClick={() => setDefault(a.id)}
+                >
                   Padrão
                 </Button>
               )}
-              <Button size="icon" variant="ghost" onClick={() => delAddr(a.id)}>
+              <Button
+                size="icon"
+                variant="ghost"
+                disabled={saving}
+                aria-label="Remover endereço"
+                onClick={() => delAddr(a.id)}
+              >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
@@ -162,7 +240,10 @@ function EnderecosPage() {
         ))}
       </section>
 
-      <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
+      <fieldset
+        disabled={saving}
+        className="space-y-3 rounded-2xl border border-border bg-card p-4"
+      >
         <h2 className="text-sm font-semibold">Adicionar novo endereço</h2>
         <div className="grid gap-2 sm:grid-cols-2">
           <Input
@@ -200,11 +281,11 @@ function EnderecosPage() {
             value={novo.estado}
             onChange={(e) => setNovo({ ...novo, estado: e.target.value })}
           />
-          <Button onClick={addAddr}>
+          <Button disabled={saving} onClick={addAddr}>
             <Plus className="mr-1 h-4 w-4" /> Adicionar
           </Button>
         </div>
-      </section>
+      </fieldset>
     </div>
   );
 }
