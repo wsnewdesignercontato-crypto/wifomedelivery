@@ -1,6 +1,6 @@
 # Pagamento no checkout do PedeTrem com Asaas
 
-Estado: especificação revisada para checkout transparente, conforme escolha expressa do usuário em 19/10/2026. A configuração da Asaas no admin já está publicada; o pagamento online descrito aqui ainda não foi implementado. A revisão do documento antecede o plano de implementação.
+Estado: especificação de checkout transparente aprovada pelo usuário em 19/10/2026. A configuração da Asaas no admin já está publicada; o pagamento online descrito aqui ainda não foi implementado. O plano escrito será revisado antes da implementação, preservando a execução nesta sessão escolhida pelo usuário.
 
 ## Objetivo e decisões existentes
 
