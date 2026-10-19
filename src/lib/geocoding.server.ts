@@ -2,7 +2,8 @@ type GeocodingOptions = { apiKey?: string; fetch?: typeof fetch };
 type GeocodingResponse = {
   status?: string;
   results?: Array<{
-    geometry?: { location?: { lat: number; lng: number } };
+    geometry?: { location?: { lat: number; lng: number }; location_type?: string };
+    partial_match?: boolean;
     address_components?: Array<{ long_name?: string; short_name?: string; types?: string[] }>;
   }>;
 };
@@ -71,4 +72,17 @@ export async function reverseGeocodeCoordinates(
     }
   }
   return null;
+}
+/** Never save a city/street centroid as a precise storefront location. */
+export async function geocodeStoreAddress(address: string, options: GeocodingOptions = {}) {
+  if (!address.trim()) return null;
+  const data = await requestGeocoding({ address: address.trim() }, options);
+  const result = data?.results?.[0];
+  const location = result?.geometry?.location;
+  return !result?.partial_match &&
+    ["ROOFTOP", "RANGE_INTERPOLATED"].includes(result?.geometry?.location_type ?? "") &&
+    location &&
+    validCoordinates(location.lat, location.lng)
+    ? { lat: location.lat, lng: location.lng }
+    : null;
 }

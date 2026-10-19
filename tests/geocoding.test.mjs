@@ -147,3 +147,23 @@ test("out-of-range provider coordinates are rejected", async () => {
     null,
   );
 });
+test("store lookup rejects city centroids and partial matches, accepts precise addresses", async () => {
+  const { geocodeStoreAddress } = await import("../src/lib/geocoding.server.ts");
+  for (const [location_type, partial_match, ok] of [
+    ["APPROXIMATE", false, false],
+    ["GEOMETRIC_CENTER", false, false],
+    ["ROOFTOP", true, false],
+    ["ROOFTOP", false, true],
+    ["RANGE_INTERPOLATED", false, true],
+  ]) {
+    const result = await geocodeStoreAddress("Rua A, 10, Cidade", {
+      apiKey,
+      fetch: async () =>
+        Response.json({
+          status: "OK",
+          results: [{ partial_match, geometry: { location, location_type } }],
+        }),
+    });
+    assert.deepEqual(result, ok ? location : null);
+  }
+});

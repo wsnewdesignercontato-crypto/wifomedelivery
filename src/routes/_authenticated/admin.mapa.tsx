@@ -1,295 +1,348 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState, lazy, Suspense } from "react";
-import { MapPin, Store, Bike, Loader2, AlertTriangle, Wand2, Eye, EyeOff } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { geocodeMissingEstablishments } from "@/lib/admin-map.functions";
 import { toast } from "sonner";
-import { watchDeviceLocation } from "@/lib/device-preferences";
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState, lazy, Suspense, useMemo } from "react";
+import { Store, Bike, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { StoreLocationEditor } from "@/components/store-location-editor";
+import { validMapPoint, type MapPoint } from "@/lib/map-utils";
+import { courierLocationState, locationAgeLabel, type LiveCourier } from "@/lib/live-map";
+import type { MapMarker } from "@/components/open-street-map";
 
 export const Route = createFileRoute("/_authenticated/admin/mapa")({
-  head: () => ({
-    meta: [
-      { title: "Admin — Mapa ao vivo | PedeTrem" },
-      { name: "description", content: "PedeTrem: admin, mapa ao vivo." },
-      { property: "og:title", content: "Admin — Mapa ao vivo | PedeTrem" },
-      { property: "og:description", content: "PedeTrem: admin, mapa ao vivo." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "Mapa ao vivo | PedeTrem Admin" }] }),
   component: MapaPage,
 });
-
-const LiveMap = lazy(() => import("@/components/admin/live-map"));
-
-type Point = {
-  courier_id: string;
-  lat: number;
-  lng: number;
-  created_at: string;
-  order_id: string | null;
-};
-type Estab = {
-  id: string;
-  nome: string;
-  lat: number;
-  lng: number;
-  is_open: boolean;
-  cidade: string | null;
-};
-
-async function fetchLatestPoints(): Promise<Point[]> {
-  const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-  const map = new Map<string, Point>();
-
-  // 1) Últimos tracking_points por entregador (entregas ativas)
-  const { data: tp } = await supabase
-    .from("tracking_points")
-    .select("courier_id,lat,lng,created_at,order_id")
-    .gte("created_at", since)
-    .order("created_at", { ascending: false })
-    .limit(500);
-  for (const p of (tp ?? []) as Point[]) {
-    if (!map.has(p.courier_id)) map.set(p.courier_id, p);
-  }
-
-  // 2) Couriers online (mesmo sem entrega em andamento) via server fn
-  const { listAvailableCouriers } = await import("@/lib/couriers.functions");
-  const online = await listAvailableCouriers().catch(() => []);
-  for (const c of online ?? []) {
-    if (c.lat == null || c.lng == null) continue;
-    if (map.has(c.user_id)) continue;
-    map.set(c.user_id, {
-      courier_id: c.user_id,
-      lat: c.lat,
-      lng: c.lng,
-      created_at: c.last_seen ?? new Date().toISOString(),
-      order_id: null,
-    });
-  }
-  return Array.from(map.values());
+const LiveMap = lazy(() => import("@/components/open-street-map"));
+async function fetchCouriers(): Promise<LiveCourier[]> {
+  const { data, error } = await supabase.rpc("admin_live_couriers");
+  if (error) throw new Error("Não foi possível atualizar os entregadores.");
+  return (data ?? []) as unknown as LiveCourier[];
 }
-
-async function fetchEstablishments(): Promise<{
-  withGeo: Estab[];
-  withoutGeo: { id: string; nome: string; cidade: string | null }[];
-}> {
+async function fetchEstablishments() {
   const { data, error } = await supabase
     .from("establishments")
-    .select("id,nome,lat,lng,is_open,cidade,status")
-    .eq("status", "aprovado");
-  if (error) throw error;
-  const withGeo: Estab[] = [];
-  const withoutGeo: { id: string; nome: string; cidade: string | null }[] = [];
-  for (const e of (data ?? []) as (Estab & { lat: number | null; lng: number | null })[]) {
-    if (e.lat != null && e.lng != null) withGeo.push(e as Estab);
-    else withoutGeo.push({ id: e.id, nome: e.nome, cidade: e.cidade });
-  }
-  return { withGeo, withoutGeo };
+    .select("id,nome,lat,lng,is_open,cidade,endereco")
+    .eq("status", "aprovado")
+    .order("nome");
+  if (error) throw new Error("Não foi possível atualizar os estabelecimentos.");
+  return data ?? [];
 }
-
+const EMPTY_COURIERS: LiveCourier[] = [];
+const EMPTY_STORES: Awaited<ReturnType<typeof fetchEstablishments>> = [];
 function MapaPage() {
   const qc = useQueryClient();
-  const { data: points = [], isLoading: loadingPts } = useQuery({
-    queryKey: ["tracking-latest"],
-    queryFn: fetchLatestPoints,
-    refetchInterval: 8000,
-  });
-  const { data: estabData, isLoading: loadingEst } = useQuery({
-    queryKey: ["map-establishments"],
-    queryFn: fetchEstablishments,
-    refetchInterval: 60000,
-  });
-  const estabs = estabData?.withGeo ?? [];
-  const semGeo = estabData?.withoutGeo ?? [];
-
-  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
-  const [geoError, setGeoError] = useState<string | null>(null);
-  const [geocoding, setGeocoding] = useState(false);
-  const [showEstabs, setShowEstabs] = useState(true);
-  const [showCouriers, setShowCouriers] = useState(true);
-  const [onlyOpen, setOnlyOpen] = useState(false);
-  const geocodeFn = useServerFn(geocodeMissingEstablishments);
-
-  const filteredEstabs = showEstabs ? (onlyOpen ? estabs.filter((e) => e.is_open) : estabs) : [];
-  const filteredPoints = showCouriers ? points : [];
-
-  useEffect(() => {
-    if (!navigator.geolocation) {
-      setGeoError("Geolocalização não suportada neste navegador.");
-      return;
-    }
-    const stopWatching = watchDeviceLocation(
-      (pos) => {
-        setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setGeoError(null);
-      },
-      (err) => setGeoError(err.message || "Não foi possível obter sua localização."),
-      { enableHighAccuracy: true, maximumAge: 15000, timeout: 15000 },
-    );
-    return stopWatching;
-  }, []);
-
-  useEffect(() => {
-    const ch = supabase
-      .channel("tracking-live")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "tracking_points" }, () =>
-        qc.invalidateQueries({ queryKey: ["tracking-latest"] }),
-      )
-      .on("postgres_changes", { event: "*", schema: "public", table: "courier_profiles" }, () =>
-        qc.invalidateQueries({ queryKey: ["tracking-latest"] }),
-      )
-      .on("postgres_changes", { event: "*", schema: "public", table: "establishments" }, () =>
-        qc.invalidateQueries({ queryKey: ["map-establishments"] }),
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
-  }, [qc]);
-
-  async function rodarGeocoding() {
-    setGeocoding(true);
+  const geocode = useServerFn(geocodeMissingEstablishments);
+  const [locating, setLocating] = useState(false);
+  async function locateStores() {
+    if (locating) return;
+    setLocating(true);
     try {
-      const res = await geocodeFn();
-      toast.success(`Geocodificação concluída: ${res.atualizados}/${res.total} localizados.`);
-      if (res.falhas.length) {
+      const result = await geocode();
+      await qc.invalidateQueries({ queryKey: ["map-establishments"] });
+      if (result.atualizados) toast.success(result.atualizados + " loja(s) localizada(s).");
+      if (result.falhas.length)
         toast.warning(
-          `${res.falhas.length} sem coordenadas: ${res.falhas.map((f) => f.nome).join(", ")}`,
+          "Confira o ponto no mapa das lojas: " + result.falhas.map((f) => f.nome).join(", "),
         );
-      }
-      qc.invalidateQueries({ queryKey: ["map-establishments"] });
+      if (!result.total) toast.success("Todas as lojas já têm localização cadastrada.");
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(e instanceof Error ? e.message : "Não foi possível localizar as lojas.");
     } finally {
-      setGeocoding(false);
+      setLocating(false);
     }
   }
-
-  const loading = loadingPts || loadingEst;
-
+  const drivers = useQuery({
+    queryKey: ["tracking-latest"],
+    queryFn: fetchCouriers,
+    refetchInterval: 8000,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+  });
+  const stores = useQuery({
+    queryKey: ["map-establishments"],
+    queryFn: fetchEstablishments,
+    refetchInterval: 30000,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+  });
+  const [connection, setConnection] = useState("CONNECTING");
+  const [now, setNow] = useState(Date.now);
+  const [showStores, setShowStores] = useState(true);
+  const [showDrivers, setShowDrivers] = useState(true);
+  const [onlyOpen, setOnlyOpen] = useState(false);
+  const [focusedId, setFocusedId] = useState<string | null>(null);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const refresh = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        void qc.invalidateQueries({ queryKey: ["tracking-latest"] });
+        void qc.invalidateQueries({ queryKey: ["map-establishments"] });
+      }, 200);
+    };
+    const ch = supabase
+      .channel("admin-live-map")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "tracking_points" },
+        refresh,
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "courier_profiles" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "establishments" }, refresh)
+      .subscribe((status) => {
+        setConnection(status);
+        if (status === "SUBSCRIBED") refresh();
+      });
+    const tick = setInterval(() => setNow(Date.now()), 10000);
+    const resume = () => {
+      if (document.visibilityState === "visible") {
+        setNow(Date.now());
+        refresh();
+      }
+    };
+    document.addEventListener("visibilitychange", resume);
+    window.addEventListener("online", refresh);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(tick);
+      document.removeEventListener("visibilitychange", resume);
+      window.removeEventListener("online", refresh);
+      void supabase.removeChannel(ch);
+    };
+  }, [qc]);
+  const couriers = drivers.data ?? EMPTY_COURIERS;
+  const establishments = stores.data ?? EMPTY_STORES;
+  const live = couriers.filter((c) => courierLocationState(c, now) === "live");
+  const located = establishments.filter((e): e is typeof e & MapPoint => validMapPoint(e));
+  const markers = useMemo<MapMarker[]>(
+    () => [
+      ...(showStores
+        ? establishments
+            .filter((p): p is typeof p & MapPoint => validMapPoint(p))
+            .filter((e) => !onlyOpen || e.is_open)
+            .map((e) => ({
+              id: "store:" + e.id,
+              lat: e.lat,
+              lng: e.lng,
+              title: e.nome,
+              detail: [e.is_open ? "Aberto" : "Fechado", e.endereco, e.cidade]
+                .filter(Boolean)
+                .join(" · "),
+              color: "#059669",
+            }))
+        : []),
+      ...(showDrivers
+        ? couriers
+            .filter((p): p is typeof p & MapPoint => validMapPoint(p))
+            .map((c) => ({
+              id: "courier:" + c.courier_id,
+              lat: c.lat,
+              lng: c.lng,
+              title: c.nome,
+              detail: [
+                c.status === "ocupado" ? "Em entrega" : "Disponível",
+                locationAgeLabel(c.created_at, now),
+              ].join(" · "),
+              color: courierLocationState(c, now) === "live" ? "#EA580C" : "#64748B",
+            }))
+        : []),
+    ],
+    [establishments, couriers, showStores, showDrivers, onlyOpen, now],
+  );
+  const error = drivers.error || stores.error;
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Mapa ao vivo</h1>
-          <p className="text-sm text-muted-foreground">
-            {loading ? (
-              <span className="inline-flex items-center gap-1">
-                <Loader2 className="h-3 w-3 animate-spin" /> Carregando…
-              </span>
-            ) : (
-              <>Visualização em tempo real de estabelecimentos e entregadores.</>
-            )}
+          <h1 className="text-2xl font-bold">Mapa ao vivo</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Lojas e entregadores, com horário da última posição recebida.
           </p>
         </div>
-        <span className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-600">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
-          Realtime
-        </span>
+        <Button
+          variant="outline"
+          onClick={() => {
+            void drivers.refetch();
+            void stores.refetch();
+          }}
+          disabled={drivers.isFetching || stores.isFetching}
+        >
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Atualizar
+        </Button>
       </div>
-
-      <div className="flex flex-wrap gap-2 text-xs">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1">
-          <Store className="h-3.5 w-3.5 text-emerald-600" />
-          {estabs.length} de {estabs.length + semGeo.length} estabelecimento
-          {estabs.length + semGeo.length === 1 ? "" : "s"} com posição real
-        </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1">
-          <Bike className="h-3.5 w-3.5 text-primary" />
-          {points.length} entregador{points.length === 1 ? "" : "es"} online agora
-        </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1">
-          <MapPin className="h-3.5 w-3.5 text-blue-500" />
-          {userLoc ? "Sua localização ativa" : geoError ? geoError : "Aguardando localização…"}
-        </span>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border bg-card p-4">
+          <Store className="mb-2 h-5 w-5 text-emerald-600" />
+          <strong className="text-2xl">
+            {located.length}/{establishments.length}
+          </strong>
+          <p className="text-xs text-muted-foreground">Lojas no mapa</p>
+        </div>
+        <div className="rounded-2xl border bg-card p-4">
+          <Bike className="mb-2 h-5 w-5 text-orange-600" />
+          <strong className="text-2xl">{live.length}</strong>
+          <p className="text-xs text-muted-foreground">Entregadores com GPS recente</p>
+        </div>
+        <div className="col-span-2 rounded-2xl border bg-card p-4 sm:col-span-1">
+          <span
+            className={`mb-2 block h-2 w-2 rounded-full ${connection === "SUBSCRIBED" && !error ? "bg-emerald-500" : "bg-amber-500"}`}
+          />
+          <p className="text-sm font-semibold">
+            {connection === "SUBSCRIBED" ? "Atualização ao vivo" : "Atualização a cada 8 segundos"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {drivers.dataUpdatedAt
+              ? "Consulta às " + new Date(drivers.dataUpdatedAt).toLocaleTimeString("pt-BR")
+              : "Conectando…"}
+          </p>
+        </div>
       </div>
-
-      {semGeo.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
-          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold text-amber-700 dark:text-amber-400">
-              {semGeo.length} estabelecimento{semGeo.length === 1 ? "" : "s"} sem coordenadas
-            </p>
-            <p className="truncate text-xs text-amber-700/80 dark:text-amber-400/80">
-              {semGeo.map((e) => e.nome).join(" • ")}
-            </p>
-          </div>
-          <button
-            onClick={rodarGeocoding}
-            disabled={geocoding}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-amber-700 disabled:opacity-50"
-          >
-            {geocoding ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Wand2 className="h-3.5 w-3.5" />
-            )}
-            Geocodificar endereços
-          </button>
+      {located.length < establishments.length && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+          <p>
+            Há lojas sem ponto de coleta. Localize pelo endereço ou ajuste o ponto na lista abaixo.
+          </p>
+          <Button variant="outline" onClick={locateStores} disabled={locating}>
+            {locating ? "Localizando…" : "Localizar endereços"}
+          </Button>
         </div>
       )}
-
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-2">
-        <span className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Camadas
-        </span>
-        <button
-          onClick={() => setShowEstabs((v) => !v)}
-          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
-            showEstabs
-              ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-              : "border-border bg-muted/40 text-muted-foreground"
-          }`}
+      {error && (
+        <div
+          role="alert"
+          className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm"
         >
-          {showEstabs ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-          <span className="h-2 w-2 rounded-full bg-emerald-500" />
-          Estabelecimentos ({filteredEstabs.length})
-        </button>
-        <button
-          onClick={() => setShowCouriers((v) => !v)}
-          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
-            showCouriers
-              ? "border-primary/50 bg-primary/10 text-primary"
-              : "border-border bg-muted/40 text-muted-foreground"
-          }`}
+          {error.message} Os dados exibidos podem estar desatualizados. Use Atualizar para tentar
+          novamente.
+        </div>
+      )}
+      <div className="flex flex-wrap gap-2 rounded-xl border bg-card p-3">
+        <Button
+          variant={showStores ? "default" : "outline"}
+          aria-pressed={showStores}
+          onClick={() => setShowStores((v) => !v)}
         >
-          {showCouriers ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-          <span className="h-2 w-2 rounded-full bg-primary" />
-          Entregadores online ({filteredPoints.length})
-        </button>
-        <button
+          Lojas
+        </Button>
+        <Button
+          variant={showDrivers ? "default" : "outline"}
+          aria-pressed={showDrivers}
+          onClick={() => setShowDrivers((v) => !v)}
+        >
+          Entregadores
+        </Button>
+        <Button
+          variant={onlyOpen ? "default" : "outline"}
+          aria-pressed={onlyOpen}
+          disabled={!showStores}
           onClick={() => setOnlyOpen((v) => !v)}
-          disabled={!showEstabs}
-          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition disabled:opacity-40 ${
-            onlyOpen
-              ? "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-400"
-              : "border-border bg-muted/40 text-muted-foreground"
-          }`}
         >
-          Apenas abertos
-        </button>
-        {userLoc && (
-          <span className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400">
-            <span className="h-2 w-2 rounded-full bg-blue-500" />
-            Você
-          </span>
-        )}
+          Só lojas abertas
+        </Button>
       </div>
-
-      <div className="h-[calc(100vh-320px)] overflow-hidden rounded-xl border border-border bg-card">
-        <Suspense
-          fallback={
-            <div className="flex h-full items-center justify-center text-muted-foreground">
-              Carregando mapa…
-            </div>
-          }
-        >
-          <LiveMap points={filteredPoints} establishments={filteredEstabs} userLocation={userLoc} />
+      <div className="h-[55dvh] min-h-80 overflow-hidden rounded-2xl border bg-card">
+        <Suspense fallback={<p className="p-4">Carregando mapa…</p>}>
+          <LiveMap markers={markers} focusedId={focusedId} />
         </Suspense>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        ● Verde: loja · Laranja: entregador com GPS recente · Cinza: última posição, GPS há mais de
+        1 minuto. Localizações ausentes não são estimadas.
+      </p>
+      <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+        <section className="min-w-0 rounded-2xl border bg-card p-4">
+          <h2 className="mb-3 text-base font-semibold">
+            Estabelecimentos ({establishments.length})
+          </h2>
+          <div className="max-h-96 space-y-3 overflow-y-auto">
+            {stores.isLoading && <p>Carregando lojas…</p>}
+            {establishments.map((e) => (
+              <div key={e.id} className="rounded-xl border p-3">
+                <div className="mb-2 min-w-0">
+                  <p className="break-words font-semibold">{e.nome}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {e.is_open ? "Aberto" : "Fechado"} · {e.cidade || "Cidade não informada"}
+                  </p>
+                  <p
+                    className={`mt-1 text-xs ${validMapPoint(e) ? "text-emerald-700" : "text-amber-700"}`}
+                  >
+                    {validMapPoint(e)
+                      ? "Localização cadastrada"
+                      : "Defina o ponto de coleta para aparecer no mapa"}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    disabled={!validMapPoint(e)}
+                    onClick={() => {
+                      setShowStores(true);
+                      setOnlyOpen(false);
+                      setFocusedId("store:" + e.id);
+                    }}
+                  >
+                    Ver no mapa
+                  </Button>
+                  <StoreLocationEditor store={e} />
+                </div>
+              </div>
+            ))}
+            {!stores.isLoading && !establishments.length && (
+              <p className="text-sm text-muted-foreground">Nenhuma loja aprovada.</p>
+            )}
+          </div>
+        </section>
+        <section className="min-w-0 rounded-2xl border bg-card p-4">
+          <h2 className="mb-3 text-base font-semibold">
+            Entregadores disponíveis ou em entrega ({couriers.length})
+          </h2>
+          <div className="max-h-96 space-y-3 overflow-y-auto">
+            {drivers.isLoading && <p>Carregando entregadores…</p>}
+            {couriers.map((c) => (
+              <div
+                key={c.courier_id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3"
+              >
+                <div className="min-w-0">
+                  <p className="break-words font-semibold">{c.nome}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {c.status === "ocupado" ? "Em entrega" : "Disponível"} ·{" "}
+                    {c.veiculo || "Veículo não informado"}
+                  </p>
+                  <p
+                    className={`mt-1 text-xs ${courierLocationState(c, now) === "live" ? "text-orange-700" : "text-muted-foreground"}`}
+                  >
+                    {locationAgeLabel(c.created_at, now)}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  disabled={!validMapPoint(c)}
+                  onClick={() => {
+                    setShowDrivers(true);
+                    setFocusedId("courier:" + c.courier_id);
+                  }}
+                >
+                  Ver no mapa
+                </Button>
+              </div>
+            ))}
+            {!drivers.isLoading && !couriers.length && (
+              <p className="text-sm text-muted-foreground">
+                Nenhum entregador disponível ou em entrega.
+              </p>
+            )}
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            O entregador precisa estar online, com a localização permitida e o aplicativo ativo. Se
+            o celular suspender o GPS, a posição será sinalizada como desatualizada.
+          </p>
+        </section>
       </div>
     </div>
   );

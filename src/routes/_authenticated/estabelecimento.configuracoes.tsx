@@ -1,3 +1,4 @@
+import { StoreLocationEditor } from "@/components/store-location-editor";
 import { useNicheCatalog } from "@/hooks/use-niche-catalog";
 import { confirmProfileSaved, savedProfileMessage } from "@/lib/profile-completion";
 import { isCheckoutPhone } from "@/lib/customer-access";
@@ -232,7 +233,7 @@ function ConfigPage() {
       };
       // Only write edited fields. The snapshot belongs to the form, not a
       // later background refetch, so concurrent changes cannot be overwritten.
-      const patch: Partial<typeof values> = {};
+      const patch: Partial<typeof values> & { lat?: null; lng?: null } = {};
       const formKeys: Record<string, keyof FormState> = {
         taxa_entrega_cents: "taxa",
         tempo_medio_min: "tempo",
@@ -243,6 +244,8 @@ function ConfigPage() {
         if (form[field] !== baselineForm.current?.[field])
           Object.assign(patch, { [key]: values[key] });
       }
+      if (["endereco", "cidade", "estado"].some((key) => key in patch))
+        Object.assign(patch, { lat: null, lng: null });
       if (!Object.keys(patch).length) {
         toast.success("Os dados já estão salvos.");
         return;
@@ -265,7 +268,7 @@ function ConfigPage() {
       for (const key of Object.keys(patch)) {
         // Private columns are readable only through the ownership-scoped RPC.
         // Keep those grants restricted; never add a REST SELECT just to save.
-        if (privateFields.has(key)) continue;
+        if (privateFields.has(key) || key === "lat" || key === "lng") continue;
         const previous = baselineRow.current?.[key as keyof Estab];
         if (previous === null || previous === undefined) query = query.is(key, null);
         else query = query.eq(key, previous);
@@ -509,6 +512,14 @@ function ConfigPage() {
           full
         />
       </Section>
+
+      <div className="rounded-2xl border bg-card p-4">
+        <h2 className="text-base font-semibold">Ponto de coleta no mapa</h2>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Defina onde o entregador deve buscar os pedidos.
+        </p>
+        <StoreLocationEditor store={estab} />
+      </div>
 
       <Section icon={Truck} title="Operação" subtitle="Taxas e prazos padrão">
         <Field
