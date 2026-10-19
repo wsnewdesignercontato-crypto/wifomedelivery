@@ -10,6 +10,8 @@ export type Estab = {
   telefone: string | null;
   categoria_id: string | null;
   endereco: string | null;
+  lat?: number | null;
+  lng?: number | null;
   cidade: string | null;
   estado: string | null;
   taxa_entrega_cents: number;

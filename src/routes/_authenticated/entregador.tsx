@@ -11,7 +11,8 @@ import { IFomeLogo } from "@/components/ifome-logo";
 import { OnboardingGate } from "@/components/onboarding-gate";
 import { useMyCourier } from "@/hooks/use-courier";
 import { useQueryClient } from "@tanstack/react-query";
-import { watchDeviceLocation } from "@/lib/device-preferences";
+import { freshDevicePoint } from "@/lib/courier-location";
+import { getCurrentDevicePosition, watchDeviceLocation } from "@/lib/device-preferences";
 
 export const Route = createFileRoute("/_authenticated/entregador")({
   head: () => ({
@@ -39,29 +40,68 @@ function EntregadorWorkspace() {
   const [form, setForm] = useState({ veiculo: "moto", placa: "", cnh: "", pix: "", telefone: "" });
   const [saving, setSaving] = useState(false);
 
+  const [gpsError, setGpsError] = useState<string | null>(null);
+  const trackingUserId = courier?.user_id;
+  const trackingStatus = courier?.status;
   useEffect(() => {
-    if (!courier || typeof navigator === "undefined" || !navigator.geolocation) return;
-    if (courier.status !== "online" && courier.status !== "ocupado") return;
+    if (!trackingUserId || typeof navigator === "undefined" || !navigator.geolocation) return;
+    if (trackingStatus !== "online" && trackingStatus !== "ocupado") return;
+    let active = true;
+    let sending = false;
     let lastSent = 0;
-    const stopWatching = watchDeviceLocation(
-      async (pos) => {
-        const now = Date.now();
-        if (now - lastSent < 10000) return;
-        lastSent = now;
-        await supabase.from("tracking_points").insert({
-          courier_id: courier.user_id,
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-          heading: pos.coords.heading,
-          speed: pos.coords.speed,
-        });
-      },
-      () => {},
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
-    );
-    return stopWatching;
-  }, [courier]);
+    const send: PositionCallback = async (position) => {
+      if (!active || sending || Date.now() - lastSent < 5000) return;
+      const point = freshDevicePoint(position);
+      if (!point) return;
+      sending = true;
+      try {
+        const results = await Promise.all([
+          supabase.from("tracking_points").insert({ courier_id: trackingUserId, ...point }),
+          supabase
+            .from("courier_profiles")
+            .update({
+              lat: point.lat,
+              lng: point.lng,
+              last_seen: new Date(position.timestamp).toISOString(),
+            })
+            .eq("user_id", trackingUserId)
+            .select("user_id")
+            .single(),
+        ]);
+        if (results.some((result) => result.error)) throw new Error("write failed");
+        lastSent = Date.now();
+        if (active) setGpsError(null);
+      } catch {
+        if (active)
+          setGpsError(
+            "Não foi possível enviar sua localização. Verifique sua conexão; tentaremos novamente.",
+          );
+      } finally {
+        sending = false;
+      }
+    };
+    const error = () => {
+      if (active)
+        setGpsError(
+          "Ative a localização do aplicativo e permita o GPS para aparecer no mapa e acompanhar suas entregas.",
+        );
+    };
+    const options = { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 };
+    const stopWatching = watchDeviceLocation(send, error, options);
+    const refresh = () => {
+      if (document.visibilityState === "visible") getCurrentDevicePosition(send, error, options);
+    };
+    const timer = setInterval(refresh, 15000);
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("online", refresh);
+    return () => {
+      active = false;
+      stopWatching();
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("online", refresh);
+    };
+  }, [trackingUserId, trackingStatus]);
 
   if (isLoading) {
     return (
@@ -159,6 +199,14 @@ function EntregadorWorkspace() {
   return (
     <OnboardingGate role="entregador" userId={userId}>
       <EntregadorShell>
+        {gpsError && (trackingStatus === "online" || trackingStatus === "ocupado") && (
+          <div
+            role="status"
+            className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+          >
+            {gpsError}
+          </div>
+        )}
         <Outlet />
       </EntregadorShell>
     </OnboardingGate>

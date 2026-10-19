@@ -6,6 +6,7 @@ const r = { states: [], cursor: 0, effects: [], notices: [], writes: [] };
 globalThis.__storeRegistration = r;
 const jsx = loadTsx();
 const mocks = {
+  "@/components/store-location-editor": "export const StoreLocationEditor='store-location';",
   react: `export * from ${JSON.stringify(import.meta.resolve("react"))};const r=globalThis.__storeRegistration;
 export function useState(v){const i=r.cursor++;if(!(i in r.states))r.states[i]=typeof v==='function'?v():v;return[r.states[i],v=>r.states[i]=typeof v==='function'?v(r.states[i]):v]}
 export function useRef(v){const i=r.cursor++;return r.states[i]??={current:v}}
@@ -136,4 +137,13 @@ test("invalid preparation times do not reach the database", async () => {
   await save();
   assert.equal(r.writes.length, 0);
   assert.ok(r.notices.some((n) => n.kind === "error"));
+});
+
+test("changing the store address clears the old pickup coordinates", async () => {
+  mount();
+  edit("Endereço", "Rua Nova, 123");
+  await save();
+  assert.equal(r.writes.length, 1);
+  assert.equal(r.writes[0].lat, null);
+  assert.equal(r.writes[0].lng, null);
 });
