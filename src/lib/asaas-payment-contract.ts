@@ -115,7 +115,7 @@ export function validatePayer(value: unknown): PayerInput {
     cpfCnpj = normalizeDocument(row.cpfCnpj),
     email = paymentText(row.email, 254).toLowerCase();
   if (!validDocument(cpfCnpj) || !validEmail(email)) throw invalid();
-  const phone = formatted(row.phone, /^[0-9+() \-]{10,22}$/).replace(/\D/g, "");
+  const phone = formatted(row.phone, /^[0-9+() -]{10,22}$/).replace(/\D/g, "");
   if (!/^\d{10,13}$/.test(phone) || /^(.)\1+$/.test(phone)) throw invalid();
   const result: PayerInput = { name: paymentText(row.name, 120), cpfCnpj, email, phone };
   if (row.postalCode !== undefined && row.postalCode !== "")
