@@ -3260,6 +3260,21 @@ export type Database = {
       };
     };
     Functions: {
+      customer_payment_test_context: { Args: { p_store: string }; Returns: Json };
+      checkout_test_order: {
+        Args: {
+          p_coupon_code?: string;
+          p_endereco?: Json;
+          p_establishment_id: string;
+          p_expected_total_cents?: number;
+          p_forma_pagamento: string;
+          p_idempotency_key: string;
+          p_observacoes?: string;
+          p_quote?: boolean;
+          p_tipo_entrega: string;
+        };
+        Returns: Json;
+      };
       admin_payment_test: { Args: { p_action: string; p_payload?: Json }; Returns: Json };
       asaas_settings_get: {
         Args: { _environment: string };

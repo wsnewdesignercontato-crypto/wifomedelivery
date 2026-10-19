@@ -29,6 +29,7 @@ const quoteOrderInput = z.object({
 
 const placeOrderInput = quoteOrderInput.extend({
   expected_total_cents: z.number().int().nonnegative(),
+  test_mode: z.boolean().default(false),
 });
 
 export type CheckoutQuoteInput = z.infer<typeof quoteOrderInput>;
@@ -60,16 +61,19 @@ export const placeOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: z.infer<typeof placeOrderInput>) => placeOrderInput.parse(data))
   .handler(async ({ data, context }) => {
-    const { data: result, error } = await context.supabase.rpc("checkout_order", {
-      p_establishment_id: data.establishment_id,
-      p_idempotency_key: data.idempotency_key,
-      p_forma_pagamento: data.forma_pagamento,
-      p_tipo_entrega: data.tipo_entrega,
-      p_endereco: data.endereco ?? null,
-      p_observacoes: data.observacoes ?? undefined,
-      p_coupon_code: data.coupon_code ?? undefined,
-      p_expected_total_cents: data.expected_total_cents,
-    });
+    const { data: result, error } = await context.supabase.rpc(
+      data.test_mode ? "checkout_test_order" : "checkout_order",
+      {
+        p_establishment_id: data.establishment_id,
+        p_idempotency_key: data.idempotency_key,
+        p_forma_pagamento: data.forma_pagamento,
+        p_tipo_entrega: data.tipo_entrega,
+        p_endereco: data.endereco ?? null,
+        p_observacoes: data.observacoes ?? undefined,
+        p_coupon_code: data.coupon_code ?? undefined,
+        p_expected_total_cents: data.expected_total_cents,
+      },
+    );
     if (error)
       throw new Error(
         /^[0-9A-Z]{5}$/.test(error.code ?? "")

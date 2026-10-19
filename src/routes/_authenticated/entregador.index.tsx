@@ -155,7 +155,7 @@ function Home() {
       .from("deliveries")
       .select("id,order_id,status,valor_entrega_cents,entregador_id,is_test")
       .eq("entregador_id", courier.user_id)
-      .not("status", "in", "(delivered,cancelled)")
+      .in("status", ["accepted", "to_store", "at_store", "picked_up", "to_customer", "at_customer"])
       .maybeSingle();
     if (!isCurrent() || error) return;
     const nextOrderId = data?.order_id ?? null;

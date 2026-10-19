@@ -7,11 +7,9 @@ let rows, subscriptions, statuses, sends, failSubscriptions;
 const client = {
   from(table) {
     const filters = [];
-    let update,
-      returning = false;
+    let update;
     const query = {
       select() {
-        returning = true;
         return query;
       },
       update(value) {

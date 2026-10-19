@@ -241,7 +241,7 @@ function Corridas() {
         "id,order_id,status,valor_entrega_cents,entregador_id,aceito_em,coletado_em,entregue_em,is_test",
       )
       .eq("entregador_id", courier.user_id)
-      .not("status", "in", "(delivered,cancelled)")
+      .in("status", ["accepted", "to_store", "at_store", "picked_up", "to_customer", "at_customer"])
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();

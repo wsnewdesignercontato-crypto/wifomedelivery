@@ -1,16 +1,26 @@
-# Administrative payment simulator
+# Teste de compra completa
 
-Open Admin → Configurações → Pagamentos · modo de teste. The setting starts OFF and is separate from gateway credentials. Only administrators can read or operate the simulator.
+Em **Administração → Configurações → Pagamentos · modo de teste**, ative o modo, selecione uma conta de cliente, a loja e, para entrega, o entregador aprovado. Clique em **Liberar compra de teste**. A autorização vale por 24 horas, para aquela conta e aquela loja; pode ser removida antes.
 
-1. Enable the simulator. Choose a customer account, approved store, amount and delivery/pickup.
-2. For delivery, choose an approved online courier serving the store city and a test street address.
-3. Generate a pending simulated sale, then approve or decline it. Approval creates a clearly labelled test order in the normal operational flow; refusal creates no order. The merchant and selected courier can exercise acceptance, preparation, dispatch and proof of delivery in their own apps. Normal sounds/push and the 60-second merchant deadline apply.
-4. Simulate a full refund if desired. It changes only the simulated sale/order.
-5. Clean test sales using the confirmation dialog. Cleanup includes linked orders, deliveries, messages, histories, notifications and non-cascading support/tracking records. It releases a courier occupied by a removed test only when no other active delivery remains. User accounts, products, carts, stock, coupons, real sales, real balances and administrative audit records remain.
-6. Turn the simulator off to prevent new tests. Already-created test orders retain their test identity; cleanup remains available.
+Na conta liberada, monte o carrinho no aplicativo do cliente com produtos e complementos do catálogo. Na finalização aparece **TESTE · compra completa sem cobrança** e o botão **Confirmar pedido de teste**. Pix e cartão são aprovados internamente, sem cobrança, QR Code de pagamento ou contato com o Asaas.
 
-Only sales generated in this panel are simulated. The customer checkout is never globally converted into free/test purchases. No gateway is called, no real receipt can be confirmed for a test order, and no test delivery generates a ledger credit or score/review/ranking reward. Operational dashboards and financial aggregates exclude test sales. The displayed split is simulated, not a withdrawable balance.
+O pedido usa as regras normais de cadastro, endereço, loja aberta, preço, cupom, estoque disponível e complementos obrigatórios. A loja recebe o pedido, aceita e prepara; ao chamar a entrega, somente o entregador escolhido recebe a oferta. Ele precisa estar online, livre, aprovado e atuar na cidade da loja. O cliente acompanha as etapas e recebe as mensagens, inclusive “Seu pedido está a caminho!”. A conclusão exige a mesma confirmação de entrega do fluxo normal.
 
-This simulator validates the internal order/notification/delivery flow. It does not validate Asaas authentication, webhooks, real Pix/card settlement or a bank deposit. The separately updated Asaas connection and webhook panel is preserved beside the simulator. Its credentials and provider environment remain independent; the internal simulator never calls that gateway. Online checkout charges and settlement still require their own integration and validation.
+Pedidos de teste permanecem identificados como TESTE, não devem ser preparados ou entregues de verdade e não alteram estoque, contador de cupom, saldo para saque, avaliação, ranking ou comissão real. A confirmação usa o servidor e a mesma validação de catálogo do checkout normal; preços enviados pelo navegador não são aceitos como autoridade. Repetir a mesma tentativa não duplica pedido.
 
-Tests: `tests/payment-simulator.test.mjs` exercises the actual PostgreSQL migration with PGlite. The full-schema contract in `supabase/tests/payment-simulator.sql` uses the temporary fixture prefix from `order-acceptance-flow.sql`, inside a transaction ending in ROLLBACK. It verifies roles, mode gating, retry idempotency, immutable test identity, targeted notifications, exclusive courier access, proof completion, receipt isolation, refund and active-delivery cleanup while preserving a normal control order and inventory. All production verification fixtures are rolled back; the published simulator remains disabled.
+**Desligar** impede novas compras de teste. Contas não liberadas e compras em outras lojas continuam no checkout normal. A configuração Asaas Sandbox/Produção é independente. Este teste valida o fluxo operacional interno; não comprova recebimento de dinheiro pelo gateway.
+
+**Limpar testes** remove somente vendas, pedidos, corridas, mensagens e avisos vinculados aos testes, e revoga as autorizações de teste. Produtos, usuários, vendas reais e saldos são preservados. O registro administrativo da limpeza permanece. O comando antigo de demonstração permanece compatível para registros anteriores.
+
+## Notificações e áudio
+
+A central do cliente mostra as 50 mensagens mais recentes, inclusive as lidas, com o texto completo. O contador considera apenas as não lidas. A lista reconcilia eventos do banco, recebimento de push, retorno ao aplicativo e atualização periódica com a tela visível. O cabeçalho usa um sino, sem estrelinhas de IA.
+
+Uma corrida direcionada em `broadcasting` continua sendo uma oferta; não é entrega aceita. Essa distinção permite abrir a oferta e iniciar a música. O toque usa o MP3 configurado e para ao aceitar, recusar ou perder a corrida. A liberação de áudio depende de interação com o aplicativo e da preferência de som. Não é garantida música contínua quando o sistema suspende um PWA em segundo plano ou bloqueia a tela.
+
+## Verificação
+
+- Testes de checkout com preço e complemento reais, repetição, total adulterado, conta não autorizada, cancelamento sem reposição indevida e isolamento de saldos.
+- Contrato `supabase/tests/realistic-checkout-test.sql`, com as fixtures de `order-acceptance-flow.sql`, executado em transação e revertido: compra, aceite da loja, despacho, aceite do entregador, código de conclusão, notificações visíveis sob RLS e limpeza seletiva.
+- Testes da central preservam mensagens lidas e reconciliam atualizações.
+- Testes de oferta direcionada e do MP3 em loop, desbloqueio, silêncio, cancelamento e parada imediata.

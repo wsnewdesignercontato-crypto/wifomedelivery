@@ -159,7 +159,14 @@ export function useNewRideAlert(courier: Courier, soundEnabled = true) {
         .from("deliveries")
         .select("id")
         .eq("entregador_id", courierId)
-        .not("status", "in", "(delivered,cancelled)")
+        .in("status", [
+          "accepted",
+          "to_store",
+          "at_store",
+          "picked_up",
+          "to_customer",
+          "at_customer",
+        ])
         .limit(1)
         .maybeSingle();
 

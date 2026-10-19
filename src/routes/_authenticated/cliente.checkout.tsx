@@ -84,6 +84,7 @@ function CheckoutPage() {
   const [pagto, setPagto] = useState<Pay>("pix");
   const [tipoEntrega, setTipoEntrega] = useState<"delivery" | "pickup">("delivery");
   const [obs, setObs] = useState("");
+  const [testMode, setTestMode] = useState<boolean | null>(null);
   const [estab, setEstab] = useState<Estab | null>(null);
   const [cartFingerprint, setCartFingerprint] = useState("");
   const [loading, setLoading] = useState(true);
@@ -153,6 +154,18 @@ function CheckoutPage() {
         if (storeError) {
           toast.error(storeError.message);
           setLoadError("Não foi possível carregar a loja. Tente novamente.");
+        }
+        const mode = await supabase.rpc("customer_payment_test_context", {
+          p_store: ci[0].establishment_id,
+        });
+        if (!active || request !== sequence) return;
+        if (mode.error) {
+          setTestMode(null);
+          setLoadError("Não foi possível conferir o modo de pagamento. Tente novamente.");
+        } else {
+          const enabled = z.object({ enabled: z.boolean() }).parse(mode.data).enabled;
+          setTestMode(enabled);
+          if (enabled) setPagto((pay) => (pay === "dinheiro" ? "pix" : pay));
         }
         setEstab(e as Estab | null);
       } else setEstab(null);
@@ -270,11 +283,16 @@ function CheckoutPage() {
       setDetailsOpen(true);
       return;
     }
-    if (!checkoutData || !currentQuote || enviando) return;
+    if (!checkoutData || !currentQuote || enviando || testMode === null) return;
     setEnviando(true);
     try {
       const expected_total_cents = currentQuote.total_cents;
-      const fingerprint = JSON.stringify({ checkoutData, cartFingerprint, expected_total_cents });
+      const fingerprint = JSON.stringify({
+        checkoutData,
+        cartFingerprint,
+        expected_total_cents,
+        testMode,
+      });
       const storageKey = `wifome-pending-checkout-${user.id}`;
       let attempt = checkoutAttempt.current;
       try {
@@ -301,7 +319,12 @@ function CheckoutPage() {
         /* Optional persistence. */
       }
       const res = await call({
-        data: { ...checkoutData, expected_total_cents, idempotency_key: attempt.key },
+        data: {
+          ...checkoutData,
+          expected_total_cents,
+          idempotency_key: attempt.key,
+          test_mode: testMode,
+        },
       });
       try {
         sessionStorage.removeItem(storageKey);
@@ -354,6 +377,19 @@ function CheckoutPage() {
   return (
     <div className="space-y-5">
       <h1 className="text-xl font-bold">Finalizar pedido</h1>
+      {testMode && (
+        <div
+          role="status"
+          className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm"
+        >
+          <strong>TESTE · compra completa sem cobrança.</strong>
+          <p>
+            Ao confirmar, o pagamento de teste é aprovado e o pedido segue para a loja e o
+            entregador selecionados pelo administrador. Não pague nem realize uma entrega de
+            verdade.
+          </p>
+        </div>
+      )}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="theme-cliente">
           <DialogHeader>
@@ -489,19 +525,21 @@ function CheckoutPage() {
       <section>
         <h2 className="mb-2 text-sm font-semibold">Forma de pagamento</h2>
         <div className="grid grid-cols-2 gap-2">
-          {PAYS.map(({ key, label, Icon }) => (
+          {PAYS.filter((pay) => !testMode || pay.key !== "dinheiro").map(({ key, label, Icon }) => (
             <button
               key={key}
               onClick={() => setPagto(key)}
               className={`flex items-center gap-2 rounded-2xl border p-3 text-sm font-medium transition ${pagto === key ? "border-primary bg-primary text-primary-foreground shadow-sm [&_.text-muted-foreground]:text-primary-foreground/90" : "border-primary bg-card text-primary hover:bg-primary/5"}`}
             >
               <Icon className="h-4 w-4" />
-              {label}
+              {testMode ? (key === "pix" ? "Pix de teste" : "Cartão de teste") : label}
             </button>
           ))}
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Pagamento processado na entrega (Pix e cartão online em breve).
+          {testMode
+            ? "Pagamento aprovado apenas no simulador, sem Pix, cartão ou dinheiro real."
+            : "Pagamento processado na entrega (Pix e cartão online em breve)."}
         </p>
       </section>
 
@@ -562,12 +600,14 @@ function CheckoutPage() {
         className="w-full"
         size="lg"
         onClick={confirmar}
-        disabled={enviando || !currentQuote || !detailsLoaded}
+        disabled={enviando || !currentQuote || !detailsLoaded || testMode === null}
       >
         {enviando ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : uncertainAttempt === quoteFingerprint ? (
           "Verificar tentativa anterior"
+        ) : testMode ? (
+          "Confirmar pedido de teste"
         ) : (
           "Confirmar pedido"
         )}

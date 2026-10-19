@@ -24,7 +24,8 @@ function visit(node) {
 visit(ast);
 assert.ok(evaluateSource);
 const js = ts.transpile(evaluateSource, { target: ts.ScriptTarget.ES2022 });
-async function offerFor(coordinates) {
+async function offerFor(coordinates, assignedBroadcast = false) {
+  let acceptedStages = [];
   let offer = null;
   const store = {
     id: "store",
@@ -47,6 +48,10 @@ async function offerFor(coordinates) {
         not() {
           return q;
         },
+        in(column, values) {
+          if (table === "deliveries" && column === "status") acceptedStages = values;
+          return q;
+        },
         or() {
           return q;
         },
@@ -60,7 +65,10 @@ async function offerFor(coordinates) {
           return {
             data:
               table === "deliveries"
-                ? null
+                ? assignedBroadcast &&
+                  (acceptedStages.length === 0 || acceptedStages.includes("broadcasting"))
+                  ? { ...candidate, status: "broadcasting", entregador_id: "courier" }
+                  : null
                 : table === "orders"
                   ? {
                       id: "order",
@@ -128,4 +136,8 @@ test("valid stored pickup coordinates preserve the computed route distances", as
   assert.equal(offer.pickup.lat, -20.94);
   assert.equal(offer.distanciaColeta, 0);
   assert.ok(offer.distanciaEntrega > 0);
+});
+test("a targeted test broadcast remains an offer and can trigger the ringtone before acceptance", async () => {
+  const offer = await offerFor({ lat: null, lng: null }, true);
+  assert.equal(offer?.deliveryId, "ride");
 });

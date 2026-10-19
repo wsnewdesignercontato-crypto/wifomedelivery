@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FlaskConical, Trash2 } from "lucide-react";
 import { z } from "zod";
@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -33,6 +32,14 @@ const stateSchema = z.object({
     }),
   ),
   couriers: z.array(person.extend({ status: z.string(), cidade: z.string().nullable() })),
+  testers: z.array(
+    z.object({
+      customer_id: z.string().uuid(),
+      customer: z.string().nullable(),
+      store: z.string(),
+      expires_at: z.string(),
+    }),
+  ),
   sales: z.array(
     z.object({
       id: z.string().uuid(),
@@ -93,14 +100,7 @@ export function PaymentTestSettings() {
   const [customer, setCustomer] = useState("");
   const [store, setStore] = useState("");
   const [courier, setCourier] = useState("");
-  const [fulfillment, setFulfillment] = useState("delivery");
-  const [payment, setPayment] = useState("pix");
-  const [value, setValue] = useState("10,00");
-  const [street, setStreet] = useState("");
-  const [number, setNumber] = useState("");
   const [cleanupOpen, setCleanupOpen] = useState(false);
-  const attempt = useRef<{ signature: string; id: string } | null>(null);
-  const selectedStore = data?.stores.find((s) => s.id === store);
 
   async function run(action: string, payload: Record<string, Json>, message: string) {
     if (busy) return false;
@@ -118,43 +118,6 @@ export function PaymentTestSettings() {
     } finally {
       setBusy(null);
     }
-  }
-
-  async function createSale(event: React.FormEvent) {
-    event.preventDefault();
-    if (!/^\d{1,5}([.,]\d{1,2})?$/.test(value.trim()))
-      return toast.error("Informe um valor de R$ 1,00 a R$ 10.000,00.");
-    const cents = Math.round(Number(value.trim().replace(",", ".")) * 100);
-    if (cents < 100 || cents > 1000000)
-      return toast.error("Informe um valor de R$ 1,00 a R$ 10.000,00.");
-    const payload: Record<string, Json> = {
-      customer_id: customer || data?.admin_id || "",
-      store_id: store,
-      courier_id: fulfillment === "delivery" ? courier : null,
-      fulfillment,
-      payment_method: payment,
-      subtotal_cents: cents,
-      address:
-        fulfillment === "delivery"
-          ? {
-              rua: street.trim(),
-              numero: number.trim(),
-              cidade: selectedStore?.cidade || "",
-              estado: selectedStore?.estado || "",
-            }
-          : null,
-    };
-    const signature = JSON.stringify(payload);
-    if (attempt.current?.signature !== signature)
-      attempt.current = { signature, id: crypto.randomUUID() };
-    if (
-      await run(
-        "create",
-        { ...payload, request_key: attempt.current.id },
-        "Venda de teste criada. Agora simule a aprovação ou a recusa.",
-      )
-    )
-      attempt.current = null;
   }
 
   if (isLoading) return <div className="h-32 max-w-3xl animate-pulse rounded-2xl bg-muted" />;
@@ -196,13 +159,28 @@ export function PaymentTestSettings() {
         />
       </div>
       <p className="rounded-xl bg-amber-500/10 p-3 text-sm">
-        <strong>{data.enabled ? "Teste ativado" : "Teste desligado"} · sem dinheiro real.</strong> O
-        simulador não usa sua chave de produção nem movimenta saldo, estoque ou saques. Somente as
-        vendas geradas aqui são simuladas; o checkout dos clientes continua normal. Para validar a
-        integração com o Asaas, use também o ambiente de testes do próprio gateway.
+        <strong>{data.enabled ? "Teste ativado" : "Teste desligado"} · sem dinheiro real.</strong>{" "}
+        Libere uma conta abaixo e faça a compra no aplicativo do cliente, escolhendo produtos e
+        complementos de verdade. O pagamento é aprovado no simulador e o pedido percorre loja,
+        entregador e acompanhamento. Identificado como TESTE, não usa a chave Asaas nem altera
+        estoque, cupons, saldos ou saques. Contas não liberadas continuam no checkout normal.
       </p>
       {data.enabled && (
-        <form onSubmit={(event) => void createSale(event)} className="space-y-4">
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void run(
+              "enroll",
+              {
+                customer_id: customer || data.admin_id,
+                store_id: store,
+                courier_id: courier || null,
+              },
+              "Compra de teste liberada por 24 horas. Abra a loja no aplicativo do cliente.",
+            );
+          }}
+        >
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="test-customer">Conta do cliente</Label>
@@ -224,9 +202,9 @@ export function PaymentTestSettings() {
               <Label htmlFor="test-store">Estabelecimento do teste</Label>
               <select
                 id="test-store"
+                required
                 className={selectClass}
                 value={store}
-                required
                 onChange={(e) => setStore(e.target.value)}
               >
                 <option value="">Escolha a loja</option>
@@ -238,113 +216,64 @@ export function PaymentTestSettings() {
                 ))}
               </select>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="test-fulfillment">Tipo do pedido</Label>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="test-courier">Entregador do teste</Label>
               <select
-                id="test-fulfillment"
+                id="test-courier"
                 className={selectClass}
-                value={fulfillment}
-                onChange={(e) => setFulfillment(e.target.value)}
+                value={courier}
+                onChange={(e) => setCourier(e.target.value)}
               >
-                <option value="delivery">Entrega</option>
-                <option value="pickup">Retirada na loja</option>
+                <option value="">Sem entregador (somente retirada)</option>
+                {data.couriers.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nome || p.id.slice(0, 8)} · {p.status}
+                  </option>
+                ))}
               </select>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="test-payment">Pagamento simulado</Label>
-              <select
-                id="test-payment"
-                className={selectClass}
-                value={payment}
-                onChange={(e) => setPayment(e.target.value)}
-              >
-                <option value="pix">Pix</option>
-                <option value="cartao">Cartão</option>
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="test-amount">Valor dos produtos (R$)</Label>
-              <Input
-                id="test-amount"
-                inputMode="decimal"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                A taxa de entrega da loja é acrescentada à simulação.
-              </p>
-            </div>
-            {fulfillment === "delivery" && (
-              <div className="space-y-1.5">
-                <Label htmlFor="test-courier">Entregador do teste</Label>
-                <select
-                  id="test-courier"
-                  className={selectClass}
-                  value={courier}
-                  required
-                  onChange={(e) => setCourier(e.target.value)}
-                >
-                  <option value="">Escolha o entregador</option>
-                  {data.couriers.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nome || p.id.slice(0, 8)} ·{" "}
-                      {p.status === "online"
-                        ? "online"
-                        : p.status === "ocupado"
-                          ? "ocupado"
-                          : "offline"}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
           </div>
-          {fulfillment === "delivery" && (
-            <div className="grid gap-4 sm:grid-cols-[1fr_7rem]">
-              <div className="space-y-1.5">
-                <Label htmlFor="test-street">Rua da entrega de teste</Label>
-                <Input
-                  id="test-street"
-                  value={street}
-                  required
-                  maxLength={200}
-                  onChange={(e) => setStreet(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Cidade: {selectedStore?.cidade || "selecione uma loja com cidade cadastrada"}. Não
-                  é necessário fazer uma entrega de verdade.
-                </p>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="test-number">Número</Label>
-                <Input
-                  id="test-number"
-                  value={number}
-                  maxLength={20}
-                  onChange={(e) => setNumber(e.target.value)}
-                />
-              </div>
-            </div>
-          )}
           <p className="text-xs text-muted-foreground">
-            Use suas contas de teste. A loja recebe o pedido após aprovar o pagamento simulado. O
-            entregador escolhido precisa estar online e atuar na cidade da loja para receber o aviso
-            quando ela chamar a entrega.
+            Use contas de teste. A loja precisa estar aberta. Para entrega, o entregador selecionado
+            precisa estar online, aprovado e atuar na cidade da loja. A autorização expira em 24
+            horas; desligar o modo bloqueia novas compras de teste.
           </p>
-          <Button
-            type="submit"
-            disabled={
-              !data.enabled ||
-              !!busy ||
-              !store ||
-              (fulfillment === "delivery" && (!courier || !selectedStore?.cidade))
-            }
-            loading={busy === "create"}
-          >
-            Gerar venda de teste
+          <Button type="submit" disabled={!!busy || !store} loading={busy === "enroll"}>
+            Liberar compra de teste
           </Button>
         </form>
+      )}
+      {data.testers.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">Contas liberadas</h3>
+          {data.testers.map((tester) => (
+            <div
+              key={tester.customer_id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3"
+            >
+              <p className="text-sm">
+                {tester.customer || tester.customer_id.slice(0, 8)} · {tester.store}
+                <span className="block text-xs text-muted-foreground">
+                  Até {new Date(tester.expires_at).toLocaleString("pt-BR")}
+                </span>
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!!busy}
+                onClick={() =>
+                  void run(
+                    "revoke",
+                    { customer_id: tester.customer_id },
+                    "Autorização de teste removida.",
+                  )
+                }
+              >
+                Remover autorização
+              </Button>
+            </div>
+          ))}
+        </div>
       )}
       <div className="space-y-3 border-t pt-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

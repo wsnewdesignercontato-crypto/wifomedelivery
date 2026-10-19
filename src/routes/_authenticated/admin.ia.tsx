@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles } from "lucide-react";
+import { ChartColumnBig } from "lucide-react";
 import { generateAdminInsights } from "@/lib/admin-ai.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/ia")({
@@ -54,11 +54,11 @@ function IaPage() {
     <div className="space-y-6">
       <div>
         <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight">
-          <Sparkles className="h-7 w-7 text-primary" />
-          IA Insights
+          <ChartColumnBig className="h-7 w-7 text-primary" />
+          Análises
         </h1>
         <p className="text-sm text-muted-foreground">
-          Pergunte à IA sobre operação, crescimento, riscos e marketing.
+          Consulte análises sobre operação, crescimento, riscos e marketing.
         </p>
       </div>
 
@@ -85,15 +85,15 @@ function IaPage() {
           rows={3}
         />
         <Button onClick={() => ask()} disabled={loading} className="mt-3">
-          <Sparkles className="mr-2 h-4 w-4" />
-          {loading ? "Analisando…" : "Gerar insight"}
+          <ChartColumnBig className="mr-2 h-4 w-4" />
+          {loading ? "Analisando…" : "Gerar análise"}
         </Button>
       </div>
 
       {answer && (
         <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-6">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">
-            Resposta da IA
+            Análise da plataforma
           </p>
           <div className="whitespace-pre-wrap text-sm leading-relaxed">{answer}</div>
           {summary && (
