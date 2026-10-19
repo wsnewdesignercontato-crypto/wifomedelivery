@@ -91,3 +91,18 @@ test("quote returns the authoritative discount/total and validates the database 
   });
   assert.deepEqual(result, quote);
 });
+test("explicit test purchases use the scoped test RPC, never the normal payment path", async () => {
+  let selected;
+  await placeOrder({
+    data: { ...input, forma_pagamento: "pix", test_mode: true },
+    context: {
+      supabase: {
+        rpc: async (name) => {
+          selected = name;
+          return { data: { order_id: uuid, total_cents: 1000, desconto_cents: 0 }, error: null };
+        },
+      },
+    },
+  });
+  assert.equal(selected, "checkout_test_order");
+});

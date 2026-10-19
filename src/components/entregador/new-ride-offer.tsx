@@ -166,7 +166,14 @@ export function NewRideOffer({ courier, enabled }: { courier: Courier | null; en
         .from("deliveries")
         .select("id,is_test")
         .eq("entregador_id", courier.user_id)
-        .not("status", "in", "(delivered,cancelled)")
+        .in("status", [
+          "accepted",
+          "to_store",
+          "at_store",
+          "picked_up",
+          "to_customer",
+          "at_customer",
+        ])
         .limit(1)
         .maybeSingle();
       if (ativa) {

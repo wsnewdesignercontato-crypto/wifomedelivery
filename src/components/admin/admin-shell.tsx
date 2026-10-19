@@ -20,7 +20,7 @@ import {
   Send,
   LifeBuoy,
   Map as MapIcon,
-  Sparkles,
+  ChartColumnBig,
   Smartphone,
 } from "lucide-react";
 import { useState } from "react";
@@ -56,10 +56,15 @@ const navItems: NavItem[] = [
   { to: "/admin/campanhas", label: "Campanhas", icon: Megaphone, group: "Marketing" },
   { to: "/admin/banners", label: "Banners", icon: ImageIcon, group: "Marketing" },
   { to: "/admin/anuncios", label: "Anúncios patrocinados", icon: Megaphone, group: "Marketing" },
-  { to: "/admin/planos-anuncio", label: "Planos de anúncio", icon: Sparkles, group: "Marketing" },
+  {
+    to: "/admin/planos-anuncio",
+    label: "Planos de anúncio",
+    icon: ChartColumnBig,
+    group: "Marketing",
+  },
   { to: "/admin/notificacoes", label: "Notificações", icon: Send, group: "Marketing" },
   { to: "/admin/suporte", label: "Suporte", icon: LifeBuoy, group: "Atendimento" },
-  { to: "/admin/ia", label: "IA Insights", icon: Sparkles, group: "Atendimento" },
+  { to: "/admin/ia", label: "Análises", icon: ChartColumnBig, group: "Atendimento" },
   { to: "/admin/logs", label: "Logs & Auditoria", icon: ScrollText, group: "Sistema" },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings, group: "Sistema" },
 ];

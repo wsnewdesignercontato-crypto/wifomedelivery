@@ -18,7 +18,7 @@ const modules = {
  export function useState(v){const i=r.cursor++;if(!(i in r.states))r.states[i]=v;return[r.states[i],v=>r.states[i]=typeof v==='function'?v(r.states[i]):v]}
  export function useEffect(fn){const i=r.cursor++;if(!(i in r.states)){r.states[i]=true;r.effects.push(fn)}}`,
   "@/integrations/supabase/client": `const r=globalThis.__notificationReconciliationTest;
- export const supabase={from(){const q={select(){return q},eq(){return q},or(){return q},order(){return q},limit(){r.loads++;return Promise.resolve({data:r.rows})}};return q},channel(){const ch={on(type,filter,fn){r.handlers.push({filter,fn});return ch},subscribe(fn){r.subscription=fn;return ch}};return ch},removeChannel(){r.removed=true}};`,
+ export const supabase={from(){const q={update(){return {eq:async()=>({error:null}),in:async()=>({error:null})}},select(){return q},eq(k,v){r.filters.push([k,v]);return q},or(){return q},order(){return q},limit(){r.loads++;return Promise.resolve({data:r.rows})}};return q},channel(){const ch={on(type,filter,fn){r.handlers.push({filter,fn});return ch},subscribe(fn){r.subscription=fn;return ch}};return ch},removeChannel(){r.removed=true}};`,
   "@/hooks/use-push-notifications": `export const usePushNotifications=()=>({supported:false});export const setAppBadgeCount=()=>{};`,
   "@tanstack/react-router": `export const useNavigate=()=>()=>{};`,
   "@/lib/notification-sound": `export const playBellChime=()=>{};`,
@@ -48,7 +48,7 @@ function find(node, p) {
     if (found) return found;
   }
 }
-async function mount() {
+async function mount(audience = "admin") {
   Object.assign(runtime, {
     states: [],
     cursor: 0,
@@ -65,6 +65,7 @@ async function mount() {
       },
     ],
     loads: 0,
+    filters: [],
     removed: false,
   });
   const priorWindow = globalThis.window,
@@ -73,7 +74,7 @@ async function mount() {
   globalThis.document = Object.assign(new EventTarget(), { visibilityState: "visible" });
   const render = () => {
     runtime.cursor = 0;
-    return NotificationsBell({ userId: "admin", audience: "admin" });
+    return NotificationsBell({ userId: "admin", audience });
   };
   render();
   const cleanups = runtime.effects.splice(0).map((fn) => fn());
@@ -132,5 +133,56 @@ test("notifications reload after resuming or reconnecting, and detach listeners 
     await settle();
     assert.equal(runtime.loads, before);
     assert.equal(runtime.removed, true);
+  }
+});
+test("customer order messages remain visible after reading, and push receipt refreshes the feed", async () => {
+  const app = await mount("cliente");
+  try {
+    runtime.rows = [
+      {
+        id: "status",
+        titulo: "Atualização do pedido",
+        mensagem: "Seu pedido está a caminho!",
+        audience: "cliente",
+        lida: false,
+        created_at: new Date().toISOString(),
+      },
+    ];
+    globalThis.window.dispatchEvent(new Event("focus"));
+    await settle();
+    assert.equal(
+      runtime.filters.some(([k, v]) => k === "lida" && v === false),
+      false,
+      "customer history must include read messages",
+    );
+    let tree = app.render();
+    const button = find(
+      tree,
+      (n) =>
+        n.type === "button" && !!find(n, (c) => c.props?.children === "Seu pedido está a caminho!"),
+    );
+    assert.ok(button);
+    await button.props.onClick();
+    tree = app.render();
+    assert.ok(find(tree, (n) => n.props?.children === "Seu pedido está a caminho!"));
+    assert.equal(
+      find(tree, (n) => n.props?.["aria-label"] === "Não lida"),
+      undefined,
+    );
+    runtime.rows = [
+      ...runtime.rows,
+      {
+        id: "arriving",
+        titulo: "Atualização do pedido",
+        mensagem: "O entregador está chegando.",
+        lida: false,
+        created_at: new Date().toISOString(),
+      },
+    ];
+    globalThis.window.dispatchEvent(new Event("focus"));
+    await settle();
+    assert.ok(find(app.render(), (n) => n.props?.children === "O entregador está chegando."));
+  } finally {
+    app.cleanup();
   }
 });

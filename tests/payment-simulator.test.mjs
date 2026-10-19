@@ -15,6 +15,11 @@ test("payment simulator rejects non-admins, isolates receipts and cleans only te
     ).match(/CREATE OR REPLACE FUNCTION public\.normalize_delivery_text[\s\S]*?\$\$;/)[0];
     await db.exec(normalize);
     await db.exec(await load("supabase/migrations/20261019031549_admin_payment_simulator.sql"));
+    await db.exec(
+      await load(
+        "supabase/migrations/20261019035427_realistic_checkout_test_and_notification_inbox.sql",
+      ),
+    );
     const admin = "93000000-0000-4000-8000-000000000001",
       customer = "93000000-0000-4000-8000-000000000002",
       shop = "93000000-0000-4000-8000-000000000003";
@@ -122,6 +127,106 @@ test("payment simulator rejects non-admins, isolates receipts and cleans only te
       (await db.query("SELECT count(*)::int AS n FROM public.orders WHERE is_test")).rows[0].n,
       0,
     );
+    // Full customer checkout: real product and addon snapshots, no charge or stock/coupon mutation.
+    const product = "93000000-0000-4000-8000-000000000010";
+    const group = "93000000-0000-4000-8000-000000000011";
+    const addon = "93000000-0000-4000-8000-000000000012";
+    const requestKey = "93000000-0000-4000-8000-000000000013";
+    await user("");
+    await db.query(
+      "INSERT INTO public.products(id,establishment_id,nome,preco_cents,estoque,disponivel) VALUES($1,$2,'Catalog pizza',1000,10,true)",
+      [product, shop],
+    );
+    await db.query(
+      "INSERT INTO public.addon_groups(id,establishment_id,nome,minimo,maximo,obrigatorio,ativo) VALUES($1,$2,'Borda',1,1,true,true)",
+      [group, shop],
+    );
+    await db.query(
+      "INSERT INTO public.addons(id,addon_group_id,nome,preco_extra_cents,estoque,ativo) VALUES($1,$2,'Borda recheada',300,10,true)",
+      [addon, group],
+    );
+    await db.query(
+      "INSERT INTO public.product_addon_groups(product_id,addon_group_id) VALUES($1,$2)",
+      [product, group],
+    );
+    await db.query(
+      "INSERT INTO public.cart_items(user_id,establishment_id,product_id,nome_snapshot,preco_unit_cents,quantidade,addons) VALUES($1,$2,$3,'Forged display name',1,2,$4)",
+      [customer, shop, product, JSON.stringify([{ id: addon }])],
+    );
+    await user(customer);
+    const purchase = () =>
+      db.query(
+        "SELECT public.checkout_test_order($1,$2,'pix','pickup',NULL,NULL,NULL,2600) AS data",
+        [shop, requestKey],
+      );
+    await assert.rejects(purchase(), /desligado|autorização/);
+    await user(admin);
+    await command("toggle", { enabled: true });
+    await command("enroll", { customer_id: customer, store_id: shop, courier_id: null });
+    await user(customer);
+    assert.equal(
+      (await db.query("SELECT public.customer_payment_test_context($1) AS data", [shop])).rows[0]
+        .data.enabled,
+      true,
+    );
+    await assert.rejects(
+      db.query("SELECT public.checkout_test_order($1,$2,'pix','pickup',NULL,NULL,NULL,2)", [
+        shop,
+        requestKey,
+      ]),
+      /QUOTE_CHANGED/,
+    );
+    const placed = (await purchase()).rows[0].data;
+    assert.equal((await purchase()).rows[0].data.order_id, placed.order_id);
+    const item = (
+      await db.query(
+        "SELECT nome_snapshot,preco_unit_cents,quantidade,addons FROM public.order_items WHERE order_id=$1",
+        [placed.order_id],
+      )
+    ).rows[0];
+    assert.equal(item.nome_snapshot, "Catalog pizza");
+    assert.equal(item.preco_unit_cents, 1300);
+    assert.equal(item.quantidade, 2);
+    assert.equal(item.addons[0].nome, "Borda recheada");
+    assert.equal(
+      (await db.query("SELECT estoque FROM public.products WHERE id=$1", [product])).rows[0]
+        .estoque,
+      10,
+    );
+    assert.equal(
+      (await db.query("SELECT estoque FROM public.addons WHERE id=$1", [addon])).rows[0].estoque,
+      10,
+    );
+    await assert.rejects(
+      db.query("SELECT public.checkout_order($1,$2,'pix','pickup',NULL,NULL,NULL,2600)", [
+        shop,
+        requestKey,
+      ]),
+      /outro modo/,
+    );
+    await user(admin);
+    const fullState = await command("state");
+    const fullSale = fullState.sales.find((x) => x.order_id === placed.order_id);
+    assert.ok(fullSale);
+    assert.equal(fullSale.status, "approved");
+    await command("refund", { sale_id: fullSale.id });
+    assert.equal(
+      (await db.query("SELECT estoque FROM public.products WHERE id=$1", [product])).rows[0]
+        .estoque,
+      10,
+      "test cancellation must not manufacture inventory",
+    );
+    await command("toggle", { enabled: false });
+    await user(customer);
+    assert.equal(
+      (await db.query("SELECT public.customer_payment_test_context($1) AS data", [shop])).rows[0]
+        .data.enabled,
+      false,
+    );
+    await assert.rejects(purchase(), /desligado|autorização/);
+    await user(admin);
+    await command("cleanup", { confirmation: "LIMPAR TESTES" });
+    assert.equal((await command("state")).testers.length, 0);
   } finally {
     await db.close();
   }

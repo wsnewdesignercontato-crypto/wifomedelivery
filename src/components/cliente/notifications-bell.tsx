@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, BellOff, BellRing, CheckCheck, Package, Sparkles } from "lucide-react";
+import { Bell, BellOff, BellRing, CheckCheck, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -38,18 +38,22 @@ export function NotificationsBell({
     async function load() {
       if (!alive) return;
       const currentRequest = ++requestId;
-      const { data } = await supabase
+      let query = supabase
         .from("notifications")
         .select("id,titulo,mensagem,link_url,lida,created_at,audience")
         .eq("user_id", userId)
-        .eq("lida", false)
         .or(`audience.is.null,audience.eq.${audience},audience.eq.all`)
-        .order("created_at", { ascending: false })
-        .limit(20);
+        .order("created_at", { ascending: false });
+      if (audience !== "cliente") query = query.eq("lida", false);
+      const { data, error } = await query.limit(50);
+      if (error) return;
       if (alive && currentRequest === requestId) setItems((data ?? []) as Notif[]);
     }
     load();
     const detachResume = bindResumeRefresh(load);
+    const poll = setInterval(() => {
+      if (document.visibilityState === "visible") void load();
+    }, 15000);
     const ch = supabase
       .channel(`notif-${audience}-${userId}`)
       .on(
@@ -96,20 +100,29 @@ export function NotificationsBell({
     return () => {
       alive = false;
       detachResume();
+      clearInterval(poll);
       supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, audience]);
 
-  const unread = items.length;
+  const unread = items.filter((item) => !item.lida).length;
 
   useEffect(() => {
     setAppBadgeCount(unread);
   }, [unread]);
 
   async function handleClick(n: Notif) {
-    setItems((prev) => prev.filter((i) => i.id !== n.id));
-    await supabase.from("notifications").update({ lida: true }).eq("id", n.id);
+    const { error } = await supabase.from("notifications").update({ lida: true }).eq("id", n.id);
+    if (error) {
+      toast.error("Não foi possível marcar a mensagem como lida.");
+      return;
+    }
+    setItems((prev) =>
+      audience === "cliente"
+        ? prev.map((i) => (i.id === n.id ? { ...i, lida: true } : i))
+        : prev.filter((i) => i.id !== n.id),
+    );
     if (n.link_url) {
       const target = new URL(n.link_url, window.location.origin);
       navigate({
@@ -122,9 +135,13 @@ export function NotificationsBell({
 
   async function markAllRead() {
     if (unread === 0) return;
-    const ids = items.map((i) => i.id);
-    setItems([]);
-    await supabase.from("notifications").update({ lida: true }).in("id", ids);
+    const ids = items.filter((i) => !i.lida).map((i) => i.id);
+    const { error } = await supabase.from("notifications").update({ lida: true }).in("id", ids);
+    if (error) {
+      toast.error("Não foi possível marcar as mensagens como lidas.");
+      return;
+    }
+    setItems((prev) => (audience === "cliente" ? prev.map((i) => ({ ...i, lida: true })) : []));
   }
 
   function timeAgo(iso: string) {
@@ -161,7 +178,7 @@ export function NotificationsBell({
           <div className="relative flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <div className="grid h-8 w-8 place-items-center rounded-xl bg-white/15 backdrop-blur-sm">
-                <Sparkles className="h-4 w-4" />
+                <Bell className="h-4 w-4" />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold leading-tight">Notificações</p>
@@ -197,17 +214,22 @@ export function NotificationsBell({
                 <li key={n.id}>
                   <button
                     onClick={() => handleClick(n)}
-                    className="group flex w-full items-start gap-3 bg-primary/5 px-3 py-3 text-left transition hover:bg-muted/60"
+                    className={`group flex w-full items-start gap-3 px-3 py-3 text-left transition hover:bg-muted/60 ${n.lida ? "bg-card" : "bg-primary/5"}`}
                   >
                     <div className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">
                       <Package className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="truncate text-sm font-semibold">{n.titulo}</p>
-                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
+                        <p className="break-words text-sm font-semibold">{n.titulo}</p>
+                        {!n.lida && (
+                          <span
+                            aria-label="Não lida"
+                            className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary"
+                          />
+                        )}
                       </div>
-                      <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                      <p className="mt-0.5 whitespace-pre-wrap break-words text-xs text-muted-foreground">
                         {n.mensagem}
                       </p>
                       <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">

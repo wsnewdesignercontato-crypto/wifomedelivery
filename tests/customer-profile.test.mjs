@@ -23,7 +23,7 @@ const modules = {
     export const createFileRoute=()=>options=>({...options,useSearch:()=>({checkout:true,cupom:'VOLTA'}),useRouteContext:()=>({user:{id:'customer-test',email:'test@example.invalid'}})});
     export const useNavigate=()=>value=>r.navigations.push(value);
     export const Link='a';`,
-  "@/integrations/supabase/client": `export const supabase={from:(...args)=>globalThis.__customerProfileTest.from(...args)};`,
+  "@/integrations/supabase/client": `export const supabase={rpc:async()=>({data:{enabled:false},error:null}),from:(...args)=>globalThis.__customerProfileTest.from(...args)};`,
   sonner: `const r=globalThis.__customerProfileTest;export const toast={success:message=>r.notices.push({kind:'success',message}),error:message=>r.notices.push({kind:'error',message})};`,
   "@tanstack/react-start": "export const useServerFn=fn=>fn;",
   "@/lib/checkout.functions":
