@@ -3295,6 +3295,16 @@ export type Database = {
         Returns: Json;
       };
       admin_payment_test: { Args: { p_action: string; p_payload?: Json }; Returns: Json };
+      admin_generate_test_order: {
+        Args: {
+          p_request_key: string;
+          p_customer_id: string;
+          p_store_id: string;
+          p_courier_id?: string | null;
+          p_subtotal_cents?: number;
+        };
+        Returns: Json;
+      };
       asaas_settings_get: {
         Args: { _environment: string };
         Returns: Json;

@@ -33,6 +33,13 @@ export function AsaasOnlineControls() {
           Não foi possível consultar a ativação.
         </p>
       )}
+      {data && !data.enabled && (
+        <p role="status" className="rounded-lg bg-muted p-3 text-sm">
+          {data.canEnable
+            ? "Conexão e webhook de produção verificados. O checkout será liberado ao ativar os pagamentos abaixo."
+            : "Para liberar o botão, selecione Produção acima, salve a chave, clique em Testar conexão e depois em Registrar/atualizar webhook. Se alterar a chave ou o token, repita essas verificações."}
+        </p>
+      )}
       <p className="text-xs text-muted-foreground">
         Antes de ativar, homologue no Sandbox e teste a chave de produção, depois registre o webhook
         atualizado. Repasses continuam sujeitos à conferência manual.

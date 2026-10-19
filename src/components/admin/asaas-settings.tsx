@@ -86,6 +86,7 @@ export function AsaasSettings() {
       const result = await operation();
       if (!current() || result.status.environment !== environment) return;
       qc.setQueryData(settingsKey(environment), result.status);
+      void qc.invalidateQueries({ queryKey: ["admin-asaas-online-status"] });
       if (action === "save") {
         setApiKey("");
         setWebhookToken("");

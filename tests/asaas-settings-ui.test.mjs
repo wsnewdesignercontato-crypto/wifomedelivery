@@ -14,7 +14,7 @@ const modules = {
     export function useRef(initial){const i=r.cursor++;return r.states[i]??={current:initial}}
     export function useEffect(fn,deps){const i=r.cursor++;const old=r.states[i];if(!old||deps.some((v,j)=>v!==old.deps[j])){const s={deps};r.states[i]=s;r.effects.push(()=>{old?.cleanup?.();s.cleanup=fn()})}}`,
   "@tanstack/react-start": "export const useServerFn=fn=>fn;",
-  "@tanstack/react-query": `const r=globalThis.__asaasSettingsTest;export function useQuery(options){r.query=options;return{data:r.statuses[options.queryKey.at(-1)],isPending:false,error:null,refetch:()=>options.queryFn()}};export const useQueryClient=()=>({setQueryData(key,value){r.statuses[key.at(-1)]=value}});`,
+  "@tanstack/react-query": `const r=globalThis.__asaasSettingsTest;export function useQuery(options){r.query=options;return{data:r.statuses[options.queryKey.at(-1)],isPending:false,error:null,refetch:()=>options.queryFn()}};export const useQueryClient=()=>({setQueryData(key,value){r.statuses[key.at(-1)]=value},invalidateQueries(options){r.invalidations.push(options.queryKey);return Promise.resolve()}});`,
   "@/lib/admin-asaas.functions": `const r=globalThis.__asaasSettingsTest;export const getAsaasSettings=input=>r.server('get',input);export const saveAsaasSettings=input=>r.server('save',input);export const testAsaasConnection=input=>r.server('test',input);export const registerAsaasWebhook=input=>r.server('register',input);`,
   "@/components/ui/button": "export const Button='button';",
   "@/components/ui/input": "export const Input='input';",
@@ -72,6 +72,7 @@ function mount(changes = {}) {
     effects: [],
     statuses: { sandbox: status("sandbox"), production: status("production", { tested: false }) },
     calls: [],
+    invalidations: [],
     messages: [],
     deny: false,
     defer: null,
@@ -240,6 +241,24 @@ test("webhook registration requires a successful test of the current saved envir
         ["register", { data: { environment: "production" } }],
       ],
     );
+  } finally {
+    app.cleanup();
+  }
+});
+test("configuration changes refresh checkout readiness immediately without waiting for polling", async () => {
+  const app = mount();
+  try {
+    app.change("asaas-api-key", "replacement");
+    await app.save();
+    app.flush();
+    await app.button("Testar conexão").props.onClick();
+    app.flush();
+    await app.button("Registrar/atualizar webhook").props.onClick();
+    assert.deepEqual(runtime.invalidations, [
+      ["admin-asaas-online-status"],
+      ["admin-asaas-online-status"],
+      ["admin-asaas-online-status"],
+    ]);
   } finally {
     app.cleanup();
   }

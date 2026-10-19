@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FlaskConical, Trash2 } from "lucide-react";
 import { z } from "zod";
@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
@@ -101,12 +102,28 @@ export function PaymentTestSettings() {
   const [store, setStore] = useState("");
   const [courier, setCourier] = useState("");
   const [cleanupOpen, setCleanupOpen] = useState(false);
+  const [amount, setAmount] = useState("29.00");
+  const lock = useRef(false);
+  const request = useRef<{ key: string; fingerprint: string } | null>(null);
 
   async function run(action: string, payload: Record<string, Json>, message: string) {
-    if (busy) return false;
+    if (lock.current) return false;
+    lock.current = true;
     setBusy(action);
     try {
-      const result = await command(action, payload);
+      let result;
+      if (action === "generate") {
+        const { data, error } = await supabase.rpc("admin_generate_test_order", {
+          p_request_key: String(payload.request_key),
+          p_customer_id: String(payload.customer_id),
+          p_store_id: String(payload.store_id),
+          p_courier_id: payload.courier_id ? String(payload.courier_id) : null,
+          p_subtotal_cents: Number(payload.subtotal_cents),
+        });
+        if (error) throw new Error(error.message);
+        result = stateSchema.parse(data);
+        request.current = null;
+      } else result = await command(action, payload);
       qc.setQueryData(key, result);
       toast.success(message);
       return true;
@@ -116,8 +133,34 @@ export function PaymentTestSettings() {
       );
       return false;
     } finally {
+      lock.current = false;
       setBusy(null);
     }
+  }
+
+  async function generate() {
+    if (!data || !store || lock.current) return;
+    const cents = Math.round(Number(amount.replace(",", ".")) * 100);
+    if (!Number.isFinite(cents) || cents < 100 || cents > 1000000) {
+      toast.error("Informe um valor entre R$ 1,00 e R$ 10.000,00.");
+      return;
+    }
+    const payload = {
+      customer_id: customer || data.admin_id,
+      store_id: store,
+      courier_id: courier || null,
+      subtotal_cents: cents,
+    };
+    const fingerprint = JSON.stringify(payload);
+    if (request.current?.fingerprint !== fingerprint)
+      request.current = { key: crypto.randomUUID(), fingerprint };
+    await run(
+      "generate",
+      { ...payload, request_key: request.current.key },
+      courier
+        ? "Pedido de teste enviado à loja. A corrida será liberada quando ela marcar o pedido como pronto."
+        : "Pedido de teste para retirada enviado à loja. Nenhuma cobrança foi criada.",
+    );
   }
 
   if (isLoading) return <div className="h-32 w-full min-w-0 animate-pulse rounded-2xl bg-muted" />;
@@ -162,25 +205,17 @@ export function PaymentTestSettings() {
       </div>
       <p className="rounded-xl bg-amber-500/10 p-3 text-sm">
         <strong>{data.enabled ? "Teste ativado" : "Teste desligado"} · sem dinheiro real.</strong>{" "}
-        Libere uma conta abaixo e faça a compra no aplicativo do cliente, escolhendo produtos e
-        complementos de verdade. O pagamento é aprovado no simulador e o pedido percorre loja,
-        entregador e acompanhamento. Identificado como TESTE, não usa a chave Asaas nem altera
-        estoque, cupons, saldos ou saques. Contas não liberadas continuam no checkout normal.
+        Gere um pedido de demonstração diretamente abaixo ou libere uma conta para comprar pelo
+        aplicativo do cliente. O pedido percorre loja, entregador e acompanhamento. Identificado
+        como TESTE, não usa a chave Asaas nem altera estoque, cupons, saldos ou saques. Contas não
+        liberadas continuam no checkout normal.
       </p>
       {data.enabled && (
         <form
           className="space-y-4"
-          onSubmit={(event) => {
+          onSubmit={async (event) => {
             event.preventDefault();
-            void run(
-              "enroll",
-              {
-                customer_id: customer || data.admin_id,
-                store_id: store,
-                courier_id: courier || null,
-              },
-              "Compra de teste liberada por 24 horas. Abra a loja no aplicativo do cliente.",
-            );
+            await generate();
           }}
         >
           <div className="grid gap-4 sm:grid-cols-2">
@@ -190,6 +225,7 @@ export function PaymentTestSettings() {
                 id="test-customer"
                 className={selectClass}
                 value={customer || data.admin_id}
+                disabled={!!busy}
                 onChange={(e) => setCustomer(e.target.value)}
               >
                 {data.customers.map((p) => (
@@ -207,6 +243,7 @@ export function PaymentTestSettings() {
                 required
                 className={selectClass}
                 value={store}
+                disabled={!!busy}
                 onChange={(e) => setStore(e.target.value)}
               >
                 <option value="">Escolha a loja</option>
@@ -218,12 +255,13 @@ export function PaymentTestSettings() {
                 ))}
               </select>
             </div>
-            <div className="space-y-1.5 sm:col-span-2">
+            <div className="space-y-1.5">
               <Label htmlFor="test-courier">Entregador do teste</Label>
               <select
                 id="test-courier"
                 className={selectClass}
                 value={courier}
+                disabled={!!busy}
                 onChange={(e) => setCourier(e.target.value)}
               >
                 <option value="">Sem entregador (somente retirada)</option>
@@ -234,15 +272,57 @@ export function PaymentTestSettings() {
                 ))}
               </select>
             </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="test-amount">Valor dos produtos no teste (R$)</Label>
+              <Input
+                id="test-amount"
+                type="number"
+                inputMode="decimal"
+                min="1"
+                max="10000"
+                step="0.01"
+                required
+                value={amount}
+                disabled={!!busy}
+                onChange={(event) => setAmount(event.target.value)}
+              />
+            </div>
           </div>
           <p className="text-xs text-muted-foreground">
             Use contas de teste. A loja precisa estar aberta. Para entrega, o entregador selecionado
-            precisa estar online, aprovado e atuar na cidade da loja. A autorização expira em 24
-            horas; desligar o modo bloqueia novas compras de teste.
+            precisa estar online, aprovado e atuar na cidade da loja. O cliente selecionado precisa
+            ter endereço cadastrado. A loja recebe o pedido primeiro; ao marcar como pronto, libera
+            a corrida ao entregador selecionado.
           </p>
-          <Button type="submit" disabled={!!busy || !store} loading={busy === "enroll"}>
-            Liberar compra de teste
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" disabled={!!busy || !store} loading={busy === "generate"}>
+              Gerar pedido de teste
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!!busy || !store}
+              loading={busy === "enroll"}
+              onClick={() =>
+                void run(
+                  "enroll",
+                  {
+                    customer_id: customer || data.admin_id,
+                    store_id: store,
+                    courier_id: courier || null,
+                  },
+                  "Compra de teste liberada por 24 horas. Abra a loja no aplicativo do cliente.",
+                )
+              }
+            >
+              Liberar compra pelo app
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            “Gerar pedido” usa um produto de demonstração e aprova o pagamento fictício na hora.
+            “Liberar compra pelo app” autoriza a conta por 24 horas para testar produtos reais do
+            catálogo.
+          </p>
         </form>
       )}
       {data.testers.length > 0 && (
