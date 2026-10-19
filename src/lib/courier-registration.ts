@@ -20,7 +20,9 @@ export function registrationChanges(
   const patch: Record<string, Json> = {};
   const expected: Record<string, Json> = {};
   for (const [key, value] of Object.entries(draft)) {
-    if (addressKeys.includes(key) || value === baseline[key]) continue;
+    const inheritPhone =
+      key === "telefone" && !snapshot.courier?.telefone?.trim() && !!value.trim();
+    if (addressKeys.includes(key) || (value === baseline[key] && !inheritPhone)) continue;
     patch[key] = value.trim() || null;
     expected[key] =
       key === "nome"
@@ -31,7 +33,11 @@ export function registrationChanges(
             ? (snapshot.courier?.foto_url ?? snapshot.profile.foto_url)
             : ((snapshot.courier as unknown as Record<string, Json> | null)?.[key] ?? null);
   }
-  if (draft.cidade !== undefined && draft.cidade !== baseline.cidade) {
+  if (
+    draft.cidade !== undefined &&
+    (draft.cidade !== baseline.cidade ||
+      (!snapshot.courier?.cidade_atuacao?.trim() && !!draft.cidade.trim()))
+  ) {
     patch.cidade_atuacao = draft.cidade.trim() || null;
     expected.cidade_atuacao = snapshot.courier?.cidade_atuacao ?? null;
   }

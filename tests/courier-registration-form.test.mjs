@@ -170,3 +170,21 @@ test("partial registration changes preserve unedited payment fields and original
   assert.equal(change.patch.endereco.lat, -20);
   assert.equal(change.patch.endereco.rua, "Rua nova");
 });
+
+test("prefilled account phone and address city are persisted for the courier even without retyping them", () => {
+  const snapshot = {
+    profile: { nome: "Entregador", telefone: "31999999999", foto_url: null },
+    courier: {
+      ...initialDriver,
+      telefone: null,
+      cidade_atuacao: null,
+      endereco: { cidade: "Cidade" },
+    },
+  };
+  const form = { telefone: "31999999999", cidade: "Cidade", cnh: "12345678901" };
+  const changes = registrationChanges(form, form, snapshot);
+  assert.equal(changes.patch.telefone, "31999999999");
+  assert.equal(changes.patch.cidade_atuacao, "Cidade");
+  assert.equal(changes.expected.telefone, "31999999999");
+  assert.equal(changes.expected.cidade_atuacao, null);
+});
