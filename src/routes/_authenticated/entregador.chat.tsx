@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { MessageSquare } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/entregador/chat")({
@@ -25,6 +25,12 @@ function Chat() {
           Durante uma corrida ativa, você pode conversar com a loja, o cliente e o suporte
           diretamente na tela da corrida.
         </p>
+        <Link
+          to="/entregador/corridas"
+          className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+        >
+          Abrir minhas corridas
+        </Link>
       </div>
     </div>
   );

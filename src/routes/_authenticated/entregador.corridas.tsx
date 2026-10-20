@@ -913,14 +913,14 @@ function Corridas() {
 
       {/* Chat drawer */}
       <Sheet open={chatOpen !== null} onOpenChange={(o) => !o && setChatOpen(null)}>
-        <SheetContent side="right" className="flex w-full flex-col p-0 sm:max-w-md">
-          <SheetHeader className="border-b border-border p-4">
+        <SheetContent side="right" className="flex h-dvh w-full min-w-0 flex-col p-0 sm:max-w-md">
+          <SheetHeader className="shrink-0 border-b border-border p-4 pr-12">
             <SheetTitle>
               {chatOpen === "client_courier" ? "Chat com o cliente" : "Chat com a loja"}
             </SheetTitle>
           </SheetHeader>
           {chatOpen && ativa && order && (
-            <div className="flex-1 p-3">
+            <div className="min-h-0 min-w-0 flex-1 overflow-hidden p-3">
               <OrderChat
                 orderId={order.id}
                 escopo={chatOpen}

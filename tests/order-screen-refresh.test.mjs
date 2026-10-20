@@ -102,14 +102,17 @@ runtime.client = {
           ],
           deliveries: {
             id: "delivery",
+            order_id: order.id,
             status: order.status,
-            entregador_id: "courier",
+            entregador_id: runtime.assignedCourier,
             lat: -20,
             lng: -43,
           },
           reviews: null,
           profiles: { nome: "Cliente teste", telefone: "31999990000" },
         };
+        if (runtime.screen === "store" && table === "deliveries")
+          values.deliveries = [values.deliveries];
         const isCourier = runtime.screen === "rides" || runtime.screen === "courierHome";
         if (isCourier && table === "deliveries")
           values.deliveries = single
@@ -120,6 +123,7 @@ runtime.client = {
               ? runtime.availableDeliveries
               : [];
         const error =
+          (table === "deliveries" && runtime.deliveryReadError) ||
           (table === "orders" && runtime.orderReadError) ||
           ((table === "orders" || (isCourier && table === "deliveries")) && runtime.readError)
             ? { message: "offline" }
@@ -184,6 +188,7 @@ const routes = {
   detail: (await import("../src/routes/_authenticated/cliente.pedido.$id.tsx")).Route,
   customer: (await import("../src/routes/_authenticated/cliente.pedidos.tsx")).Route,
   store: (await import("../src/routes/_authenticated/estabelecimento.pedidos.tsx")).Route,
+  courierChat: (await import("../src/routes/_authenticated/entregador.chat.tsx")).Route,
   rides: (await import("../src/routes/_authenticated/entregador.corridas.tsx")).Route,
   courierHome: (await import("../src/routes/_authenticated/entregador.index.tsx")).Route,
 };
@@ -207,6 +212,7 @@ async function mount(name, status = "placed") {
     effects: [],
     writes: 0,
     orderId: "order-1",
+    assignedCourier: "courier",
     userId: "customer",
     estab: { id: "store", nome: "Loja teste", printer_enabled: false, printer_auto: false },
     order: {
@@ -227,6 +233,7 @@ async function mount(name, status = "placed") {
     resolveOrder: null,
     readError: false,
     orderReadError: false,
+    deliveryReadError: false,
     screen: name,
     courier: {
       user_id: "courier",
@@ -628,3 +635,131 @@ test("pickup-ready orders never display a courier dispatch action", async () => 
     app.cleanup();
   }
 });
+
+const chatButton = (app, label) =>
+  nodes(app.render()).find(
+    (node) => node.type === "button" && texts(node).join(" ").includes(label),
+  );
+const currentChat = (app) =>
+  nodes(app.render()).find((node) => node.type === "aside" && node.props?.escopo);
+for (const [name, role, firstLabel] of [
+  ["detail", "cliente", "Falar com a loja"],
+  ["store", "estabelecimento", "Falar com o cliente"],
+]) {
+  test(`${name} opens the order's counterpart chats with its own role`, async () => {
+    const app = await mount(name);
+    try {
+      assert.ok(chatButton(app, firstLabel), "the counterpart needs a reachable chat");
+      chatButton(app, firstLabel).props.onClick();
+      assert.equal(currentChat(app)?.props.orderId, "order-1");
+      assert.equal(currentChat(app)?.props.escopo, "client_store");
+      assert.equal(currentChat(app)?.props.myRole, role);
+      assert.ok(chatButton(app, "Falar com o entregador"));
+      chatButton(app, "Falar com o entregador").props.onClick();
+      assert.equal(currentChat(app)?.props.orderId, "order-1");
+      assert.equal(
+        currentChat(app)?.props.escopo,
+        name === "detail" ? "client_courier" : "store_courier",
+      );
+      assert.equal(currentChat(app)?.props.myRole, role);
+      assert.equal(
+        currentChat(app)?.props.contactPhone,
+        undefined,
+        "courier phone is not fabricated",
+      );
+    } finally {
+      app.cleanup();
+    }
+  });
+  test(`${name} removes courier chat when assignment is revoked and restores it after reassignment`, async () => {
+    const app = await mount(name);
+    try {
+      assert.ok(chatButton(app, "Falar com o entregador"));
+      chatButton(app, "Falar com o entregador").props.onClick();
+      runtime.assignedCourier = null;
+      const handler = runtime.channel.handlers.find((h) => h.filter.table === "deliveries");
+      assert.ok(handler, "delivery changes must refresh chat availability");
+      handler.callback({ eventType: "UPDATE" });
+      await settle();
+      assert.equal(chatButton(app, "Falar com o entregador"), undefined);
+      assert.equal(currentChat(app), undefined);
+      assert.ok(chatButton(app, firstLabel));
+      runtime.assignedCourier = "courier-2";
+      handler.callback({ eventType: "UPDATE" });
+      await settle();
+      assert.ok(chatButton(app, "Falar com o entregador"));
+    } finally {
+      app.cleanup();
+    }
+  });
+  test(`${name} has only the store/customer conversation for pickup`, async () => {
+    const app = await mount(name);
+    try {
+      runtime.order.tipo_entrega = "pickup";
+      globalThis.window.dispatchEvent(new Event("focus"));
+      await settle();
+      assert.ok(chatButton(app, firstLabel));
+      assert.equal(chatButton(app, "Falar com o entregador"), undefined);
+    } finally {
+      app.cleanup();
+    }
+  });
+  test(`${name} clears an open chat when its order/account scope changes`, async () => {
+    const app = await mount(name);
+    try {
+      assert.ok(chatButton(app, firstLabel));
+      chatButton(app, firstLabel).props.onClick();
+      assert.ok(currentChat(app));
+      runtime.readError = true;
+      if (name === "detail") runtime.orderId = "another-order";
+      else runtime.estab = { ...runtime.estab, id: "another-store" };
+      app.render();
+      app.commitEffects();
+      await settle();
+      assert.equal(currentChat(app), undefined);
+    } finally {
+      app.cleanup();
+    }
+  });
+}
+test("courier chat landing links to the active ride conversations", async () => {
+  const app = await mount("courierChat");
+  try {
+    assert.ok(
+      nodes(app.render()).some(
+        (node) => node.type === "a" && node.props.to === "/entregador/corridas",
+      ),
+    );
+  } finally {
+    app.cleanup();
+  }
+});
+
+test("merchant assignment lookup failure preserves orders, contacts and customer chat", async () => {
+  const app = await mount("store");
+  try {
+    runtime.deliveryReadError = true;
+    runtime.order.status = "preparing";
+    globalThis.window.dispatchEvent(new Event("focus"));
+    await settle();
+    assert.ok(hasCurrentStatus(app, "store", "Em preparo"));
+    assert.ok(texts(app.render()).includes("Cliente teste"));
+    assert.ok(chatButton(app, "Falar com o cliente"));
+    chatButton(app, "Falar com o cliente").props.onClick();
+    assert.equal(currentChat(app)?.props.orderId, "order-1");
+  } finally {
+    app.cleanup();
+  }
+});
+
+for (const name of ["detail", "store"]) {
+  test(`${name} keeps existing participant conversations reachable on completed orders`, async () => {
+    const app = await mount(name, "delivered");
+    try {
+      assert.ok(chatButton(app, name === "detail" ? "Falar com a loja" : "Falar com o cliente"));
+      assert.ok(chatButton(app, "Falar com o entregador"));
+    } finally {
+      app.cleanup();
+    }
+  });
+}

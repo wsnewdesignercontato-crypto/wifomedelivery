@@ -20,6 +20,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { OrderHistory } from "@/components/order-history";
+import { OrderChat } from "@/components/order-chat";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { dispatchOrderDelivery } from "@/lib/delivery-dispatch";
 import { bindResumeRefresh } from "@/lib/resume-refresh";
 import {
@@ -117,6 +119,12 @@ function PedidosPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [items, setItems] = useState<Record<string, OrderItem[]>>({});
   const [contacts, setContacts] = useState<Record<string, Contact>>({});
+  const [couriers, setCouriers] = useState<Record<string, string | null>>({});
+  const [chatOpen, setChatOpen] = useState<{
+    orderId: string;
+    establishmentId: string;
+    escopo: "client_store" | "store_courier";
+  } | null>(null);
   const [openHistory, setOpenHistory] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<string>("todos");
   const [dispatching, setDispatching] = useState<Set<string>>(new Set());
@@ -158,11 +166,18 @@ function PedidosPage() {
     setOrders(list);
     if (list.length) {
       const ids = list.map((o) => o.id);
-      const { data: it, error: itemsError } = await supabase
-        .from("order_items")
-        .select("*")
-        .in("order_id", ids);
+      const [{ data: it, error: itemsError }, deliveryResult] = await Promise.all([
+        supabase.from("order_items").select("*").in("order_id", ids),
+        supabase.from("deliveries").select("order_id,entregador_id").in("order_id", ids),
+      ]);
       if (!isCurrent()) return;
+      // A failed assignment read leaves order actions usable; a successful read
+      // replaces the map so removed assignments cannot keep a courier chat open.
+      if (!deliveryResult.error) {
+        setCouriers(
+          Object.fromEntries((deliveryResult.data ?? []).map((d) => [d.order_id, d.entregador_id])),
+        );
+      }
       const g: Record<string, OrderItem[]> = {};
       (it ?? []).forEach((r) => {
         const row = r as unknown as OrderItem;
@@ -177,7 +192,10 @@ function PedidosPage() {
         .forEach((o) => {
           void loadContact(o.id);
         });
-    } else setItems({});
+    } else {
+      setItems({});
+      setCouriers({});
+    }
   }
 
   useEffect(() => {
@@ -185,6 +203,8 @@ function PedidosPage() {
       setOrders([]);
       setItems({});
       setContacts({});
+      setCouriers({});
+      setChatOpen(null);
       setOpenHistory(new Set());
     }
     if (!estab) return;
@@ -233,6 +253,9 @@ function PedidosPage() {
           }
         },
       )
+      .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, () => {
+        if (lifetime.active) void reload();
+      })
       .subscribe((status) => {
         if (lifetime.active && status === "SUBSCRIBED") void reload();
       });
@@ -379,6 +402,17 @@ function PedidosPage() {
     { key: "cancelled", label: "Cancelados" },
   ];
   const lista = filter === "todos" ? orders : orders.filter((o) => o.status === filter);
+  const chatOrder =
+    chatOpen?.establishmentId === estab?.id
+      ? orders.find((o) => o.id === chatOpen?.orderId)
+      : undefined;
+  const activeChat =
+    chatOrder &&
+    chatOpen &&
+    (chatOpen.escopo === "client_store" ||
+      (chatOrder.tipo_entrega !== "pickup" && couriers[chatOrder.id]))
+      ? chatOpen
+      : null;
 
   return (
     <div className="space-y-4">
@@ -585,6 +619,36 @@ function PedidosPage() {
                   </p>
                 )}
                 <div className="mt-4 flex flex-wrap gap-2 pt-2 border-t border-border/40">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      estab &&
+                      setChatOpen({
+                        orderId: o.id,
+                        establishmentId: estab.id,
+                        escopo: "client_store",
+                      })
+                    }
+                  >
+                    Falar com o cliente
+                  </Button>
+                  {o.tipo_entrega !== "pickup" && couriers[o.id] && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        estab &&
+                        setChatOpen({
+                          orderId: o.id,
+                          establishmentId: estab.id,
+                          escopo: "store_courier",
+                        })
+                      }
+                    >
+                      Falar com o entregador
+                    </Button>
+                  )}
                   {step && (
                     <Button
                       size="sm"
@@ -669,6 +733,37 @@ function PedidosPage() {
           })}
         </div>
       )}
+      <Sheet open={activeChat !== null} onOpenChange={(open) => !open && setChatOpen(null)}>
+        <SheetContent side="right" className="flex h-dvh w-full min-w-0 flex-col p-0 sm:max-w-md">
+          <SheetHeader className="shrink-0 border-b border-border p-4 pr-12">
+            <SheetTitle>
+              {activeChat?.escopo === "client_store"
+                ? "Conversa com o cliente"
+                : "Conversa com o entregador"}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="min-h-0 min-w-0 flex-1 overflow-hidden p-3">
+            {activeChat && (
+              <OrderChat
+                key={`${activeChat.orderId}:${activeChat.escopo}:${activeChat.escopo === "store_courier" ? couriers[activeChat.orderId] : "client"}`}
+                orderId={activeChat.orderId}
+                escopo={activeChat.escopo}
+                myRole="estabelecimento"
+                contactName={
+                  activeChat.escopo === "client_store"
+                    ? (contacts[activeChat.orderId]?.nome ?? undefined)
+                    : undefined
+                }
+                contactPhone={
+                  activeChat.escopo === "client_store"
+                    ? (contacts[activeChat.orderId]?.telefone ?? undefined)
+                    : undefined
+                }
+              />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

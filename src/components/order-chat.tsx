@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Send, Image as ImageIcon, MapPin, Phone } from "lucide-react";
 import { toast } from "sonner";
+import { bindResumeRefresh } from "@/lib/resume-refresh";
 
 type Escopo = "client_courier" | "store_courier" | "client_store";
 type Role = "cliente" | "estabelecimento" | "entregador";
@@ -58,10 +59,20 @@ async function loadAttachment(message: Message): Promise<Message> {
   const path = chatAttachmentPath(message.anexo_url);
   if (!path) return { ...message, attachmentUrl: null };
   // Storage authorizes the current participant and scope each time this URL is renewed.
-  const { data, error } = await supabase.storage
-    .from("chat-attachments")
-    .createSignedUrl(path, 5 * 60);
-  return { ...message, attachmentUrl: error ? null : (data?.signedUrl ?? null) };
+  try {
+    const { data, error } = await supabase.storage
+      .from("chat-attachments")
+      .createSignedUrl(path, 5 * 60);
+    return { ...message, attachmentUrl: error ? null : (data?.signedUrl ?? null) };
+  } catch {
+    return { ...message, attachmentUrl: null };
+  }
+}
+
+function mergeMessages(previous: Message[], incoming: Message[]) {
+  return Array.from(
+    new Map([...previous, ...incoming].map((message) => [message.id, message])).values(),
+  ).sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at) || a.id.localeCompare(b.id));
 }
 
 export function OrderChat({
@@ -83,70 +94,116 @@ export function OrderChat({
   const [sending, setSending] = useState(false);
   const [uid, setUid] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [openError, setOpenError] = useState<string | null>(null);
+  const [messageError, setMessageError] = useState<string | null>(null);
+  const [retry, setRetry] = useState(0);
+  const [readyScope, setReadyScope] = useState<string | null>(null);
+  const scope = `${orderId}:${escopo}:${myRole}`;
+  const currentScope = useRef(scope);
+  currentScope.current = scope;
+  const generation = useRef(0);
+  const sendLock = useRef(false);
+  const pendingSend = useRef<{ fingerprint: string; id: string } | null>(null);
+  const refreshMessages = useRef<(() => Promise<void>) | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUid(data.user?.id ?? null));
-  }, []);
 
   // Get or create chat
   useEffect(() => {
     let active = true;
+    const request = ++generation.current;
+    const current = () =>
+      active && request === generation.current && currentScope.current === scope;
     (async () => {
       setLoading(true);
+      setOpenError(null);
+      setMessageError(null);
+      setReadyScope(null);
       setChatId(null);
+      setUid(null);
       setMessages([]);
       setText("");
-      const { data: existing } = await supabase
-        .from("order_chats")
-        .select("id")
-        .eq("order_id", orderId)
-        .eq("escopo", escopo)
-        .maybeSingle();
-      if (!active) return;
-      if (existing) {
-        setChatId(existing.id);
-      } else {
-        const { data: created, error } = await supabase
-          .from("order_chats")
-          .insert({ order_id: orderId, escopo })
-          .select("id")
-          .maybeSingle();
-        if (!active) return;
-        if (error) toast.error("Não foi possível abrir o chat");
-        else setChatId(created?.id ?? null);
+      setSending(false);
+      sendLock.current = false;
+      pendingSend.current = null;
+      try {
+        const identity = await supabase.auth.getUser();
+        if (!current()) return;
+        if (identity.error || !identity.data.user) throw new Error("Authentication required");
+        const lookup = () =>
+          supabase
+            .from("order_chats")
+            .select("id")
+            .eq("order_id", orderId)
+            .eq("escopo", escopo)
+            .maybeSingle();
+        let result = await lookup();
+        if (!current()) return;
+        if (result.error) throw result.error;
+        if (!result.data) {
+          result = await supabase
+            .from("order_chats")
+            .insert({ order_id: orderId, escopo })
+            .select("id")
+            .maybeSingle();
+          if (!current()) return;
+          if (result.error?.code === "23505") result = await lookup();
+        }
+        if (!current()) return;
+        if (result.error || !result.data) throw new Error("Chat unavailable");
+        setUid(identity.data.user.id);
+        setChatId(result.data.id);
+        setReadyScope(scope);
+      } catch {
+        if (current())
+          setOpenError("Não foi possível abrir a conversa. Confira a conexão e tente novamente.");
+      } finally {
+        if (current()) setLoading(false);
       }
-      setLoading(false);
     })();
     return () => {
       active = false;
+      generation.current = request + 1;
     };
-  }, [orderId, escopo]);
+  }, [orderId, escopo, myRole, scope, retry]);
 
   // Load + subscribe messages
   useEffect(() => {
-    if (!chatId) return;
+    if (!chatId || readyScope !== scope) return;
     const currentChatId = chatId;
+    const request = generation.current;
     let active = true;
+    let sequence = 0;
+    const current = () =>
+      active && request === generation.current && currentScope.current === scope;
     async function loadMessages() {
-      const { data, error } = await supabase
-        .from("order_messages")
-        .select("*")
-        .eq("chat_id", currentChatId)
-        .order("created_at", { ascending: true });
-      if (error) {
-        if (active) setMessages([]);
-        return;
+      if (!current()) return;
+      const load = ++sequence;
+      try {
+        const { data, error } = await supabase
+          .from("order_messages")
+          .select("*")
+          .eq("chat_id", currentChatId)
+          .order("created_at", { ascending: true });
+        if (error) {
+          throw error;
+        }
+        const hydrated = await Promise.all(((data ?? []) as Message[]).map(loadAttachment));
+        if (!current() || load !== sequence) return;
+        setMessages((previous) => mergeMessages(previous, hydrated));
+        setMessageError(null);
+        queueMicrotask(() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight }));
+      } catch {
+        if (current() && load === sequence)
+          setMessageError("Não foi possível atualizar as mensagens. Tente novamente.");
       }
-      const hydrated = await Promise.all(((data ?? []) as Message[]).map(loadAttachment));
-      if (!active) return;
-      setMessages(hydrated);
-      queueMicrotask(() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight }));
     }
+    refreshMessages.current = loadMessages;
     void loadMessages();
-    const renewal = window.setInterval(() => void loadMessages(), 4 * 60 * 1000);
-    window.addEventListener("focus", loadMessages);
+    const detachResume = bindResumeRefresh(loadMessages);
+    const renewal = window.setInterval(() => {
+      if (document.visibilityState === "visible") void loadMessages();
+    }, 15000);
     const ch = supabase
       .channel("order-chat-" + chatId)
       .on(
@@ -159,31 +216,36 @@ export function OrderChat({
         },
         async (p) => {
           const message = await loadAttachment(p.new as Message);
-          if (!active) return;
-          setMessages((prev) =>
-            prev.some((item) => item.id === message.id) ? prev : [...prev, message],
-          );
+          if (!current()) return;
+          setMessages((prev) => mergeMessages(prev, [message]));
           queueMicrotask(() =>
             listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }),
           );
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") void loadMessages();
+      });
     return () => {
       active = false;
       window.clearInterval(renewal);
-      window.removeEventListener("focus", loadMessages);
+      detachResume();
+      if (refreshMessages.current === loadMessages) refreshMessages.current = null;
       supabase.removeChannel(ch);
     };
-  }, [chatId]);
+  }, [chatId, scope, readyScope]);
 
   async function send(
     tipo: Message["tipo"],
     payload: { conteudo?: string; anexo_url?: string; lat?: number; lng?: number },
+    prepare?: () => Promise<void>,
   ) {
-    if (!chatId || !uid) return;
+    if (!chatId || !uid || readyScope !== scope || sendLock.current) return false;
+    sendLock.current = true;
+    const request = generation.current;
+    const current = () => currentScope.current === scope && request === generation.current;
     setSending(true);
-    const { error } = await supabase.from("order_messages").insert({
+    const body = {
       chat_id: chatId,
       sender_id: uid,
       sender_role: myRole,
@@ -192,31 +254,66 @@ export function OrderChat({
       anexo_url: payload.anexo_url ?? null,
       lat: payload.lat ?? null,
       lng: payload.lng ?? null,
-    });
-    setSending(false);
-    if (error) toast.error("Falha ao enviar");
+    };
+    try {
+      await prepare?.();
+      if (!current()) return false;
+      const fingerprint = JSON.stringify(body);
+      if (pendingSend.current?.fingerprint !== fingerprint)
+        pendingSend.current = { fingerprint, id: crypto.randomUUID() };
+      const id = pendingSend.current.id;
+      let result = await supabase
+        .from("order_messages")
+        .insert({ id, ...body })
+        .select("*")
+        .single();
+      if (result.error?.code === "23505") {
+        result = await supabase
+          .from("order_messages")
+          .select("*")
+          .eq("id", id)
+          .eq("chat_id", chatId)
+          .eq("sender_id", uid)
+          .single();
+      }
+      if (result.error || !result.data) throw new Error("Send failed");
+      const message = await loadAttachment(result.data as Message);
+      if (!current()) return false;
+      setMessages((previous) => mergeMessages(previous, [message]));
+      pendingSend.current = null;
+      queueMicrotask(() =>
+        listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }),
+      );
+      return true;
+    } catch {
+      if (current())
+        toast.error("Não foi possível enviar. Sua mensagem foi mantida para tentar novamente.");
+      return false;
+    } finally {
+      if (current()) {
+        sendLock.current = false;
+        setSending(false);
+      }
+    }
   }
 
   async function sendText() {
     const t = text.trim();
     if (!t) return;
-    setText("");
-    await send("text", { conteudo: t });
+    if (await send("text", { conteudo: t }))
+      setText((previous) => (previous.trim() === t ? "" : previous));
   }
 
   async function sendImage(file: File) {
-    if (!uid) return;
+    if (!uid || !chatId || sendLock.current || sending) return;
     const invalid = validateImageFile(file);
     if (invalid) return toast.error(invalid);
     const path = `${uid}/${orderId}/${escopo}/${Date.now()}-${file.name}`;
-    setSending(true);
-    const { error: upErr } = await supabase.storage.from("chat-attachments").upload(path, file);
-    if (upErr) {
-      setSending(false);
-      return toast.error("Falha ao enviar imagem");
-    }
-    await send("image", { anexo_url: path });
-    setSending(false);
+    await send("image", { anexo_url: path }, async () => {
+      const { error } = await supabase.storage.from("chat-attachments").upload(path, file);
+      if (error) throw error;
+    });
+    if (fileRef.current) fileRef.current.value = "";
   }
 
   async function sendLocation() {
@@ -225,9 +322,16 @@ export function OrderChat({
         "Ative a localização nas preferências do dispositivo para compartilhar sua posição.",
       );
     if (!("geolocation" in navigator)) return toast.error("Localização indisponível");
+    const request = generation.current;
+    const current = () => currentScope.current === scope && request === generation.current;
     navigator.geolocation.getCurrentPosition(
-      (pos) => send("location", { lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => toast.error("Não foi possível obter sua localização"),
+      (pos) => {
+        if (current())
+          void send("location", { lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      () => {
+        if (current()) toast.error("Não foi possível obter sua localização");
+      },
     );
   }
 
@@ -239,8 +343,16 @@ export function OrderChat({
     );
   }
 
+  if (openError || readyScope !== scope || !chatId || !uid)
+    return (
+      <div role="alert" className="space-y-3 rounded-xl border p-4 text-sm">
+        <p>{openError ?? "Não foi possível abrir a conversa."}</p>
+        <Button onClick={() => setRetry((value) => value + 1)}>Tentar novamente</Button>
+      </div>
+    );
+
   return (
-    <div className="flex h-full min-h-[420px] flex-col rounded-2xl border border-border bg-card">
+    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card">
       {(contactName || contactPhone) && (
         <div className="flex items-center justify-between border-b border-border p-3">
           <div>
@@ -260,8 +372,16 @@ export function OrderChat({
         </div>
       )}
 
-      <div ref={listRef} className="flex-1 space-y-2 overflow-y-auto p-3">
-        {messages.length === 0 && (
+      <div ref={listRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
+        {messageError && (
+          <div role="alert" className="space-y-2 text-sm text-destructive">
+            <p>{messageError}</p>
+            <Button variant="outline" onClick={() => void refreshMessages.current?.()}>
+              Tentar novamente
+            </Button>
+          </div>
+        )}
+        {messages.length === 0 && !messageError && (
           <p className="mt-16 text-center text-sm text-muted-foreground">
             Envie a primeira mensagem
           </p>
@@ -312,6 +432,7 @@ export function OrderChat({
             <button
               key={q}
               type="button"
+              disabled={sending}
               onClick={() => send("text", { conteudo: q })}
               className="whitespace-nowrap rounded-full border border-border bg-background px-3 py-1 text-xs hover:bg-primary hover:text-primary-foreground"
             >

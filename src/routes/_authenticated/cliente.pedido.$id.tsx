@@ -18,6 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { ReviewForm } from "@/components/reviews";
 import { bindResumeRefresh } from "@/lib/resume-refresh";
 import { OrderOnlinePayment } from "@/components/checkout/order-online-payment";
+import { OrderChat } from "@/components/order-chat";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 export const Route = createFileRoute("/_authenticated/cliente/pedido/$id")({
   head: () => ({
@@ -106,6 +108,7 @@ function PedidoPage() {
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [loading, setLoading] = useState(true);
   const [reviewed, setReviewed] = useState(false);
+  const [chatOpen, setChatOpen] = useState<"client_store" | "client_courier" | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -114,6 +117,7 @@ function PedidoPage() {
     setLoja(null);
     setDelivery(null);
     setReviewed(false);
+    setChatOpen(null);
     let alive = true;
     let sequence = 0;
     let trackingSequence = 0;
@@ -274,6 +278,8 @@ function PedidoPage() {
     );
 
   const isPickup = order.tipo_entrega === "pickup";
+  const canChatWithCourier = !isPickup && !!delivery?.entregador_id;
+  const activeChat = chatOpen === "client_store" || canChatWithCourier ? chatOpen : null;
   const activeStages = isPickup ? PICKUP_STAGES : DELIVERY_STAGES;
   const stageIdx = activeStages.findIndex((s) => s.key === order.status);
 
@@ -311,6 +317,37 @@ function PedidoPage() {
           </div>
         </div>
       </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" onClick={() => setChatOpen("client_store")}>
+          Falar com a loja
+        </Button>
+        {canChatWithCourier && (
+          <Button variant="outline" onClick={() => setChatOpen("client_courier")}>
+            Falar com o entregador
+          </Button>
+        )}
+      </div>
+      <Sheet open={activeChat !== null} onOpenChange={(open) => !open && setChatOpen(null)}>
+        <SheetContent side="right" className="flex h-dvh w-full min-w-0 flex-col p-0 sm:max-w-md">
+          <SheetHeader className="shrink-0 border-b border-border p-4 pr-12">
+            <SheetTitle>
+              {activeChat === "client_store" ? "Conversa com a loja" : "Conversa com o entregador"}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="min-h-0 min-w-0 flex-1 overflow-hidden p-3">
+            {activeChat && (
+              <OrderChat
+                key={`${order.id}:${activeChat}:${activeChat === "client_courier" ? delivery?.entregador_id : "store"}`}
+                orderId={order.id}
+                escopo={activeChat}
+                myRole="cliente"
+                contactName={activeChat === "client_store" ? loja?.nome : undefined}
+              />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {order.codigo_entrega &&
         !["pending_payment", "delivered", "cancelled", "refunded"].includes(order.status) &&
