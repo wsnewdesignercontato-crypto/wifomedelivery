@@ -12,13 +12,14 @@ import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, MapPin, CreditCard, Banknote, QrCode, Bike, Store } from "lucide-react";
+import { Loader2, CreditCard, Banknote, QrCode, Bike, Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { placeOrder, quoteOrder, type CheckoutQuoteInput } from "@/lib/checkout.functions";
 import { getOnlinePaymentAvailability, startOnlineOrder } from "@/lib/asaas-payment.functions";
+import { CheckoutSummary } from "@/components/checkout/checkout-summary";
+import { SavedCheckoutAddresses } from "@/components/checkout/saved-checkout-addresses";
 import { OnlinePaymentForm } from "@/components/checkout/online-payment-form";
 import type { PayerInput, CardInput } from "@/lib/asaas-payment-contract";
 import {
@@ -120,7 +121,6 @@ function CheckoutPage() {
     if (!loading && detailsLoaded && estab) setDetailsOpen(missing.length > 0);
   }, [loading, detailsLoaded, estab, missing]);
   const [enviando, setEnviando] = useState(false);
-  const [novo, setNovo] = useState({ rua: "", numero: "", bairro: "", cidade: "", estado: "" });
 
   useEffect(() => {
     let active = true;
@@ -298,25 +298,6 @@ function CheckoutPage() {
     setQuoteRevision((revision) => revision + 1);
   }
 
-  async function criarEndereco() {
-    if (!novo.rua.trim() || !novo.cidade.trim()) {
-      toast.error("Informe rua e cidade");
-      return;
-    }
-    const { data, error } = await supabase
-      .from("addresses")
-      .insert({ user_id: user.id, label: "Casa", ...novo, is_default: addrs.length === 0 })
-      .select("*")
-      .single();
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    setAddrs((prev) => [data as Addr, ...prev]);
-    setAddrId((data as Addr).id);
-    setNovo({ rua: "", numero: "", bairro: "", cidade: "", estado: "" });
-  }
-
   async function confirmar(payment?: { payer: PayerInput; card?: CardInput }) {
     if (!detailsLoaded || missing.length) {
       setDetailsOpen(true);
@@ -441,6 +422,15 @@ function CheckoutPage() {
   return (
     <div className="space-y-5">
       <h1 className="text-xl font-bold">Finalizar pedido</h1>
+      <CheckoutSummary
+        quote={currentQuote}
+        pickup={tipoEntrega === "pickup"}
+        coupon={search.cupom}
+        establishmentId={estab.id}
+        canQuote={!!checkoutData}
+        error={quoteError}
+        onRetry={refreshQuote}
+      />
       {testMode && (
         <div
           role="status"
@@ -521,69 +511,12 @@ function CheckoutPage() {
       </section>
 
       {tipoEntrega === "delivery" && (
-        <section>
-          <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold">
-            <MapPin className="h-4 w-4 text-primary" /> Endereço de entrega
-          </h2>
-          <div className="space-y-2">
-            {addrs.map((a) => (
-              <label
-                key={a.id}
-                className={`block cursor-pointer rounded-2xl border p-3 text-sm ${addrId === a.id ? "border-primary bg-primary text-primary-foreground shadow-sm [&_.text-muted-foreground]:text-primary-foreground/90" : "border-primary bg-card text-primary hover:bg-primary/5"}`}
-              >
-                <input
-                  type="radio"
-                  className="sr-only"
-                  checked={addrId === a.id}
-                  onChange={() => setAddrId(a.id)}
-                />
-                <div className="font-semibold">{a.label}</div>
-                <div className="text-xs text-muted-foreground">
-                  {a.rua}
-                  {a.numero ? `, ${a.numero}` : ""}
-                  {a.bairro ? ` — ${a.bairro}` : ""}
-                  <br />
-                  {a.cidade}
-                  {a.estado ? `/${a.estado}` : ""}
-                  {a.cep ? ` · CEP ${a.cep}` : ""}
-                </div>
-              </label>
-            ))}
-          </div>
-          <div className="mt-3 rounded-2xl border border-dashed border-border p-3">
-            <p className="mb-2 text-xs font-semibold">Novo endereço</p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Input
-                placeholder="Rua"
-                value={novo.rua}
-                onChange={(e) => setNovo({ ...novo, rua: e.target.value })}
-              />
-              <Input
-                placeholder="Número"
-                value={novo.numero}
-                onChange={(e) => setNovo({ ...novo, numero: e.target.value })}
-              />
-              <Input
-                placeholder="Bairro"
-                value={novo.bairro}
-                onChange={(e) => setNovo({ ...novo, bairro: e.target.value })}
-              />
-              <Input
-                placeholder="Cidade"
-                value={novo.cidade}
-                onChange={(e) => setNovo({ ...novo, cidade: e.target.value })}
-              />
-              <Input
-                placeholder="Estado"
-                value={novo.estado}
-                onChange={(e) => setNovo({ ...novo, estado: e.target.value })}
-              />
-            </div>
-            <Button size="sm" variant="default" className="mt-2" onClick={criarEndereco}>
-              Adicionar endereço
-            </Button>
-          </div>
-        </section>
+        <SavedCheckoutAddresses
+          addresses={addrs}
+          selectedId={addrId}
+          onSelect={setAddrId}
+          coupon={search.cupom}
+        />
       )}
 
       <section>
@@ -649,49 +582,6 @@ function CheckoutPage() {
           maxLength={300}
         />
       </section>
-
-      <div className="rounded-2xl border border-border bg-card p-4 space-y-1.5 text-sm">
-        <div className="flex justify-between text-muted-foreground">
-          <span>Subtotal</span>
-          <span>{currentQuote ? fmt(currentQuote.subtotal_cents) : "—"}</span>
-        </div>
-        <div className="flex justify-between text-muted-foreground">
-          <span>{tipoEntrega === "pickup" ? "Retirada" : "Entrega"}</span>
-          <span>{currentQuote ? fmt(currentQuote.frete_cents) : "—"}</span>
-        </div>
-        {search.cupom && (
-          <div className="flex justify-between text-primary">
-            <span>Cupom</span>
-            <span>
-              {search.cupom} {currentQuote ? `· −${fmt(currentQuote.desconto_cents)}` : ""}
-            </span>
-          </div>
-        )}
-        <div className="my-2 border-t border-border" />
-        <div className="flex justify-between text-base font-bold">
-          <span>Total</span>
-          <span>{currentQuote ? fmt(currentQuote.total_cents) : "—"}</span>
-        </div>
-      </div>
-      {quoteError ? (
-        <div role="alert" className="space-y-2 text-sm text-destructive">
-          <p>{quoteError}</p>
-          <Button variant="default" size="sm" onClick={refreshQuote}>
-            Conferir novamente
-          </Button>
-        </div>
-      ) : !currentQuote ? (
-        <p role="status" className="text-sm text-muted-foreground">
-          {checkoutData
-            ? "Conferindo preços, entrega e cupom…"
-            : "Selecione um endereço ou a retirada para conferir o total."}
-        </p>
-      ) : (
-        <p className="text-xs text-muted-foreground">
-          Total conferido com o catálogo atual, a entrega e o cupom. Se o preço mudar, você
-          precisará revisar e confirmar novamente.
-        </p>
-      )}
 
       {online && pagto !== "dinheiro" && currentQuote && currentQuote.total_cents > 0 ? (
         <OnlinePaymentForm

@@ -3,7 +3,7 @@ import { ProductDetails } from "@/components/product-details";
 import { productSummary, productSnapshotName } from "@/lib/product-details";
 import { ESTABLISHMENT_SELECT } from "@/lib/data-access";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -103,6 +103,8 @@ function EstabelecimentoPage() {
   const [saving, setSaving] = useState(false);
   const [groups, setGroups] = useState<AddonGroup[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
+  const [groupsError, setGroupsError] = useState<string | null>(null);
+  const groupLoadSequence = useRef(0);
   // seleção: groupId -> lista de addonIds
   const [sel, setSel] = useState<Record<string, string[]>>({});
 
@@ -208,54 +210,60 @@ function EstabelecimentoPage() {
   }
 
   async function abrirProd(p: Produto) {
+    const request = ++groupLoadSequence.current;
     setOpenProd(p);
     setQty(1);
     setObs("");
     setSel({});
     setGroups([]);
     setLoadingGroups(true);
-    // Busca grupos vinculados ao produto + seus addons ativos
-    const { data: pag } = await supabase
-      .from("product_addon_groups")
-      .select(
-        "ordem,addon_group_id,addon_groups(id,nome,descricao,minimo,maximo,obrigatorio,selecao_multipla,ordem,ativo)",
-      )
-      .eq("product_id", p.id)
-      .order("ordem");
-    type Row = {
-      ordem: number;
-      addon_group_id: string;
-      addon_groups: (Omit<AddonGroup, "addons"> & { ativo: boolean }) | null;
-    };
-    const rows = ((pag ?? []) as unknown as Row[]).filter(
-      (r) => r.addon_groups && r.addon_groups.ativo,
-    );
-    if (rows.length === 0) {
-      setGroups([]);
-      setLoadingGroups(false);
-      return;
-    }
-    const groupIds = rows.map((r) => r.addon_group_id);
-    const { data: adns } = await supabase
-      .from("addons")
-      .select("id,nome,descricao,preco_extra_cents,ordem,addon_group_id,ativo")
-      .in("addon_group_id", groupIds)
-      .eq("ativo", true)
-      .order("ordem");
-    const byGroup = new Map<string, Addon[]>();
-    (adns ?? []).forEach((a) => {
-      const arr = byGroup.get(a.addon_group_id) ?? [];
-      arr.push({
-        id: a.id,
-        nome: a.nome,
-        descricao: a.descricao,
-        preco_extra_cents: a.preco_extra_cents,
-        ordem: a.ordem,
+    setGroupsError(null);
+    try {
+      // Busca grupos vinculados ao produto + seus addons ativos
+      const { data: pag, error: groupError } = await supabase
+        .from("product_addon_groups")
+        .select(
+          "ordem,addon_group_id,addon_groups(id,nome,descricao,minimo,maximo,obrigatorio,selecao_multipla,ordem,ativo)",
+        )
+        .eq("product_id", p.id)
+        .order("ordem");
+      if (request !== groupLoadSequence.current) return;
+      if (groupError) throw groupError;
+      type Row = {
+        ordem: number;
+        addon_group_id: string;
+        addon_groups: (Omit<AddonGroup, "addons"> & { ativo: boolean }) | null;
+      };
+      const rows = ((pag ?? []) as unknown as Row[]).filter(
+        (r) => r.addon_groups && r.addon_groups.ativo,
+      );
+      if (rows.length === 0) {
+        setGroups([]);
+        setLoadingGroups(false);
+        return;
+      }
+      const groupIds = rows.map((r) => r.addon_group_id);
+      const { data: adns, error: addonError } = await supabase
+        .from("addons")
+        .select("id,nome,descricao,preco_extra_cents,ordem,addon_group_id,ativo")
+        .in("addon_group_id", groupIds)
+        .eq("ativo", true)
+        .order("ordem");
+      if (request !== groupLoadSequence.current) return;
+      if (addonError) throw addonError;
+      const byGroup = new Map<string, Addon[]>();
+      (adns ?? []).forEach((a) => {
+        const arr = byGroup.get(a.addon_group_id) ?? [];
+        arr.push({
+          id: a.id,
+          nome: a.nome,
+          descricao: a.descricao,
+          preco_extra_cents: a.preco_extra_cents,
+          ordem: a.ordem,
+        });
+        byGroup.set(a.addon_group_id, arr);
       });
-      byGroup.set(a.addon_group_id, arr);
-    });
-    const built: AddonGroup[] = rows
-      .map((r) => ({
+      const built: AddonGroup[] = rows.map((r) => ({
         id: r.addon_groups!.id,
         nome: r.addon_groups!.nome,
         descricao: r.addon_groups!.descricao,
@@ -265,10 +273,16 @@ function EstabelecimentoPage() {
         selecao_multipla: r.addon_groups!.selecao_multipla,
         ordem: r.addon_groups!.ordem,
         addons: byGroup.get(r.addon_group_id) ?? [],
-      }))
-      .filter((g) => g.addons.length > 0);
-    setGroups(built);
-    setLoadingGroups(false);
+      }));
+      setGroups(built);
+    } catch {
+      if (request === groupLoadSequence.current)
+        setGroupsError(
+          "Não foi possível carregar os adicionais deste produto. Tente novamente antes de adicionar.",
+        );
+    } finally {
+      if (request === groupLoadSequence.current) setLoadingGroups(false);
+    }
   }
 
   function toggleAddon(g: AddonGroup, addonId: string) {
@@ -312,14 +326,18 @@ function EstabelecimentoPage() {
   const precoUnit = precoBase + extras;
 
   const invalid = useMemo(() => {
+    if (loadingGroups) return "Aguarde o carregamento dos adicionais antes de adicionar.";
+    if (groupsError) return groupsError;
     for (const g of groups) {
       const n = (sel[g.id] ?? []).length;
+      if ((g.obrigatorio || g.minimo > 0) && g.addons.length < Math.max(1, g.minimo))
+        return `Os adicionais obrigatórios de "${g.nome}" estão indisponíveis. Escolha outro produto ou consulte a loja.`;
       if (g.obrigatorio && n < Math.max(1, g.minimo)) return `Escolha "${g.nome}"`;
       if (g.minimo > 0 && n < g.minimo) return `Escolha ao menos ${g.minimo} em "${g.nome}"`;
       if (g.maximo > 0 && n > g.maximo) return `Máximo ${g.maximo} em "${g.nome}"`;
     }
     return null;
-  }, [groups, sel]);
+  }, [groups, sel, loadingGroups, groupsError]);
 
   async function adicionar() {
     if (!user.id)
@@ -327,7 +345,7 @@ function EstabelecimentoPage() {
         to: "/auth",
         search: { perfil: "cliente", redirect: `/cliente/estabelecimento/${id}` },
       });
-    if (!openProd || !estab) return;
+    if (!openProd || !estab || saving) return;
     if (invalid) {
       toast.error(invalid);
       return;
@@ -637,6 +655,14 @@ function EstabelecimentoPage() {
                 {loadingGroups && (
                   <div className="flex justify-center py-4">
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  </div>
+                )}
+                {groupsError && (
+                  <div role="alert" className="space-y-2 text-sm text-destructive">
+                    <p>{groupsError}</p>
+                    <Button variant="outline" size="sm" onClick={() => void abrirProd(openProd)}>
+                      Tentar novamente
+                    </Button>
                   </div>
                 )}
 

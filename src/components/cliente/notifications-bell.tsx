@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bell, BellOff, BellRing, CheckCheck, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,15 @@ export function NotificationsBell({
   userId: string;
   audience?: Audience;
 }) {
-  const [items, setItems] = useState<Notif[]>([]);
+  const [{ items, unread }, setFeed] = useState<{ items: Notif[]; unread: number }>({
+    items: [],
+    unread: 0,
+  });
+  const readRevision = useRef(0);
+  const reloadFeed = useRef<(() => Promise<void>) | null>(null);
+  const scope = `${userId}:${audience}`;
+  const currentScope = useRef(scope);
+  currentScope.current = scope;
   const navigate = useNavigate();
   const push = usePushNotifications();
 
@@ -38,17 +46,28 @@ export function NotificationsBell({
     async function load() {
       if (!alive) return;
       const currentRequest = ++requestId;
+      const revision = readRevision.current;
       let query = supabase
         .from("notifications")
         .select("id,titulo,mensagem,link_url,lida,created_at,audience")
         .eq("user_id", userId)
-        .or(`audience.is.null,audience.eq.${audience},audience.eq.all`)
-        .order("created_at", { ascending: false });
+        .or(`audience.is.null,audience.eq.${audience},audience.eq.all`);
       if (audience !== "cliente") query = query.eq("lida", false);
-      const { data, error } = await query.limit(50);
-      if (error) return;
-      if (alive && currentRequest === requestId) setItems((data ?? []) as Notif[]);
+      else query = query.order("lida", { ascending: true });
+      const [list, counter] = await Promise.all([
+        query.order("created_at", { ascending: false }).limit(50),
+        supabase
+          .from("notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .eq("lida", false)
+          .or(`audience.is.null,audience.eq.${audience},audience.eq.all`),
+      ]);
+      if (list.error || counter.error || typeof counter.count !== "number") return;
+      if (alive && currentRequest === requestId && revision === readRevision.current)
+        setFeed({ items: (list.data ?? []) as Notif[], unread: counter.count });
     }
+    reloadFeed.current = load;
     load();
     const detachResume = bindResumeRefresh(load);
     const poll = setInterval(() => {
@@ -99,6 +118,7 @@ export function NotificationsBell({
       });
     return () => {
       alive = false;
+      if (reloadFeed.current === load) reloadFeed.current = null;
       detachResume();
       clearInterval(poll);
       supabase.removeChannel(ch);
@@ -106,23 +126,42 @@ export function NotificationsBell({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, audience]);
 
-  const unread = items.filter((item) => !item.lida).length;
-
   useEffect(() => {
     setAppBadgeCount(unread);
   }, [unread]);
 
-  async function handleClick(n: Notif) {
-    const { error } = await supabase.from("notifications").update({ lida: true }).eq("id", n.id);
+  async function markRead(ids: string[]) {
+    if (!ids.length) return true;
+    const actor = scope;
+    const { error } = await supabase
+      .from("notifications")
+      .update({ lida: true })
+      .eq("user_id", userId)
+      .in("id", ids);
+    if (currentScope.current !== actor) return false;
     if (error) {
       toast.error("Não foi possível marcar a mensagem como lida.");
-      return;
+      return false;
     }
-    setItems((prev) =>
-      audience === "cliente"
-        ? prev.map((i) => (i.id === n.id ? { ...i, lida: true } : i))
-        : prev.filter((i) => i.id !== n.id),
-    );
+    // A snapshot fetched before this save must never restore its old unread flags.
+    readRevision.current++;
+    const selected = new Set(ids);
+    setFeed((prev) => ({
+      items:
+        audience === "cliente"
+          ? prev.items.map((i) => (selected.has(i.id) ? { ...i, lida: true } : i))
+          : prev.items.filter((i) => !selected.has(i.id)),
+      unread: Math.max(
+        0,
+        prev.unread - prev.items.filter((i) => selected.has(i.id) && !i.lida).length,
+      ),
+    }));
+    void reloadFeed.current?.();
+    return true;
+  }
+
+  async function handleClick(n: Notif) {
+    if (!(await markRead([n.id]))) return;
     if (n.link_url) {
       const target = new URL(n.link_url, window.location.origin);
       navigate({
@@ -136,12 +175,7 @@ export function NotificationsBell({
   async function markAllRead() {
     if (unread === 0) return;
     const ids = items.filter((i) => !i.lida).map((i) => i.id);
-    const { error } = await supabase.from("notifications").update({ lida: true }).in("id", ids);
-    if (error) {
-      toast.error("Não foi possível marcar as mensagens como lidas.");
-      return;
-    }
-    setItems((prev) => (audience === "cliente" ? prev.map((i) => ({ ...i, lida: true })) : []));
+    await markRead(ids);
   }
 
   function timeAgo(iso: string) {
@@ -227,6 +261,11 @@ export function NotificationsBell({
                             aria-label="Não lida"
                             className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary"
                           />
+                        )}
+                        {n.lida && audience === "cliente" && (
+                          <span className="shrink-0 text-[10px] font-medium text-muted-foreground">
+                            Lida
+                          </span>
                         )}
                       </div>
                       <p className="mt-0.5 whitespace-pre-wrap break-words text-xs text-muted-foreground">

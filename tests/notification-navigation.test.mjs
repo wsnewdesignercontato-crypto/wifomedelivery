@@ -23,12 +23,13 @@ globalThis.__notificationNavigationTest = runtime;
 const jsx = loadTsx();
 const modules = {
   react: `export * from ${JSON.stringify(import.meta.resolve("react"))};
-    export const useState=value=>[Array.isArray(value)?[globalThis.__notificationNavigationTest.notification]:value,()=>{}];
+    export const useState=value=>[value&&typeof value==='object'&&'items'in value?{items:[globalThis.__notificationNavigationTest.notification],unread:1}:value,()=>{}];
+    export const useRef=value=>({current:value});
     export const useEffect=()=>{};`,
   "@tanstack/react-router":
     "export const useNavigate=()=>args=>globalThis.__notificationNavigationTest.navigations.push(args);",
   "@/integrations/supabase/client":
-    "export const supabase={from:()=>({update:()=>({eq:async()=>({error:null})})})};",
+    "export const supabase={from:()=>({update:()=>({eq(){return this},in:async()=>({error:null})})})};",
   "@/hooks/use-push-notifications":
     "export const usePushNotifications=()=>({supported:false}); export const setAppBadgeCount=()=>{};",
 };

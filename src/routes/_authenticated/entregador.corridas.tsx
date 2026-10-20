@@ -125,9 +125,9 @@ function Corridas() {
   const [order, setOrder] = useState<OrderLite | null>(null);
   const [estab, setEstab] = useState<Estab | null>(null);
   const [cliente, setCliente] = useState<ClienteInfo | null>(null);
-  const [codeOpen, setCodeOpen] = useState(false);
   const [codeInput, setCodeInput] = useState("");
   const [advancing, setAdvancing] = useState(false);
+  const confirmingRef = useRef(false);
   const [chatOpen, setChatOpen] = useState<"client_courier" | "store_courier" | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
@@ -391,10 +391,7 @@ function Corridas() {
 
   async function avancar(next: string) {
     if (!ativa || !courier || advancing) return;
-    if (next === "delivered") {
-      setCodeOpen(true);
-      return;
-    }
+    if (next === "delivered") return;
     setAdvancing(true);
     try {
       await transitionCourierDelivery(ativa.id, next);
@@ -413,7 +410,7 @@ function Corridas() {
   }
 
   async function confirmarEntrega() {
-    if (!ativa || !order || !courier) return;
+    if (!ativa || !order || !courier || advancing || confirmingRef.current) return;
     // Validação de formato (zod)
     const parsed = codigoEntregaSchema.safeParse(codeInput);
     if (!parsed.success) {
@@ -422,63 +419,74 @@ function Corridas() {
       return toast.error(msg);
     }
     setCodeError(null);
+    confirmingRef.current = true;
     setAdvancing(true);
-    let prova_url: string | null = null;
-    if (proofFile) {
-      const invalidProof = validateImageFile(proofFile);
-      if (invalidProof) {
-        setAdvancing(false);
-        return toast.error(invalidProof);
+    try {
+      let prova_url: string | null = null;
+      if (proofFile) {
+        const invalidProof = validateImageFile(proofFile);
+        if (invalidProof) {
+          return toast.error(invalidProof);
+        }
+        const path = `${courier.user_id}/${order.id}/${Date.now()}-${proofFile.name}`;
+        const up = await supabase.storage.from("delivery-proofs").upload(path, proofFile);
+        if (up.error) {
+          return toast.error("Falha ao enviar foto");
+        }
+        const { data: signed } = await supabase.storage
+          .from("delivery-proofs")
+          .createSignedUrl(path, 60 * 60 * 24 * 30);
+        prova_url = signed?.signedUrl ?? path;
       }
-      const path = `${courier.user_id}/${order.id}/${Date.now()}-${proofFile.name}`;
-      const up = await supabase.storage.from("delivery-proofs").upload(path, proofFile);
-      if (up.error) {
-        setAdvancing(false);
-        return toast.error("Falha ao enviar foto");
+      // Confirma entrega atomicamente via RPC
+      const { data: rpcRes, error: rpcErr } = await supabase.rpc("confirm_delivery_code", {
+        p_order_id: ativa.order_id,
+        p_code: parsed.data,
+        p_prova_url: prova_url ?? undefined,
+      });
+
+      const result = rpcRes && typeof rpcRes === "object" && !Array.isArray(rpcRes) ? rpcRes : null;
+
+      if (rpcErr || (result && result.success === false)) {
+        const errorMsg =
+          rpcErr?.message ||
+          (result && result.error === "invalid_code" ? "Código incorreto" : "Falha ao finalizar");
+        setCodeError(errorMsg);
+        return toast.error(errorMsg);
       }
-      const { data: signed } = await supabase.storage
-        .from("delivery-proofs")
-        .createSignedUrl(path, 60 * 60 * 24 * 30);
-      prova_url = signed?.signedUrl ?? path;
-    }
-    // Confirma entrega atomicamente via RPC
-    const { data: rpcRes, error: rpcErr } = await supabase.rpc("confirm_delivery_code", {
-      p_order_id: ativa.order_id,
-      p_code: parsed.data,
-      p_prova_url: prova_url ?? undefined,
-    });
+      // A entrega já foi confirmada; falha no status não deve pedir nova confirmação.
+      await supabase
+        .from("courier_profiles")
+        .update({ status: "online" })
+        .eq("user_id", courier.user_id)
+        .then(
+          () => {},
+          () => {},
+        );
 
-    const result = rpcRes && typeof rpcRes === "object" && !Array.isArray(rpcRes) ? rpcRes : null;
-
-    if (rpcErr || (result && result.success === false)) {
+      // Atualização imediata do estado local + confirmação visual
+      const valorCents = ativa.valor_entrega_cents ?? 0;
+      const clienteNome = cliente?.nome ?? null;
+      setCodeInput("");
+      setProofFile(null);
+      setProofPreview(null);
+      setAtiva(null);
+      setOrder(null);
+      setEstab(null);
+      setCliente(null);
+      setDeliveredInfo({ valorCents, clienteNome });
+      toast.success("Entrega confirmada! 🎉", {
+        description: `Código validado. Entrega de R$ ${(valorCents / 100).toFixed(2).replace(".", ",")} registrada para conferência financeira.`,
+      });
+      load();
+    } catch {
+      const message = "Falha ao finalizar. Tente novamente.";
+      setCodeError(message);
+      toast.error(message);
+    } finally {
+      confirmingRef.current = false;
       setAdvancing(false);
-      const errorMsg =
-        rpcErr?.message ||
-        (result && result.error === "invalid_code" ? "Código incorreto" : "Falha ao finalizar");
-      return toast.error(errorMsg);
     }
-    await supabase
-      .from("courier_profiles")
-      .update({ status: "online" })
-      .eq("user_id", courier.user_id);
-
-    // Atualização imediata do estado local + confirmação visual
-    const valorCents = ativa.valor_entrega_cents ?? 0;
-    const clienteNome = cliente?.nome ?? null;
-    setAdvancing(false);
-    setCodeOpen(false);
-    setCodeInput("");
-    setProofFile(null);
-    setProofPreview(null);
-    setAtiva(null);
-    setOrder(null);
-    setEstab(null);
-    setCliente(null);
-    setDeliveredInfo({ valorCents, clienteNome });
-    toast.success("Entrega confirmada! 🎉", {
-      description: `Código validado. Entrega de R$ ${(valorCents / 100).toFixed(2).replace(".", ",")} registrada para conferência financeira.`,
-    });
-    load();
   }
 
   async function salvarIncidente() {
@@ -774,7 +782,7 @@ function Corridas() {
           )}
 
           <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
-            {currentStage && (
+            {currentStage && currentStage.key !== "at_customer" && (
               <Button
                 size="lg"
                 className="w-full"
@@ -814,8 +822,6 @@ function Corridas() {
               >
                 {advancing ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : currentStage.key === "at_customer" ? (
-                  <ShieldCheck className="mr-2 h-4 w-4" />
                 ) : (
                   <Navigation className="mr-2 h-4 w-4" />
                 )}
@@ -904,100 +910,6 @@ function Corridas() {
           </div>
         </section>
       )}
-
-      {/* Confirmar entrega */}
-      <Dialog open={codeOpen} onOpenChange={setCodeOpen}>
-        <DialogContent className="max-h-[92vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Confirmar entrega</DialogTitle>
-            <DialogDescription>
-              Peça o código de 4 dígitos ao cliente e, se possível, tire uma foto do pedido entregue
-              como prova.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              inputMode="numeric"
-              maxLength={4}
-              placeholder="0000"
-              value={codeInput}
-              onChange={(e) => {
-                setCodeInput(e.target.value.replace(/\D/g, "").slice(0, 4));
-                if (codeError) setCodeError(null);
-              }}
-              aria-invalid={!!codeError}
-              aria-describedby="codigo-erro-modal"
-              className={`text-center text-3xl font-black tracking-[0.5em] ${codeError ? "border-destructive focus-visible:ring-destructive" : ""}`}
-              autoFocus
-            />
-            {codeError && (
-              <p
-                id="codigo-erro-modal"
-                role="alert"
-                className="flex items-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive"
-              >
-                <AlertTriangle className="h-4 w-4 shrink-0" /> {codeError}
-              </p>
-            )}
-
-            <div className="space-y-2">
-              <p className="text-xs font-bold uppercase text-muted-foreground">
-                Prova de entrega (opcional)
-              </p>
-              <input
-                ref={proofInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={(e) => e.target.files?.[0] && pickProof(e.target.files[0])}
-              />
-              {proofPreview ? (
-                <div className="relative">
-                  <img src={proofPreview} alt="prova" className="w-full rounded-xl" />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-2 w-full"
-                    onClick={() => {
-                      setProofFile(null);
-                      setProofPreview(null);
-                    }}
-                  >
-                    Trocar foto
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => proofInputRef.current?.click()}
-                >
-                  <Camera className="mr-2 h-4 w-4" /> Tirar foto do pedido entregue
-                </Button>
-              )}
-            </div>
-
-            <p className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs text-muted-foreground">
-              <strong className="text-primary">Obrigatório:</strong> peça ao cliente o código de 4
-              dígitos que aparece no pedido dele. Sem o código, a entrega não pode ser finalizada.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCodeOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={confirmarEntrega} disabled={advancing || codeInput.length !== 4}>
-              {advancing ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-              )}
-              Confirmar entrega
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Chat drawer */}
       <Sheet open={chatOpen !== null} onOpenChange={(o) => !o && setChatOpen(null)}>

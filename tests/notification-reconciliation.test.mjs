@@ -16,13 +16,18 @@ const jsx = loadTsx();
 const modules = {
   react: `export * from ${JSON.stringify(import.meta.resolve("react"))}; const r=globalThis.__notificationReconciliationTest;
  export function useState(v){const i=r.cursor++;if(!(i in r.states))r.states[i]=v;return[r.states[i],v=>r.states[i]=typeof v==='function'?v(r.states[i]):v]}
+ export function useRef(v){const i=r.cursor++;return r.states[i]??={current:v}}
  export function useEffect(fn){const i=r.cursor++;if(!(i in r.states)){r.states[i]=true;r.effects.push(fn)}}`,
   "@/integrations/supabase/client": `const r=globalThis.__notificationReconciliationTest;
- export const supabase={from(){const q={update(){return {eq:async()=>({error:null}),in:async()=>({error:null})}},select(){return q},eq(k,v){r.filters.push([k,v]);return q},or(){return q},order(){return q},limit(){r.loads++;return Promise.resolve({data:r.rows})}};return q},channel(){const ch={on(type,filter,fn){r.handlers.push({filter,fn});return ch},subscribe(fn){r.subscription=fn;return ch}};return ch},removeChannel(){r.removed=true}};`,
+ export const supabase={from(){let filters=[],orders=[],head=false,cap=null,write=false;const q={
+ update(){write=true;return q},select(c,o){head=!!o?.head;return q},eq(k,v){r.filters.push([k,v]);filters.push([k,v]);return q},in(k,v){filters.push([k,v]);return q},or(){return q},order(k,o){orders.push([k,o.ascending]);return q},limit(n){cap=n;return q},then(resolve,reject){
+ if(write){const apply=()=>{if(r.writeError)return resolve({error:{message:'failed'}});r.rows=r.rows.map(row=>filters.every(([k,v])=>k==='user_id'||(Array.isArray(v)?v.includes(row[k]):row[k]===v))?{...row,lida:true}:row);resolve({error:null})};if(r.deferWrite){r.resolveWrite=apply;return}return apply()}
+ r.loads++;let rows=r.rows.filter(row=>filters.every(([k,v])=>k==='user_id'||row[k]===v));rows=[...rows].sort((a,b)=>{for(const[k,asc]of orders){const d=a[k]<b[k]?-1:a[k]>b[k]?1:0;if(d)return asc?d:-d}return 0});const result={data:head?null:rows.slice(0,cap??rows.length),count:rows.length,error:null};if(r.deferLoads)r.pendingLoads.push(()=>resolve(result));else resolve(result)
+ }};return q},channel(){const ch={on(type,filter,fn){r.handlers.push({filter,fn});return ch},subscribe(fn){r.subscription=fn;return ch}};return ch},removeChannel(){r.removed=true}};`,
   "@/hooks/use-push-notifications": `export const usePushNotifications=()=>({supported:false});export const setAppBadgeCount=()=>{};`,
   "@tanstack/react-router": `export const useNavigate=()=>()=>{};`,
   "@/lib/notification-sound": `export const playBellChime=()=>{};`,
-  sonner: `export const toast=Object.assign(()=>{},{success:()=>{}});`,
+  sonner: `export const toast=Object.assign(()=>{},{success:()=>{},error:()=>{}});`,
 };
 const hooks = registerHooks({
   resolve(name, ctx, next) {
@@ -67,6 +72,10 @@ async function mount(audience = "admin") {
     loads: 0,
     filters: [],
     removed: false,
+    deferLoads: false,
+    pendingLoads: [],
+    deferWrite: false,
+    writeError: false,
   });
   const priorWindow = globalThis.window,
     priorDocument = globalThis.document;
@@ -150,11 +159,6 @@ test("customer order messages remain visible after reading, and push receipt ref
     ];
     globalThis.window.dispatchEvent(new Event("focus"));
     await settle();
-    assert.equal(
-      runtime.filters.some(([k, v]) => k === "lida" && v === false),
-      false,
-      "customer history must include read messages",
-    );
     let tree = app.render();
     const button = find(
       tree,
@@ -182,6 +186,108 @@ test("customer order messages remain visible after reading, and push receipt ref
     globalThis.window.dispatchEvent(new Event("focus"));
     await settle();
     assert.ok(find(app.render(), (n) => n.props?.children === "O entregador está chegando."));
+  } finally {
+    app.cleanup();
+  }
+});
+test("a stale fetch cannot make a successfully read customer message unread again", async () => {
+  const app = await mount("cliente");
+  try {
+    runtime.deferLoads = true;
+    window.dispatchEvent(new Event("focus"));
+    await settle();
+    runtime.deferLoads = false;
+    const button = find(
+      app.render(),
+      (n) => n.type === "button" && !!find(n, (c) => c.props?.children === "Analisar cadastro"),
+    );
+    await button.props.onClick();
+    runtime.pendingLoads.splice(0).forEach((resolve) => resolve());
+    await settle();
+    assert.equal(
+      find(app.render(), (n) => n.props?.["aria-label"] === "Não lida"),
+      undefined,
+    );
+    assert.ok(find(app.render(), (n) => n.props?.children === "Lida"));
+  } finally {
+    app.cleanup();
+  }
+});
+test("marking displayed messages never reads a message arriving during the save", async () => {
+  const app = await mount("cliente");
+  try {
+    runtime.deferWrite = true;
+    const button = find(
+      app.render(),
+      (n) => n.type === "button" && [n.props?.children].flat().includes("Marcar lidas"),
+    );
+    const pending = button.props.onClick();
+    await settle();
+    runtime.rows.push({
+      id: "later",
+      titulo: "Later",
+      mensagem: "New arrival",
+      lida: false,
+      created_at: new Date().toISOString(),
+    });
+    window.dispatchEvent(new Event("focus"));
+    await settle();
+    runtime.resolveWrite();
+    await pending;
+    const tree = app.render();
+    assert.ok(find(tree, (n) => n.props?.["aria-label"] === "Não lida"));
+    assert.ok(find(tree, (n) => n.props?.children === "1 nova"));
+  } finally {
+    app.cleanup();
+  }
+});
+test("customer counter includes older unread messages beyond the fifty-row history window", async () => {
+  const app = await mount("cliente");
+  try {
+    runtime.rows = Array.from({ length: 61 }, (_, i) => ({
+      id: "u" + i,
+      titulo: "Pending " + i,
+      mensagem: "Unread",
+      lida: false,
+      created_at: "2026-01-01T00:00:00Z",
+    })).concat(
+      Array.from({ length: 55 }, (_, i) => ({
+        id: "r" + i,
+        titulo: "Read " + i,
+        mensagem: "History",
+        lida: true,
+        created_at: "2026-10-20T00:00:00Z",
+      })),
+    );
+    window.dispatchEvent(new Event("focus"));
+    await settle();
+    assert.ok(find(app.render(), (n) => n.props?.children === "61 novas"));
+    assert.ok(find(app.render(), (n) => n.props?.children === "Pending 0"));
+    await find(
+      app.render(),
+      (n) => n.type === "button" && [n.props?.children].flat().includes("Marcar lidas"),
+    ).props.onClick();
+    await settle();
+    assert.ok(find(app.render(), (n) => n.props?.children === "11 novas"));
+    assert.ok(find(app.render(), (n) => n.props?.children === "Pending 50"));
+  } finally {
+    app.cleanup();
+  }
+});
+test("a failed read save keeps the customer message and counter unread", async () => {
+  const app = await mount("cliente");
+  try {
+    runtime.writeError = true;
+    await find(
+      app.render(),
+      (n) => n.type === "button" && !!find(n, (c) => c.props?.children === "Analisar cadastro"),
+    ).props.onClick();
+    assert.ok(find(app.render(), (n) => n.props?.["aria-label"] === "Não lida"));
+    assert.ok(find(app.render(), (n) => n.props?.children === "1 nova"));
+    assert.equal(
+      find(app.render(), (n) => n.props?.children === "Lida"),
+      undefined,
+    );
   } finally {
     app.cleanup();
   }
