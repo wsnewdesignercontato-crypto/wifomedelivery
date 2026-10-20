@@ -76,5 +76,30 @@ DO $$ DECLARE oid uuid:=(SELECT id FROM generated_test_ids WHERE kind='order'); 
  IF EXISTS(SELECT FROM public.platform_ledger WHERE order_id=oid) OR EXISTS(SELECT FROM asaas_private.payment_attempts WHERE order_id=oid) THEN RAISE EXCEPTION 'Test affected real financial records'; END IF;
  IF has_function_privilege('anon','public.admin_generate_test_order(uuid,uuid,uuid,uuid,integer)','execute') THEN RAISE EXCEPTION 'Anonymous generator access'; END IF;
 END $$;
+SELECT set_config('request.jwt.claims',json_build_object('sub',(SELECT id FROM generated_test_ids WHERE kind='admin'),'role','authenticated')::text,true);
+SELECT set_config('request.jwt.claim.sub',(SELECT id::text FROM generated_test_ids WHERE kind='admin'),true);
+INSERT INTO generated_test_ids(kind) VALUES('direct_request');
+SET LOCAL ROLE authenticated;
+DO $$ DECLARE result jsonb; BEGIN
+ result:=public.admin_generate_test_ride((SELECT id FROM generated_test_ids WHERE kind='direct_request'),
+  (SELECT id FROM generated_test_ids WHERE kind='customer'),(SELECT id FROM generated_test_ids WHERE kind='store'),
+  (SELECT id FROM generated_test_ids WHERE kind='courier'),2900);
+ PERFORM public.admin_generate_test_ride((SELECT id FROM generated_test_ids WHERE kind='direct_request'),
+  (SELECT id FROM generated_test_ids WHERE kind='customer'),(SELECT id FROM generated_test_ids WHERE kind='store'),
+  (SELECT id FROM generated_test_ids WHERE kind='courier'),2900);
+ IF NOT EXISTS(SELECT FROM public.orders o JOIN public.deliveries d ON d.order_id=o.id
+   WHERE o.establishment_id=(SELECT id FROM generated_test_ids WHERE kind='store')
+   AND o.is_test AND d.is_test AND o.status='waiting_courier' AND d.status='broadcasting'
+   AND d.entregador_id=(SELECT id FROM generated_test_ids WHERE kind='courier')) THEN
+  RAISE EXCEPTION 'Direct test did not produce an immediately available courier offer'; END IF;
+ IF (SELECT count(*) FROM public.deliveries d JOIN public.orders o ON o.id=d.order_id
+  WHERE o.establishment_id=(SELECT id FROM generated_test_ids WHERE kind='store'))<>2 THEN RAISE EXCEPTION 'Direct retry duplicated the ride'; END IF;
+END $$;
+RESET ROLE;
+DO $$ BEGIN
+ IF EXISTS(SELECT FROM public.platform_ledger l JOIN public.orders o ON o.id=l.order_id WHERE o.establishment_id=(SELECT id FROM generated_test_ids WHERE kind='store'))
+ OR EXISTS(SELECT FROM asaas_private.payment_attempts a JOIN public.orders o ON o.id=a.order_id WHERE o.establishment_id=(SELECT id FROM generated_test_ids WHERE kind='store')) THEN RAISE EXCEPTION 'Direct test affected real finance'; END IF;
+ IF has_function_privilege('anon','public.admin_generate_test_ride(uuid,uuid,uuid,uuid,integer)','execute') THEN RAISE EXCEPTION 'Anonymous direct ride access'; END IF;
+END $$;
 SELECT 'Generated test order completed through store, courier offer, acceptance and delivery; no real finance; all fixtures rolled back' AS result;
 ROLLBACK;

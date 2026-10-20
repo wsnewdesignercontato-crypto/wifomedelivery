@@ -103,6 +103,7 @@ export function PaymentTestSettings() {
   const [courier, setCourier] = useState("");
   const [cleanupOpen, setCleanupOpen] = useState(false);
   const [amount, setAmount] = useState("29.00");
+  const [notice, setNotice] = useState<{ error: boolean; message: string } | null>(null);
   const lock = useRef(false);
   const request = useRef<{ key: string; fingerprint: string } | null>(null);
 
@@ -110,27 +111,33 @@ export function PaymentTestSettings() {
     if (lock.current) return false;
     lock.current = true;
     setBusy(action);
+    setNotice(null);
     try {
       let result;
-      if (action === "generate") {
-        const { data, error } = await supabase.rpc("admin_generate_test_order", {
-          p_request_key: String(payload.request_key),
-          p_customer_id: String(payload.customer_id),
-          p_store_id: String(payload.store_id),
-          p_courier_id: payload.courier_id ? String(payload.courier_id) : null,
-          p_subtotal_cents: Number(payload.subtotal_cents),
-        });
+      if (action === "generate" || action === "generate-ride") {
+        const { data, error } = await supabase.rpc(
+          action === "generate-ride" ? "admin_generate_test_ride" : "admin_generate_test_order",
+          {
+            p_request_key: String(payload.request_key),
+            p_customer_id: String(payload.customer_id),
+            p_store_id: String(payload.store_id),
+            p_courier_id: payload.courier_id ? String(payload.courier_id) : null,
+            p_subtotal_cents: Number(payload.subtotal_cents),
+          },
+        );
         if (error) throw new Error(error.message);
         result = stateSchema.parse(data);
         request.current = null;
       } else result = await command(action, payload);
       qc.setQueryData(key, result);
+      setNotice({ error: false, message });
       toast.success(message);
       return true;
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Não foi possível concluir o teste. Tente novamente.",
-      );
+      const detail =
+        err instanceof Error ? err.message : "Não foi possível concluir o teste. Tente novamente.";
+      setNotice({ error: true, message: detail });
+      toast.error(detail);
       return false;
     } finally {
       lock.current = false;
@@ -138,8 +145,9 @@ export function PaymentTestSettings() {
     }
   }
 
-  async function generate() {
+  async function generate(directRide = false) {
     if (!data || !store || lock.current) return;
+    if (directRide && !courier) return;
     const cents = Math.round(Number(amount.replace(",", ".")) * 100);
     if (!Number.isFinite(cents) || cents < 100 || cents > 1000000) {
       toast.error("Informe um valor entre R$ 1,00 e R$ 10.000,00.");
@@ -151,15 +159,17 @@ export function PaymentTestSettings() {
       courier_id: courier || null,
       subtotal_cents: cents,
     };
-    const fingerprint = JSON.stringify(payload);
+    const fingerprint = JSON.stringify({ ...payload, directRide });
     if (request.current?.fingerprint !== fingerprint)
       request.current = { key: crypto.randomUUID(), fingerprint };
     await run(
-      "generate",
+      directRide ? "generate-ride" : "generate",
       { ...payload, request_key: request.current.key },
-      courier
-        ? "Pedido de teste enviado à loja. A corrida será liberada quando ela marcar o pedido como pronto."
-        : "Pedido de teste para retirada enviado à loja. Nenhuma cobrança foi criada.",
+      directRide
+        ? "Corrida de teste enviada ao entregador selecionado. Aceite e preparo da loja foram simulados; nenhuma cobrança foi criada."
+        : courier
+          ? "Pedido de teste enviado à loja. A corrida será liberada quando ela marcar o pedido como pronto."
+          : "Pedido de teste para retirada enviado à loja. Nenhuma cobrança foi criada.",
     );
   }
 
@@ -301,6 +311,15 @@ export function PaymentTestSettings() {
             <Button
               type="button"
               variant="outline"
+              disabled={!!busy || !store || !courier}
+              loading={busy === "generate-ride"}
+              onClick={() => generate(true)}
+            >
+              Gerar corrida de teste
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
               disabled={!!busy || !store}
               loading={busy === "enroll"}
               onClick={() =>
@@ -320,10 +339,19 @@ export function PaymentTestSettings() {
           </div>
           <p className="text-xs text-muted-foreground">
             “Gerar pedido” usa um produto de demonstração e aprova o pagamento fictício na hora.
-            “Liberar compra pelo app” autoriza a conta por 24 horas para testar produtos reais do
-            catálogo.
+            “Gerar corrida” simula o aceite e o preparo da loja e envia a oferta diretamente ao
+            entregador selecionado, sem esperar a loja atender. “Liberar compra pelo app” autoriza a
+            conta por 24 horas para testar produtos reais do catálogo.
           </p>
         </form>
+      )}
+      {notice && (
+        <p
+          role={notice.error ? "alert" : "status"}
+          className={`rounded-xl border p-3 text-sm ${notice.error ? "border-destructive/30 bg-destructive/5 text-destructive" : "border-emerald-500/30 bg-emerald-500/5"}`}
+        >
+          {notice.message}
+        </p>
       )}
       {data.testers.length > 0 && (
         <div className="space-y-2">

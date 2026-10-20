@@ -124,3 +124,26 @@ test("rapid double submission generates one request and enrollment remains a sep
   assert.equal(r.calls.at(-1)[0], "admin_payment_test");
   assert.equal(r.calls.at(-1)[1].p_action, "enroll");
 });
+test("courier test has its own explicit action and uses a separate retry identity", async () => {
+  const app = mount();
+  app.change("test-store", store);
+  const button = () =>
+    nodes(app.render()).find(
+      (n) => n.type === "button" && text(n).includes("Gerar corrida de teste"),
+    );
+  assert.ok(button());
+  assert.equal(button().props.disabled, true);
+  app.change("test-courier", admin);
+  assert.equal(button().props.disabled, false);
+  r.fail = true;
+  await app.submit();
+  const orderKey = r.calls[0][1].p_request_key;
+  await button().props.onClick();
+  assert.equal(r.calls[1][0], "admin_generate_test_ride");
+  assert.notEqual(r.calls[1][1].p_request_key, orderKey);
+  const rideKey = r.calls[1][1].p_request_key;
+  r.fail = false;
+  await button().props.onClick();
+  assert.equal(r.calls[2][1].p_request_key, rideKey);
+  assert.match(r.messages.at(-1), /Corrida de teste/);
+});

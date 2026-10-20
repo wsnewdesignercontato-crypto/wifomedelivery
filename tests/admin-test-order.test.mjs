@@ -9,6 +9,7 @@ test("admin generator creates one approved test order atomically and protects re
     for (const name of [
       "20261019231556_payment_test_safe_cleanup",
       "20261019232859_admin_generate_test_order",
+      "20261020032842_admin_generate_direct_test_ride",
     ])
       await db.exec(
         await readFile(new URL(`../supabase/migrations/${name}.sql`, import.meta.url), "utf8"),
@@ -105,10 +106,50 @@ test("admin generator creates one approved test order atomically and protects re
       (await db.query("SELECT count(*)::int n FROM asaas_private.payment_attempts")).rows[0].n,
       0,
     );
+    const rideKey = "94000000-0000-4000-8000-000000000020";
+    const ride = (request = rideKey, driver = courier) =>
+      db
+        .query("SELECT public.admin_generate_test_ride($1,$2,$3,$4,2900) AS data", [
+          request,
+          customer,
+          store,
+          driver,
+        ])
+        .then((r) => r.rows[0].data);
+    await user(customer);
+    await assert.rejects(ride(), /Admin only/);
+    await user(admin);
+    await assert.rejects(ride(rideKey, null), /entregador/i);
+    await assert.rejects(ride(key), /outro modo/i);
+    const direct = await ride();
+    assert.equal(direct.count, 2);
+    const delivery = (
+      await db.query(
+        "SELECT d.*,o.status AS order_status FROM public.deliveries d JOIN public.orders o ON o.id=d.order_id",
+      )
+    ).rows[0];
+    assert.equal(delivery.is_test, true);
+    assert.equal(delivery.entregador_id, courier);
+    assert.equal(delivery.status, "broadcasting");
+    assert.equal(delivery.order_status, "waiting_courier");
+    await db.query("UPDATE public.courier_profiles SET status='ocupado' WHERE user_id=$1", [
+      courier,
+    ]);
+    assert.equal(
+      (await ride()).count,
+      2,
+      "replay returns the same ride even if the courier status changed",
+    );
+    await assert.rejects(ride("94000000-0000-4000-8000-000000000021"), /online|livre/i);
+    assert.equal((await db.query("SELECT count(*)::int n FROM public.deliveries")).rows[0].n, 1);
     await db.query("DELETE FROM public.addresses WHERE user_id=$1", [customer]);
     const pickup = await generate("94000000-0000-4000-8000-000000000006", null);
-    assert.equal(pickup.count, 2);
-    assert.equal(pickup.sales.find((s) => s.order_id !== order.id).freight_cents, 0);
+    assert.equal(pickup.count, 3);
+    assert.equal(
+      pickup.sales.find((s) => s.order_id !== order.id && s.order_id !== delivery.order_id)
+        .freight_cents,
+      0,
+    );
     // Forced failure during approval rolls back the pending sale as well.
     await db.exec(
       "CREATE FUNCTION public.reject_generator_order() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'injected order failure'; END $$; CREATE TRIGGER reject_generator_order BEFORE INSERT ON public.orders FOR EACH ROW EXECUTE FUNCTION public.reject_generator_order();",
@@ -119,7 +160,7 @@ test("admin generator creates one approved test order atomically and protects re
     );
     assert.equal(
       (await db.query("SELECT count(*)::int n FROM private.payment_test_sales")).rows[0].n,
-      2,
+      3,
     );
     await db.exec("SET ROLE anon");
     await assert.rejects(generate(), /permission denied/);
