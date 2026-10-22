@@ -1,6 +1,6 @@
 # Checkout, saved cards and beverage units
 
-Status: implementation validated locally; hosted migrations and production publication pending restored Supabase administrative access.
+Status: implementation validated locally; both hosted migrations applied and verified on the correct PedeTrem project. Production publication follows the existing Git/Vercel workflow.
 
 ## Result
 
@@ -23,12 +23,15 @@ Older carts also contain a missing mandatory addon or quantity above stock; thos
 - TypeScript, scoped ESLint, whitespace checks and Vercel build passed.
 - Independent review: no critical or important findings.
 - Actual component preview checked at desktop size and 390px mobile override; no horizontal overflow. Preview uses synthetic data and does not submit charges.
-- Saved-card SQL contracts run against local PostgreSQL/PGlite with Vault API emulation; hosted encryption, permissions and existing-cart quotes must still be verified on the correct project.
+- Saved-card SQL contracts passed against both local PostgreSQL/PGlite and hosted Supabase/Vault in rollback transactions. Ownership, role denial, encrypted storage, removal and account-deletion cleanup passed without leaving fixtures.
+- Hosted cart diagnostic now returns 1600 subtotal + 900 delivery = 2500, and pickup = 1600, for the current cart affected by the city-accent bug. Older invalid-addon and insufficient-stock carts still reject appropriately.
+- Production payment settings remain enabled, tested and registered against the current webhook revision. No real charge was submitted.
+- Hosted advisors: no saved-card security warning/error. The informational no-policy notice is deliberate: this private table denies browser roles and is accessed only by service-role RPCs. The environment foreign-key index suggestion is informational; user lookup and token-secret keys are indexed.
 
 ## Release continuation
 
-Target Supabase is only `nsvgfagjezdduatmbsqq` (WS account). The existing administrative profile currently returns HTTP 403. Connector account lists a different project and must not be used.
+Target Supabase is only `nsvgfagjezdduatmbsqq` (WS account). The connector account lists a different project and must not be used. A native CLI project listing confirmed the correct WS project after login.
 
-After the user restores `wifomedelivery-ws` login on WILLIAN, use the ignored target-guarded helper `.superpowers/sdd/2026-10-22-premium-checkout/apply-and-verify.cjs`. It applies the city correction first, checks saved-card contracts in a hosted rollback transaction, then applies saved-card storage and records migration history. The final cart diagnostic is rollback-only and saves sanitized results privately.
+The previous ignored connection helper read a stale legacy credential. Native CLI debug output identified its effective profile as `supabase`, despite the requested alias. The helper now mirrors that verified credential lookup and retains the hard guard restricting requests to the WS project and organization. No credential was printed or added to Git.
 
-Validate hosted advisors and quote results before publishing through the existing Git/Vercel workflow. No real payments, cart edits or persistent test orders have been made during this implementation.
+The ignored target-guarded helper `.superpowers/sdd/2026-10-22-premium-checkout/apply-and-verify.cjs` applied the city correction first, checked saved-card contracts in a hosted rollback transaction, then applied saved-card storage and recorded migration history. The final cart diagnostic was rollback-only. No real payments, cart edits or persistent test orders have been made during this implementation.
