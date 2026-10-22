@@ -134,6 +134,8 @@ test("missing required addons explain how to correct the cart without removing a
     error: "Required addon group or selection limit not satisfied",
   });
   assert.match(html, /adicionais obrigatórios/);
+  assert.match(html, /Complete os adicionais do pedido/);
+  assert.ok(!html.includes("Não foi possível conferir os valores"));
   assert.match(html, /remova/i);
   assert.match(html, /adicione/i);
   assert.match(html, /Revisar carrinho/);

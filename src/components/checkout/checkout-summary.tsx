@@ -6,6 +6,16 @@ export type CheckoutSummaryItem = { id: string; name: string; quantity: number }
 const fmt = (cents: number) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+function quoteErrorTitle(error: string) {
+  if (error.includes("Required addon group")) return "Complete os adicionais do pedido";
+  if (error.includes("Product stock insufficient") || error.includes("Insufficient stock"))
+    return "Revise a quantidade dos produtos";
+  if (error.includes("Address outside")) return "Confira o endereço de entrega";
+  if (error.includes("Coupon unavailable")) return "Confira o cupom do pedido";
+  if (error.includes("Minimum order not reached")) return "Complete o valor mínimo da loja";
+  return "Não foi possível conferir os valores";
+}
+
 function quoteErrorMessage(error: string) {
   if (error.includes("Required addon group or selection limit not satisfied"))
     return "Confira os adicionais obrigatórios e os limites de escolha dos produtos. No carrinho, remova o item incompleto e adicione novamente pela loja com os adicionais selecionados.";
@@ -92,9 +102,8 @@ export function CheckoutSummary({
       </dl>
       {error ? (
         <div role="alert" className="space-y-2">
-          <p className="text-destructive">
-            Não foi possível conferir os valores. {quoteErrorMessage(error)}
-          </p>
+          <p className="font-semibold">{quoteErrorTitle(error)}</p>
+          <p className="text-muted-foreground">{quoteErrorMessage(error)}</p>
           <div className="flex flex-wrap gap-3">
             <Button variant="default" size="sm" onClick={onRetry}>
               Conferir novamente
