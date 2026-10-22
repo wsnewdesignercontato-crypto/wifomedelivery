@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { placeOrderInput } from "./checkout.functions";
 import { validatePayer, validateCard, type PaymentView } from "./asaas-payment-contract";
+import { validateCardOptions, type SavedCard } from "./saved-cards";
 type Identity = {
   userId: string;
   supabase: {
@@ -37,9 +38,16 @@ const requireCustomer = createMiddleware({ type: "function" })
     return next();
   });
 const orderInput = z.object({ orderId: z.string().uuid() }).strict();
-const retryInput = orderInput.extend({ payer: z.unknown(), card: z.unknown().optional() }).strict();
+const retryInput = orderInput
+  .extend({ payer: z.unknown(), card: z.unknown().optional(), cardOptions: z.unknown().optional() })
+  .strict();
 const onlineInput = z
-  .object({ checkout: placeOrderInput, payer: z.unknown(), card: z.unknown().optional() })
+  .object({
+    checkout: placeOrderInput,
+    payer: z.unknown(),
+    card: z.unknown().optional(),
+    cardOptions: z.unknown().optional(),
+  })
   .strict();
 function safeParse<T>(schema: z.ZodType<T>, data: unknown): T {
   const r = schema.safeParse(data);
@@ -54,6 +62,7 @@ function paymentInput(data: unknown) {
     ...input,
     payer: input.checkout.expected_total_cents === 0 ? undefined : validatePayer(input.payer),
     card: input.card === undefined ? undefined : validateCard(input.card),
+    cardOptions: validateCardOptions(input.cardOptions),
   };
 }
 function requestContext() {
@@ -124,6 +133,8 @@ export const startOnlineOrder = createServerFn({ method: "POST" })
             data.payer,
             data.card,
             request,
+            false,
+            data.cardOptions,
           );
     await fresh(context);
     return view;
@@ -136,6 +147,7 @@ export const retryOnlinePayment = createServerFn({ method: "POST" })
       ...i,
       payer: validatePayer(i.payer),
       card: i.card === undefined ? undefined : validateCard(i.card),
+      cardOptions: validateCardOptions(i.cardOptions),
     };
   })
   .handler(async ({ data, context }) => {
@@ -147,6 +159,7 @@ export const retryOnlinePayment = createServerFn({ method: "POST" })
       data.card,
       requestContext(),
       true,
+      data.cardOptions,
     );
     await fresh(context);
     return view;
@@ -157,6 +170,43 @@ export const getOnlinePayment = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<PaymentView> => {
     const { store } = await deps();
     return store.view(context.userId, data.orderId);
+  });
+
+export const listSavedCards = createServerFn({ method: "POST" })
+  .middleware([requireCustomer])
+  .handler(async ({ context }): Promise<SavedCard[]> => {
+    const { rpc } = await deps();
+    const settings = await rpc<{ revision: string }>("asaas_settings_get", {
+      _environment: "production",
+    });
+    const rows = await rpc<unknown>("asaas_saved_cards_list", {
+      _user_id: context.userId,
+      _environment: "production",
+      _revision: settings.revision,
+    });
+    await fresh(context);
+    // Never serialize secret/provider fields even if a storage response changes.
+    return z
+      .array(
+        z.object({
+          id: z.string().uuid(),
+          brand: z.string().min(1).max(40),
+          last4: z.string().regex(/^\d{4}$/),
+        }),
+      )
+      .parse(rows);
+  });
+export const removeSavedCard = createServerFn({ method: "POST" })
+  .middleware([requireCustomer])
+  .validator((input: unknown) => safeParse(z.object({ id: z.string().uuid() }).strict(), input))
+  .handler(async ({ data, context }) => {
+    const { rpc } = await deps();
+    const removed = await rpc<boolean>("asaas_saved_card_remove", {
+      _user_id: context.userId,
+      _card_id: data.id,
+    });
+    await fresh(context);
+    return { removed: removed === true };
   });
 export const refreshOnlinePayment = createServerFn({ method: "POST" })
   .middleware([requirePaymentUser])

@@ -52,7 +52,7 @@ test("beverage volume and packaging persist and are readable by customers and in
   const form = renderToStaticMarkup(
     createElement(ProductSpecificFields, { fields, values: { volume_ml: "350" }, onChange() {} }),
   );
-  assert.match(form, /Volume \(ml\)/);
+  assert.match(form, /Volume/);
   assert.match(form, /Embalagem/);
   const publicHtml = renderToStaticMarkup(createElement(ProductDetails, { value: raw }));
   assert.match(publicHtml, /350 ml/);

@@ -3315,6 +3315,36 @@ export type Database = {
         };
         Returns: Json;
       };
+      asaas_saved_cards_list: {
+        Args: { _user_id: string; _environment: string; _revision: string };
+        Returns: Json;
+      };
+      asaas_saved_card_get: {
+        Args: {
+          _user_id: string;
+          _environment: string;
+          _revision: string;
+          _card_id: string;
+          _customer_id: string;
+        };
+        Returns: Json;
+      };
+      asaas_saved_card_save: {
+        Args: {
+          _user_id: string;
+          _environment: string;
+          _revision: string;
+          _customer_id: string;
+          _token: string;
+          _brand: string;
+          _last4: string;
+        };
+        Returns: string;
+      };
+      asaas_saved_card_remove: {
+        Args: { _user_id: string; _card_id: string };
+        Returns: boolean;
+      };
       asaas_settings_get: {
         Args: { _environment: string };
         Returns: Json;

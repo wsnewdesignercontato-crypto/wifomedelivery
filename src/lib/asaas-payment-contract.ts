@@ -35,6 +35,7 @@ export type CardInput = {
 };
 export type PixData = { encodedImage: string; payload: string; expirationDate: string };
 export type PaymentView = {
+  cardSaveStatus?: "saved" | "unavailable";
   orderId: string;
   channel: PaymentChannel;
   state: PaymentState;

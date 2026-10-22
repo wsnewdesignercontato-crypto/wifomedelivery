@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { ProductField } from "@/lib/product-details";
+import { changeProductVolumeUnit, type ProductField } from "@/lib/product-details";
 export function ProductSpecificFields({
   fields,
   values,
@@ -24,22 +24,34 @@ export function ProductSpecificFields({
           <div key={field.key} className="space-y-1.5">
             <Label htmlFor={"detail-" + field.key} className="text-xs">
               {field.label}
-              {field.suffix ? " (" + field.suffix + ")" : ""}
+              {field.suffix
+                ? " (" +
+                  (field.key === "volume_ml" ? values.volume_unit || "ml" : field.suffix) +
+                  ")"
+                : ""}
             </Label>
             {field.options ? (
               <select
                 id={"detail-" + field.key}
-                value={values[field.key] ?? ""}
+                value={values[field.key] ?? (field.key === "volume_unit" ? "ml" : "")}
                 disabled={disabled}
-                onChange={(event) => onChange({ ...values, [field.key]: event.target.value })}
+                onChange={(event) =>
+                  onChange(
+                    field.key === "volume_unit"
+                      ? changeProductVolumeUnit(values, event.target.value)
+                      : { ...values, [field.key]: event.target.value },
+                  )
+                }
                 className="h-10 w-full min-w-0 rounded-xl border border-input bg-background px-3 text-sm"
               >
-                <option value="">Selecione</option>
+                {field.key !== "volume_unit" && <option value="">Selecione</option>}
                 {values[field.key] && !field.options.includes(values[field.key]) && (
                   <option value={values[field.key]}>{values[field.key]}</option>
                 )}
                 {field.options.map((option) => (
-                  <option key={option}>{option}</option>
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
                 ))}
               </select>
             ) : (

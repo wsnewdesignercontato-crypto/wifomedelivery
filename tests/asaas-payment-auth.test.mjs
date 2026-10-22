@@ -55,6 +55,8 @@ test("every payment handler requires a fresh existing confirmed matching user", 
     "getOnlinePayment",
     "refreshOnlinePayment",
     "cancelOnlinePayment",
+    "listSavedCards",
+    "removeSavedCard",
   ])
     for (const user of [
       null,
@@ -66,6 +68,39 @@ test("every payment handler requires a fresh existing confirmed matching user", 
       await assert.rejects(handlers[name]({ data: {} }), /Unauthorized/);
       assert.equal(runtime.calls, 0);
     }
+});
+
+test("saved card metadata is whitelisted and server identity cannot be supplied by browser", async () => {
+  reset();
+  const calls = [];
+  runtime.work = async (name, args) => {
+    calls.push({ name, args });
+    return name === "asaas_settings_get"
+      ? { revision: uuid }
+      : [{ id: uuid, brand: "VISA", last4: "1111", token: "NEVER_TO_BROWSER", user_id: "foreign" }];
+  };
+  const rows = await handlers.listSavedCards();
+  assert.deepEqual(rows, [{ id: uuid, brand: "VISA", last4: "1111" }]);
+  assert.equal(calls[1].args._user_id, "user");
+  assert.equal(calls[1].args._environment, "production");
+  await assert.rejects(handlers.removeSavedCard({ data: { id: uuid, userId: "foreign" } }));
+});
+
+test("removing a card binds the authenticated identity and rejects revoked identity after lookup", async () => {
+  reset();
+  runtime.work = async (name, args) => {
+    assert.equal(name, "asaas_saved_card_remove");
+    assert.deepEqual(args, { _user_id: "user", _card_id: uuid });
+    return true;
+  };
+  assert.deepEqual(await handlers.removeSavedCard({ data: { id: uuid } }), { removed: true });
+  reset();
+  runtime.work = async (name) => {
+    if (name === "asaas_settings_get") return { revision: uuid };
+    runtime.user = null;
+    return [];
+  };
+  await assert.rejects(handlers.listSavedCards(), /Unauthorized/);
 });
 test("online checkout rejects a different role, Sandbox selection and simulated purchases", async () => {
   assert.ok(handlers);

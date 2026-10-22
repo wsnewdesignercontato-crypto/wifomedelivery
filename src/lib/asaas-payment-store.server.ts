@@ -10,6 +10,24 @@ export async function paymentRpc<T>(name: Rpc, args: Record<string, unknown> = {
   return data as T;
 }
 export const paymentStore: PaymentStore = {
+  savedCardGet: (u, e, revision, id, customerId) =>
+    paymentRpc("asaas_saved_card_get", {
+      _user_id: u,
+      _environment: e,
+      _revision: revision,
+      _card_id: id,
+      _customer_id: customerId,
+    }),
+  savedCardSave: (u, e, revision, customerId, card) =>
+    paymentRpc("asaas_saved_card_save", {
+      _user_id: u,
+      _environment: e,
+      _revision: revision,
+      _customer_id: customerId,
+      _token: card.token,
+      _brand: card.brand,
+      _last4: card.last4,
+    }),
   claim: (u, o, retry = false) =>
     paymentRpc("asaas_payment_claim", { _user_id: u, _order_id: o, _retry: retry }),
   credentials: async (environment, revision) => {

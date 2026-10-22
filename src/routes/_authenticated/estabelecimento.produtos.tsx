@@ -3,6 +3,7 @@ import {
   productFields,
   productSummary,
   readProductDetails,
+  readProductEditorDetails,
   writeProductDetails,
 } from "@/lib/product-details";
 import { Badge } from "@/components/ui/badge";
@@ -360,7 +361,7 @@ function ProdutoForm({
     disponivel: produto?.disponivel ?? true,
   });
   const [extras, setExtras] = useState<Record<string, string>>(
-    () => readProductDetails(produto?.descricao).attributes,
+    () => readProductEditorDetails(produto?.descricao).attributes,
   );
   const [showAddons, setShowAddons] = useState(false);
   const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());

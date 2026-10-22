@@ -24,10 +24,13 @@ export function SavedCheckoutAddresses({
   coupon?: string;
 }) {
   return (
-    <section aria-labelledby="checkout-address-heading">
+    <section
+      aria-labelledby="checkout-address-heading"
+      className="rounded-3xl border border-border/70 bg-card p-5 shadow-sm sm:p-7"
+    >
       <h2
         id="checkout-address-heading"
-        className="mb-2 flex items-center gap-1.5 text-sm font-semibold"
+        className="mb-5 flex items-center gap-2 text-lg font-semibold tracking-tight"
       >
         <MapPin className="h-4 w-4 text-primary" /> Endereço de entrega
       </h2>
@@ -43,12 +46,12 @@ export function SavedCheckoutAddresses({
         {addresses.map((address) => (
           <label
             key={address.id}
-            className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-3 text-sm ${selectedId === address.id ? "border-primary bg-primary text-primary-foreground shadow-sm [&_.text-muted-foreground]:text-primary-foreground/90" : "border-primary bg-card text-primary hover:bg-primary/5"}`}
+            className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 text-sm ${selectedId === address.id ? "border-primary bg-primary/5 text-foreground shadow-sm ring-1 ring-primary/10" : "border-border bg-card text-foreground hover:border-primary/40"}`}
           >
             <input
               type="radio"
               name="checkout-address"
-              className="mt-1 accent-current"
+              className="mt-1 h-4 w-4 shrink-0 accent-primary"
               checked={selectedId === address.id}
               onChange={() => onSelect(address.id)}
             />

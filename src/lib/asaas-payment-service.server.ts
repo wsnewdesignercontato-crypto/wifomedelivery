@@ -10,6 +10,7 @@ import {
   type PixData,
 } from "./asaas-payment-contract.ts";
 import type { AsaasEnvironment } from "./asaas-config.ts";
+import { validateCardOptions, type CardOptions, type TokenizedCard } from "./saved-cards.ts";
 export type PaymentAttempt = {
   attemptId: string;
   orderId: string;
@@ -27,6 +28,20 @@ export type PaymentAttempt = {
   mode: "create" | "reuse" | "reconcile";
 };
 export type PaymentStore = {
+  savedCardGet?: (
+    userId: string,
+    environment: AsaasEnvironment,
+    revision: string,
+    cardId: string,
+    customerId: string,
+  ) => Promise<{ token: string } | null>;
+  savedCardSave?: (
+    userId: string,
+    environment: AsaasEnvironment,
+    revision: string,
+    customerId: string,
+    card: TokenizedCard,
+  ) => Promise<string>;
   claim: (userId: string, orderId: string, retry?: boolean) => Promise<PaymentAttempt>;
   credentials: (
     environment: AsaasEnvironment,
@@ -116,10 +131,14 @@ export function createPaymentService(
     cardInput: unknown,
     request: PaymentRequestContext,
     retry = false,
+    optionsInput: CardOptions = {},
   ) {
+    const cardOptions = validateCardOptions(optionsInput);
+    if (cardOptions.savedCardId && cardInput !== undefined)
+      throw new Error("Escolha um cartão salvo ou informe um novo cartão.");
     const payer = validatePayer(payerInput);
     const card = cardInput === undefined ? undefined : validateCard(cardInput);
-    if (card && (!request.https || !isIP(request.remoteIp)))
+    if ((card || cardOptions.savedCardId) && (!request.https || !isIP(request.remoteIp)))
       throw new Error("Use uma conexão segura para pagar com cartão.");
     let a = await store.claim(userId, orderId, retry);
     if (a.userId !== userId || a.orderId !== orderId || a.environment !== "production")
@@ -127,7 +146,10 @@ export function createPaymentService(
     if (a.mode === "reuse") return store.view(userId, orderId);
     if (a.mode === "reconcile") return reconcilePayment(a);
     if (!a.operationId) throw new PaymentReconciliationError();
-    if (a.billingType === "CREDIT_CARD" && (!card || !request.https || !isIP(request.remoteIp))) {
+    if (
+      a.billingType === "CREDIT_CARD" &&
+      ((!card && !cardOptions.savedCardId) || !request.https || !isIP(request.remoteIp))
+    ) {
       await store.fail(a.attemptId, a.operationId, "declined");
       throw new Error("Confira os dados do cartão em uma conexão segura.");
     }
@@ -150,8 +172,22 @@ export function createPaymentService(
           throw new PaymentReconciliationError();
       }
       a = { ...a, customerId };
+      let savedToken: string | undefined;
+      if (cardOptions.savedCardId) {
+        if (a.billingType !== "CREDIT_CARD" || !store.savedCardGet)
+          throw new Error("Cartão indisponível.");
+        const selected = await store.savedCardGet(
+          userId,
+          a.environment,
+          a.revision,
+          cardOptions.savedCardId,
+          customerId,
+        );
+        if (!selected) throw new Error("Cartão indisponível.");
+        savedToken = selected.token;
+      }
       sent = true;
-      const snapshot = await api.createAsaasPayment(
+      const { cardToken, ...snapshot } = await api.createAsaasPayment(
         c,
         {
           customerId,
@@ -163,10 +199,28 @@ export function createPaymentService(
         a.billingType === "CREDIT_CARD" ? card : undefined,
         request.remoteIp,
         options,
+        savedToken,
       );
       if (!(await store.attach(a.attemptId, a.operationId!, snapshot)))
         throw new PaymentReconciliationError();
-      return await apply(a, snapshot);
+      const view = await apply(a, snapshot);
+      if (cardOptions.saveCard && card && a.billingType === "CREDIT_CARD") {
+        let cardSaveStatus: "saved" | "unavailable" = "unavailable";
+        if (
+          cardToken &&
+          ["CONFIRMED", "RECEIVED"].includes(snapshot.status) &&
+          store.savedCardSave
+        ) {
+          try {
+            await store.savedCardSave(userId, a.environment, a.revision, customerId, cardToken);
+            cardSaveStatus = "saved";
+          } catch {
+            /* Saving is optional; a confirmed charge must never be retried because saving failed. */
+          }
+        }
+        return { ...view, cardSaveStatus };
+      }
+      return view;
     } catch (error) {
       const kind =
         !sent || (error instanceof transport.AsaasPaymentError && error.kind === "declined")

@@ -9,6 +9,7 @@ import {
 } from "./asaas-payment-contract.ts";
 import type { CardInput, PayerInput, PaymentSnapshot, PixData } from "./asaas-payment-contract.ts";
 import type { AsaasEnvironment } from "./asaas-config";
+import type { TokenizedCard } from "./saved-cards.ts";
 
 export type PaymentCredentials = { environment: AsaasEnvironment; apiKey: string | null };
 export type PaymentAttemptInput = {
@@ -139,7 +140,8 @@ export async function createAsaasPayment(
   cardInput: CardInput | undefined,
   remoteIp: string,
   options: Options = {},
-): Promise<PaymentSnapshot> {
+  savedToken?: string,
+): Promise<PaymentSnapshot & { cardToken?: TokenizedCard }> {
   const payer = validatePayer(input),
     customer = paymentIdentifier(attempt.customerId),
     externalReference = paymentText(attempt.externalReference, 200);
@@ -150,7 +152,12 @@ export async function createAsaasPayment(
     (attempt.billingType !== "PIX" && attempt.billingType !== "CREDIT_CARD")
   )
     throw new AsaasPaymentError("uncertain");
-  const card = attempt.billingType === "CREDIT_CARD" ? validateCard(cardInput) : undefined;
+  if (savedToken && (cardInput || attempt.billingType !== "CREDIT_CARD"))
+    throw new Error("Confira a opção de cartão.");
+  const token = savedToken ? paymentIdentifier(savedToken) : undefined;
+  const card =
+    attempt.billingType === "CREDIT_CARD" && !token ? validateCard(cardInput) : undefined;
+  if (token && !isIP(remoteIp)) throw new Error("Confira a conexão do pagamento.");
   if (card && (!isIP(remoteIp) || !payer.postalCode || !payer.addressNumber))
     throw new Error("Confira os dados e o endereço do titular do cartão.");
   const result = await request(
@@ -164,6 +171,7 @@ export async function createAsaasPayment(
       dueDate: new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" }),
       externalReference,
       description: "Pedido PedeTrem",
+      ...(token ? { creditCardToken: token, remoteIp, authorizeOnly: false } : {}),
       ...(card
         ? {
             creditCard: card,
@@ -182,7 +190,7 @@ export async function createAsaasPayment(
         : {}),
     },
     options,
-    !!card,
+    !!card || !!token,
   );
   const snapshot = validatePaymentSnapshot(result);
   if (
@@ -192,7 +200,27 @@ export async function createAsaasPayment(
     snapshot.valueCents !== attempt.valueCents
   )
     throw new AsaasPaymentError("uncertain");
-  return snapshot;
+  const metadata =
+    result.creditCard && typeof result.creditCard === "object"
+      ? (result.creditCard as Record<string, unknown>)
+      : result;
+  let cardToken: TokenizedCard | undefined;
+  if (
+    attempt.billingType === "CREDIT_CARD" &&
+    typeof metadata.creditCardToken === "string" &&
+    /^[A-Za-z0-9_-]{1,128}$/.test(metadata.creditCardToken) &&
+    typeof metadata.creditCardBrand === "string" &&
+    /^[A-Za-z0-9 _-]{1,40}$/.test(metadata.creditCardBrand) &&
+    typeof metadata.creditCardNumber === "string" &&
+    /^\d{4}$/.test(metadata.creditCardNumber)
+  ) {
+    cardToken = {
+      token: metadata.creditCardToken,
+      brand: metadata.creditCardBrand,
+      last4: metadata.creditCardNumber,
+    };
+  }
+  return { ...snapshot, ...(cardToken ? { cardToken } : {}) };
 }
 export async function findAsaasPayments(
   credentials: PaymentCredentials,

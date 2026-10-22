@@ -78,6 +78,11 @@ test("checkout displays server subtotal, freight, discount and total together", 
   ])
     assert.ok(html.includes(value), value);
 });
+
+test('order summary identifies products and quantities while totals remain server supplied',()=>{
+ const html=summaryHtml({items:[{id:'one',name:'Suco de uva · 1,5 L',quantity:2}]});
+ assert.match(html,/Suco de uva · 1,5 L/);assert.match(html,/2×/);assert.match(html,/46,00/);
+});
 test("checkout shows an explicit zero discount only when the server returned zero", () => {
   const html = summaryHtml({
     coupon: undefined,
@@ -137,4 +142,16 @@ test("missing required addons explain how to correct the cart without removing a
   assert.ok(!html.includes("Required addon"));
   assert.ok(!html.includes("Remover cupom"));
   assert.ok(!html.includes("R$"));
+});
+
+test("stock and delivery validation explain the correction without exposing database errors", () => {
+  const stock = summaryHtml({ quote: null, error: "Product stock insufficient" });
+  assert.match(stock, /estoque/i);
+  assert.match(stock, /quantidade/i);
+  assert.doesNotMatch(stock, /Insufficient stock/);
+  assert.ok(!stock.includes("R$"));
+  const city = summaryHtml({ quote: null, error: "Address outside delivery city" });
+  assert.match(city, /Gerenciar endereço/);
+  assert.match(city, /checkout=true/);
+  assert.doesNotMatch(city, /Address outside/);
 });

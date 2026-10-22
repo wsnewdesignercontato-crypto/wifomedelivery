@@ -12,7 +12,7 @@ globalThis.__customerProfileTest = runtime;
 const jsxHooks = loadTsx();
 const reactUrl = import.meta.resolve("react");
 const modules = {
-  "@/lib/asaas-payment.functions": `export const getOnlinePaymentAvailability=async()=>({enabled:false,methods:[]});export const startOnlineOrder=async()=>{throw Error('online is disabled in profile regression')};`,
+  "@/lib/asaas-payment.functions": `export const listSavedCards=async()=>[];export const removeSavedCard=async()=>({removed:true});export const getOnlinePaymentAvailability=async()=>({enabled:false,methods:[]});export const startOnlineOrder=async()=>{throw Error('online is disabled in profile regression')};`,
   "@/components/checkout/online-payment-form": `export const OnlinePaymentForm='form';`,
   react: `export * from ${JSON.stringify(reactUrl)};
     const r=globalThis.__customerProfileTest;
@@ -22,6 +22,7 @@ const modules = {
     export function useMemo(fn){return fn()}
     export function useReducer(reducer,initial){const [value,set]=useState(initial);return [value,event=>set(old=>reducer(old,event))]}`,
   "@tanstack/react-router": `const r=globalThis.__customerProfileTest;
+    export const useLocation=()=>({pathname:'/cliente/checkout',searchStr:''});
     export const createFileRoute=()=>options=>({...options,useSearch:()=>({checkout:true,cupom:'VOLTA'}),useRouteContext:()=>({user:{id:'customer-test',email:'test@example.invalid'}})});
     export const useNavigate=()=>value=>r.navigations.push(value);
     export const Link='a';`,

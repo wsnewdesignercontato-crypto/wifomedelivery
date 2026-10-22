@@ -10,6 +10,7 @@ import type { PaymentView, PaymentMethod } from "@/lib/asaas-payment-contract";
 import { OrderPaymentPanel } from "./order-payment-panel";
 import { OnlinePaymentForm } from "./online-payment-form";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 export function OrderOnlinePayment({
   orderId,
   userId,
@@ -129,8 +130,15 @@ export function OrderOnlinePayment({
           method={method}
           busy={busy}
           onError={() => setError("Confira os dados de pagamento informados.")}
-          onSubmit={async (payer, card) => {
-            await act(() => retry({ data: { orderId, payer, card } }));
+          onSubmit={async (payer, card, cardOptions) => {
+            await act(async () => {
+              const result = await retry({ data: { orderId, payer, card, cardOptions } });
+              if (result.cardSaveStatus === "unavailable")
+                toast.info(
+                  "Não foi possível salvar o cartão para próximas compras. Confira abaixo o resultado do pagamento.",
+                );
+              return result;
+            });
           }}
         />
       )}
