@@ -1,6 +1,27 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { getCatalogOnlineAvailability } from "./customer-catalog.functions";
 import { catalogStoreFacts, readCatalogPages, type CatalogFacts } from "./customer-catalog";
+
+export type CustomerCouponOffer =
+  Database["public"]["Functions"]["customer_coupon_offers"]["Returns"][number];
+
+/** The server returns only current offers accepted by each requested store. */
+export async function loadCustomerCouponOffers(ids: string[]): Promise<CustomerCouponOffer[]> {
+  const uniqueIds = [...new Set(ids)];
+  const offers = new Map<string, CustomerCouponOffer>();
+  for (let index = 0; index < uniqueIds.length; index += 100) {
+    const storeIds = uniqueIds.slice(index, index + 100);
+    const rows = await readCatalogPages((from, to) =>
+      supabase.rpc("customer_coupon_offers", { p_establishment_ids: storeIds }).range(from, to),
+    );
+    for (const row of rows) {
+      if (storeIds.includes(row.establishment_id))
+        offers.set(`${row.establishment_id}:${row.id}`, row);
+    }
+  }
+  return [...offers.values()];
+}
 
 /** Read existing public catalog permissions; a failed signal never advertises a benefit. */
 export async function loadCatalogFacts(
@@ -22,17 +43,7 @@ export async function loadCatalogFacts(
         .order("id")
         .range(from, to),
     ),
-    readCatalogPages((from, to) =>
-      supabase
-        .from("coupons")
-        .select(
-          "id,establishment_id,ativo,starts_at,expires_at,usage_limit,used_count,type,percent,value_cents",
-        )
-        .in("establishment_id", ids)
-        .eq("ativo", true)
-        .order("id")
-        .range(from, to),
-    ),
+    loadCustomerCouponOffers(ids),
     readCatalogPages((from, to) =>
       supabase
         .from("establishment_delivery_zones")

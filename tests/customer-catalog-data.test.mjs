@@ -1,13 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { registerHooks } from "node:module";
-const runtime = { tables: {}, failures: [], online: true };
+const runtime = { tables: {}, failures: [], online: true, rpcReads: [] };
 globalThis.__catalogReads = runtime;
 const hooks = registerHooks({
   resolve(name, context, next) {
     let source;
     if (name === "@/integrations/supabase/client")
-      source = `export const supabase={from(table){let ids=[];return {select(){return this},in(column,values){ids=values;return this},eq(){return this},order(){return this},range(from,to){const r=globalThis.__catalogReads;return Promise.resolve({data:r.failures.includes(table)?null:(r.tables[table]??[]).filter(row=>ids.includes(row.establishment_id)).slice(from,to+1),error:r.failures.includes(table)?new Error("denied"):null})}}}};`;
+      source = `export const supabase={rpc(name,args){return {range(from,to){const r=globalThis.__catalogReads;r.rpcReads.push({name,args,from,to});return Promise.resolve({data:r.failures.includes(name)?null:(r.tables[name]??[]).filter(row=>args.p_establishment_ids.includes(row.establishment_id)).slice(from,to+1),error:r.failures.includes(name)?new Error("denied"):null})}}},from(table){let ids=[];return {select(){return this},in(column,values){ids=values;return this},eq(){return this},order(){return this},range(from,to){const r=globalThis.__catalogReads;return Promise.resolve({data:r.failures.includes(table)?null:(r.tables[table]??[]).filter(row=>ids.includes(row.establishment_id)).slice(from,to+1),error:r.failures.includes(table)?new Error("denied"):null})}}}};`;
     if (name === "./customer-catalog.functions")
       source =
         "export const getCatalogOnlineAvailability=async()=>globalThis.__catalogReads.online;";
@@ -18,7 +18,8 @@ const hooks = registerHooks({
       : next(name, context);
   },
 });
-const { loadCatalogFacts } = await import("../src/lib/customer-catalog-data.ts");
+const { loadCatalogFacts, loadCustomerCouponOffers } =
+  await import("../src/lib/customer-catalog-data.ts");
 test.after(() => {
   hooks.deregister();
   delete globalThis.__catalogReads;
@@ -30,6 +31,7 @@ const stores = [
 function reset() {
   runtime.failures = [];
   runtime.online = true;
+  runtime.rpcReads = [];
   runtime.tables = {
     products: [
       {
@@ -41,7 +43,7 @@ function reset() {
         preco_promo_cents: 800,
       },
     ],
-    coupons: [
+    customer_coupon_offers: [
       {
         id: "c",
         establishment_id: "b",
@@ -92,4 +94,45 @@ test("failed signals hide only unverified benefits without discarding the store 
 test("an empty directory performs no optional catalog reads", async () => {
   reset();
   assert.deepEqual(await loadCatalogFacts([]), { facts: {}, incomplete: false });
+});
+
+test("catalog discounts come only from store participation offers, including anonymous global campaigns", async () => {
+  reset();
+  runtime.tables.coupons = [{ ...runtime.tables.customer_coupon_offers[0], establishment_id: "a" }];
+  runtime.tables.customer_coupon_offers[0].code = null;
+  const { facts, incomplete } = await loadCatalogFacts(stores);
+  assert.equal(incomplete, false);
+  assert.equal(facts.a.discount, false);
+  assert.equal(facts.b.discount, true);
+  assert.deepEqual(runtime.rpcReads[0].args, { p_establishment_ids: ["a", "b"] });
+});
+
+test("an offer read failure hides discounts and marks catalog facts incomplete", async () => {
+  reset();
+  runtime.failures = ["customer_coupon_offers"];
+  const { facts, incomplete } = await loadCatalogFacts(stores);
+  assert.equal(incomplete, true);
+  assert.equal(facts.b.discount, false);
+});
+
+test("coupon discovery chunks unique store IDs and reads all pages without duplicate offers", async () => {
+  reset();
+  assert.equal(typeof loadCustomerCouponOffers, "function");
+  const ids = Array.from({ length: 101 }, (_, index) => `store-${index}`);
+  const row = runtime.tables.customer_coupon_offers[0];
+  runtime.tables.customer_coupon_offers = [
+    ...Array.from({ length: 1001 }, (_, index) => ({
+      ...row,
+      id: `campaign-${index}`,
+      establishment_id: "store-0",
+    })),
+    { ...row, id: "campaign-last", establishment_id: "store-100" },
+    { ...row, id: "campaign-last", establishment_id: "store-100" },
+  ];
+  const offers = await loadCustomerCouponOffers([...ids, "store-0"]);
+  assert.equal(offers.length, 1002);
+  assert.equal(offers.at(-1).establishment_id, "store-100");
+  assert.ok(runtime.rpcReads.every((read) => read.args.p_establishment_ids.length <= 100));
+  assert.ok(runtime.rpcReads.some((read) => read.from > 0));
+  assert.deepEqual(await loadCustomerCouponOffers([]), []);
 });

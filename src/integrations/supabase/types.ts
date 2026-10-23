@@ -489,8 +489,51 @@ export type Database = {
           },
         ];
       };
+      coupon_participations: {
+        Row: {
+          coupon_id: string;
+          establishment_id: string;
+          campaign_revision: string;
+          participating: boolean;
+          accepted_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          coupon_id: string;
+          establishment_id: string;
+          campaign_revision: string;
+          participating: boolean;
+          accepted_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          coupon_id?: string;
+          establishment_id?: string;
+          campaign_revision?: string;
+          participating?: boolean;
+          accepted_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "coupon_participations_coupon_id_fkey";
+            columns: ["coupon_id"];
+            isOneToOne: false;
+            referencedRelation: "coupons";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "coupon_participations_establishment_id_fkey";
+            columns: ["establishment_id"];
+            isOneToOne: false;
+            referencedRelation: "establishments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       coupons: {
         Row: {
+          campaign_revision: string;
           ativo: boolean;
           code: string;
           created_at: string;
@@ -510,6 +553,7 @@ export type Database = {
           value_cents: number;
         };
         Insert: {
+          campaign_revision?: string;
           ativo?: boolean;
           code: string;
           created_at?: string;
@@ -529,6 +573,7 @@ export type Database = {
           value_cents?: number;
         };
         Update: {
+          campaign_revision?: string;
           ativo?: boolean;
           code?: string;
           created_at?: string;
@@ -2007,6 +2052,7 @@ export type Database = {
       };
       orders: {
         Row: {
+          coupon_campaign_revision: string | null;
           is_test: boolean;
           test_sale_id: string | null;
           acceptance_deadline: string | null;
@@ -2056,6 +2102,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          coupon_campaign_revision?: string | null;
           acceptance_deadline?: string | null;
           cancellation_reason?: string | null;
           cancelled_at?: string | null;
@@ -2103,6 +2150,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          coupon_campaign_revision?: string | null;
           acceptance_deadline?: string | null;
           cancellation_reason?: string | null;
           cancelled_at?: string | null;
@@ -3269,6 +3317,36 @@ export type Database = {
       };
     };
     Functions: {
+      merchant_coupon_campaigns: { Args: { p_establishment_id: string }; Returns: Json };
+      set_coupon_participation: {
+        Args: {
+          p_establishment_id: string;
+          p_coupon_id: string;
+          p_revision: string;
+          p_participating: boolean;
+        };
+        Returns: Json;
+      };
+      customer_coupon_offers: {
+        Args: { p_establishment_ids: string[] };
+        Returns: {
+          id: string;
+          establishment_id: string;
+          code: string | null;
+          type: Database["public"]["Enums"]["coupon_type"];
+          percent: number;
+          value_cents: number;
+          min_order_cents: number;
+          max_discount_cents: number | null;
+          usage_limit: number | null;
+          used_count: number;
+          ativo: boolean;
+          starts_at: string | null;
+          expires_at: string | null;
+          descricao: string | null;
+        }[];
+      };
+
       admin_live_couriers: { Args: Record<PropertyKey, never>; Returns: Json };
       check_account_access: { Args: Record<string, never>; Returns: undefined };
       set_my_default_address: {

@@ -1,239 +1,368 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { TicketPercent, Check, RefreshCw, Store } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useMyEstab, fmt } from "@/hooks/use-my-estab";
+import { useMyEstab } from "@/hooks/use-my-estab";
+import { fmtBRL } from "@/lib/format";
+import {
+  createCampaignRequestGuard,
+  parseMerchantCampaigns,
+  parseParticipationResult,
+  type MerchantCampaign,
+} from "@/lib/coupon-campaign-panels";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, Trash2 } from "lucide-react";
-import { parseMoneyCents } from "@/lib/commerce";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/cupons")({
-  head: () => ({
-    meta: [
-      { title: "Loja — Cupons | PedeTrem" },
-      { name: "description", content: "PedeTrem: loja, cupons." },
-      { property: "og:title", content: "Loja — Cupons | PedeTrem" },
-      { property: "og:description", content: "PedeTrem: loja, cupons." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "Cupons e campanhas | PedeTrem" }] }),
   component: CuponsPage,
 });
 
-type Coupon = {
-  id: string;
-  code: string;
-  type: string;
-  value_cents: number;
-  percent: number;
-  min_order_cents: number;
-  usage_limit: number | null;
-  used_count: number;
-  ativo: boolean;
-};
-
 function CuponsPage() {
-  const { estab } = useMyEstab();
-  const estabId = estab?.id;
-  const [list, setList] = useState<Coupon[]>([]);
-  const [open, setOpen] = useState(false);
+  const { estab, userId, isLoading } = useMyEstab();
+  if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Carregando sua loja…</p>;
+  if (!estab || estab.owner_id !== userId) {
+    return (
+      <p className="p-6 text-sm text-muted-foreground">
+        Não foi possível identificar sua loja. Atualize a página.
+      </p>
+    );
+  }
+  return (
+    <MerchantCampaigns key={`${userId}:${estab.id}`} establishmentId={estab.id} userId={userId} />
+  );
+}
 
-  const reload = useCallback(async () => {
-    if (!estabId) return;
-    const { data, error } = await supabase
-      .from("coupons")
-      .select("id,code,type,value_cents,percent,min_order_cents,usage_limit,used_count,ativo")
-      .eq("establishment_id", estabId)
-      .order("created_at", { ascending: false });
-    if (error) return toast.error(error.message);
-    setList((data ?? []) as Coupon[]);
-  }, [estabId]);
+function MerchantCampaigns({
+  establishmentId,
+  userId,
+}: {
+  establishmentId: string;
+  userId: string;
+}) {
+  const [selected, setSelected] = useState<MerchantCampaign | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [identityValid, setIdentityValid] = useState(true);
+  const [guard] = useState(createCampaignRequestGuard);
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    guard.reset();
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user.id !== userId) {
+        guard.cancel();
+        setIdentityValid(false);
+        setSelected(null);
+      }
+    });
+    return () => {
+      guard.cancel();
+      data.subscription.unsubscribe();
+    };
+  }, [guard, userId]);
 
-  async function toggle(c: Coupon) {
-    if (!estabId) return;
-    const { data, error } = await supabase
-      .from("coupons")
-      .update({ ativo: !c.ativo })
-      .eq("id", c.id)
-      .eq("establishment_id", estabId)
-      .select("id");
-    if (error || data?.length !== 1)
-      return toast.error(error?.message ?? "Cupom não encontrado ou sem permissão");
-    await reload();
+  const {
+    data = [],
+    isPending,
+    isFetching,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["merchant-coupon-campaigns", userId, establishmentId],
+    enabled: identityValid,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("merchant_coupon_campaigns", {
+        p_establishment_id: establishmentId,
+      });
+      if (error) throw error;
+      return parseMerchantCampaigns(data);
+    },
+  });
+  const campaigns = data.filter(
+    (campaign) => campaign.available || campaign.participating || campaign.requires_reacceptance,
+  );
+
+  async function changeParticipation(campaign: MerchantCampaign, participating: boolean) {
+    if (!identityValid) return;
+    const current = data.find((item) => item.id === campaign.id);
+    if (
+      !current ||
+      current.campaign_revision !== campaign.campaign_revision ||
+      (participating && !current.available)
+    ) {
+      setSelected(null);
+      toast.error("As condições mudaram. Atualize e confira a campanha antes de aderir.");
+      void refetch();
+      return;
+    }
+    const request = guard.begin();
+    if (!request) return;
+    setPendingId(campaign.id);
+    try {
+      const { data: result, error } = await supabase.rpc("set_coupon_participation", {
+        p_establishment_id: establishmentId,
+        p_coupon_id: campaign.id,
+        p_revision: campaign.campaign_revision,
+        p_participating: participating,
+      });
+      if (!request.isCurrent()) return;
+      if (error) throw error;
+      parseParticipationResult(result, campaign.campaign_revision, participating);
+      setSelected(null);
+      toast.success(
+        participating ? "Adesão confirmada para sua loja." : "Sua loja saiu da campanha.",
+      );
+      await refetch();
+    } catch (error) {
+      if (!request.isCurrent()) return;
+      setSelected(null);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível confirmar a alteração. Confira a campanha novamente.",
+      );
+      await refetch();
+    } finally {
+      if (request.isCurrent()) setPendingId(null);
+      request.finish();
+    }
   }
-  async function remover(id: string) {
-    if (!estabId) return;
-    if (!confirm("Excluir cupom?")) return;
-    const { data, error } = await supabase
-      .from("coupons")
-      .delete()
-      .eq("id", id)
-      .eq("establishment_id", estabId)
-      .select("id");
-    if (error?.code === "23503")
-      return toast.error("Cupom vinculado a pedidos. Desative-o para impedir novos usos.");
-    if (error || data?.length !== 1)
-      return toast.error(error?.message ?? "Cupom não encontrado ou sem permissão");
-    await reload();
-  }
+
+  if (!identityValid)
+    return (
+      <p className="p-6 text-sm text-muted-foreground">
+        A sessão mudou. Atualize a página para continuar.
+      </p>
+    );
 
   return (
-    <div className="space-y-4 max-w-3xl">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-black tracking-tight">Cupons da loja</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Novo cupom
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <CupomForm
-              onSaved={() => {
-                setOpen(false);
-                reload();
-              }}
-            />
-          </DialogContent>
-        </Dialog>
+    <div className="w-full space-y-6">
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-red-600">
+            Campanhas PedeTrem
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight">Cupons e campanhas</h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            Escolha os cupons da plataforma que sua loja aceita. A adesão é individual e você pode
+            sair quando quiser.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          disabled={isFetching || pendingId !== null}
+          onClick={() => void refetch()}
+        >
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Atualizar
+        </Button>
+      </header>
+      <div className="flex gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-950 dark:border-red-900 dark:bg-red-950/30 dark:text-red-100">
+        <Store className="mt-0.5 h-5 w-5 shrink-0" />
+        <div>
+          <p className="font-semibold">A decisão de participar é da sua loja</p>
+          <p className="mt-1">
+            O desconto é custeado pela sua loja e reduz seu repasse; comissão segue regras
+            existentes.
+          </p>
+        </div>
       </div>
-      <div className="space-y-2">
-        {list.map((c) => (
-          <div
-            key={c.id}
-            className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
-          >
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <span className="font-mono font-bold">{c.code}</span>
-                <Badge>{c.type === "percent" ? `${c.percent}%` : fmt(c.value_cents)}</Badge>
+      {isPending ? (
+        <p className="p-6 text-sm text-muted-foreground" role="status">
+          Carregando campanhas…
+        </p>
+      ) : isError ? (
+        <div role="alert" className="rounded-2xl border p-6">
+          <p>Não foi possível carregar as campanhas.</p>
+          <Button className="mt-3" variant="outline" onClick={() => void refetch()}>
+            Tentar novamente
+          </Button>
+        </div>
+      ) : campaigns.length === 0 ? (
+        <div className="rounded-2xl border border-dashed p-10 text-center">
+          <TicketPercent className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+          <h2 className="font-semibold">Nenhuma campanha disponível</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Os cupons liberados pela administração aparecerão aqui.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4 xl:grid-cols-2">
+          {campaigns.map((campaign) => (
+            <article
+              key={campaign.id}
+              className="flex flex-col rounded-2xl border bg-card p-5 sm:p-6"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="font-mono text-lg font-bold tracking-wide">{campaign.code}</span>
+                <Badge
+                  variant={campaign.participating ? "default" : "secondary"}
+                  className={campaign.participating ? "bg-emerald-700 text-white" : ""}
+                >
+                  {campaign.participating ? (
+                    <>
+                      <Check className="mr-1 h-3 w-3" />
+                      Sua loja participa
+                    </>
+                  ) : campaign.requires_reacceptance ? (
+                    "Nova adesão necessária"
+                  ) : (
+                    "Adesão opcional"
+                  )}
+                </Badge>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Usos: {c.used_count}
-                {c.usage_limit ? `/${c.usage_limit}` : ""}
-                {c.min_order_cents ? ` · Mín ${fmt(c.min_order_cents)}` : ""}
-              </p>
-            </div>
-            <Switch checked={c.ativo} onCheckedChange={() => toggle(c)} />
-            <Button size="icon" variant="ghost" onClick={() => remover(c.id)}>
-              <Trash2 className="h-4 w-4 text-destructive" />
+              <p className="mt-4 text-3xl font-bold text-red-600">{discountLabel(campaign)}</p>
+              {campaign.descricao && (
+                <p className="mt-2 break-words text-sm text-muted-foreground">
+                  {campaign.descricao}
+                </p>
+              )}
+              <CampaignTerms campaign={campaign} />
+              {campaign.requires_reacceptance && (
+                <p className="mt-4 text-sm font-medium text-amber-700 dark:text-amber-400">
+                  As condições foram alteradas. Confira os termos e confirme uma nova adesão.
+                </p>
+              )}
+              {!campaign.available && (
+                <p className="mt-4 text-sm text-muted-foreground">
+                  Campanha indisponível para novas adesões ou usos.
+                </p>
+              )}
+              <div className="mt-auto pt-5">
+                {campaign.participating ? (
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    disabled={pendingId !== null}
+                    onClick={() => void changeParticipation(campaign, false)}
+                  >
+                    {pendingId === campaign.id ? "Salvando…" : "Sair da campanha"}
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full bg-red-600 hover:bg-red-700 sm:w-auto"
+                    disabled={pendingId !== null || !campaign.available || isFetching}
+                    onClick={() => setSelected(campaign)}
+                  >
+                    Conferir e aderir
+                  </Button>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+      <Dialog
+        open={selected !== null}
+        onOpenChange={(open) => {
+          if (!open && !pendingId) setSelected(null);
+        }}
+      >
+        <DialogContent className="max-h-[90dvh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Confirmar adesão {selected ? `ao ${selected.code}` : "à campanha"}
+            </DialogTitle>
+            <DialogDescription>
+              Ao confirmar, sua loja passa a aceitar este cupom nas condições abaixo.
+            </DialogDescription>
+          </DialogHeader>
+          {selected && (
+            <>
+              <p className="text-2xl font-bold text-red-600">{discountLabel(selected)}</p>
+              <CampaignTerms campaign={selected} />
+            </>
+          )}
+          <p className="rounded-xl bg-red-50 p-4 text-sm font-medium text-red-950 dark:bg-red-950/30 dark:text-red-100">
+            O desconto é custeado pela sua loja e reduz seu repasse; comissão segue regras
+            existentes.
+          </p>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              disabled={pendingId !== null}
+              onClick={() => setSelected(null)}
+            >
+              Cancelar
             </Button>
-          </div>
-        ))}
-        {list.length === 0 && <p className="text-sm text-muted-foreground">Nenhum cupom criado.</p>}
-      </div>
+            <Button
+              className="bg-red-600 hover:bg-red-700"
+              disabled={pendingId !== null || isFetching}
+              onClick={() => {
+                if (selected) void changeParticipation(selected, true);
+              }}
+            >
+              {pendingId ? "Confirmando…" : "Confirmar adesão"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function CupomForm({ onSaved }: { onSaved: () => void }) {
-  const { estab } = useMyEstab();
-  const [f, setF] = useState({ code: "", type: "percent", valor: "10", minimo: "", usos: "" });
-  const [saving, setSaving] = useState(false);
-  async function salvar() {
-    if (saving) return;
-    if (!estab || !f.code.trim()) return toast.error("Código obrigatório");
-    if (f.code.trim().length > 50) return toast.error("Código deve ter até 50 caracteres");
-    const minimum = f.minimo ? parseMoneyCents(f.minimo) : 0;
-    const amount = parseMoneyCents(f.valor);
-    const percent = /^\d+(?:[,.]\d{1,2})?$/.test(f.valor.trim())
-      ? Number(f.valor.replace(",", "."))
-      : NaN;
-    const uses = f.usos ? Number(f.usos) : null;
-    if (
-      minimum === null ||
-      (uses !== null &&
-        (!/^\d+$/.test(f.usos) || !Number.isSafeInteger(uses) || uses < 1 || uses > 2147483647))
-    )
-      return toast.error("Mínimo ou limite de usos inválido");
-    if (
-      f.type === "percent"
-        ? !Number.isFinite(percent) || percent <= 0 || percent > 100
-        : amount === null || amount <= 0
-    )
-      return toast.error("Informe um desconto válido");
-    const payload = {
-      establishment_id: estab.id,
-      code: f.code.trim().toUpperCase(),
-      type: f.type as "percent" | "fixed",
-      ativo: true,
-      min_order_cents: minimum,
-      usage_limit: uses,
-      value_cents: f.type === "fixed" ? (amount ?? 0) : 0,
-      percent: f.type === "percent" ? percent : 0,
-    };
-    setSaving(true);
-    const { error } = await supabase.from("coupons").insert(payload);
-    setSaving(false);
-    if (error) toast.error("Falha: " + error.message);
-    else {
-      toast.success("Cupom criado");
-      onSaved();
-    }
-  }
+function discountLabel(campaign: MerchantCampaign) {
+  return campaign.type === "percent"
+    ? `${campaign.percent}% de desconto`
+    : campaign.type === "fixed"
+      ? `${fmtBRL(campaign.value_cents)} de desconto`
+      : "Frete grátis";
+}
+
+function CampaignTerms({ campaign }: { campaign: MerchantCampaign }) {
   return (
-    <>
-      <DialogHeader>
-        <DialogTitle>Novo cupom</DialogTitle>
-      </DialogHeader>
-      <div className="grid gap-3">
-        <div>
-          <Label>Código</Label>
-          <Input
-            value={f.code}
-            onChange={(e) => setF({ ...f, code: e.target.value })}
-            placeholder="WELCOME10"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label>Tipo</Label>
-            <select
-              className="w-full rounded-md border border-input bg-background p-2 text-sm"
-              value={f.type}
-              onChange={(e) => setF({ ...f, type: e.target.value })}
-            >
-              <option value="percent">Percentual (%)</option>
-              <option value="fixed">Valor fixo (R$)</option>
-            </select>
-          </div>
-          <div>
-            <Label>Valor</Label>
-            <Input value={f.valor} onChange={(e) => setF({ ...f, valor: e.target.value })} />
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label>Pedido mínimo (R$)</Label>
-            <Input value={f.minimo} onChange={(e) => setF({ ...f, minimo: e.target.value })} />
-          </div>
-          <div>
-            <Label>Usos máximos</Label>
-            <Input value={f.usos} onChange={(e) => setF({ ...f, usos: e.target.value })} />
-          </div>
-        </div>
+    <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+      <div>
+        <dt className="text-muted-foreground">Pedido mínimo</dt>
+        <dd className="font-medium">
+          {campaign.min_order_cents ? fmtBRL(campaign.min_order_cents) : "Sem mínimo"}
+        </dd>
       </div>
-      <DialogFooter>
-        <Button onClick={salvar} disabled={saving}>
-          {saving ? "Criando…" : "Criar"}
-        </Button>
-      </DialogFooter>
-    </>
+      <div>
+        <dt className="text-muted-foreground">Desconto máximo</dt>
+        <dd className="font-medium">
+          {campaign.max_discount_cents !== null
+            ? fmtBRL(campaign.max_discount_cents)
+            : "Sem teto adicional"}
+        </dd>
+      </div>
+      <div>
+        <dt className="text-muted-foreground">Validade</dt>
+        <dd className="font-medium">
+          {campaign.expires_at
+            ? new Date(campaign.expires_at).toLocaleString("pt-BR", {
+                dateStyle: "short",
+                timeStyle: "short",
+              })
+            : "Sem data final"}
+        </dd>
+      </div>
+      <div>
+        <dt className="text-muted-foreground">Usos na plataforma</dt>
+        <dd className="font-medium">
+          {campaign.used_count}
+          {campaign.usage_limit !== null ? ` de ${campaign.usage_limit}` : " · sem limite"}
+        </dd>
+      </div>
+      {campaign.starts_at && (
+        <div>
+          <dt className="text-muted-foreground">Início</dt>
+          <dd className="font-medium">
+            {new Date(campaign.starts_at).toLocaleString("pt-BR", {
+              dateStyle: "short",
+              timeStyle: "short",
+            })}
+          </dd>
+        </div>
+      )}
+    </dl>
   );
 }

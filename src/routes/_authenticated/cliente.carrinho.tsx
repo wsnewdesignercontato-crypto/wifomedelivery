@@ -5,6 +5,8 @@ import { Trash2, Plus, Minus, Loader2, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { loadCustomerCouponOffers, type CustomerCouponOffer } from "@/lib/customer-catalog-data";
+import { DATA_UPDATED_EVENT } from "@/lib/app-refresh";
 
 export const Route = createFileRoute("/_authenticated/cliente/carrinho")({
   head: () => ({
@@ -32,17 +34,7 @@ type Item = {
   addons: CartAddon[];
 };
 type Estab = { id: string; nome: string; taxa_entrega_cents: number; pedido_minimo_cents: number };
-type CouponRow = {
-  id: string;
-  code: string;
-  type: "percent" | "fixed" | "free_delivery";
-  value_cents: number;
-  percent: number;
-  min_order_cents: number;
-  descricao: string | null;
-  establishment_id: string | null;
-  expires_at: string | null;
-};
+type CouponRow = CustomerCouponOffer & { code: string };
 
 const fmt = (c: number) =>
   (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -50,64 +42,115 @@ const fmt = (c: number) =>
 function CarrinhoPage() {
   const { user } = Route.useRouteContext() as { user: { id: string } };
   const navigate = useNavigate();
-  const [items, setItems] = useState<Item[]>([]);
-  const [estab, setEstab] = useState<Estab | null>(null);
-  const [cupom, setCupom] = useState("");
+  const [storedItems, setItems] = useState<Item[]>([]);
+  const [storedEstab, setEstab] = useState<Estab | null>(null);
+  const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
+  const items = loadedUserId === user.id ? storedItems : [];
+  const estabId = items[0]?.establishment_id ?? null;
+  const estab = loadedUserId === user.id && storedEstab?.id === estabId ? storedEstab : null;
+  const couponScope = `${user.id}:${estabId ?? ""}`;
+  const [couponChoice, setCouponChoice] = useState({ scope: "", value: "" });
+  const cupom = couponChoice.scope === couponScope ? couponChoice.value : "";
+  const setCupom = (value: string) => setCouponChoice({ scope: couponScope, value });
+  const [couponState, setCouponState] = useState<{ scope: string; rows: CouponRow[] }>({
+    scope: "",
+    rows: [],
+  });
+  const coupons = couponState.scope === couponScope ? couponState.rows : [];
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    load();
+    let alive = true;
+    let sequence = 0;
+    let scheduled = false;
+    setLoading(true);
+    async function load() {
+      const request = ++sequence;
+      const current = () => alive && request === sequence;
+      setCouponState({ scope: "", rows: [] });
+      try {
+        const { data, error } = await supabase
+          .from("cart_items")
+          .select(
+            "id,product_id,nome_snapshot,preco_unit_cents,quantidade,observacoes,establishment_id,addons",
+          )
+          .eq("user_id", user.id)
+          .order("created_at");
+        if (!current()) return;
+        if (error) throw error;
+        const arr = ((data ?? []) as unknown as Item[]).map((item) => ({
+          ...item,
+          addons: Array.isArray(item.addons) ? item.addons : [],
+        }));
+        const storeId = arr[0]?.establishment_id;
+        setItems(arr);
+        setLoadedUserId(user.id);
+        setEstab((previous) => (previous?.id === storeId ? previous : null));
+        if (!storeId) return;
+        const [store, offers] = await Promise.allSettled([
+          supabase
+            .from("establishments")
+            .select("id,nome,taxa_entrega_cents,pedido_minimo_cents")
+            .eq("id", storeId)
+            .maybeSingle(),
+          loadCustomerCouponOffers([storeId]),
+        ]);
+        if (!current()) return;
+        setEstab(store.status === "fulfilled" && !store.value.error ? store.value.data : null);
+        setCouponState({
+          scope: `${user.id}:${storeId}`,
+          rows:
+            offers.status === "fulfilled"
+              ? offers.value.filter(
+                  (offer): offer is CouponRow =>
+                    offer.establishment_id === storeId &&
+                    typeof offer.code === "string" &&
+                    offer.code.trim().length > 0,
+                )
+              : [],
+        });
+      } catch {
+        if (current()) {
+          setItems([]);
+          setEstab(null);
+          setLoadedUserId(user.id);
+          setCouponState({ scope: "", rows: [] });
+        }
+      } finally {
+        if (current()) setLoading(false);
+      }
+    }
+    const refresh = () => {
+      if (scheduled) return;
+      scheduled = true;
+      queueMicrotask(() => {
+        scheduled = false;
+        if (alive) void load();
+      });
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    refresh();
+    window.addEventListener(DATA_UPDATED_EVENT, refresh);
+    window.addEventListener("focus", refresh);
+    window.addEventListener("online", refresh);
+    window.addEventListener("pageshow", refresh);
+    document.addEventListener("visibilitychange", onVisible);
     const ch = supabase
-      .channel("coupons-cliente")
-      .on("postgres_changes", { event: "*", schema: "public", table: "coupons" }, () => load())
+      .channel(`coupons-cliente-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "coupons" }, refresh)
       .subscribe();
     return () => {
+      alive = false;
+      window.removeEventListener(DATA_UPDATED_EVENT, refresh);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("online", refresh);
+      window.removeEventListener("pageshow", refresh);
+      document.removeEventListener("visibilitychange", onVisible);
       supabase.removeChannel(ch);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const [coupons, setCoupons] = useState<CouponRow[]>([]);
-
-  async function load() {
-    setLoading(true);
-    const { data } = await supabase
-      .from("cart_items")
-      .select(
-        "id,product_id,nome_snapshot,preco_unit_cents,quantidade,observacoes,establishment_id,addons",
-      )
-      .eq("user_id", user.id)
-      .order("created_at");
-    const arr = ((data ?? []) as unknown as Item[]).map((i) => ({
-      ...i,
-      addons: Array.isArray(i.addons) ? i.addons : [],
-    }));
-    setItems(arr);
-    let estabId: string | null = null;
-    if (arr[0]) {
-      estabId = arr[0].establishment_id;
-      const { data: e } = await supabase
-        .from("establishments")
-        .select("id,nome,taxa_entrega_cents,pedido_minimo_cents")
-        .eq("id", estabId)
-        .maybeSingle();
-      setEstab(e as Estab | null);
-    } else {
-      setEstab(null);
-    }
-    const nowIso = new Date().toISOString();
-    const { data: cps } = await supabase
-      .from("coupons")
-      .select(
-        "id,code,type,value_cents,percent,min_order_cents,descricao,establishment_id,expires_at,starts_at,ativo",
-      )
-      .eq("ativo", true)
-      .or(`establishment_id.is.null${estabId ? `,establishment_id.eq.${estabId}` : ""}`)
-      .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-      .order("created_at", { ascending: false });
-    setCoupons((cps ?? []) as unknown as CouponRow[]);
-    setLoading(false);
-  }
+  }, [user.id]);
 
   async function alterar(id: string, qty: number) {
     if (qty <= 0) {
@@ -132,7 +175,7 @@ function CarrinhoPage() {
   const frete = estab?.taxa_entrega_cents ?? 0;
   const total = subtotal + frete;
 
-  if (loading)
+  if (loading || loadedUserId !== user.id)
     return (
       <div className="flex justify-center py-20">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
