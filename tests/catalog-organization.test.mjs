@@ -102,7 +102,7 @@ test("photo field uses a compact preview action and one line of image requiremen
   );
   assert.match(html, /Adicionar foto do produto/);
   assert.match(html, /Escolher foto/);
-  assert.match(html, /1.000 × 1.000 px/);
+  assert.match(html, /Recomendado: 1080 × 1080 px/);
   assert.match(html, /até 5 MB/);
   assert.match(html, /type="file"[^>]*class="sr-only"/);
   assert.doesNotMatch(html, /Escolha da galeria|Você pode trocar/);

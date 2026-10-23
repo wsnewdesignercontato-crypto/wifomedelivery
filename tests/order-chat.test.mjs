@@ -13,6 +13,7 @@ const modules = {
   "@/integrations/supabase/client": "export const supabase=globalThis.__orderChatTest.client;",
   "@/components/ui/button": "export const Button='button';",
   "@/components/ui/input": "export const Input='input';",
+  "@/components/image-upload-guidance": "export const ImageUploadGuidance=()=>null;",
   "@/lib/device-preferences": "export const isLocationEnabled=()=>false;",
   "@/lib/upload-validation": "export const validateImageFile=()=>null;",
   "@/lib/data-access": "export const chatAttachmentPath=x=>x;",

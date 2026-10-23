@@ -83,13 +83,13 @@ const fmt = (c: number) =>
   (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 type Pay = "pix" | "cartao" | "dinheiro";
 const PAYS: { key: Pay; label: string; Icon: typeof QrCode }[] = [
-  { key: "pix", label: "Pix na entrega", Icon: QrCode },
-  { key: "cartao", label: "Cartão na entrega", Icon: CreditCard },
+  { key: "pix", label: "Pix", Icon: QrCode },
+  { key: "cartao", label: "Cartão", Icon: CreditCard },
   { key: "dinheiro", label: "Dinheiro", Icon: Banknote },
 ];
 
 function CheckoutPage() {
-  const { user } = Route.useRouteContext() as { user: { id: string } };
+  const { user } = Route.useRouteContext() as { user: { id: string; email?: string } };
   const search = Route.useSearch();
   const navigate = useNavigate();
   const call = useServerFn(placeOrder);
@@ -156,6 +156,23 @@ function CheckoutPage() {
     items: CheckoutSummaryItem[];
   }>({ userId: user.id, items: [] });
   const checkoutItems = summaryItems.userId === user.id ? summaryItems.items : [];
+  const [payerProfile, setPayerProfile] = useState<{
+    userId: string;
+    name: string;
+    phone: string;
+  } | null>(null);
+  const billingAddress = addrs.find((address) => address.id === addrId);
+  const payerDefaults: Partial<PayerInput> =
+    payerProfile?.userId === user.id
+      ? {
+          name: payerProfile.name,
+          email: user.email ?? "",
+          phone: payerProfile.phone,
+          postalCode: billingAddress?.cep ?? "",
+          addressNumber: billingAddress?.numero ?? "",
+        }
+      : {};
+  const paymentContext = tipoEntrega === "pickup" ? "na retirada" : "na entrega";
   const removalLock = useRef(false);
   const savedCards = cardsState.userId === user.id ? cardsState.cards : [];
   const removalCard = pendingRemoval?.userId === user.id ? pendingRemoval.card : null;
@@ -229,7 +246,7 @@ function CheckoutPage() {
           .from("cart_items")
           .select("id,updated_at,preco_unit_cents,quantidade,establishment_id,nome_snapshot")
           .eq("user_id", user.id),
-        supabase.from("profiles").select("telefone").eq("id", user.id).single(),
+        supabase.from("profiles").select("nome,telefone").eq("id", user.id).single(),
       ]);
       if (!active || request !== sequence) return;
       if (a.error || c.error || profile.error) {
@@ -248,6 +265,11 @@ function CheckoutPage() {
       setLoadError(null);
       setAddrs(arr);
       setPhone(profile.data.telefone);
+      setPayerProfile({
+        userId: user.id,
+        name: profile.data.nome ?? "",
+        phone: profile.data.telefone ?? "",
+      });
       setDetailsLoaded(true);
       setAddrId((current) =>
         arr.some((address) => address.id === current) ? current : (arr[0]?.id ?? null),
@@ -723,7 +745,12 @@ function CheckoutPage() {
                   disabled={enviando}
                   onClick={() => setOnline(false)}
                 >
-                  Pagar na entrega
+                  {tipoEntrega === "pickup" ? (
+                    <Store aria-hidden="true" />
+                  ) : (
+                    <Bike aria-hidden="true" />
+                  )}
+                  Pagar {paymentContext}
                 </Button>
                 <Button
                   variant="ghost"
@@ -739,6 +766,7 @@ function CheckoutPage() {
                     if (pagto === "dinheiro") setPagto("pix");
                   }}
                 >
+                  <ShieldCheck aria-hidden="true" />
                   Pagar online
                 </Button>
               </div>
@@ -754,7 +782,7 @@ function CheckoutPage() {
                     onClick={() => setPagto(key)}
                     className={`flex min-h-20 items-center gap-3 rounded-2xl border p-4 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-primary disabled:cursor-wait ${pagto === key ? "border-primary bg-primary/5 text-foreground shadow-sm ring-1 ring-primary/10" : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-primary/[0.02]"}`}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
                     {testMode
                       ? key === "pix"
                         ? "Pix de teste"
@@ -763,7 +791,7 @@ function CheckoutPage() {
                         ? key === "pix"
                           ? "Pix online"
                           : "Cartão online · à vista"
-                        : label}
+                        : `${label} ${paymentContext}`}
                   </button>
                 ),
               )}
@@ -773,7 +801,9 @@ function CheckoutPage() {
                 ? "Pagamento aprovado apenas no simulador, sem Pix, cartão ou dinheiro real."
                 : online
                   ? "Pagamento dentro do PedeTrem, processado pela Asaas. A loja recebe o pedido após a confirmação."
-                  : "Pague à loja ou ao entregador ao receber seu pedido."}
+                  : tipoEntrega === "pickup"
+                    ? "Pague à loja ao retirar seu pedido."
+                    : "Pague à loja ou ao entregador ao receber seu pedido."}
             </p>
           </section>
 
@@ -800,6 +830,7 @@ function CheckoutPage() {
             <OnlinePaymentForm
               key={`${user.id}:${pagto}`}
               method={pagto}
+              payerDefaults={payerDefaults}
               busy={enviando}
               disabled={!detailsLoaded || missing.length > 0 || removingCard}
               submitLabel={`Pagar ${fmt(currentQuote.total_cents)}`}

@@ -105,6 +105,7 @@ function EstabelecimentoPage() {
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [groupsError, setGroupsError] = useState<string | null>(null);
   const groupLoadSequence = useRef(0);
+  const addingToCart = useRef(false);
   // seleção: groupId -> lista de addonIds
   const [sel, setSel] = useState<Record<string, string[]>>({});
 
@@ -345,61 +346,81 @@ function EstabelecimentoPage() {
         to: "/auth",
         search: { perfil: "cliente", redirect: `/cliente/estabelecimento/${id}` },
       });
-    if (!openProd || !estab || saving) return;
+    if (!openProd || !estab || saving || addingToCart.current) return;
     if (invalid) {
       toast.error(invalid);
       return;
     }
+    addingToCart.current = true;
     setSaving(true);
-    // Bloqueia mistura de lojas
-    const { data: existing } = await supabase
-      .from("cart_items")
-      .select("id,establishment_id")
-      .eq("user_id", user.id)
-      .limit(1);
-    if (existing && existing[0] && existing[0].establishment_id !== estab.id) {
-      const ok = confirm("Você já tem itens de outra loja no carrinho. Substituir?");
-      if (!ok) {
-        setSaving(false);
-        return;
-      }
-      await supabase.from("cart_items").delete().eq("user_id", user.id);
-    }
-    // Sempre insere linha nova quando há opcionais ou observações
-    // (para não misturar combinações diferentes do mesmo produto)
-    const temCustom = chosen.length > 0 || !!obs.trim();
-    if (!temCustom) {
-      const { data: same } = await supabase
+    try {
+      const { data: existing, error: lookupError } = await supabase
         .from("cart_items")
-        .select("id,quantidade,addons")
+        .select("id,establishment_id")
         .eq("user_id", user.id)
-        .eq("establishment_id", estab.id)
-        .eq("product_id", openProd.id)
-        .maybeSingle();
-      if (same && Array.isArray(same.addons) && (same.addons as unknown[]).length === 0) {
-        await supabase
-          .from("cart_items")
-          .update({ quantidade: same.quantidade + qty })
-          .eq("id", same.id);
-        setSaving(false);
-        setOpenProd(null);
-        toast.success(`${openProd.nome} no carrinho`);
-        return;
+        .limit(1);
+      if (lookupError) throw lookupError;
+      if (existing?.[0] && existing[0].establishment_id !== estab.id) {
+        if (!confirm("Você já tem itens de outra loja no carrinho. Substituir?")) return;
+        const { error } = await supabase.from("cart_items").delete().eq("user_id", user.id);
+        if (error) throw error;
       }
+      let merged = false;
+      // Somente itens sem adicionais e sem observações podem compartilhar a linha.
+      if (chosen.length === 0 && !obs.trim()) {
+        const { data: candidates, error } = await supabase
+          .from("cart_items")
+          .select("id,quantidade,addons,observacoes")
+          .eq("user_id", user.id)
+          .eq("establishment_id", estab.id)
+          .eq("product_id", openProd.id);
+        if (error) throw error;
+        const same = candidates?.find(
+          (item) =>
+            Array.isArray(item.addons) && item.addons.length === 0 && !item.observacoes?.trim(),
+        );
+        if (same) {
+          const { data, error: updateError } = await supabase
+            .from("cart_items")
+            .update({ quantidade: same.quantidade + qty })
+            .eq("id", same.id)
+            .eq("user_id", user.id)
+            .select("id")
+            .single();
+          if (updateError || !data) throw updateError ?? new Error("Cart item not updated");
+          merged = true;
+        }
+      }
+      if (!merged) {
+        const { data, error } = await supabase
+          .from("cart_items")
+          .insert({
+            user_id: user.id,
+            establishment_id: estab.id,
+            product_id: openProd.id,
+            nome_snapshot: productSnapshotName(openProd.nome, openProd.descricao),
+            preco_unit_cents: precoUnit,
+            quantidade: qty,
+            observacoes: obs || null,
+            addons: chosen,
+          })
+          .select("id")
+          .single();
+        if (error || !data) throw error ?? new Error("Cart item not inserted");
+      }
+      setOpenProd(null);
+      toast.success("Item adicionado ao carrinho", {
+        description: `${qty} × ${productSnapshotName(openProd.nome, openProd.descricao)}`,
+        action: { label: "OK", onClick: () => {} },
+        className: "rounded-2xl border-emerald-200 shadow-lg",
+        duration: 6000,
+      });
+    } catch {
+      toast.error("Não foi possível adicionar ao carrinho. Confira sua conexão e tente novamente.");
+    } finally {
+      addingToCart.current = false;
+      setSaving(false);
     }
-    await supabase.from("cart_items").insert({
-      user_id: user.id,
-      establishment_id: estab.id,
-      product_id: openProd.id,
-      nome_snapshot: productSnapshotName(openProd.nome, openProd.descricao),
-      preco_unit_cents: precoUnit,
-      quantidade: qty,
-      observacoes: obs || null,
-      addons: chosen,
-    });
-    setSaving(false);
-    setOpenProd(null);
-    toast.success(`${openProd.nome} no carrinho`);
   }
 
   if (loading) {

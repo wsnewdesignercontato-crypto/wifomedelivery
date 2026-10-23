@@ -27,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { transitionCourierDelivery } from "@/lib/courier-delivery-transition";
 import { bindResumeRefresh } from "@/lib/resume-refresh";
 import { validateImageFile } from "@/lib/upload-validation";
+import { ImageUploadGuidance } from "@/components/image-upload-guidance";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -743,6 +744,7 @@ function Corridas() {
                       type="file"
                       accept="image/*"
                       capture="environment"
+                      aria-describedby="delivery-proof-help"
                       className="hidden"
                       onChange={(e) => e.target.files?.[0] && pickProof(e.target.files[0])}
                     />
@@ -757,6 +759,7 @@ function Corridas() {
                           size="sm"
                           variant="outline"
                           className="mt-2 w-full"
+                          aria-describedby="delivery-proof-help"
                           onClick={() => {
                             setProofFile(null);
                             setProofPreview(null);
@@ -770,11 +773,17 @@ function Corridas() {
                         variant="outline"
                         className="w-full"
                         onClick={() => proofInputRef.current?.click()}
+                        aria-describedby="delivery-proof-help"
                       >
                         <Camera className="mr-2 h-4 w-4 shrink-0" />
                         <span className="truncate">Adicionar foto da entrega (opcional)</span>
                       </Button>
                     )}
+                    <ImageUploadGuidance
+                      id="delivery-proof-help"
+                      profile="delivery-proof"
+                      className="mt-2"
+                    />
                   </div>
                 </div>
               )}

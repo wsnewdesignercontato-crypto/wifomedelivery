@@ -6,6 +6,7 @@ import { ESTABLISHMENT_SELECT } from "@/lib/data-access";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { ImageUploadGuidance } from "@/components/image-upload-guidance";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Loader2,
@@ -18,7 +19,6 @@ import {
   Palette,
   Save,
   ImageIcon,
-  Image,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -325,6 +325,7 @@ function ConfigPage() {
           <button
             type="button"
             onClick={() => capaRef.current?.click()}
+            aria-describedby="store-cover-help"
             disabled={uploadingCapa}
             className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-xs font-medium text-white backdrop-blur transition hover:bg-black/70"
           >
@@ -339,6 +340,7 @@ function ConfigPage() {
             ref={capaRef}
             type="file"
             accept="image/*"
+            aria-describedby="store-cover-help"
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -366,6 +368,7 @@ function ConfigPage() {
                 ref={logoRef}
                 type="file"
                 accept="image/*"
+                aria-describedby="store-logo-help"
                 className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
@@ -377,6 +380,7 @@ function ConfigPage() {
                 size="sm"
                 variant="outline"
                 onClick={() => logoRef.current?.click()}
+                aria-describedby="store-logo-help"
                 disabled={uploadingLogo}
               >
                 {uploadingLogo ? (
@@ -386,11 +390,18 @@ function ConfigPage() {
                 )}
                 {uploadingLogo ? "Enviando…" : "Trocar logo"}
               </Button>
-              <span className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">
-                <Image className="h-3 w-3" /> JPG/PNG até 5MB
-              </span>
             </div>
+            <ImageUploadGuidance
+              id="store-logo-help"
+              profile="logo"
+              formatPolicy="any-image"
+              className="mt-2"
+            />
           </div>
+        </div>
+        <div className="px-6 pb-6">
+          <p className="text-xs font-medium">Capa da loja</p>
+          <ImageUploadGuidance id="store-cover-help" profile="cover" formatPolicy="any-image" />
         </div>
       </section>
 

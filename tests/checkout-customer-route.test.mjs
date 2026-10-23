@@ -54,9 +54,9 @@ const hooks = registerHooks({
       name === "react" &&
       context.parentURL?.includes("/routes/_authenticated/cliente.checkout.tsx")
     )
-      source = `export * from ${JSON.stringify(reactUrl)};import {useState as realUseState,useReducer as realUseReducer} from ${JSON.stringify(reactUrl)};export const useState=(initial)=>{const r=globalThis.__checkoutRoute;const index=r.stateIndex++;return realUseState(index<r.values.length?r.values[index]:initial)};export const useReducer=(reducer,initial)=>realUseReducer(reducer,globalThis.__checkoutRoute.quote??initial);`;
+      source = `export * from ${JSON.stringify(reactUrl)};import {useState as realUseState,useReducer as realUseReducer} from ${JSON.stringify(reactUrl)};export const useState=(initial)=>{const r=globalThis.__checkoutRoute;const index=r.stateIndex++;return realUseState(r.overrides&&index in r.overrides?r.overrides[index]:index<r.values.length?r.values[index]:initial)};export const useReducer=(reducer,initial)=>realUseReducer(reducer,globalThis.__checkoutRoute.quote??initial);`;
     if (name === "@tanstack/react-router")
-      source = `import React from ${JSON.stringify(reactUrl)};export const useLocation=()=>({pathname:'/cliente/checkout',searchStr:''});export const createFileRoute=()=>options=>({...options,useRouteContext:()=>({user:{id:"customer"}}),useSearch:()=>({cupom:"BEMVINDO"})});export const useNavigate=()=>()=>{};export const Link=({to,search,children,...props})=>React.createElement("a",{...props,href:to+"?"+new URLSearchParams(Object.entries(search??{}).filter(([,v])=>v!==undefined))},children);`;
+      source = `import React from ${JSON.stringify(reactUrl)};export const useLocation=()=>({pathname:'/cliente/checkout',searchStr:''});export const createFileRoute=()=>options=>({...options,useRouteContext:()=>({user:globalThis.__checkoutRoute.user??{id:"customer"}}),useSearch:()=>({cupom:"BEMVINDO"})});export const useNavigate=()=>()=>{};export const Link=({to,search,children,...props})=>React.createElement("a",{...props,href:to+"?"+new URLSearchParams(Object.entries(search??{}).filter(([,v])=>v!==undefined))},children);`;
     if (name === "@tanstack/react-start") source = "export const useServerFn=()=>async()=>{};";
     if (name === "@/lib/checkout.functions")
       source = "export const placeOrder=()=>{};export const quoteOrder=()=>{};";
@@ -138,4 +138,65 @@ test("the loaded checkout shows pricing before the address, saved addresses only
   assert.match(html, /Cartão na entrega/);
   assert.match(html, /Dinheiro/);
   assert.match(html, /disabled=""[^>]*>Confirmar pedido/);
+});
+
+test("pickup payment choices identify the pickup context for all three methods", () => {
+  runtime.values[0] = true;
+  runtime.values[7] = "pickup";
+  runtime.stateIndex = 0;
+  try {
+    const html = renderToStaticMarkup(React.createElement(Route.component));
+    assert.match(html, /Pagar na retirada/);
+    for (const label of ["Pix na retirada", "Cartão na retirada", "Dinheiro na retirada"])
+      assert.ok(html.includes(label), label);
+    assert.doesNotMatch(html, /Pagar na entrega|Pix na entrega|Cartão na entrega/);
+  } finally {
+    runtime.values[0] = false;
+    runtime.values[7] = "delivery";
+  }
+});
+
+test("online choices contain only online Pix and card while offline cash stays in its own context", () => {
+  const html = paidCheckoutFixture("pix");
+  const choices = html.slice(html.indexOf("Forma de pagamento"), html.indexOf("Observações"));
+  assert.match(choices, /Pagar online/);
+  assert.match(choices, /Pix online/);
+  assert.match(choices, /Cartão online/);
+  assert.doesNotMatch(choices, /Dinheiro/);
+});
+
+test("checkout preloads account payer data and selected saved billing address", () => {
+  runtime.user = { id: "customer", email: "account@example.invalid" };
+  runtime.overrides = {
+    23: { userId: "customer", name: "Cliente cadastrado", phone: "47999999999" },
+  };
+  try {
+    const html = paidCheckoutFixture();
+    for (const value of [
+      "Cliente cadastrado",
+      "account@example.invalid",
+      "47999999999",
+      'name="addressNumber"',
+      'value="10"',
+    ])
+      assert.ok(html.includes(value), value);
+  } finally {
+    runtime.overrides = undefined;
+    runtime.user = undefined;
+  }
+});
+
+test("checkout never prefills a new account with the previous account payer details", () => {
+  runtime.user = { id: "customer", email: "new@example.invalid" };
+  runtime.overrides = {
+    23: { userId: "previous-account", name: "Nome privado anterior", phone: "47988888888" },
+  };
+  try {
+    const html = paidCheckoutFixture();
+    assert.doesNotMatch(html, /Nome privado anterior|47988888888/);
+    assert.match(html, /name="name"[^>]*value=""/);
+  } finally {
+    runtime.overrides = undefined;
+    runtime.user = undefined;
+  }
 });

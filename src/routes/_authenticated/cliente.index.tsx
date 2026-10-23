@@ -1,29 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Star, ChevronRight, Loader2, Tag, Flame, Clock } from "lucide-react";
+import { ChevronRight, Loader2, Flame, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-import catPizza from "@/assets/cat-pizza.jpg";
-import catHamburguer from "@/assets/cat-hamburguer.jpg";
-import catSushi from "@/assets/cat-sushi.jpg";
-import catAcai from "@/assets/cat-acai.jpg";
-import catSorvete from "@/assets/cat-sorvete.jpg";
-import catMarmita from "@/assets/cat-marmita.jpg";
-import catPastel from "@/assets/cat-pastel.jpg";
-import catFrango from "@/assets/cat-frango.jpg";
-import catChurrasco from "@/assets/cat-churrasco.jpg";
-import catSaudavel from "@/assets/cat-saudavel.jpg";
-import catMexicana from "@/assets/cat-mexicana.jpg";
-import catMassas from "@/assets/cat-massas.jpg";
-import catPadaria from "@/assets/cat-padaria.jpg";
-import catLanches from "@/assets/cat-lanches.jpg";
-import catDoces from "@/assets/cat-doces.jpg";
-import catChocolates from "@/assets/cat-chocolates.jpg";
-import catBebidas from "@/assets/cat-bebidas.jpg";
-import catCafeteria from "@/assets/cat-cafeteria.jpg";
-import catPorcoes from "@/assets/cat-porcoes.jpg";
-import catMercado from "@/assets/cat-mercado.jpg";
-import catFarmacia from "@/assets/cat-farmacia.jpg";
 import bannerFreteGratis from "@/assets/banner-frete-gratis-premium.png.asset.json";
 import { AdRotator } from "@/components/cliente/ad-rotator";
 import { Button } from "@/components/ui/button";
@@ -31,6 +10,19 @@ import { bindResumeRefresh } from "@/lib/resume-refresh";
 import { DATA_UPDATED_EVENT, PROFILE_UPDATED_EVENT } from "@/lib/app-refresh";
 import { useCityDetection } from "@/hooks/use-city-detection";
 import { CitySwitchCard } from "@/components/cliente/city-switch-card";
+import {
+  CategoryArtwork,
+  CatalogFilterBar,
+  CatalogBadges,
+  CatalogRating,
+} from "@/components/cliente/catalog-discovery";
+import {
+  catalogStoreFacts,
+  emptyCatalogFilters,
+  matchesCatalogFilters,
+  type CatalogFacts,
+} from "@/lib/customer-catalog";
+import { loadCatalogFacts } from "@/lib/customer-catalog-data";
 
 export const Route = createFileRoute("/_authenticated/cliente/")({
   head: () => ({
@@ -61,41 +53,12 @@ type Estab = {
   cidade: string | null;
 };
 type ActiveLocation = { cidade_ativa: string | null; estado_ativo: string | null };
-type CouponRow = { establishment_id: string | null; expires_at: string | null };
 type OrderCountRow = { establishment_id: string | null; order_count: number };
 type PlatformSettings = { bestseller_threshold: number | null; ad_default_seconds: number | null };
 type EstablishmentHourRow = { establishment_id: string; abre: string | null; fecha: string | null };
-type ReviewCountRow = { establishment_id: string | null };
 
 const fmt = (c: number) =>
   (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-// Foto real por slug (fallback usa emoji)
-const CAT_IMG: Record<string, string> = {
-  pizza: catPizza,
-  hamburguer: catHamburguer,
-  hamburgueres: catHamburguer,
-  lanches: catLanches,
-  japonesa: catSushi,
-  sushi: catSushi,
-  acai: catAcai,
-  sorvete: catSorvete,
-  marmita: catMarmita,
-  pastel: catPastel,
-  frango: catFrango,
-  churrasco: catChurrasco,
-  saudavel: catSaudavel,
-  mexicana: catMexicana,
-  massas: catMassas,
-  padaria: catPadaria,
-  doces: catDoces,
-  chocolates: catChocolates,
-  bebidas: catBebidas,
-  cafeteria: catCafeteria,
-  porcoes: catPorcoes,
-  mercado: catMercado,
-  farmacia: catFarmacia,
-};
 
 function ClienteHome() {
   const navigate = useNavigate();
@@ -107,11 +70,18 @@ function ClienteHome() {
   const [locationReady, setLocationReady] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [showAllCats, setShowAllCats] = useState(false);
-  const [promoIds, setPromoIds] = useState<Set<string>>(new Set());
+  const [factsById, setFactsById] = useState<Record<string, CatalogFacts>>({});
+  const [filters, setFilters] = useState(emptyCatalogFilters);
+  const [signalsLoading, setSignalsLoading] = useState(false);
+  const [signalsIncomplete, setSignalsIncomplete] = useState(false);
   const [salesCount, setSalesCount] = useState<Record<string, number>>({});
   const [threshold, setThreshold] = useState<number>(15);
   const [hoursById, setHoursById] = useState<Record<string, { abre: string; fecha: string }>>({});
-  const [reviewCountById, setReviewCountById] = useState<Record<string, number>>({});
+  const reviewCountById = useMemo(
+    () =>
+      Object.fromEntries(Object.entries(factsById).map(([id, facts]) => [id, facts.reviewCount])),
+    [factsById],
+  );
   const [sortBy, setSortBy] = useState<"recomendados" | "reviews" | "vendas">("recomendados");
   const [activeCidade, setActiveCidade] = useState<string | null>(null);
   const [activeEstado, setActiveEstado] = useState<string | null>(null);
@@ -256,15 +226,13 @@ function ClienteHome() {
     setLoadError(false);
     (async () => {
       try {
-        const nowIso = new Date().toISOString();
-        const [c, e, cp, od, ps] = await Promise.all([
+        const [c, e, od, ps] = await Promise.all([
           supabase
             .from("global_categories")
             .select("id,nome,slug,icone")
             .eq("ativo", true)
             .order("ordem"),
           supabase.rpc("customer_store_directory", { p_city: activeCidade, p_state: activeEstado }),
-          supabase.from("coupons").select("establishment_id,expires_at,ativo").eq("ativo", true),
           supabase.rpc("public_store_sales"),
           supabase
             .from("public_platform_settings")
@@ -272,16 +240,10 @@ function ClienteHome() {
             .maybeSingle(),
         ]);
         if (!active) return;
-        if (e.error) throw e.error;
+        if (e.error || c.error) throw e.error ?? c.error;
         setCats((c.data ?? []) as Categoria[]);
         setEstabs((e.data ?? []) as Estab[]);
         setLoading(false);
-        const promos = new Set<string>();
-        (cp.data ?? []).forEach((r: CouponRow) => {
-          if (r.establishment_id && (!r.expires_at || r.expires_at > nowIso))
-            promos.add(r.establishment_id);
-        });
-        setPromoIds(promos);
         const counts: Record<string, number> = {};
         (od.data ?? []).forEach((r: OrderCountRow) => {
           if (r.establishment_id) counts[r.establishment_id] = r.order_count;
@@ -310,17 +272,6 @@ function ClienteHome() {
             };
           });
           setHoursById(map);
-
-          const { data: revs } = await supabase
-            .from("public_reviews")
-            .select("establishment_id")
-            .in("establishment_id", ids);
-          if (!active) return;
-          const rc: Record<string, number> = {};
-          (revs ?? []).forEach((r: ReviewCountRow) => {
-            if (r.establishment_id) rc[r.establishment_id] = (rc[r.establishment_id] ?? 0) + 1;
-          });
-          setReviewCountById(rc);
         }
       } catch {
         if (active) setLoadError(true);
@@ -333,9 +284,54 @@ function ClienteHome() {
     };
   }, [activeCidade, activeEstado, locationReady, refreshKey]);
 
+  useEffect(() => {
+    let active = true;
+    setFactsById({});
+    setSignalsIncomplete(false);
+    setSignalsLoading(true);
+    void loadCatalogFacts(estabs)
+      .then((result) => {
+        if (!active) return;
+        setFactsById(result.facts);
+        setSignalsIncomplete(result.incomplete);
+      })
+      .catch(() => {
+        if (active) setSignalsIncomplete(true);
+      })
+      .finally(() => {
+        if (active) setSignalsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [estabs, refreshKey]);
+
+  const factsFor = (store: Estab) =>
+    factsById[store.id] ??
+    catalogStoreFacts(store, {
+      products: [],
+      coupons: [],
+      zones: null,
+      reviewCount: 0,
+      onlineEnabled: false,
+    });
+  const hasFilters = Object.values(filters).some(Boolean);
+
   const filtered = useMemo(() => {
     const base = catSel ? estabs.filter((e) => e.categoria_id === catSel) : estabs;
-    const arr = [...base];
+    const arr = base.filter((store) =>
+      matchesCatalogFilters(
+        factsById[store.id] ??
+          catalogStoreFacts(store, {
+            products: [],
+            coupons: [],
+            zones: null,
+            reviewCount: 0,
+            onlineEnabled: false,
+          }),
+        filters,
+      ),
+    );
     if (sortBy === "reviews") {
       arr.sort(
         (a, b) =>
@@ -358,13 +354,13 @@ function ClienteHome() {
         const rating = Number(e.avaliacao ?? 0);
         const revs = reviewCountById[e.id] ?? 0;
         const sales = salesCount[e.id] ?? 0;
-        const promo = promoIds.has(e.id) ? 1 : 0;
+        const promo = factsById[e.id]?.promotion ? 1 : 0;
         return rating * 2 + Math.log10(revs + 1) * 3 + Math.log10(sales + 1) * 2 + promo * 0.5;
       };
       arr.sort((a, b) => Number(b.is_open) - Number(a.is_open) || score(b) - score(a));
     }
     return arr;
-  }, [estabs, catSel, sortBy, reviewCountById, salesCount, promoIds]);
+  }, [estabs, catSel, sortBy, reviewCountById, salesCount, factsById, filters]);
 
   const compactCount = cats.length;
   const visibleCats = cats;
@@ -437,11 +433,10 @@ function ClienteHome() {
           className={
             showAllCats
               ? "grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8"
-              : "flex gap-3 overflow-x-auto scrollbar-hide pb-2"
+              : "flex gap-3 overflow-x-auto pb-3 [scrollbar-width:thin]"
           }
         >
           {visibleCats.map((c) => {
-            const img = CAT_IMG[c.slug];
             const active = catSel === c.id;
             return (
               <button
@@ -456,20 +451,7 @@ function ClienteHome() {
                     active ? "ring-2 ring-primary ring-offset-2 scale-[1.03]" : "hover:scale-[1.03]"
                   }`}
                 >
-                  {img ? (
-                    <img
-                      src={img}
-                      alt={c.nome}
-                      width={192}
-                      height={192}
-                      loading="lazy"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="grid h-full w-full place-items-center bg-gradient-to-br from-primary/15 to-primary/5 text-2xl">
-                      🍽️
-                    </div>
-                  )}
+                  <CategoryArtwork slug={c.slug} name={c.nome} />
                 </div>
                 <span
                   className={`text-center text-[11px] font-semibold leading-tight sm:text-xs ${
@@ -527,6 +509,31 @@ function ClienteHome() {
             </Link>
           )}
         </div>
+        <CatalogFilterBar filters={filters} onChange={setFilters} />
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+          <p role="status">
+            {signalsLoading ? "Atualizando benefícios…" : `${filtered.length} estabelecimento(s)`}
+          </p>
+          {hasFilters && (
+            <button
+              className="rounded-lg px-2 py-1 font-semibold text-primary"
+              onClick={() => setFilters(emptyCatalogFilters())}
+            >
+              Limpar filtros
+            </button>
+          )}
+        </div>
+        {signalsIncomplete && (
+          <p className="text-xs text-muted-foreground">
+            Alguns benefícios não puderam ser atualizados.{" "}
+            <button
+              className="font-semibold text-primary"
+              onClick={() => setRefreshKey((value) => value + 1)}
+            >
+              Atualizar
+            </button>
+          </p>
+        )}
         <div className="grid w-full grid-cols-3 gap-2">
           {(
             [
@@ -567,13 +574,27 @@ function ClienteHome() {
             </Button>
           </div>
         )}
-        {loading ? (
+        {loading || (hasFilters && signalsLoading) ? (
           <div className="flex justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : loadError && !estabs.length ? null : filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-            <p className="text-sm text-muted-foreground">Nenhum estabelecimento encontrado.</p>
+            <p className="text-sm text-muted-foreground">
+              Nenhum estabelecimento encontrado com essa seleção.
+            </p>
+            {(hasFilters || catSel) && (
+              <Button
+                className="mt-3"
+                variant="outline"
+                onClick={() => {
+                  setFilters(emptyCatalogFilters());
+                  setCatSel(null);
+                }}
+              >
+                Limpar seleção
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -581,10 +602,9 @@ function ClienteHome() {
               <EstabRow
                 key={e.id}
                 estab={e}
-                hasPromo={promoIds.has(e.id)}
+                facts={factsFor(e)}
                 isBestseller={(salesCount[e.id] ?? 0) >= threshold}
                 hoje={hoursById[e.id]}
-                reviewCount={reviewCountById[e.id] ?? 0}
               />
             ))}
           </div>
@@ -596,16 +616,14 @@ function ClienteHome() {
 
 function EstabRow({
   estab,
-  hasPromo,
+  facts,
   isBestseller,
   hoje,
-  reviewCount,
 }: {
   estab: Estab;
-  hasPromo: boolean;
+  facts: CatalogFacts;
   isBestseller: boolean;
   hoje?: { abre: string; fecha: string };
-  reviewCount: number;
 }) {
   return (
     <Link
@@ -650,28 +668,18 @@ function EstabRow({
         <h3 className="truncate pr-12 text-base font-extrabold tracking-tight text-foreground">
           {estab.nome}
         </h3>
-        {(isBestseller || hasPromo) && (
+        {isBestseller && (
           <div className="mt-1 flex flex-wrap items-center gap-1">
             {isBestseller && (
               <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-600 ring-1 ring-orange-500/30">
                 <Flame className="h-3 w-3" /> Mais vendido
               </span>
             )}
-            {hasPromo && (
-              <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary ring-1 ring-primary/30">
-                <Tag className="h-3 w-3" /> Promoção
-              </span>
-            )}
           </div>
         )}
-        <div className="mt-1 flex items-center gap-2 text-[12px] text-muted-foreground">
-          {estab.avaliacao != null && (
-            <span className="flex items-center gap-0.5 font-semibold text-foreground">
-              <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-              {Number(estab.avaliacao).toFixed(1)}
-              <span className="ml-0.5 font-normal text-muted-foreground">({reviewCount})</span>
-            </span>
-          )}
+        <CatalogBadges facts={facts} />
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-muted-foreground">
+          <CatalogRating facts={facts} />
           {estab.tempo_medio_min ? (
             <>
               <span aria-hidden>·</span>
@@ -684,10 +692,14 @@ function EstabRow({
         </div>
         <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
           Entrega{" "}
-          {estab.taxa_entrega_cents === 0 ? (
-            <span className="font-bold text-emerald-600">grátis</span>
+          {facts.delivery.fromCents === null ? (
+            "a consultar"
+          ) : facts.delivery.free ? (
+            <span className="font-bold text-emerald-600">
+              {facts.delivery.conditional ? "grátis em áreas selecionadas" : "grátis"}
+            </span>
           ) : (
-            fmt(estab.taxa_entrega_cents)
+            (facts.delivery.conditional ? "a partir de " : "") + fmt(facts.delivery.fromCents)
           )}
           {hoje ? (
             <>

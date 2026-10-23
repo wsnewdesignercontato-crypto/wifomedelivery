@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { ImageUploadGuidance } from "@/components/image-upload-guidance";
 import { isCheckoutPhone } from "@/lib/customer-access";
 import { notifyDataUpdated } from "@/lib/app-refresh";
 
@@ -239,6 +240,11 @@ function ContaPage() {
           </div>
           <div className="sm:col-span-2 space-y-2">
             <Label>Foto do perfil</Label>
+            <ImageUploadGuidance
+              id="customer-profile-photo-help"
+              profile="profile"
+              formatPolicy="any-image"
+            />
             {profile?.foto_url ? (
               <img
                 src={profile.foto_url}
@@ -251,6 +257,7 @@ function ContaPage() {
                 ref={fileRef}
                 type="file"
                 accept="image/*"
+                aria-describedby="customer-profile-photo-help"
                 className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
@@ -263,6 +270,7 @@ function ContaPage() {
                 variant="default"
                 size="sm"
                 onClick={() => fileRef.current?.click()}
+                aria-describedby="customer-profile-photo-help"
                 disabled={uploading || saving}
               >
                 {uploading ? (

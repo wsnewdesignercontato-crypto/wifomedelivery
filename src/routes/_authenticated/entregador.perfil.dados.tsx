@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { ImageUploadGuidance } from "@/components/image-upload-guidance";
 import { ArrowLeft, Loader2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -324,11 +325,16 @@ function Perfil() {
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold">Foto de perfil</p>
-            <p className="text-xs text-muted-foreground">JPG ou PNG até 5MB</p>
+            <ImageUploadGuidance
+              id="courier-profile-photo-help"
+              profile="profile"
+              formatPolicy="any-image"
+            />
             <input
               ref={fileRef}
               type="file"
               accept="image/*"
+              aria-describedby="courier-profile-photo-help"
               className="hidden"
               onChange={handleUpload}
             />
@@ -338,6 +344,7 @@ function Perfil() {
               className="mt-2"
               disabled={uploading}
               onClick={() => fileRef.current?.click()}
+              aria-describedby="courier-profile-photo-help"
             >
               {uploading ? (
                 <Loader2 className="mr-2 h-3 w-3 animate-spin" />

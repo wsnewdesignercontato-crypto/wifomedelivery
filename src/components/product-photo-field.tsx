@@ -1,13 +1,15 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ImageUploadGuidance } from "@/components/image-upload-guidance";
+import { MAX_IMAGE_BYTES } from "@/lib/upload-validation";
 
 import { toast } from "sonner";
 
 export async function prepareProductPhoto(file: File): Promise<File> {
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type))
     throw new Error("Escolha uma foto JPG, PNG ou WebP.");
-  if (!file.size || file.size > 5 * 1024 * 1024)
+  if (!file.size || file.size > MAX_IMAGE_BYTES)
     throw new Error("A foto deve ter até 5 MB. Escolha um arquivo menor.");
   const source = URL.createObjectURL(file);
   try {
@@ -121,6 +123,7 @@ export function ProductPhotoField({
               : "Adicionar foto do produto"
         }
         disabled={disabled || busy}
+        aria-describedby={id + "-help"}
         onClick={() => inputRef.current?.click()}
         className={`relative flex ${compact ? "aspect-square w-full" : "h-24 w-24 shrink-0"} items-center justify-center overflow-hidden rounded-xl border border-dashed border-primary/30 bg-background text-primary transition-colors hover:bg-primary/5 disabled:opacity-50`}
       >
@@ -157,12 +160,7 @@ export function ProductPhotoField({
             </span>
           )}
         </p>
-        <p
-          id={id + "-help"}
-          className={compact ? "sr-only" : "text-xs leading-relaxed text-muted-foreground"}
-        >
-          1.000 × 1.000 px · JPG, PNG ou WebP · até 5 MB
-        </p>
+        <ImageUploadGuidance id={id + "-help"} profile="product" />
         <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
@@ -170,6 +168,7 @@ export function ProductPhotoField({
             className={compact ? "h-8 w-full px-1 text-xs" : undefined}
             variant="outline"
             disabled={disabled || busy}
+            aria-describedby={id + "-help"}
             onClick={() => inputRef.current?.click()}
           >
             {busy

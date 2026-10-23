@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Send, Image as ImageIcon, MapPin, Phone } from "lucide-react";
 import { toast } from "sonner";
+import { ImageUploadGuidance } from "@/components/image-upload-guidance";
 import { bindResumeRefresh } from "@/lib/resume-refresh";
 
 type Escopo = "client_courier" | "store_courier" | "client_store";
@@ -445,6 +446,7 @@ export function OrderChat({
             ref={fileRef}
             type="file"
             accept="image/*"
+            aria-describedby={`chat-image-help-${orderId}-${escopo}`}
             className="hidden"
             onChange={(e) => e.target.files?.[0] && sendImage(e.target.files[0])}
           />
@@ -452,6 +454,7 @@ export function OrderChat({
             size="icon"
             variant="outline"
             aria-label="Enviar imagem"
+            aria-describedby={`chat-image-help-${orderId}-${escopo}`}
             onClick={() => fileRef.current?.click()}
             disabled={sending}
           >
@@ -482,6 +485,11 @@ export function OrderChat({
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>
+        <ImageUploadGuidance
+          id={`chat-image-help-${orderId}-${escopo}`}
+          profile="attachment"
+          className="mt-2"
+        />
       </div>
     </div>
   );

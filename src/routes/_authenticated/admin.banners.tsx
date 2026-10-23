@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImageUploadGuidance } from "@/components/image-upload-guidance";
 import {
   Dialog,
   DialogContent,
@@ -122,10 +123,16 @@ function BannersPage() {
               </div>
               <div>
                 <Label>Imagem do banner</Label>
+                <ImageUploadGuidance
+                  id="admin-banner-help"
+                  profile="banner"
+                  formatPolicy="any-image"
+                />
                 <input
                   ref={fileRef}
                   type="file"
                   accept="image/*"
+                  aria-describedby="admin-banner-help"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -146,6 +153,7 @@ function BannersPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => fileRef.current?.click()}
+                        aria-describedby="admin-banner-help"
                         disabled={uploading}
                       >
                         Trocar
@@ -164,6 +172,7 @@ function BannersPage() {
                   <button
                     type="button"
                     onClick={() => fileRef.current?.click()}
+                    aria-describedby="admin-banner-help"
                     disabled={uploading}
                     className="mt-2 flex h-32 w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border text-sm text-muted-foreground hover:border-primary hover:text-primary"
                   >

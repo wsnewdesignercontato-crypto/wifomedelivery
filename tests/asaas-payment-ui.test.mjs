@@ -257,3 +257,83 @@ test("payment form sends once and clears private fields immediately after explic
     globalThis.FormData = old;
   }
 });
+
+test("payer defaults prefill editable account and billing fields without overwriting payer edits", () => {
+  const props = { payerDefaults: payerEntries, onSubmit: async () => {} };
+  let tree = renderForm(props);
+  const input = (name) => walk(tree, (n) => n.type === "input" && n.props.name === name);
+  assert.equal(input("name").props.value, "Fixture");
+  assert.equal(input("email").props.value, "fixture@example.invalid");
+  assert.equal(input("phone").props.value, "47999999999");
+  assert.equal(input("postalCode").props.value, "89223005");
+  assert.equal(input("addressNumber").props.value, "277");
+  input("name").props.onChange({ target: { value: "Outro pagador" } });
+  tree = renderForm({
+    ...props,
+    payerDefaults: { ...payerEntries, name: "Updated account", phone: "47988888888" },
+  });
+  assert.equal(input("name").props.value, "Outro pagador");
+  assert.equal(input("phone").props.value, "47988888888");
+  assert.equal(input("cpfCnpj").props.required, true);
+});
+
+test("saved-card payment needs no billing fields and omits stale billing data from its payer", async () => {
+  let sent;
+  const props = {
+    savedCards: [cardFixture],
+    payerDefaults: payerEntries,
+    onSubmit: async (...args) => {
+      sent = args;
+    },
+  };
+  let tree = renderForm(props);
+  walk(tree, (n) => n.type === "input" && n.props.value === cardFixture.id).props.onChange();
+  tree = renderForm(props);
+  for (const name of ["postalCode", "addressNumber", "number", "expiryMonth", "expiryYear", "ccv"])
+    assert.equal(
+      walk(tree, (n) => n.type === "input" && n.props.name === name),
+      null,
+      name,
+    );
+  await submitEntries(tree, payerEntries);
+  assert.deepEqual(sent[0], {
+    name: "Fixture",
+    cpfCnpj: "24971563792",
+    email: "fixture@example.invalid",
+    phone: "47999999999",
+  });
+  assert.deepEqual(sent[2], { savedCardId: cardFixture.id });
+});
+
+test("new-card provider fields remain required and disappeared saved cards cannot be submitted", async () => {
+  let sent = false;
+  let errors = 0;
+  const props = {
+    savedCards: [cardFixture],
+    onSubmit: async () => {
+      sent = true;
+    },
+    onError: () => errors++,
+  };
+  let tree = renderForm(props);
+  walk(tree, (n) => n.type === "input" && n.props.value === cardFixture.id).props.onChange();
+  tree = renderForm({ ...props, savedCards: [] });
+  for (const name of [
+    "cpfCnpj",
+    "postalCode",
+    "addressNumber",
+    "number",
+    "holderName",
+    "expiryMonth",
+    "expiryYear",
+    "ccv",
+  ])
+    assert.equal(
+      walk(tree, (n) => n.type === "input" && n.props.name === name).props.required,
+      true,
+      name,
+    );
+  await submitEntries(tree, payerEntries);
+  assert.equal(sent, false);
+  assert.equal(errors, 1);
+});

@@ -15,6 +15,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ImageUploadGuidance } from "@/components/image-upload-guidance";
 import { supabase } from "@/integrations/supabase/client";
 import { validateImageFile } from "@/lib/upload-validation";
 import { useMyEstab } from "@/hooks/use-my-estab";
@@ -601,7 +602,9 @@ function SubirCampanhaModal({
               />
               <div>
                 <p className="text-sm font-semibold">Banner (imagem)</p>
-                <p className="text-[11px] text-muted-foreground">JPG/PNG até 5 MB</p>
+                <p className="text-[11px] text-muted-foreground">
+                  JPG, PNG, WebP ou GIF · até 5 MB
+                </p>
               </div>
             </button>
             <button
@@ -671,21 +674,13 @@ function SubirCampanhaModal({
                 <div className="mb-3 flex items-start gap-3 rounded-lg bg-background/70 p-3 text-xs text-muted-foreground">
                   <ImageIcon className="h-5 w-5 shrink-0 text-primary" />
                   <div className="space-y-1">
-                    <p>
-                      <b>Tamanho exato:</b> 1200 × 630 pixels (proporção 16:9 — horizontal).
-                    </p>
-                    <p>
-                      <b>Formato:</b> JPG ou PNG · até 5 MB.
-                    </p>
-                    <p>
-                      <b>Dica:</b> deixe o texto principal no centro — as bordas podem ser cortadas
-                      em telas menores.
-                    </p>
+                    <ImageUploadGuidance id="sponsored-banner-help" profile="banner" />
                   </div>
                 </div>
                 <input
                   type="file"
                   accept="image/*"
+                  aria-describedby="sponsored-banner-help"
                   onChange={onPickFile}
                   className="block w-full text-sm"
                 />

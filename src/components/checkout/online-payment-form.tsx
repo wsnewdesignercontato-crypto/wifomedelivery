@@ -21,6 +21,7 @@ export function OnlinePaymentForm({
   cardsError = null,
   onRetryCards,
   onRemoveCard,
+  payerDefaults = {},
 }: {
   method: PaymentMethod;
   busy: boolean;
@@ -33,9 +34,13 @@ export function OnlinePaymentForm({
   cardsError?: string | null;
   onRetryCards?: () => void;
   onRemoveCard?: (id: string) => Promise<void>;
+  payerDefaults?: Partial<PayerInput>;
 }) {
   const submitting = useRef(false);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  // Keep only explicit payer edits here. Refreshed account defaults can fill
+  // untouched fields without replacing details entered for another payer.
+  const [payerEdits, setPayerEdits] = useState<Partial<PayerInput>>({});
   const savedCard =
     method === "cartao" ? savedCards.find((card) => card.id === selectedCardId) : undefined;
   const blocked = busy || disabled;
@@ -56,7 +61,7 @@ export function OnlinePaymentForm({
             cpfCnpj: value("cpfCnpj"),
             email: value("email"),
             phone: value("phone"),
-            ...(method === "cartao"
+            ...(method === "cartao" && !savedCard
               ? { postalCode: value("postalCode"), addressNumber: value("addressNumber") }
               : {}),
           });
@@ -188,13 +193,16 @@ export function OnlinePaymentForm({
           </div>
         )}
         <h3 className="text-sm font-semibold">Dados do pagador</h3>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Confira os dados preenchidos. Você pode editá-los para pagar em nome de outra pessoa.
+        </p>
         <div className="grid min-w-0 gap-3 sm:grid-cols-2">
           {[
             { name: "name", label: "Nome completo", max: 120 },
             { name: "cpfCnpj", label: "CPF ou CNPJ", max: 24 },
             { name: "email", label: "E-mail do pagador", max: 254, type: "email" },
             { name: "phone", label: "Telefone com DDD", max: 20, type: "tel" },
-            ...(method === "cartao"
+            ...(method === "cartao" && !savedCard
               ? [
                   { name: "postalCode", label: "CEP de cobrança", max: 9 },
                   { name: "addressNumber", label: "Número do endereço de cobrança", max: 20 },
@@ -219,6 +227,20 @@ export function OnlinePaymentForm({
                 type={field.type ?? "text"}
                 required
                 maxLength={field.max}
+                {...(["name", "cpfCnpj", "email", "phone", "postalCode", "addressNumber"].includes(
+                  field.name,
+                )
+                  ? {
+                      value:
+                        payerEdits[field.name as keyof PayerInput] ??
+                        payerDefaults[field.name as keyof PayerInput] ??
+                        "",
+                      onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+                        const value = event.target.value;
+                        setPayerEdits((current) => ({ ...current, [field.name]: value }));
+                      },
+                    }
+                  : {})}
                 autoComplete="off"
                 inputMode={
                   ["number", "expiryMonth", "expiryYear", "ccv", "postalCode", "phone"].includes(

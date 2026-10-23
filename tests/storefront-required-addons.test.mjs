@@ -55,7 +55,10 @@ const hooks = registerHooks({
     if (name === "@/components/ui/dialog")
       source = `import React from ${JSON.stringify(reactUrl)};const Part=({children})=>React.createElement("div",null,children);export const Dialog=Part,DialogContent=Part,DialogHeader=Part,DialogTitle=Part;`;
     if (name === "@/integrations/supabase/client")
-      source = `export const supabase={from(table){const r=globalThis.__storefront;const query={select(){return this},eq(){return this},in(){return this},limit(){return this},order(){return table==="product_addon_groups"?r.groupResult:r.addonResult},maybeSingle:async()=>({data:null,error:null}),insert:async data=>{r.inserts.push(data);return {error:null}},then(resolve,reject){return Promise.resolve({data:[],error:null}).then(resolve,reject)}};return query}};`;
+      source = `export const supabase={from(table){const r=globalThis.__storefront;let operation="read",columns="";const query={select(value){columns=value;return this},eq(){return this},in(){return this},limit(){return this},order(){return table==="product_addon_groups"?r.groupResult:r.addonResult},maybeSingle(){return this},single(){return this},update(data){operation="update";r.updates.push(data);return this},delete(){operation="delete";return this},insert(data){operation="insert";r.inserts.push(data);return this},then(resolve,reject){const result=operation!=="read"?(r.writeResult??{data:{id:"cart-row"},error:null}):(columns.includes("quantidade")?r.sameResult:r.cartResult);return Promise.resolve(result).then(resolve,reject)}};return query}};`;
+    if (name === "sonner")
+      source =
+        "export const toast={success:(...args)=>globalThis.__storefront.notices.push(args),error:(message)=>globalThis.__storefront.errors.push(message)};";
     if (source)
       return { url: "data:text/javascript," + encodeURIComponent(source), shortCircuit: true };
     return next(name, context);
@@ -69,6 +72,12 @@ function reset() {
   runtime.states = [store, 0, [], [product], "", {}, false, false, null];
   runtime.refs = [];
   runtime.inserts = [];
+  runtime.updates = [];
+  runtime.notices = [];
+  runtime.errors = [];
+  runtime.cartResult = { data: [], error: null };
+  runtime.sameResult = { data: [], error: null };
+  runtime.writeResult = undefined;
   runtime.groupResult = { data: [], error: null };
   runtime.addonResult = { data: [], error: null };
 }
@@ -158,6 +167,98 @@ test("a completed query with no addon requirements still allows the normal item"
   assert.equal(runtime.inserts.length, 1);
   assert.equal(runtime.inserts[0].product_id, "product");
   assert.deepEqual(runtime.inserts[0].addons, []);
+  assert.equal(runtime.notices.length, 1);
+  const [message, options] = runtime.notices[0];
+  assert.equal(message, "Item adicionado ao carrinho");
+  assert.match(options.description, /Lanche/);
+  assert.equal(options.action.label, "OK");
+  assert.match(options.className, /rounded-2xl/);
+});
+
+test("a rejected cart write keeps the product open and never confirms success", async () => {
+  reset();
+  runtime.writeResult = { data: null, error: { message: "database unavailable" } };
+  await openProduct();
+  await addButton(render()).props.onClick();
+  assert.equal(runtime.notices.length, 0);
+  assert.equal(runtime.errors.length, 1);
+  assert.ok(!addButton(render()).props.disabled, "retry becomes available");
+});
+
+test("a transport failure unlocks a deliberate retry without a false confirmation", async () => {
+  reset();
+  runtime.writeResult = {
+    then(_resolve, reject) {
+      return Promise.reject(new Error("offline")).catch(reject);
+    },
+  };
+  await openProduct();
+  await addButton(render()).props.onClick();
+  assert.equal(runtime.notices.length, 0);
+  runtime.writeResult = undefined;
+  await addButton(render()).props.onClick();
+  assert.equal(runtime.notices.length, 1);
+});
+
+test("a write without a persisted row cannot report success", async () => {
+  reset();
+  runtime.writeResult = { data: null, error: null };
+  await openProduct();
+  await addButton(render()).props.onClick();
+  assert.equal(runtime.notices.length, 0);
+  assert.equal(runtime.errors.length, 1);
+});
+
+test("rapid taps cannot persist the same cart addition twice", async () => {
+  reset();
+  let release;
+  runtime.writeResult = new Promise((resolve) => {
+    release = resolve;
+  });
+  await openProduct();
+  const add = addButton(render());
+  const pending = add.props.onClick();
+  await add.props.onClick();
+  release({ data: { id: "cart-row" }, error: null });
+  await pending;
+  assert.equal(runtime.inserts.length, 1);
+  assert.equal(runtime.notices.length, 1);
+});
+
+test("a failed cart lookup does not replace or add items", async () => {
+  reset();
+  runtime.cartResult = { data: null, error: { message: "offline" } };
+  await openProduct();
+  await addButton(render()).props.onClick();
+  assert.equal(runtime.inserts.length, 0);
+  assert.equal(runtime.notices.length, 0);
+  assert.equal(runtime.errors.length, 1);
+});
+
+test("an ordinary item never merges into an item with instructions", async () => {
+  reset();
+  runtime.sameResult = {
+    data: [{ id: "custom", quantidade: 2, addons: [], observacoes: "Sem cebola" }],
+    error: null,
+  };
+  await openProduct();
+  await addButton(render()).props.onClick();
+  assert.equal(runtime.updates.length, 0);
+  assert.equal(runtime.inserts.length, 1);
+});
+
+test("a failed quantity update does not show a success confirmation", async () => {
+  reset();
+  runtime.sameResult = {
+    data: [{ id: "plain", quantidade: 2, addons: [], observacoes: null }],
+    error: null,
+  };
+  runtime.writeResult = { data: null, error: { message: "update failed" } };
+  await openProduct();
+  await addButton(render()).props.onClick();
+  assert.deepEqual(runtime.updates, [{ quantidade: 3 }]);
+  assert.equal(runtime.inserts.length, 0);
+  assert.equal(runtime.notices.length, 0);
 });
 
 test("a failed options query cannot bypass a required group", async () => {
