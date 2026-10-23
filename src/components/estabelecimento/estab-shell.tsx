@@ -53,6 +53,7 @@ const NAV: NavItem[] = [
   { label: "Categorias", to: "/estabelecimento/categorias", icon: FolderTree },
   { label: "Complementos", to: "/estabelecimento/complementos", icon: Layers },
   { label: "Estoque", to: "/estabelecimento/estoque", icon: Boxes },
+  { label: "Cupons", to: "/estabelecimento/cupons", icon: Ticket },
   { label: "Horários", to: "/estabelecimento/horarios", icon: Clock },
   { label: "Área de entrega", to: "/estabelecimento/entrega", icon: Truck },
   { label: "Financeiro", to: "/estabelecimento/financeiro", icon: DollarSign },

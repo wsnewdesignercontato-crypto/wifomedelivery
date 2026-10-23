@@ -15,7 +15,7 @@
 - [x] Replace merchant coupon creation with released-campaign list and explicit acceptance/leave actions. Admin creates/releases percentage campaigns and sees current participants. Network failures preserve UI state and report errors.
 - [x] Customer home and cart use `customer_coupon_offers(uuid[])` instead of guessing coupon scope. Return only current accepted offers for approved stores, no acceptance identities; codes visible only to authenticated users.
 - [x] Run targeted SQL/UI tests, full suite (643 passed), typecheck, lint, production build and independent review (no important findings).
-- [ ] Apply migration to authorized wifome after access renewal; verify synthetic rollback tests there, then publish and inspect production. Never change live coupons/participation to make tests pass. Current management API session returned HTTP 401; login renewal requested from user.
+- [x] Apply migration to authorized wifome after access renewal; verify synthetic rollback tests and security there, then publish and inspect production. Commit ecde4b9 deployed successfully; authenticated admin/merchant panels and all three origins verified without changing live coupons or participation. Added the missing merchant navigation entry during visual verification.
 
 ## Review focus
 
