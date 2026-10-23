@@ -2,7 +2,7 @@ import { SponsorshipPlanCard } from "@/components/sponsorship-plan-card";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Sparkles, Plus, Pencil, Trash2, Check, X, Clock } from "lucide-react";
+import { BadgeCheck, Plus, Pencil, Trash2, Check, X, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -167,7 +167,7 @@ function PlanosPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-            <Sparkles className="h-6 w-6 text-primary" /> Planos de anúncio
+            <BadgeCheck className="h-6 w-6 text-primary" /> Planos de anúncio
           </h1>
           <p className="text-sm text-muted-foreground">
             Defina pacotes que os estabelecimentos podem contratar.

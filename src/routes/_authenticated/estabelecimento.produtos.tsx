@@ -38,7 +38,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Loader2, Plus, Trash2, Copy, Pencil, Sparkles } from "lucide-react";
+import { Loader2, Plus, Trash2, Copy, Pencil, ImageIcon } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/estabelecimento/produtos")({
   head: () => ({
@@ -232,7 +232,7 @@ function ProdutosPage() {
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                    <Sparkles className="h-8 w-8 opacity-20" />
+                    <ImageIcon className="h-8 w-8 opacity-20" />
                   </div>
                 )}
               </div>

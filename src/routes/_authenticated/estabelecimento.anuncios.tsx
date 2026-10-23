@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   Megaphone,
-  Sparkles,
   Clock,
   ShieldAlert,
   XCircle,
@@ -230,7 +229,7 @@ function AnunciosEstabPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="flex items-center gap-2 text-sm font-bold text-emerald-700 dark:text-emerald-400">
-                <Sparkles className="h-4 w-4" /> Plano ativo: {ativo.ad_plans?.nome}
+                <Megaphone className="h-4 w-4" /> Plano ativo: {ativo.ad_plans?.nome}
               </p>
               <p className="text-xs text-muted-foreground">
                 Válido até {ativo.fim_em ? new Date(ativo.fim_em).toLocaleDateString("pt-BR") : "—"}{" "}
@@ -577,7 +576,7 @@ function SubirCampanhaModal({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <Sparkles className="h-5 w-5 text-primary" /> Subir campanha
+            <Megaphone className="h-5 w-5 text-primary" /> Subir campanha
           </DialogTitle>
         </DialogHeader>
 

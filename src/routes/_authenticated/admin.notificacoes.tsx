@@ -3,7 +3,7 @@ import { PROMO_ART, PROMO_LABEL, type PromoAudience } from "@/components/promo-a
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Send, Sparkles, Users, Store, Bike, Megaphone, Image as ImageIcon } from "lucide-react";
+import { Send, Users, Store, Bike, Megaphone, Image as ImageIcon } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -280,7 +280,7 @@ function AudiencePanel({
       <div className="space-y-6">
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="mb-4 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
+            <Megaphone className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Modelos prontos — {label}</h3>
           </div>
           <p className="mb-4 text-xs text-muted-foreground">{desc}</p>
