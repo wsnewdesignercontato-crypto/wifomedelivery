@@ -28,19 +28,14 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { KpiCard } from "@/components/admin/kpi-card";
 import { brl, num, dateTime } from "@/lib/format";
+import { Button } from "@/components/ui/button";
+import { loadAdminSales } from "@/lib/admin-sales-data";
+import { isConfirmedSale, summarizeAdminSales } from "@/lib/admin-sales";
+import type { AdminSale as Order } from "@/lib/admin-sales";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminDashboard,
 });
-
-type Order = {
-  id: string;
-  status: string;
-  total_cents: number;
-  created_at: string;
-  establishment_id: string | null;
-  cancelled_at: string | null;
-};
 
 const ACTIVE_STATUSES = [
   "placed",
@@ -66,25 +61,20 @@ async function fetchOverview() {
   start30.setDate(start30.getDate() - 29);
   start30.setHours(0, 0, 0, 0);
 
-  const [ordersMonthRes, clientesRes, estabsRes, couriersOnlineRes, couriersRes] =
-    await Promise.all([
-      supabase
-        .from("orders")
-        .select("id,status,total_cents,created_at,establishment_id,cancelled_at")
-        .eq("is_test", false)
-        .gte("created_at", start30.toISOString())
-        .order("created_at", { ascending: false })
-        .limit(2000),
-      supabase.from("profiles").select("id", { count: "exact", head: true }),
-      supabase.from("establishments").select("id,nome,is_open,status", { count: "exact" }),
-      supabase
-        .from("courier_profiles")
-        .select("user_id", { count: "exact", head: true })
-        .eq("status", "online"),
-      supabase.from("courier_profiles").select("user_id", { count: "exact", head: true }),
-    ]);
+  const [orders, clientesRes, estabsRes, couriersOnlineRes, couriersRes] = await Promise.all([
+    loadAdminSales(new Date(Math.min(start30.getTime(), startOfMonth.getTime())).toISOString()),
+    supabase.from("profiles").select("id", { count: "exact", head: true }),
+    supabase.from("establishments").select("id,nome,is_open,status", { count: "exact" }),
+    supabase
+      .from("courier_profiles")
+      .select("user_id", { count: "exact", head: true })
+      .eq("status", "online"),
+    supabase.from("courier_profiles").select("user_id", { count: "exact", head: true }),
+  ]);
 
-  const orders = (ordersMonthRes.data ?? []) as Order[];
+  for (const result of [clientesRes, estabsRes, couriersOnlineRes, couriersRes]) {
+    if (result.error) throw new Error(result.error.message);
+  }
   const clientesTotal = clientesRes.count ?? 0;
   const estabsList = (estabsRes.data ?? []) as {
     id: string;
@@ -101,20 +91,18 @@ async function fetchOverview() {
   const entregadoresTotal = couriersRes.count ?? 0;
 
   const inRange = (o: Order, since: Date) => new Date(o.created_at) >= since;
-  const revenue = (list: Order[]) =>
-    list.filter((o) => o.status === "delivered").reduce((sum, o) => sum + (o.total_cents ?? 0), 0);
+  const revenue = (list: Order[]) => summarizeAdminSales(list).gross;
 
   const today = orders.filter((o) => inRange(o, startOfDay));
   const week = orders.filter((o) => inRange(o, startOfWeek));
   const month = orders.filter((o) => inRange(o, startOfMonth));
 
   const deliveredMonth = month.filter((o) => o.status === "delivered");
+  const salesMonth = summarizeAdminSales(month);
   const cancelledMonth = month.filter((o) => o.status === "cancelled");
   const activeNow = orders.filter((o) => ACTIVE_STATUSES.includes(o.status));
 
-  const ticketMedio = deliveredMonth.length
-    ? Math.round(revenue(deliveredMonth) / deliveredMonth.length)
-    : 0;
+  const ticketMedio = salesMonth.count ? Math.round(salesMonth.gross / salesMonth.count) : 0;
 
   // 14-day series
   const days: { day: string; pedidos: number; receita: number }[] = [];
@@ -145,10 +133,10 @@ async function fetchOverview() {
     value,
   }));
 
-  // Top estabelecimentos (by delivered orders this month)
+  // Rank confirmed sales, including online payments received before delivery.
   const estabsById = new Map<string, string>(estabsList.map((e) => [e.id, e.nome]));
   const topMap = new Map<string, { nome: string; pedidos: number; receita: number }>();
-  deliveredMonth.forEach((o) => {
+  month.filter(isConfirmedSale).forEach((o) => {
     if (!o.establishment_id) return;
     const nome = estabsById.get(o.establishment_id) ?? "—";
     const cur = topMap.get(o.establishment_id) ?? { nome, pedidos: 0, receita: 0 };
@@ -170,7 +158,8 @@ async function fetchOverview() {
       pedidosEntregues: deliveredMonth.length,
       receitaHoje: revenue(today),
       receitaSemana: revenue(week),
-      receitaMes: revenue(deliveredMonth),
+      receitaMes: salesMonth.gross,
+      vendasConfirmadas: salesMonth.count,
       ticketMedio,
       clientesTotal,
       estabsTotal,
@@ -218,7 +207,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 function AdminDashboard() {
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["admin-overview"],
     queryFn: fetchOverview,
     refetchInterval: 30000,
@@ -237,6 +226,18 @@ function AdminDashboard() {
   }, [refetch]);
 
   const k = data?.kpis;
+
+  if (error) {
+    return (
+      <div role="alert" className="space-y-3 rounded-2xl border border-destructive/30 p-6">
+        <h1 className="text-xl font-bold">Não foi possível atualizar o dashboard</h1>
+        <p>
+          Os valores não estão disponíveis no momento. Tente atualizar para consultar suas vendas.
+        </p>
+        <Button onClick={() => void refetch()}>Tentar novamente</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -259,7 +260,7 @@ function AdminDashboard() {
         <KpiCard
           label="Faturamento hoje"
           value={brl(k?.receitaHoje ?? 0)}
-          hint={`Mês: ${brl(k?.receitaMes ?? 0)}`}
+          hint={`Mês: ${brl(k?.receitaMes ?? 0)} · Online pago ou entrega concluída`}
           icon={DollarSign}
           tone="success"
           loading={isLoading}
@@ -267,7 +268,7 @@ function AdminDashboard() {
         <KpiCard
           label="Ticket médio"
           value={brl(k?.ticketMedio ?? 0)}
-          hint={`${num(k?.pedidosEntregues ?? 0)} entregues no mês`}
+          hint={`${num(k?.vendasConfirmadas ?? 0)} vendas confirmadas no mês`}
           icon={TrendingUp}
           loading={isLoading}
         />

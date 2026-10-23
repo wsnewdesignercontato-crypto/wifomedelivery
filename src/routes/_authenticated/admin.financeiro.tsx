@@ -5,12 +5,14 @@ import { KpiCard } from "@/components/admin/kpi-card";
 import { fmtBRL } from "@/lib/format";
 import { DollarSign, TrendingUp, Wallet, Percent, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { sumLedgerAmounts } from "@/lib/commerce";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AsaasPayments } from "@/components/admin/asaas-payments";
+import { loadAdminSales } from "@/lib/admin-sales-data";
+import { summarizeAdminSales } from "@/lib/admin-sales";
 import {
   Dialog,
   DialogContent,
@@ -88,7 +90,25 @@ function FinanceiroPage() {
     isLoading,
     error,
     refetch,
-  } = useQuery({ queryKey: ["ledger"], queryFn: fetchLedger });
+  } = useQuery({ queryKey: ["ledger"], queryFn: fetchLedger, refetchInterval: 30000 });
+  const salesQuery = useQuery({
+    queryKey: ["admin-confirmed-sales"],
+    queryFn: () => loadAdminSales(),
+    refetchInterval: 30000,
+  });
+  const refetchSales = salesQuery.refetch;
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-finance-sales")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
+        void refetch();
+        void refetchSales();
+      })
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [refetch, refetchSales]);
   const [range, setRange] = useState<"7" | "30" | "all">("30");
   const [settlement, setSettlement] = useState<Row | null>(null);
   const [settlementMode, setSettlementMode] = useState<"receipt" | "refund">("receipt");
@@ -132,6 +152,13 @@ function FinanceiroPage() {
   }, [data, range]);
 
   const totals = sumLedgerAmounts(filtered);
+  const sales = summarizeAdminSales(
+    (salesQuery.data ?? []).filter(
+      (order) =>
+        range === "all" ||
+        new Date(order.created_at).getTime() >= Date.now() - Number(range) * 86400000,
+    ),
+  );
   const takeRate = totals.gross > 0 ? (totals.revenue / totals.gross) * 100 : 0;
 
   function download() {
@@ -172,16 +199,51 @@ function FinanceiroPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="GMV (bruto)" value={fmtBRL(totals.gross)} icon={DollarSign} />
+        <KpiCard
+          label="Vendas confirmadas (bruto)"
+          value={salesQuery.isError ? "—" : fmtBRL(sales.gross)}
+          icon={DollarSign}
+          loading={salesQuery.isPending}
+          hint="Pagamento online confirmado ou entrega concluída"
+        />
         <KpiCard
           label="Receita plataforma"
-          value={fmtBRL(totals.revenue)}
+          value={error ? "—" : fmtBRL(totals.revenue)}
           icon={TrendingUp}
           tone="primary"
+          loading={isLoading}
+          hint="Comissões das entregas concluídas"
         />
-        <KpiCard label="Repasse lojas" value={fmtBRL(totals.merchant)} icon={Wallet} />
-        <KpiCard label="Take-rate" value={`${takeRate.toFixed(1)}%`} icon={Percent} />
+        <KpiCard
+          label="Repasse lojas"
+          value={error ? "—" : fmtBRL(totals.merchant)}
+          icon={Wallet}
+          loading={isLoading}
+          hint="Entregas concluídas; saldo depende da conferência"
+        />
+        <KpiCard
+          label="Take-rate das entregas"
+          value={error ? "—" : `${takeRate.toFixed(1)}%`}
+          icon={Percent}
+          loading={isLoading}
+        />
       </div>
+      {salesQuery.error ? (
+        <div role="alert" className="rounded-xl border border-destructive/30 p-4 text-sm">
+          Não foi possível consultar as vendas.{" "}
+          <Button variant="outline" size="sm" onClick={() => void refetchSales()}>
+            Tentar novamente
+          </Button>
+        </div>
+      ) : (
+        !salesQuery.isPending && (
+          <p className="text-sm text-muted-foreground">
+            {sales.count} vendas confirmadas no período. {fmtBRL(sales.awaitingDelivery)} em
+            pagamentos online aguardando entrega. Os repasses abaixo são gerados na conclusão da
+            entrega e continuam sujeitos à conferência do recebimento.
+          </p>
+        )
+      )}
       <AsaasPayments />
       {error && (
         <p className="text-sm text-destructive">Falha ao carregar financeiro: {error.message}</p>
