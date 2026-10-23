@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { PaymentTestSettings } from "@/components/admin/payment-test-settings";
 import { BrevoSettings } from "@/components/admin/brevo-settings";
 import { AsaasSettings } from "@/components/admin/asaas-settings";
+import { persistPlatformSettings } from "@/lib/admin-settings-save";
 
 export const Route = createFileRoute("/_authenticated/admin/configuracoes")({
   head: () => ({
@@ -68,12 +69,10 @@ function ConfigPage() {
   }, [data]);
 
   async function save() {
-    if (!form) return;
+    if (!form || saving) return;
     setSaving(true);
-    const uid = (await supabase.auth.getUser()).data.user!.id;
-    const { error } = await supabase
-      .from("platform_settings")
-      .update({
+    try {
+      const saved = await persistPlatformSettings({
         platform_name: form.platform_name,
         commission_pct: form.commission_pct,
         default_delivery_fee_cents: form.default_delivery_fee_cents,
@@ -95,14 +94,15 @@ function ConfigPage() {
         support_email: form.support_email?.trim() || null,
         support_whatsapp: form.support_whatsapp?.trim() || null,
         support_phone: form.support_phone?.trim() || null,
-        updated_by: uid,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", 1);
-    setSaving(false);
-    if (error) return toast.error("Falha ao salvar");
-    toast.success("Configurações salvas");
-    qc.invalidateQueries({ queryKey: ["platform-settings"] });
+      });
+      setForm(saved);
+      qc.setQueryData(["platform-settings"], saved);
+      toast.success("Configurações salvas");
+    } catch (failure) {
+      toast.error(failure instanceof Error ? failure.message : "Falha ao salvar as configurações");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (isLoading || !form) {
