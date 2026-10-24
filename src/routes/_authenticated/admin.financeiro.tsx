@@ -41,6 +41,7 @@ type Row = {
   establishment_id: string | null;
   gross_cents: number;
   commission_cents: number;
+  courier_commission_cents: number;
   delivery_fee_cents: number;
   courier_payout_cents: number;
   merchant_payout_cents: number;
@@ -55,7 +56,7 @@ async function fetchLedger() {
     const { data, error } = await supabase
       .from("platform_ledger")
       .select(
-        "id,order_id,establishment_id,gross_cents,commission_cents,delivery_fee_cents,courier_payout_cents,merchant_payout_cents,platform_revenue_cents,status,created_at",
+        "id,order_id,establishment_id,gross_cents,commission_cents,courier_commission_cents,delivery_fee_cents,courier_payout_cents,merchant_payout_cents,platform_revenue_cents,status,created_at",
       )
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
@@ -73,6 +74,7 @@ function toCSV(rows: Row[]) {
     "establishment_id",
     "gross_cents",
     "commission_cents",
+    "courier_commission_cents",
     "courier_payout_cents",
     "merchant_payout_cents",
     "platform_revenue_cents",
@@ -212,7 +214,7 @@ function FinanceiroPage() {
           icon={TrendingUp}
           tone="primary"
           loading={isLoading}
-          hint="Comissões das entregas concluídas"
+          hint="Comissão dos produtos e taxa do frete das entregas concluídas"
         />
         <KpiCard
           label="Repasse lojas"
@@ -308,7 +310,8 @@ function FinanceiroPage() {
                 <th>Data</th>
                 <th>Pedido</th>
                 <th>Bruto</th>
-                <th>Comissão</th>
+                <th>Comissão dos produtos</th>
+                <th>Taxa do frete</th>
                 <th>Loja</th>
                 <th>Entregador</th>
                 <th>Status</th>
@@ -318,14 +321,14 @@ function FinanceiroPage() {
             <tbody>
               {isLoading && (
                 <tr>
-                  <td colSpan={8} className="p-6 text-center text-muted-foreground">
+                  <td colSpan={9} className="p-6 text-center text-muted-foreground">
                     Carregando…
                   </td>
                 </tr>
               )}
               {!isLoading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="p-6 text-center text-muted-foreground">
+                  <td colSpan={9} className="p-6 text-center text-muted-foreground">
                     Sem lançamentos no período.
                   </td>
                 </tr>
@@ -337,7 +340,10 @@ function FinanceiroPage() {
                   </td>
                   <td className="px-4 py-2 font-mono text-xs">{r.order_id?.slice(0, 8)}</td>
                   <td className="px-4 py-2">{fmtBRL(r.gross_cents)}</td>
-                  <td className="px-4 py-2 text-emerald-600">{fmtBRL(r.platform_revenue_cents)}</td>
+                  <td className="px-4 py-2 text-emerald-600">{fmtBRL(r.commission_cents)}</td>
+                  <td className="px-4 py-2 text-emerald-600">
+                    {fmtBRL(r.courier_commission_cents)}
+                  </td>
                   <td className="px-4 py-2">{fmtBRL(r.merchant_payout_cents)}</td>
                   <td className="px-4 py-2">{fmtBRL(r.courier_payout_cents)}</td>
                   <td className="px-4 py-2">

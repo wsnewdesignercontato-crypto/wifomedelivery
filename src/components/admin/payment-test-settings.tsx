@@ -54,6 +54,7 @@ const stateSchema = z.object({
       subtotal_cents: z.number(),
       freight_cents: z.number(),
       commission_cents: z.number(),
+      courier_commission_cents: z.number().default(0),
       total_cents: z.number(),
     }),
   ),
@@ -434,8 +435,12 @@ export function PaymentTestSettings() {
               {sale.status === "approved" && (
                 <p className="rounded-lg bg-muted p-2 text-xs">
                   Distribuição simulada · Loja: {brl(sale.subtotal_cents - sale.commission_cents)} ·
-                  Entregador: {brl(sale.freight_cents)} · Plataforma: {brl(sale.commission_cents)}.
-                  Estes valores não entram nas carteiras reais.
+                  Entregador: {brl(sale.freight_cents - sale.courier_commission_cents)} ·
+                  Plataforma: {brl(sale.commission_cents + sale.courier_commission_cents)}
+                  {sale.courier_commission_cents > 0 && (
+                    <> (inclui {brl(sale.courier_commission_cents)} do frete)</>
+                  )}
+                  . Estes valores não entram nas carteiras reais.
                 </p>
               )}
               <div className="flex flex-wrap gap-2">

@@ -31,6 +31,7 @@ type Config = {
   id: number;
   platform_name: string;
   commission_pct: number;
+  courier_commission_pct: number;
   default_delivery_fee_cents: number;
   default_radius_km: number;
   maintenance_mode: boolean;
@@ -75,6 +76,7 @@ function ConfigPage() {
       const saved = await persistPlatformSettings({
         platform_name: form.platform_name,
         commission_pct: form.commission_pct,
+        courier_commission_pct: form.courier_commission_pct,
         default_delivery_fee_cents: form.default_delivery_fee_cents,
         default_radius_km: form.default_radius_km,
         maintenance_mode: form.maintenance_mode,
@@ -136,7 +138,7 @@ function ConfigPage() {
                 className="mt-1.5"
               />
             </div>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <div>
                 <Label htmlFor="com">Comissão (%)</Label>
                 <Input
@@ -147,6 +149,24 @@ function ConfigPage() {
                   onChange={(e) => setForm({ ...form, commission_pct: Number(e.target.value) })}
                   className="mt-1.5"
                 />
+              </div>
+              <div>
+                <Label htmlFor="courier-com">Taxa sobre o frete (%)</Label>
+                <Input
+                  id="courier-com"
+                  type="number"
+                  min={0}
+                  max={100}
+                  step="0.5"
+                  value={form.courier_commission_pct}
+                  onChange={(e) =>
+                    setForm({ ...form, courier_commission_pct: Number(e.target.value) })
+                  }
+                  className="mt-1.5"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Retida pela plataforma. O entregador recebe o restante do frete.
+                </p>
               </div>
               <div>
                 <Label htmlFor="tax">Taxa entrega padrão (R$)</Label>

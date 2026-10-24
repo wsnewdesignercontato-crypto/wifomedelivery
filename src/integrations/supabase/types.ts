@@ -2052,6 +2052,8 @@ export type Database = {
       };
       orders: {
         Row: {
+          courier_commission_pct: number;
+          courier_commission_cents: number;
           coupon_campaign_revision: string | null;
           is_test: boolean;
           test_sale_id: string | null;
@@ -2102,6 +2104,8 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          courier_commission_pct?: number;
+          courier_commission_cents?: number;
           coupon_campaign_revision?: string | null;
           acceptance_deadline?: string | null;
           cancellation_reason?: string | null;
@@ -2150,6 +2154,8 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          courier_commission_pct?: number;
+          courier_commission_cents?: number;
           coupon_campaign_revision?: string | null;
           acceptance_deadline?: string | null;
           cancellation_reason?: string | null;
@@ -2230,6 +2236,7 @@ export type Database = {
       };
       platform_ledger: {
         Row: {
+          courier_commission_cents: number;
           commission_cents: number;
           courier_id: string | null;
           courier_payout_cents: number;
@@ -2246,6 +2253,7 @@ export type Database = {
           status: string;
         };
         Insert: {
+          courier_commission_cents?: number;
           commission_cents?: number;
           courier_id?: string | null;
           courier_payout_cents?: number;
@@ -2262,6 +2270,7 @@ export type Database = {
           status?: string;
         };
         Update: {
+          courier_commission_cents?: number;
           commission_cents?: number;
           courier_id?: string | null;
           courier_payout_cents?: number;
@@ -2310,6 +2319,7 @@ export type Database = {
       };
       platform_settings: {
         Row: {
+          courier_commission_pct: number;
           ad_default_seconds: number;
           bestseller_threshold: number;
           commission_pct: number;
@@ -2336,6 +2346,7 @@ export type Database = {
           updated_by: string | null;
         };
         Insert: {
+          courier_commission_pct?: number;
           ad_default_seconds?: number;
           bestseller_threshold?: number;
           commission_pct?: number;
@@ -2362,6 +2373,7 @@ export type Database = {
           updated_by?: string | null;
         };
         Update: {
+          courier_commission_pct?: number;
           ad_default_seconds?: number;
           bestseller_threshold?: number;
           commission_pct?: number;
