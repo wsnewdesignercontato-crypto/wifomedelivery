@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { KpiCard } from "@/components/admin/kpi-card";
 import { fmtBRL } from "@/lib/format";
@@ -11,8 +12,10 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AsaasPayments } from "@/components/admin/asaas-payments";
-import { loadAdminSales } from "@/lib/admin-sales-data";
-import { summarizeAdminSales } from "@/lib/admin-sales";
+import { isConfirmedSale, summarizeAdminSales } from "@/lib/admin-sales";
+import { summarizeCommissions } from "@/lib/admin-commissions";
+import { getAdminCommissionOrders } from "@/lib/admin-commissions.functions";
+import { CommissionSales } from "@/components/admin/commission-sales";
 import {
   Dialog,
   DialogContent,
@@ -87,6 +90,7 @@ function toCSV(rows: Row[]) {
 }
 
 function FinanceiroPage() {
+  const loadCommissions = useServerFn(getAdminCommissionOrders);
   const {
     data = [],
     isLoading,
@@ -94,8 +98,8 @@ function FinanceiroPage() {
     refetch,
   } = useQuery({ queryKey: ["ledger"], queryFn: fetchLedger, refetchInterval: 30000 });
   const salesQuery = useQuery({
-    queryKey: ["admin-confirmed-sales"],
-    queryFn: () => loadAdminSales(),
+    queryKey: ["admin-commission-orders"],
+    queryFn: () => loadCommissions(),
     refetchInterval: 30000,
   });
   const refetchSales = salesQuery.refetch;
@@ -154,13 +158,13 @@ function FinanceiroPage() {
   }, [data, range]);
 
   const totals = sumLedgerAmounts(filtered);
-  const sales = summarizeAdminSales(
-    (salesQuery.data ?? []).filter(
-      (order) =>
-        range === "all" ||
-        new Date(order.created_at).getTime() >= Date.now() - Number(range) * 86400000,
-    ),
+  const periodSales = (salesQuery.data ?? []).filter(
+    (order) =>
+      range === "all" ||
+      new Date(order.created_at).getTime() >= Date.now() - Number(range) * 86400000,
   );
+  const sales = summarizeAdminSales(periodSales);
+  const commissions = summarizeCommissions(periodSales);
   const takeRate = totals.gross > 0 ? (totals.revenue / totals.gross) * 100 : 0;
 
   function download() {
@@ -209,12 +213,16 @@ function FinanceiroPage() {
           hint="Pagamento online confirmado ou entrega concluída"
         />
         <KpiCard
-          label="Receita plataforma"
-          value={error ? "—" : fmtBRL(totals.revenue)}
+          label="Comissão da plataforma"
+          value={salesQuery.isError || commissions.unknown > 0 ? "—" : fmtBRL(commissions.platform)}
           icon={TrendingUp}
           tone="primary"
-          loading={isLoading}
-          hint="Comissão dos produtos e taxa do frete das entregas concluídas"
+          loading={salesQuery.isPending}
+          hint={
+            commissions.unknown > 0
+              ? "Há pedidos em conferência"
+              : `Produtos: ${fmtBRL(commissions.products)} · Frete: ${fmtBRL(commissions.freight)}. Previsto até a entrega.`
+          }
         />
         <KpiCard
           label="Repasse lojas"
@@ -246,6 +254,14 @@ function FinanceiroPage() {
           </p>
         )
       )}
+      {!salesQuery.isPending && !salesQuery.isError && (
+        <CommissionSales orders={periodSales.filter(isConfirmedSale)} />
+      )}
+      <p className="text-sm text-muted-foreground">
+        Receita da plataforma em entregas concluídas:{" "}
+        {error ? "indisponível" : fmtBRL(totals.revenue)}. Esse valor é separado das comissões
+        previstas.
+      </p>
       <AsaasPayments />
       {error && (
         <p className="text-sm text-destructive">Falha ao carregar financeiro: {error.message}</p>

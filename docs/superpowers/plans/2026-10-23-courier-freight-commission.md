@@ -15,7 +15,7 @@
 - [x] Update generated types, admin settings/save, admin finance fee breakdown and simulator distribution. Courier offers already say “Você recebe” and all courier views already use the delivery payout; they now consume the normalized net amount without a second client-side deduction.
 - [x] Run SQL/UI regressions, full suite (659 tests before two added coverage cases), TypeScript, ESLint and production build; independent review found no blocking issues. Expanded targeted SQL run: six tests passed.
 - [x] Apply only to authorized wifome and verify hosted rollback and advisors. Both settings are 8%; seven existing orders retain their financial values. Temporary fixtures were rolled back. No new advisor findings for the new private functions or columns.
-- [ ] Publish through existing Git integration and inspect production configuration and financial UI.
+- [x] Published as b1608dd through the existing Git integration. Production configuration displayed and saved both rates at 8%; Financeiro loaded its separate freight-fee column. Rollback fixtures left no users behind.
 
 ## Review focus
 
